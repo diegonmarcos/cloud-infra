@@ -209,11 +209,19 @@ jobs:
               echo "::warning::path-relevance diff failed (exit $DIFF_RC) — deploying rather than skipping. git said: ${DIFF_OUT}"
               CHANGED="forced-by-diff-failure"
             else
-              CHANGED=$(printf '%s\n' "$DIFF_OUT" | grep -E '^b_infra/' | head -1 || true)
+              # Relevance = b_infra/ OR any file this VM's build reads from
+              # outside b_infra (derived from the symlinks the build follows:
+              # the consolidated artifact, build-vm-<vm>.json, hm-config.json).
+              # Grepping ^b_infra/ alone skipped every VM on a gen-configs
+              # commit that changed only the consolidated artifact — a green
+              # ship that deployed nothing (#662). The helper exits non-zero
+              # when it cannot derive the input set; that fails the job RED.
+              REL=$(printf '%s\n' "$DIFF_OUT" | bash .github/workflows/scripts/cloud-ship-hm-path-relevance.sh "$VM")
+              KIND="${REL%% *}"; CHANGED="${REL#* }"
             fi
             if [ -z "$CHANGED" ]; then
               echo "skip=true" >> "$GITHUB_OUTPUT"
-              echo "::notice::skip — no b_infra/ changes in upstream commit"
+              echo "::notice::skip — upstream commit touched neither b_infra/ nor any file ${VM}'s build reads"
               # Make a no-deploy run unmistakable on the run page. A skipped
               # gate still reports the JOB as green, which in the runs list is
               # indistinguishable from a successful deploy. Without this note a
@@ -221,14 +229,22 @@ jobs:
               # healthy — which is exactly what happened here: every recent
               # green run had skipped, so nobody saw that shipping was broken.
               echo "### ⏭️ ${VM}: NO DEPLOY PERFORMED" >> "$GITHUB_STEP_SUMMARY"
-              echo "Gate skipped this VM — upstream commit touched no \`b_infra/\` paths." >> "$GITHUB_STEP_SUMMARY"
+              echo "Gate skipped this VM — upstream commit touched no \`b_infra/\` path and no build input of this VM." >> "$GITHUB_STEP_SUMMARY"
               echo "This run being green does **not** mean the VM was updated." >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
+            echo "::notice::deploy — upstream commit changed ${CHANGED} (${KIND:-forced})"
             # A b_infra change really did flow via gen-configs — require the
             # same marker the push path demands, so no regeneration silently
             # deploys an unmarked b_infra change under a second trigger.
-            bash "$AUTH" workflow_run "$GITHUB_EVENT_PATH"
+            # A regenerated build INPUT alone (KIND=input) is the declared-data
+            # path this trigger exists for (header: "declaration change made
+            # gen-configs regen dist/ … THEN ships"); the gen-configs
+            # auto-commit never carries the marker, so demanding it there
+            # would turn every data delivery red instead of shipping it.
+            if [ "${KIND:-}" != "input" ]; then
+              bash "$AUTH" workflow_run "$GITHUB_EVENT_PATH"
+            fi
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
