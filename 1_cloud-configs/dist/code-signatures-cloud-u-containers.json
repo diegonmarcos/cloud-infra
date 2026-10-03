@@ -8078,6 +8078,8 @@
         "ghFetch(url, accept)",
         "cachedFeed(owner, repo, kind)",
         "feedHandler(kind)",
+        "cachedRelease(owner, repo, tag)",
+        "releaseAsset(req, res, { params })",
         "proxyGit(req, res, { owner, repo }, suffix)",
         "serve(req, res, url)"
       ]
@@ -8121,9 +8123,16 @@
         "feedUrl",
         "projectCommit",
         "projectRun",
+        "releaseByTagUrl",
+        "releaseAssetUrl",
+        "validTag",
+        "validRange",
+        "inCidr",
+        "isDirectMesh",
         "REDACTED",
         "GIT_PASS_HEADERS",
-        "FEED_KINDS"
+        "FEED_KINDS",
+        "ASSET_PASS_HEADERS"
       ],
       "imports": [],
       "symbols": [
@@ -8140,7 +8149,15 @@
         "clampPerPage(raw, max)",
         "feedUrl(apiBase, owner, repo, kind, perPage)",
         "projectCommit(c)",
-        "projectRun(r)"
+        "projectRun(r)",
+        "releaseByTagUrl(apiBase, owner, repo, tag)",
+        "releaseAssetUrl(apiBase, owner, repo, id)",
+        "validTag(s)",
+        "validRange(h)",
+        "ipv4ToInt(ip)",
+        "ipv6ToBig(ip)",
+        "inCidr(addr, cidr)",
+        "isDirectMesh(remoteAddr, headers, cidrs)"
       ]
     },
     {
@@ -8238,12 +8255,14 @@
         "testContract()",
         "threw(fn)",
         "testFeedsUnit()",
+        "testReleaseUnit()",
         "testLive()",
         "mintJwt(claims, signWith = privateKey, alg = 'RS256')",
         "mintUnsigned(claims)",
         "good0()",
         "req(path, token)",
         "reqH(path, headers, init = {})",
+        "bin(path, headers = {}, b = base)",
         "firstLeak(seen)",
         "safeJson(t)",
         "hash(s)",
