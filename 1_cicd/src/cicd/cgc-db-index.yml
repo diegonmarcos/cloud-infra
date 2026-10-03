@@ -351,6 +351,8 @@ jobs:
     concurrency:
       group: ship-wg-runner
       cancel-in-progress: false
+      # #844: FIFO queue instead of GitHub's one-pending-slot eviction (rationale: ship.yml deploy.concurrency).
+      queue: max
     # 240, not 340: this ceiling is now a bound on how long ONE job may hold
     # the fleet-wide deploy lock, not just on its own runtime, so "the highest
     # safe value under GitHub's 360-min cap" is the wrong thing to optimise

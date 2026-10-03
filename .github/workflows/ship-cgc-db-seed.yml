@@ -29,6 +29,8 @@ on:
 concurrency:
   group: ship-wg-runner
   cancel-in-progress: false
+  # #844: FIFO queue instead of GitHub's one-pending-slot eviction (rationale: ship.yml deploy.concurrency).
+  queue: max
 
 jobs:
   seed:

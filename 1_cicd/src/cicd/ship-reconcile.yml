@@ -116,6 +116,8 @@ jobs:
     concurrency:
       group: ship-wg-runner
       cancel-in-progress: false
+      # #844: FIFO queue instead of GitHub's one-pending-slot eviction (rationale: ship.yml deploy.concurrency).
+      queue: max
 
     # #840 loop bound. A workflow_run reconcile fires for a Ship that was
     #   - `cancelled`: what an evicted deploy makes the whole run conclude

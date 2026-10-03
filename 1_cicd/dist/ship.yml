@@ -974,6 +974,22 @@ jobs:
     concurrency:
       group: ship-wg-runner
       cancel-in-progress: false
+      # #844: `queue: max` (GitHub, 2026-05: up to 100 pending jobs/runs per
+      # group, FIFO, also at job level; forbidden with cancel-in-progress:true).
+      # The "known cost" above is what #840/#842 then patched with requeue
+      # jobs, but a single pending slot cannot survive a long holder: while a
+      # cgc-db restore-all held the group for hours, every deploy, reconcile
+      # and home-manager run evicted the one before it, and unjam-ship then
+      # cancelled reindexes (#352). EVERY ship-wg-runner entrant declares
+      # queue: max — mixing entrants with and without it is undocumented, so
+      # 9_others/test/test_ship_burst_no_dropped_deploy.sh fails if any one
+      # lacks it. Each entrant still really needs the WG identity (verified
+      # #844: they all run cloud-ship-ci-setup-wireguard.sh; cgc-db's index
+      # matrix already left the group, only restore-all stays). Requeue jobs
+      # in ship-reconcile.yml remain as the net for a full (100) queue or a
+      # human cancel. FIFO means deploys run in queue order, so an older run's
+      # deploy does not overtake a newer one in the normal case.
+      queue: max
     env:
       OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
       GCP_PROXY_SSH_KEY: ${{ secrets.GCP_PROXY_SSH_KEY }}

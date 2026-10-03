@@ -20,6 +20,8 @@ on:
 concurrency:
   group: ship-wg-runner
   cancel-in-progress: false
+  # #844: FIFO queue instead of GitHub's one-pending-slot eviction (rationale: ship.yml deploy.concurrency).
+  queue: max
 
 env:
   WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
