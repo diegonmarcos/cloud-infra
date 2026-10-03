@@ -34,8 +34,20 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 set -uo pipefail
 
+# stdin lines: <local ref> <local oid> <remote ref> <remote oid> — read ONCE,
+# both checks below need them.
+_PUSH_REFS="$(cat)"
+
+# ── Purged history (#760): never re-publish what a secret purge removed ──
+# The fleet gate (.githooks/history-gate, markers in .githooks/purged-history).
+# This repo's hooksPath is 0_git/dist/hooks, so .githooks/pre-push never runs
+# here on its own — chain to it, like pre-commit chains to .githooks/leak-scan.
+_gate="$(git rev-parse --show-toplevel)/.githooks/history-gate"
+if [ -f "$_gate" ]; then
+  printf '%s\n' "$_PUSH_REFS" | sh "$_gate" --pre-push || exit 1
+fi
+
 # ── Main-only policy: reject any push targeting a non-main ref ──────
-# stdin lines: <local ref> <local oid> <remote ref> <remote oid>
 _blocked=""
 while read -r _lref _loid _rref _roid; do
   case "$_rref" in
@@ -44,7 +56,7 @@ while read -r _lref _loid _rref _roid; do
       _blocked="${_blocked}  ${_rref#refs/heads/}\n"
       ;;
   esac
-done
+done <<< "$_PUSH_REFS"
 
 if [ -n "$_blocked" ]; then
   {

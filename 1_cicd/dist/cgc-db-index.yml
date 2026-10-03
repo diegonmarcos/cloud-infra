@@ -277,6 +277,14 @@ jobs:
           mkdir -p "$RUNNER_TEMP/octocode-home/octocode"
           echo "OCTOCODE_HOME=$RUNNER_TEMP/octocode-home/octocode" >> "$GITHUB_ENV"
       - name: "cgc-db incremental update — ${{ matrix.repo }} only (checkpoint push, no propagate)"
+        # #352/#375: STEP ceiling strictly below the 330-min JOB ceiling. When the
+        # JOB timeout fires, GitHub concludes the job (and so the whole run)
+        # CANCELLED, and cgc-db.yml's graphrag gate is `!cancelled()` — so one
+        # never-converging repo (cloud-u-android, every scheduled run since
+        # 2026-09-30) skipped GraphRAG for ALL repos, and GraphRAG nodes are the
+        # only source of kg-store `file` rows (octocode-export.py). A STEP timeout
+        # concludes FAILURE instead, which the graphrag gate already accepts.
+        timeout-minutes: 315
         # No SSH key / CGC_SSH_OPTS here (unlike the pre-matrix single job): with
         # CGC_SKIP_PROPAGATE=1 + CGC_PACKAGE_MODE=per-repo, update.sh's
         # propagate_to_host() is NEVER reached in this job (see cloud-cgc-db-update.sh),
