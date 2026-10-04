@@ -337,6 +337,43 @@ trap cleanup EXIT
 # CURRENT_CID + the EXIT trap above); the transport image is the caller's
 # call (base: drop once after staging; repo: drop after every pull — see
 # the loop below and the header comment on why that matters here).
+# VERBATIM copies of cloud-cgc-db-update.sh's lance_newest_manifest() and
+# lance_prune_old_versions() (this file runs standalone on the box, so it cannot
+# source them); cgc-db-lance-prune.test.sh asserts both copies are byte-identical.
+# Pruning superseded manifests right after each image is staged is what keeps the
+# staging tree -- and so the box's free disk -- bounded: run 37146011415 died with
+# "no space left on device" staging cloud-u-containers, whose file_metadata.lance
+# carried 3.0G of old manifests against 35M of data.
+lance_newest_manifest() { # $1 = table dir -> stdout: newest manifest file name
+  ls "$1/_versions" 2>/dev/null | awk '
+    /^[0-9]+\.manifest$/ {
+      n = $0; sub(/\.manifest$/, "", n)
+      if (length(n) == 20 && substr(n, 1, 6) == "184467") {
+        if (v2 == "" || (n "") < (v2 "")) v2 = n
+      } else if (v1 == "" || n + 0 > v1 + 0) v1 = n
+    }
+    END { if (v2 != "") print v2 ".manifest"; else if (v1 != "") print v1 ".manifest" }'
+}
+
+lance_prune_old_versions() { # $1 = octocode home (or staging tree), $2 = keep count
+  _lpo_keep="${2:-2}"; _lpo_n=0
+  for _lpo_t in "$1"/*/storage/*.lance; do
+    [ -d "$_lpo_t/_versions" ] || continue
+    _lpo_new=$(lance_newest_manifest "$_lpo_t")
+    [ -n "$_lpo_new" ] || continue
+    case "$_lpo_new" in
+      184467*) _lpo_order="sort" ;;   # V2: newest first ascending
+      *)       _lpo_order="sort -rn" ;;
+    esac
+    for _lpo_m in $(ls "$_lpo_t/_versions" | grep -E '^[0-9]+\.manifest$' | $_lpo_order | awk -v k="$_lpo_keep" 'NR > k'); do
+      [ "$_lpo_m" = "$_lpo_new" ] && continue
+      rm -f "$_lpo_t/_versions/$_lpo_m" && _lpo_n=$((_lpo_n + 1))
+    done
+  done
+  [ "$_lpo_n" -gt 0 ] && echo "[cgc-db] pruned $_lpo_n superseded lance manifest(s) under $1 (kept newest $_lpo_keep per table)"
+  :
+}
+
 stage_image() { # $1 = image ref
   CURRENT_CID=$(docker create "$1")
   docker cp "$CURRENT_CID:/octocode-db/." "$STAGING/"
@@ -384,6 +421,7 @@ _base_err=$(docker manifest inspect "$BASE_IMAGE" 2>&1 >/dev/null) || {
 docker pull -q "$BASE_IMAGE" >/dev/null
 stage_image "$BASE_IMAGE"
 docker rmi "$BASE_IMAGE" >/dev/null 2>&1 || true
+lance_prune_old_versions "$STAGING"
 echo "[cgc-db-restore-all] base staged"
 
 # The base image's config.toml is whatever the phase that seeded it happened to
@@ -438,6 +476,8 @@ for r in "$@"; do
   # wired to this script reads it.
   rm -f "$STAGING"/.cgc-manifest-*.json "$STAGING"/.cgc-index-manifest.json 2>/dev/null || true
   docker rmi "$img" >/dev/null 2>&1 || true
+  lance_prune_old_versions "$STAGING"
+  echo "[cgc-db-restore-all] after $r: staging $(du -sh "$STAGING" 2>/dev/null | cut -f1), free $(df -h "$STAGING_PARENT" 2>/dev/null | awk 'NR==2{print $4}')"
   FOUND=$((FOUND + 1))
   STAGED_REPOS="$STAGED_REPOS $r"
   # Which project dir did THIS image carry? octocode keys a project on
@@ -483,7 +523,7 @@ lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir
   _ldt_home="$1"
   for _ldt_t in "$_ldt_home"/*/storage/*.lance; do
     [ -d "$_ldt_t/_versions" ] || continue
-    _ldt_m=$(ls "$_ldt_t/_versions" 2>/dev/null | sort | head -1)
+    _ldt_m=$(lance_newest_manifest "$_ldt_t")
     [ -n "$_ldt_m" ] || continue
     # Pull every hex-run ending in .lance out of the binary manifest. `tr`, not
     # `strings`: strings is binutils and may simply be absent on a runner, and a
@@ -517,7 +557,7 @@ if [ -n "$_staging_torn" ]; then
   # only surfaces the tail of this log, so the evidence has to fit on these lines;
   # without it a refusal on the box cannot be compared with the same image's bytes.
   printf '%s\n' "$_staging_torn" | while IFS= read -r _torn_table; do
-    _torn_manifest=$(ls "$_torn_table/_versions" 2>/dev/null | sort | head -1)
+    _torn_manifest=$(lance_newest_manifest "$_torn_table")
     _torn_references=$(tr -c '0-9a-f.ln' '\n' < "$_torn_table/_versions/$_torn_manifest" 2>/dev/null \
                        | grep -E '[0-9a-f]{32,}\.lance$' | tr '\n' ' ' || true)
     echo "::error::[cgc-db-restore-all]   ${_torn_table#"$STAGING"/} newest=$_torn_manifest versions=$(ls "$_torn_table/_versions" 2>/dev/null | wc -l) data=$(ls "$_torn_table/data" 2>/dev/null | wc -l) references=[$_torn_references] data_sample=[$(ls "$_torn_table/data" 2>/dev/null | head -3 | tr '\n' ' ')]"

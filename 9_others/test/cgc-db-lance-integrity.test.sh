@@ -39,6 +39,11 @@ case "$FN" in
   *) echo "::error::could not extract lance_dangling_tables() from $UPD_SH"; exit 1 ;;
 esac
 eval "$FN"
+# lance_dangling_tables() picks the manifest via lance_newest_manifest() (both naming
+# schemes; see cgc-db-lance-prune.test.sh), so load that too, also by name.
+FN_NEWEST="$(awk '/^lance_newest_manifest\(\) \{/{f=1} f{print} f&&/^\}$/{exit}' "$UPD_SH")"
+[ -n "$FN_NEWEST" ] || { echo "::error::could not extract lance_newest_manifest() from $UPD_SH"; exit 1; }
+eval "$FN_NEWEST"
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 

@@ -317,6 +317,13 @@ jobs:
           # Propagation is centralised in the restore-all job below, which runs ONCE
           # per phase after every matrix job settles, not once per repo per job.
           CGC_SKIP_PROPAGATE: "1"
+          # #352/#375: the script's time budget, counted from its own start. MUST be
+          # the step timeout-minutes above minus room for the partial-checkpoint
+          # publish (~4G package+push): with build.json's 300 the slice outlived the
+          # 315-min step, the step timeout killed the publish, and cloud-u-android
+          # never kept a minute of progress. cgc-db-index-budget.test.sh pins
+          # budget + 25 <= step timeout.
+          CGC_BUDGET_MIN: "285"
         run: sh 1_cicd/src/ops/cloud-cgc-db-update.sh
   # ── Multi-image restore onto oci-apps: base + every per-repo image, ONCE
   # per phase. if: always() so a partial/failed matrix still propagates

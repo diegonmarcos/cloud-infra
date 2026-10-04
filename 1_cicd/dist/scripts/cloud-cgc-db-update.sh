@@ -41,6 +41,13 @@
 #    placeholder and nothing here ever holds a provider credential.
 # ──────────────────────────────────────────────────────────────────────────
 set -eu
+# Budget clock starts at SCRIPT start, not at the index loop (#352/#375). Clone +
+# mtime restore + checkpoint restore + the lance integrity scan take ~17 min for
+# cloud-u-android before the loop; anchoring the clock after them handed that repo a
+# 300-min slice inside a 315-min STEP, so the step timeout always fired first, the
+# partial checkpoint was never published, and the ratchet never advanced (was=none
+# on every run). CGC_START_TS lets a caller anchor it even earlier.
+START_TS="${CGC_START_TS:-$(date +%s)}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="${CLOUD_ROOT:-$(cd "$HERE/../../.." && pwd)}"
 BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
@@ -693,11 +700,57 @@ resolve_project_dir() {  # $1=OCTO_HOME $2=BEFORE(newline list) $3=MARKER(mtime 
 #
 # lance names _versions files u64::MAX-version, so the lexicographically FIRST
 # entry is the NEWEST version -- that is the one a reader opens.
+# The manifest a reader opens. lance has two _versions naming schemes: V2 names a
+# version u64::MAX-version (20 digits, so the SMALLEST name is the newest), V1 names
+# it plainly (the LARGEST number is the newest). `ls | sort | head -1` was right only
+# for V2 and, on a V1 table, picked the OLDEST manifest -- whose fragments compaction
+# may legitimately have removed -- and reported a healthy table as torn. It also died
+# of SIGPIPE ("sort: write error") on tables holding ~10k manifests. One awk pass,
+# string-compared (20-digit names overflow awk's doubles), handles both.
+lance_newest_manifest() { # $1 = table dir -> stdout: newest manifest file name
+  ls "$1/_versions" 2>/dev/null | awk '
+    /^[0-9]+\.manifest$/ {
+      n = $0; sub(/\.manifest$/, "", n)
+      if (length(n) == 20 && substr(n, 1, 6) == "184467") {
+        if (v2 == "" || (n "") < (v2 "")) v2 = n
+      } else if (v1 == "" || n + 0 > v1 + 0) v1 = n
+    }
+    END { if (v2 != "") print v2 ".manifest"; else if (v1 != "") print v1 ".manifest" }'
+}
+
+# Drop superseded lance MANIFESTS, keeping the newest $2 (default 2) per table.
+# octocode never cleans up old versions, and every manifest re-lists every fragment,
+# so _versions grows quadratically: measured 2026-10-04 on oci-apps,
+# cloud-u-containers' file_metadata.lance was 3.0G of _versions (8800 manifests)
+# against 35M of data. That bloat is what ran oci-apps out of disk mid-restore
+# (run 37146011415, "no space left on device" staging cloud-u-containers) and what
+# makes every pull/stage/swap slow. Old manifests serve only time travel, which
+# nothing here uses. DATA files are never touched: a fragment only an old version
+# names costs disk, but deleting one a live manifest needs would tear the table.
+lance_prune_old_versions() { # $1 = octocode home (or staging tree), $2 = keep count
+  _lpo_keep="${2:-2}"; _lpo_n=0
+  for _lpo_t in "$1"/*/storage/*.lance; do
+    [ -d "$_lpo_t/_versions" ] || continue
+    _lpo_new=$(lance_newest_manifest "$_lpo_t")
+    [ -n "$_lpo_new" ] || continue
+    case "$_lpo_new" in
+      184467*) _lpo_order="sort" ;;   # V2: newest first ascending
+      *)       _lpo_order="sort -rn" ;;
+    esac
+    for _lpo_m in $(ls "$_lpo_t/_versions" | grep -E '^[0-9]+\.manifest$' | $_lpo_order | awk -v k="$_lpo_keep" 'NR > k'); do
+      [ "$_lpo_m" = "$_lpo_new" ] && continue
+      rm -f "$_lpo_t/_versions/$_lpo_m" && _lpo_n=$((_lpo_n + 1))
+    done
+  done
+  [ "$_lpo_n" -gt 0 ] && echo "[cgc-db] pruned $_lpo_n superseded lance manifest(s) under $1 (kept newest $_lpo_keep per table)"
+  :
+}
+
 lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir per line
   _ldt_home="$1"
   for _ldt_t in "$_ldt_home"/*/storage/*.lance; do
     [ -d "$_ldt_t/_versions" ] || continue
-    _ldt_m=$(ls "$_ldt_t/_versions" 2>/dev/null | sort | head -1)
+    _ldt_m=$(lance_newest_manifest "$_ldt_t")
     [ -n "$_ldt_m" ] || continue
     # Pull every hex-run ending in .lance out of the binary manifest. `tr`, not
     # `strings`: strings is binutils and may simply be absent on a runner, and a
@@ -747,10 +800,17 @@ checkpoint_publish() {  # $1 = repo local name
     # incremental base, octocode's change-gate sees the table present and never
     # rewrites it, and the run goes green while every consumer query dies. Refuse.
     # set -eu + a bare call site means this return FAILS the job, which is the point.
+    lance_prune_old_versions "$OCTO_HOME"
     _cp_torn=$(lance_dangling_tables "$OCTO_HOME")
     if [ -n "$_cp_torn" ]; then
       echo "::error::[cgc-db] refusing to publish $1 — dangling lance manifest(s) in this home:"
-      printf '%s\n' "$_cp_torn" | sed 's|^|::error::[cgc-db]   |'
+      # Evidence per table, same shape as restore-all's refusal: run 37146011415
+      # refused cloud-data-my-ai-memory's graphrag_relationships.lance right after a
+      # clean restore + clean index, and the bare path left nothing to diagnose with.
+      printf '%s\n' "$_cp_torn" | while IFS= read -r _cp_t; do
+        _cp_m=$(lance_newest_manifest "$_cp_t")
+        echo "::error::[cgc-db]   $_cp_t newest=$_cp_m versions=$(ls "$_cp_t/_versions" 2>/dev/null | wc -l) data=$(ls "$_cp_t/data" 2>/dev/null | wc -l) references=[$(tr -c '0-9a-f.ln' '\n' < "$_cp_t/_versions/$_cp_m" 2>/dev/null | grep -E '[0-9a-f]{32,}\.lance$' | tr '\n' ' ' || true)] data_sample=[$(ls "$_cp_t/data" 2>/dev/null | head -3 | tr '\n' ' ')]"
+      done
       echo "::error::[cgc-db] a manifest naming an absent fragment is unreadable forever; the prior image on GHCR is the better artifact and is left in place."
       return 1
     fi
@@ -992,6 +1052,7 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
   # reasoning as the CGC_FORCE note above: the metadata tables gate the changed-file
   # set, so the only full-corpus path this octocode has is starting from the shared
   # base. Treat a torn checkpoint as NO checkpoint.
+  lance_prune_old_versions "$OCTO_HOME"
   _torn=$(lance_dangling_tables "$OCTO_HOME")
   if [ -n "$_torn" ]; then
     echo "::warning::[cgc-db] torn checkpoint restored from GHCR — dangling lance manifest(s):"
@@ -1302,9 +1363,11 @@ manifest_read() {  # $1 = manifest file, $2 = repo local name → stdout: record
   [ -s "$1" ] || return 0
   jq -r --arg r "$2" '.[$r] // ""' "$1" 2>/dev/null || true
 }
-BUDGET_MIN=$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")
+# CGC_BUDGET_MIN (env) overrides build.json: the CI step that runs this script knows
+# its own timeout-minutes, and the budget MUST end before it with room left for the
+# partial-checkpoint publish -- otherwise the slice never ends cleanly (see START_TS).
+BUDGET_MIN="${CGC_BUDGET_MIN:-$(jq -r '.runtime.octocode.update.max_minutes // 330' "$BJ")}"
 REPO_TIMEOUT_MIN=$(jq -r '.runtime.octocode.update.repo_timeout_min // "0"' "$BJ")
-START_TS=$(date +%s)
 PUSHED=0
 # FIX 2 guard (per-repo mode) — see seed_base_if_missing() above: only the FIRST
 # repo in this job attempts a base-image seed, even if this job indexes more than
