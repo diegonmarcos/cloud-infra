@@ -63,11 +63,12 @@ jobs:
       - name: Fetch repo inventory
         env:
           OWNER: ${{ github.repository_owner }}
+          # #480: not from the vault any more. /user/repos with private repos
+          # needs a user PAT with repo scope; CGC_GHCR_PAT is that cross-repo PAT.
+          GH_TOKEN: ${{ secrets.CGC_GHCR_PAT }}
         run: |
           set -euo pipefail
-          # Token comes from the vault, never from a file in this repo.
-          set +u; . "$HOME/git/cloud-vault/C_A0-env/dist/vault-keys-bash.env"; set -u
-          export GH_TOKEN="${GITHUB_TOKEN:?GITHUB_TOKEN missing from vault-keys-bash.env}"
+          : "${GH_TOKEN:?CGC_GHCR_PAT secret is not set on this repository}"
           page=1
           echo '[]' > /tmp/acc.json
           while :; do
