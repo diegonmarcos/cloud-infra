@@ -296,8 +296,30 @@ fi
 if [ -n "${SSH_USER_OVERRIDE:-}" ]; then
     SSH_OPTS="$SSH_OPTS -o User=${SSH_USER_OVERRIDE}"
 fi
+# Transport-level retry for the short one-shot round trips (pre-flight df,
+# prune, secrets mkdir/chmod, post-activate GC). Only exit 255 — ssh's own
+# "could not connect / connection dropped" code — is retried; any other exit
+# is the remote command's verdict and is returned as-is. Activation already
+# had its own 255-retry, but these calls did not, so a single WireGuard blip
+# from the runner (connect timeout on oci-mail, scp closed mid-transfer on
+# oci-analytics, run 37152832299, #856) failed the whole VM's ship. Every
+# caller is idempotent and none pipes stdin, so a resend is safe.
+_SSH_RETRY_ATTEMPTS="${SSH_RETRY_ATTEMPTS:-4}"
+_ssh_retry() {
+    local _t=1 _rc
+    while :; do
+        "$@" && _rc=0 || _rc=$?
+        [ "$_rc" -ne 255 ] && return "$_rc"
+        [ "$_t" -ge "$_SSH_RETRY_ATTEMPTS" ] && { log "ssh transport to ${DEPLOY_HOST} failed (255) after ${_t} attempts"; return 255; }
+        log "ssh transport to ${DEPLOY_HOST} dropped (255) — retry ${_t}/$((_SSH_RETRY_ATTEMPTS-1)) in $((10*_t))s"
+        sleep $((10*_t)); _t=$((_t+1))
+    done
+}
 ssh_vm() {
-    ssh $SSH_OPTS "$DEPLOY_HOST" "$@"
+    _ssh_retry ssh $SSH_OPTS -o ConnectTimeout=20 "$DEPLOY_HOST" "$@"
+}
+scp_vm() {
+    _ssh_retry scp $SSH_OPTS -o ConnectTimeout=20 "$@"
 }
 
 REMOTE_PATH="${DEPLOY_PATH:-\~/.config/home-manager}"

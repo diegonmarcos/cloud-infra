@@ -592,9 +592,9 @@ PREFLIGHT_EOF
         if [ -f "$DIST_DIR/.secrets" ]; then
             log "Deploying secrets to $DEPLOY_HOST"
             ssh_vm "mkdir -p ~/.config/home-manager/.secrets.d"
-            scp $SSH_OPTS "$DIST_DIR/.secrets" "$DEPLOY_HOST:~/.config/home-manager/.secrets"
+            scp_vm "$DIST_DIR/.secrets" "$DEPLOY_HOST:~/.config/home-manager/.secrets"
             if [ -d "$DIST_DIR/.secrets.d" ]; then
-                scp $SSH_OPTS -r "$DIST_DIR/.secrets.d/"* "$DEPLOY_HOST:~/.config/home-manager/.secrets.d/" 2>/dev/null || true
+                scp_vm -r "$DIST_DIR/.secrets.d/"* "$DEPLOY_HOST:~/.config/home-manager/.secrets.d/" 2>/dev/null || true
             fi
             ssh_vm "chmod 600 ~/.config/home-manager/.secrets ~/.config/home-manager/.secrets.d/* 2>/dev/null || true"
             log "Secrets deployed"
