@@ -324,7 +324,12 @@ jobs:
             # skipped, run green, consumer never rebuilt.
             # Paths are submodule-relative ("<svc>/src/..."), so the service
             # name is field 1, not field 2 as it was superproject-relative.
-            CHANGED_DIRS=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/(src/|build\.json$)' \
+            # #862: dist/ too. A push touching only a committed dist/ used to map
+            # to no service and end in verdict 'empty' (red). Shipping it is
+            # cheap and honest: the build re-renders dist/ from src/ (never
+            # deploys the committed copy) and step_verify_committed_dist fails
+            # the build if the committed dist/ is not that render.
+            CHANGED_DIRS=$(printf '%s\n' "$SUB_CHANGED" | grep -E '^[^/]+/(src/|dist/|build\.json$)' \
               | awk -F/ '{print $1}' | sort -u | tr '\n' ' ' || true)
 
             # A service can consume ANOTHER service's src file through a symlink

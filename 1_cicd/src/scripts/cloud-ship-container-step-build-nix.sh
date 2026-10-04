@@ -347,3 +347,26 @@ step_build() {
         find "$DIST_DIR" -type f | sed "s|$DIST_DIR/|  |"
     fi
 }
+
+# ── #862: committed dist/ must equal this run's render ─────────────────
+# cloud-u-containers commits each service's dist/ next to its src/. The ship
+# never deploys that copy (step_build above wipes and re-renders it), but humans,
+# agents and VM-side tools read it as "what is deployed", and a stale one was
+# what reached gcp-proxy's redis on 2026-10-04. Untracking ~1400 files across
+# the fleet would break every reader at once; this check is the smaller change:
+# after the render, any TRACKED dist/ file the render modified or dropped means
+# the commit lied about its own output. CI-only — a local build is exactly how
+# a developer refreshes dist/ before committing it.
+step_verify_committed_dist() {
+    [ -n "${CI:-}${GITHUB_ACTIONS:-}" ] || return 0
+    [ "${SHIP_ALLOW_STALE_DIST:-}" = "1" ] && { log_warn "committed-dist guard skipped (SHIP_ALLOW_STALE_DIST=1)"; return 0; }
+    git -C "$SERVICE_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+    _vcd_tracked=$(git -C "$SERVICE_DIR" ls-files -- dist 2>/dev/null)
+    [ -n "$_vcd_tracked" ] || return 0
+    _vcd_drift=$(git -C "$SERVICE_DIR" diff --name-status -- dist 2>/dev/null)
+    [ -z "$_vcd_drift" ] && { log "committed dist/ matches this run's render"; return 0; }
+    log_error "committed dist/ differs from the fresh render of src/ — commit the regenerated dist/ (./build.sh build) so the repo matches what ships:"
+    printf '%s\n' "$_vcd_drift" | sed 's|^|    |'
+    git -C "$SERVICE_DIR" --no-pager diff --stat -- dist 2>/dev/null | tail -1 | sed 's|^|    |'
+    return 1
+}

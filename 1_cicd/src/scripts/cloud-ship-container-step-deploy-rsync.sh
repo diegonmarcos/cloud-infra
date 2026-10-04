@@ -1,4 +1,4 @@
-# Step: Deploy dist/ to VM via configs image (GHCR) + rsync fallback + manifest cleanup
+# Step: Deploy this run's freshly rendered dist/ to VM via rsync + manifest cleanup
 # Sourced by cloud-ship-container-engine.sh — do not execute directly
 
 # ── Transport-error CLASSIFICATION for the secrets scp path ───────────
@@ -121,45 +121,24 @@ step_deploy() {
     [ -z "$DEPLOY_PATH" ] && { log "ERROR: deploy.remote_path not set in build.json"; return 1; }
     [ ! -d "$DIST_DIR" ] && { log "No dist/ -- run build first"; return 1; }
 
-    # ── Deploy: configs image (GHCR) + secrets (scp) — universal, all VMs ──
-    CONFIGS_IMAGE="${DOCKER_REGISTRY:-ghcr.io/diegonmarcos}/${SERVICE_NAME}-configs:latest"
-
-    log "Deploying via configs image: $CONFIGS_IMAGE"
-    # The configs image extracts with `cp -r /configs/. /out/` running as root
-    # inside the container, so every file it lands in the bind mount is
-    # root-owned. The chown that repairs that used to be the last link of an
-    # &&-chain, which meant it only ran when the whole chain succeeded — and
-    # the interesting case is precisely when it didn't. A pull or a half-done
-    # extract left root-owned files behind, then the rsync fallback (which
-    # runs as the ssh user, not root) hit them:
-    #   rsync: failed to set times on ".../.src-hash": Operation not permitted
-    #   rsync error: some files/attrs were not transferred (code 23)
-    # and the service failed to deploy. Normalising ownership unconditionally
-    # afterwards makes the fallback able to do its job, which is the entire
-    # reason a fallback exists.
+    # ── Deploy source: ONLY the dist/ this run just rendered (#862) ──
+    # This step used to `docker run` ghcr.io/<owner>/<svc>-configs:latest into
+    # $DEPLOY_PATH first and rsync dist/ afterwards. `:latest` is a mutable tag
+    # owned by whichever run pushed last (or by none, when configs-push failed —
+    # it is best-effort), so the VM briefly — or, if anything compose-up'd in
+    # between, durably — held a config this run never built. On 2026-10-04
+    # gcp-proxy's redis compose was rewritten at 12:25:06Z from the 11:06
+    # redis-configs image, two minutes before the run's own nix build (12:27Z).
+    # step_build_nix wipes and re-renders $DIST_DIR in this same process, so it
+    # is the one artifact that is provably this run's: deploy that, only that.
     # Deploying is the inverse of retiring: clear the marker `build.sh retire`
     # left behind, or vm-images-pull-up.sh keeps skipping this service and the
     # deploy silently does nothing on the host.
     ssh_with_retry "$DEPLOY_HOST" "rm -f $DEPLOY_PATH/.retired" >/dev/null 2>&1 || true
-
-    ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown \$(whoami):\$(whoami) $DEPLOY_PATH && \
-        docker pull $CONFIGS_IMAGE && \
-        docker run --rm -v $DEPLOY_PATH:/out $CONFIGS_IMAGE" && {
-        _configs_ok=1
-    } || {
-        _configs_ok=0
-    }
-    ssh_with_retry "$DEPLOY_HOST" "sudo chown -R \$(whoami):\$(whoami) $DEPLOY_PATH" >/dev/null 2>&1 \
+    # Earlier configs-image extractions ran as root inside the container and
+    # may have left root-owned files that the ssh user's rsync cannot update.
+    ssh_with_retry "$DEPLOY_HOST" "sudo mkdir -p $DEPLOY_PATH && sudo chown -R \$(whoami):\$(whoami) $DEPLOY_PATH" >/dev/null 2>&1 \
         || log_warn "could not normalise ownership of $DEPLOY_PATH — a root-owned leftover will fail rsync"
-
-    if [ "$_configs_ok" = "1" ]; then
-        log "Deployed configs to $DEPLOY_HOST:$DEPLOY_PATH (via configs image)"
-    else
-        log_warn "Configs image deploy failed — falling back to rsync"
-        # Rsync fallback (only if configs image unavailable, e.g. first-ever ship)
-        log "Deploying dist/ -> $DEPLOY_HOST:$DEPLOY_PATH (rsync fallback)"
-        rsync_with_retry -az --compress-level=9 --checksum "$DIST_DIR/" "$DEPLOY_HOST:$DEPLOY_PATH/" 2>/dev/null || true
-    fi
 
     # Secrets: ALWAYS via scp (never in GHCR image).
     # See scp_secret above for why these are classified and fatal.

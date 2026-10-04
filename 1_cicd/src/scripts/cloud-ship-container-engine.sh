@@ -606,6 +606,11 @@ _ship_build_phase() {
     # ── Phase 1: BUILD (sequential — nix build produces dist/) ──
     rm -f "$SERVICE_DIR/.image-changed"
     step_build
+    # #862: fail the build (before any push/deploy) when the committed dist/
+    # is not what src/ renders to. Guarded: an older builder image may lack it.
+    if command -v step_verify_committed_dist >/dev/null 2>&1; then
+        step_verify_committed_dist || exit 1
+    fi
 
     # ── Phase 2: 4 PARALLEL JOBS (docker + configs + compose-build + secrets) ──
     log "═══ Parallel: docker + configs-push + compose-build + secrets ═══"
