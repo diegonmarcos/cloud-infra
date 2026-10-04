@@ -317,10 +317,13 @@ step_build() {
     # package directory), and sha256sum errors with "Is a directory", which
     # makes xargs return 123 and fails the whole build.
     if [ -n "$DOCKER_IMAGE" ]; then
-        find "$SRC_DIR" \
-            \( -name '*.ts' -o -name '*.js' -o -name 'Dockerfile' -o -name 'package.json' \) \
-            -type f 2>/dev/null \
-            | sort | xargs sha256sum 2>/dev/null | sha256sum | cut -c1-16 > "$DIST_DIR/.src-hash"
+        # Deterministic: hash RELATIVE paths over the git-tracked file list
+        # (sorted, C locale), so the value is independent of the checkout
+        # location and of untracked build outputs (node_modules/, dist JS...).
+        # Falls back to find (pruning node_modules) outside a git work tree.
+        src_hash_file_list "$SRC_DIR" \
+            | (cd "$SRC_DIR" && xargs -r -d '\n' sha256sum --) 2>/dev/null \
+            | sha256sum | cut -c1-16 > "$DIST_DIR/.src-hash"
     fi
 
     # Copy extra source files for on-VM builds (e.g. Rust source for rig)
@@ -357,6 +360,20 @@ step_build() {
 # after the render, any TRACKED dist/ file the render modified or dropped means
 # the commit lied about its own output. CI-only — a local build is exactly how
 # a developer refreshes dist/ before committing it.
+# Declared .src-hash input set: tracked *.ts/*.js/Dockerfile/package.json under
+# $1, as paths relative to $1, LC_ALL=C sorted.
+src_hash_file_list() {
+    _shf_dir="$1"
+    if git -C "$_shf_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        git -C "$_shf_dir" ls-files -z -- '*.ts' '*.js' 'Dockerfile' '**/Dockerfile' 'package.json' '**/package.json' \
+            | tr '\0' '\n'
+    else
+        (cd "$_shf_dir" && find . -name node_modules -prune -o \
+            \( -name '*.ts' -o -name '*.js' -o -name 'Dockerfile' -o -name 'package.json' \) -type f -print \
+            | sed 's|^\./||')
+    fi | grep -v '/node_modules/\|^node_modules/' | LC_ALL=C sort -u
+}
+
 step_verify_committed_dist() {
     [ -n "${CI:-}${GITHUB_ACTIONS:-}" ] || return 0
     [ "${SHIP_ALLOW_STALE_DIST:-}" = "1" ] && { log_warn "committed-dist guard skipped (SHIP_ALLOW_STALE_DIST=1)"; return 0; }
