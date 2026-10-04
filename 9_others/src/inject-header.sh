@@ -17,7 +17,7 @@
 # ║                                                                  ║
 # ║ Env inputs:                                                      ║
 # ║   ENGINE_NAME  (rel path to calling engine script)               ║
-# ║   REPO_ROOT    (abs path to repo root)                           ║
+# ║   REPO_ROOT    (abs path to repo root; banner paths are relative)║
 # ╚══════════════════════════════════════════════════════════════════╝
 
 # Guard against double-sourcing.
@@ -36,6 +36,44 @@ _ih_repo_root() {
         return
     fi
     cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd
+}
+
+# Repo-relative label for {{SOURCE}}. The banner must never carry an absolute
+# checkout path: dist/ is committed and compared byte-for-byte against a CI
+# render (step_verify_committed_dist), so `/root/git/...` locally vs
+# `/home/runner/work/...` in CI is a spurious diff.
+#   1. src in ANOTHER git repo than this lib (a container service: a_solutions/
+#      is its own cloud-u-containers checkout, nested in CI, standalone
+#      locally) → relative to THAT repo's toplevel. Neither REPO_ROOT nor the
+#      checkout dir name can then leak in.
+#   2. otherwise the historical strip of REPO_ROOT (unchanged, so every banner
+#      that was already relative stays byte-identical), retried on physical
+#      paths;
+#   3. last resort: the bare basename — never an absolute path.
+_ih_rel_src() {
+    local src="$1" root rel dir top lib_top proot
+    dir="$(cd "$(dirname "$src")" 2>/dev/null && pwd -P)" || dir=""
+    if [ -n "$dir" ]; then
+        top="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)" || top=""
+        [ -n "$top" ] && top="$(cd "$top" && pwd -P)"
+        lib_top="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null)" || lib_top=""
+        [ -n "$lib_top" ] && lib_top="$(cd "$lib_top" && pwd -P)"
+        if [ -n "$top" ] && [ "$top" != "$lib_top" ]; then
+            if [ "$dir" = "$top" ]; then echo "${src##*/}"; else echo "${dir#$top/}/${src##*/}"; fi
+            return
+        fi
+    fi
+    root="$(_ih_repo_root)"
+    rel="${src#$root/}"
+    case "$rel" in /*) ;; *) echo "$rel"; return ;; esac
+    if [ -n "$dir" ]; then
+        proot="$(cd "$root" 2>/dev/null && pwd -P)" || proot=""
+        if [ -n "$proot" ] && [ "$dir" != "$proot" ]; then
+            rel="${dir#$proot/}/${src##*/}"
+            case "$rel" in /*) ;; *) echo "$rel"; return ;; esac
+        fi
+    fi
+    echo "${src##*/}"
 }
 
 _ih_engine() {
@@ -212,7 +250,7 @@ _ih_copy_one() {
     local repo_root engine rel_src prefix first_line
     repo_root="$(_ih_repo_root)"
     engine="$(_ih_engine)"
-    rel_src="${src#$repo_root/}"
+    rel_src="$(_ih_rel_src "$src")"
 
     mkdir -p "$(dirname "$dest")"
 
@@ -289,7 +327,10 @@ stamp_header_inplace() {
     [ -f "$target" ] || return 0
     repo_root="$(_ih_repo_root)"
     engine="$(_ih_engine)"
-    rel_src="${virtual_src#$repo_root/}"
+    case "$virtual_src" in
+        /*) rel_src="$(_ih_rel_src "$virtual_src")" ;;
+        *)  rel_src="$virtual_src" ;;
+    esac
 
     # Skip rules apply to in-place stamping too.
     if _ih_should_skip "$target"; then
