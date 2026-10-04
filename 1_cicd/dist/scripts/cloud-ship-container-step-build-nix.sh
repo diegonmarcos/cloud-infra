@@ -383,7 +383,7 @@ src_hash_file_list() {
         (cd "$_shf_dir" && find . -name node_modules -prune -o \
             \( -name '*.ts' -o -name '*.js' -o -name 'Dockerfile' -o -name 'package.json' \) -type f -print \
             | sed 's|^\./||')
-    fi | grep -v '/node_modules/\|^node_modules/' | LC_ALL=C sort -u
+    fi | { grep -v '/node_modules/\|^node_modules/' || true; } | LC_ALL=C sort -u
 }
 
 step_verify_committed_dist() {

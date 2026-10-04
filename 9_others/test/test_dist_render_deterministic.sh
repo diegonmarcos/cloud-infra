@@ -13,12 +13,13 @@
 # one also carrying an untracked node_modules/ + stray .js) and diffs dist/.
 #   CONTAINERS_REPO  cloud-u-containers checkout (default: ../cloud-u-containers)
 #   DET_SERVICES     services to render (default: a Type-A service-shipped
-#                    Dockerfile one and a .src-hash one)
+#                    Dockerfile one, a .src-hash one, and one with an EMPTY
+#                    hash input list — that must not fail the build)
 # Needs nix; skips (exit 0) when nix or the containers repo is unavailable.
 set -eu
 REPO_ROOT="$(_d="$(cd "$(dirname "$0")" && pwd)"; while [ "$_d" != "/" ] && [ ! -e "$_d/.git" ]; do _d="$(dirname "$_d")"; done; printf '%s' "$_d")"
 CU="${CONTAINERS_REPO:-$REPO_ROOT/../cloud-u-containers}"
-SERVICES="${DET_SERVICES:-infra-sec_caddy infra-api_c3-public-api}"
+SERVICES="${DET_SERVICES:-infra-sec_caddy infra-api_c3-public-api infra-obs_ntfy}"
 command -v nix >/dev/null 2>&1 || { echo "  skip (no nix)"; exit 0; }
 [ -d "$CU/.git" ] || { echo "  skip (no containers repo at $CU)"; exit 0; }
 
