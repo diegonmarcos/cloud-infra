@@ -3286,7 +3286,7 @@
           "dns": "redis.app",
           "public": false,
           "proxy": null,
-          "healthcheck": "redis-cli ping",
+          "healthcheck": "redis-cli -a \"$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG",
           "volumes": [
             "/data/redis:/data"
           ],

@@ -574,7 +574,7 @@
         "app": 6379
       },
       "vm": "gcp-proxy",
-      "healthcheck": "redis-cli ping",
+      "healthcheck": "redis-cli -a \"$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG",
       "description": "In-memory data store",
       "api": {
         "has_api": false,

@@ -55,7 +55,7 @@
       "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
       "port": 6379,
       "dns": "redis.app",
-      "healthcheck": "redis-cli ping",
+      "healthcheck": "redis-cli -a \"$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG",
       "volumes": [
         "/data/redis:/data"
       ],
@@ -771,7 +771,7 @@
         "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
         "port": 6379,
         "dns": "redis.app",
-        "healthcheck": "redis-cli ping",
+        "healthcheck": "redis-cli -a \"$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG",
         "volumes": [
           "/data/redis:/data"
         ],
@@ -1458,7 +1458,7 @@
           "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
           "port": 6379,
           "dns": "redis.app",
-          "healthcheck": "redis-cli ping",
+          "healthcheck": "redis-cli -a \"$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG",
           "volumes": [
             "/data/redis:/data"
           ],
