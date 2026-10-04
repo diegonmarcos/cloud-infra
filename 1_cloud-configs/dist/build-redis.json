@@ -29,7 +29,7 @@
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/redis",
   "container": {
     "container_name": "redis",
-    "image": "redis:alpine",
+    "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
     "port": 6379,
     "port_env": null,
     "dns": "redis.app",
@@ -1690,32 +1690,6 @@
         "base_path": "/api/v1",
         "display_name": "HedgeDoc",
         "description": "Collaborative markdown editor with REST API.",
-        "auth": "bearer"
-      }
-    },
-    "paca": {
-      "ip": "10.0.0.6",
-      "ports": {
-        "gateway": 8095,
-        "api": 8080,
-        "realtime": 3001,
-        "db": 5432,
-        "valkey": 6379
-      },
-      "vm": "oci-apps",
-      "healthcheck": "wget -q --spider http://localhost:8080/api/healthz || exit 1",
-      "domain": "paca.diegonmarcos.com",
-      "description": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1).",
-      "api": {
-        "has_api": true,
-        "has_web_ui": true,
-        "api_path": "/api",
-        "api_url": "https://paca.diegonmarcos.com/api",
-        "healthcheck_paths": [],
-        "type": "custom-rest",
-        "base_path": "/api",
-        "display_name": "Paca",
-        "description": "AI-native project management REST API.",
         "auth": "bearer"
       }
     },

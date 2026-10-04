@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 318,
-    "edges": 436,
+    "nodes": 309,
+    "edges": 425,
     "by_table": {
       "vm": 4,
-      "service": 73,
-      "container": 94,
-      "domain": 43,
+      "service": 72,
+      "container": 88,
+      "domain": 42,
       "repo": 3,
-      "module": 73,
+      "module": 72,
       "package": 28
     }
   },
@@ -658,7 +658,7 @@
       "key": "container:redis",
       "properties": {
         "name": "redis",
-        "image": "redis:alpine",
+        "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
         "role": "app",
         "port": 6379,
         "public": false
@@ -2094,92 +2094,6 @@
     },
     {
       "table": "service",
-      "id": "paca",
-      "key": "service:paca",
-      "properties": {
-        "name": "paca",
-        "category": "app",
-        "description": "Paca — AI-native open-source project management (Jira/Trello alternative). Core stack: Go API + React web + Socket.IO realtime + Postgres + Valkey, behind an nginx gateway. MinIO + ai-agent intentionally dropped (S3 = OCI; no LLM agent in v1).",
-        "domain": "paca.diegonmarcos.com",
-        "port": 8095,
-        "vm": "oci-apps",
-        "folder": "user-prod_paca"
-      }
-    },
-    {
-      "table": "container",
-      "id": "paca_gateway",
-      "key": "container:paca_gateway",
-      "properties": {
-        "name": "paca-gateway",
-        "image": "nginx:1.27-alpine",
-        "role": "gateway",
-        "port": 8095,
-        "public": true
-      }
-    },
-    {
-      "table": "container",
-      "id": "paca_api",
-      "key": "container:paca_api",
-      "properties": {
-        "name": "paca-api",
-        "image": "pacaai/paca-api:latest",
-        "role": "api",
-        "port": 8080,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "paca_web",
-      "key": "container:paca_web",
-      "properties": {
-        "name": "paca-web",
-        "image": "pacaai/paca-web:latest",
-        "role": "web",
-        "port": null,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "paca_realtime",
-      "key": "container:paca_realtime",
-      "properties": {
-        "name": "paca-realtime",
-        "image": "pacaai/paca-realtime:latest",
-        "role": "realtime",
-        "port": 3001,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "paca_valkey",
-      "key": "container:paca_valkey",
-      "properties": {
-        "name": "paca-valkey",
-        "image": "valkey/valkey:8-alpine",
-        "role": "valkey",
-        "port": 6379,
-        "public": false
-      }
-    },
-    {
-      "table": "container",
-      "id": "paca_postgres",
-      "key": "container:paca_postgres",
-      "properties": {
-        "name": "paca-postgres",
-        "image": "postgres:16-alpine",
-        "role": "db",
-        "port": 5432,
-        "public": false
-      }
-    },
-    {
-      "table": "service",
       "id": "send",
       "key": "service:send",
       "properties": {
@@ -2586,14 +2500,6 @@
       "key": "domain:app_diegonmarcos_com/hedgedoc",
       "properties": {
         "fqdn": "app.diegonmarcos.com/hedgedoc"
-      }
-    },
-    {
-      "table": "domain",
-      "id": "paca_diegonmarcos_com",
-      "key": "domain:paca_diegonmarcos_com",
-      "properties": {
-        "fqdn": "paca.diegonmarcos.com"
       }
     },
     {
@@ -3378,17 +3284,6 @@
         "repo": "cloud",
         "category": "app",
         "service": "hedgedoc"
-      }
-    },
-    {
-      "table": "module",
-      "id": "user_prod_paca",
-      "key": "module:user_prod_paca",
-      "properties": {
-        "name": "user-prod_paca",
-        "repo": "cloud",
-        "category": "app",
-        "service": "paca"
       }
     },
     {
@@ -4995,67 +4890,6 @@
     },
     {
       "table": "hosted_on",
-      "from": "service:paca",
-      "to": "vm:oci_apps",
-      "key": "service:paca->hosted_on->vm:oci_apps",
-      "properties": {}
-    },
-    {
-      "table": "runs_container",
-      "from": "service:paca",
-      "to": "container:paca_gateway",
-      "key": "service:paca->runs_container->container:paca_gateway",
-      "properties": {
-        "role": "gateway"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:paca",
-      "to": "container:paca_api",
-      "key": "service:paca->runs_container->container:paca_api",
-      "properties": {
-        "role": "api"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:paca",
-      "to": "container:paca_web",
-      "key": "service:paca->runs_container->container:paca_web",
-      "properties": {
-        "role": "web"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:paca",
-      "to": "container:paca_realtime",
-      "key": "service:paca->runs_container->container:paca_realtime",
-      "properties": {
-        "role": "realtime"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:paca",
-      "to": "container:paca_valkey",
-      "key": "service:paca->runs_container->container:paca_valkey",
-      "properties": {
-        "role": "valkey"
-      }
-    },
-    {
-      "table": "runs_container",
-      "from": "service:paca",
-      "to": "container:paca_postgres",
-      "key": "service:paca->runs_container->container:paca_postgres",
-      "properties": {
-        "role": "db"
-      }
-    },
-    {
-      "table": "hosted_on",
       "from": "service:send",
       "to": "vm:oci_apps",
       "key": "service:send->hosted_on->vm:oci_apps",
@@ -5511,15 +5345,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:paca",
-      "to": "service:caddy",
-      "key": "service:paca->proxied_by->service:caddy",
-      "properties": {
-        "domain": "paca.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:send",
       "to": "service:caddy",
       "key": "service:send->proxied_by->service:caddy",
@@ -5849,13 +5674,6 @@
       "from": "domain:app_diegonmarcos_com/hedgedoc",
       "to": "service:hedgedoc",
       "key": "domain:app_diegonmarcos_com/hedgedoc->routes_to->service:hedgedoc",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:paca_diegonmarcos_com",
-      "to": "service:paca",
-      "key": "domain:paca_diegonmarcos_com->routes_to->service:paca",
       "properties": {}
     },
     {
@@ -6836,20 +6654,6 @@
       "from": "module:user_prod_hedgedoc",
       "to": "service:hedgedoc",
       "key": "module:user_prod_hedgedoc->implements->service:hedgedoc",
-      "properties": {}
-    },
-    {
-      "table": "belongs_to_repo",
-      "from": "module:user_prod_paca",
-      "to": "repo:cloud",
-      "key": "module:user_prod_paca->belongs_to_repo->repo:cloud",
-      "properties": {}
-    },
-    {
-      "table": "implements",
-      "from": "module:user_prod_paca",
-      "to": "service:paca",
-      "key": "module:user_prod_paca->implements->service:paca",
       "properties": {}
     },
     {

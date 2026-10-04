@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2879,
+    "files": 2881,
     "by_lang": {
-      "sh": 141,
-      "nix": 158,
+      "sh": 140,
+      "nix": 156,
       "py": 857,
-      "ts": 1127,
-      "js": 62,
+      "ts": 1131,
+      "js": 63,
       "rust": 534
     },
     "by_role": {
-      "shell": 131,
+      "shell": 130,
       "nix-module": 14,
       "python": 850,
-      "module": 686,
-      "file": 308,
+      "module": 689,
+      "file": 309,
       "script": 8,
-      "flake": 73,
-      "compose": 71,
+      "flake": 72,
+      "compose": 70,
       "entrypoint": 48,
-      "mcp-tool": 106,
+      "mcp-tool": 107,
       "workflow-dag": 2,
       "rust-module": 529,
       "hook": 53
@@ -2074,6 +2074,32 @@
         "getVmStatus(vmId: string)",
         "getReport(reportType: string)",
         "getSecretsStatus(service?: string)"
+      ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/gha-policy.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validRepo",
+        "validId",
+        "validArtifactName",
+        "safeRelPath",
+        "planInline",
+        "rerunnable",
+        "ARTIFACT_MAX_BYTES",
+        "ARTIFACT_INLINE_MAX_BYTES",
+        "ARTIFACT_FILE_MAX_BYTES",
+        "ArtifactFile"
+      ],
+      "imports": [],
+      "symbols": [
+        "validRepo(repo: string)",
+        "validId(id: string)",
+        "validArtifactName(name: string)",
+        "safeRelPath(p: string)",
+        "planInline(files: ArtifactFile[], total = ARTIFACT_INLINE_MAX_BYTES, perFile = ARTIFACT_FILE_MAX_BYTES)",
+        "rerunnable(runStatus: string | undefined)"
       ]
     },
     {
@@ -4340,6 +4366,11 @@
         "zod",
         "../../shared/libs/exec.js",
         "../../shared/libs/ops.js",
+        "../../shared/libs/audit.js",
+        "../../shared/libs/gha-policy.js",
+        "node:fs/promises",
+        "node:os",
+        "node:path",
         "../../shared/libs/config.js"
       ],
       "symbols": [
@@ -4917,6 +4948,32 @@
       ]
     },
     {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/gha-policy.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validRepo",
+        "validId",
+        "validArtifactName",
+        "safeRelPath",
+        "planInline",
+        "rerunnable",
+        "ARTIFACT_MAX_BYTES",
+        "ARTIFACT_INLINE_MAX_BYTES",
+        "ARTIFACT_FILE_MAX_BYTES",
+        "ArtifactFile"
+      ],
+      "imports": [],
+      "symbols": [
+        "validRepo(repo: string)",
+        "validId(id: string)",
+        "validArtifactName(name: string)",
+        "safeRelPath(p: string)",
+        "planInline(files: ArtifactFile[], total = ARTIFACT_INLINE_MAX_BYTES, perFile = ARTIFACT_FILE_MAX_BYTES)",
+        "rerunnable(runStatus: string | undefined)"
+      ]
+    },
+    {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/health-match.ts",
       "lang": "ts",
       "role": "module",
@@ -5484,6 +5541,17 @@
         "envLine(e: string)",
         "shq(v: string)"
       ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-gha-policy.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "./shared/libs/gha-policy.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/test-vm-files-policy.mjs",
@@ -16714,6 +16782,7 @@
         "VOLUME_MIN_AGE_DAYS",
         "DISPATCH_CONTAINERS",
         "DISPATCH_ROOT",
+        "REAP_SCRIPT",
         "LOG_RETENTION_DAYS",
         "ALERT_FREE_GB",
         "NTFY_URL",
@@ -18311,6 +18380,32 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/gha-policy.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validRepo",
+        "validId",
+        "validArtifactName",
+        "safeRelPath",
+        "planInline",
+        "rerunnable",
+        "ARTIFACT_MAX_BYTES",
+        "ARTIFACT_INLINE_MAX_BYTES",
+        "ARTIFACT_FILE_MAX_BYTES",
+        "ArtifactFile"
+      ],
+      "imports": [],
+      "symbols": [
+        "validRepo(repo: string)",
+        "validId(id: string)",
+        "validArtifactName(name: string)",
+        "safeRelPath(p: string)",
+        "planInline(files: ArtifactFile[], total = ARTIFACT_INLINE_MAX_BYTES, perFile = ARTIFACT_FILE_MAX_BYTES)",
+        "rerunnable(runStatus: string | undefined)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/health-match.ts",
       "lang": "ts",
       "role": "module",
@@ -19590,6 +19685,32 @@
         "getVmStatus(vmId: string)",
         "getReport(reportType: string)",
         "getSecretsStatus(service?: string)"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/gha-policy.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "validRepo",
+        "validId",
+        "validArtifactName",
+        "safeRelPath",
+        "planInline",
+        "rerunnable",
+        "ARTIFACT_MAX_BYTES",
+        "ARTIFACT_INLINE_MAX_BYTES",
+        "ARTIFACT_FILE_MAX_BYTES",
+        "ArtifactFile"
+      ],
+      "imports": [],
+      "symbols": [
+        "validRepo(repo: string)",
+        "validId(id: string)",
+        "validArtifactName(name: string)",
+        "safeRelPath(p: string)",
+        "planInline(files: ArtifactFile[], total = ARTIFACT_INLINE_MAX_BYTES, perFile = ARTIFACT_FILE_MAX_BYTES)",
+        "rerunnable(runStatus: string | undefined)"
       ]
     },
     {
@@ -75206,128 +75327,6 @@
         "srcDir",
         "templates",
         "composeSpec",
-        "title"
-      ]
-    },
-    {
-      "path": "user-prod_paca/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "rewrite_compose_image_refs()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "declared_container_names()",
-        "ssh_with_retry()",
-        "ssh_run_detached()",
-        "rsync_with_retry()",
-        "_ship_build_phase()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_config()",
-        "get_config_array()",
-        "get_lifecycle()",
-        "detect_layout()",
-        "rewrite_compose_image_refs()",
-        "log()",
-        "log_warn()",
-        "log_error()",
-        "declared_container_names()",
-        "ssh_with_retry()",
-        "ssh_run_detached()",
-        "rsync_with_retry()",
-        "_ship_build_phase()"
-      ]
-    },
-    {
-      "path": "user-prod_paca/src/compose.nix",
-      "lang": "nix",
-      "role": "compose",
-      "exports": [
-        "buildJson",
-        "container",
-        "base_domain"
-      ],
-      "imports": [],
-      "symbols": [
-        "c",
-        "domain",
-        "publicUrl",
-        "gwPort",
-        "dbUser",
-        "dbName",
-        "databaseUrl",
-        "redisUrl",
-        "mem",
-        "services",
-        "postgres",
-        "image",
-        "container_name",
-        "networks",
-        "restart",
-        "env_file",
-        "environment",
-        "volumes",
-        "healthcheck",
-        "valkey",
-        "command",
-        "api",
-        "ENV",
-        "PORT",
-        "DATABASE_URL",
-        "REDIS_URL",
-        "JWT_ACCESS_TTL",
-        "JWT_REFRESH_TTL",
-        "JWT_REFRESH_SESSION_TTL",
-        "COOKIE_SECURE",
-        "ADMIN_USERNAME",
-        "STORAGE_PROVIDER",
-        "STORAGE_REGION",
-        "STORAGE_BUCKET",
-        "STORAGE_USE_SSL",
-        "STORAGE_PUBLIC_URL",
-        "PUBLIC_URL",
-        "PLUGINS_WASM_DIR",
-        "PLUGINS_FRONTEND_DIR",
-        "PLUGINS_MCP_DIR"
-      ]
-    },
-    {
-      "path": "user-prod_paca/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [
-        "description",
-        "nixpkgs"
-      ],
-      "imports": [
-        "../../_shared/engine.nix",
-        "./compose.nix",
-        "../_shared/engine.nix",
-        "compose.nix"
-      ],
-      "symbols": [
-        "description",
-        "outputs",
-        "forAllSystems",
-        "buildJson",
-        "container",
-        "engine",
-        "lib",
-        "base_domain",
-        "packages",
-        "pkgs",
-        "default",
-        "srcDir",
-        "templates",
-        "composeSpec",
-        "extraAssets",
         "title"
       ]
     },

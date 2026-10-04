@@ -126,10 +126,6 @@
       "url": "https://app.diegonmarcos.com/hedgedoc/"
     },
     {
-      "service": "paca",
-      "url": "https://paca.diegonmarcos.com/api/healthz"
-    },
-    {
       "service": "send",
       "url": "https://send.diegonmarcos.com/__lbheartbeat__"
     },
@@ -262,10 +258,6 @@
     {
       "service": "hedgedoc",
       "domain": "app.diegonmarcos.com/hedgedoc"
-    },
-    {
-      "service": "paca",
-      "domain": "paca.diegonmarcos.com"
     },
     {
       "service": "send",
@@ -404,10 +396,6 @@
     {
       "service": "hedgedoc",
       "domain": "app.diegonmarcos.com/hedgedoc"
-    },
-    {
-      "service": "paca",
-      "domain": "paca.diegonmarcos.com"
     },
     {
       "service": "send",
@@ -1338,22 +1326,6 @@
         "path": "/"
       }
     },
-    "paca": {
-      "name": "paca",
-      "vm": "oci-A1-f_0",
-      "domain": "paca.diegonmarcos.com",
-      "enabled": true,
-      "category": "app",
-      "ports": {
-        "gateway": 8095,
-        "api": 8080,
-        "realtime": 3001,
-        "db": 5432
-      },
-      "health": {
-        "path": "/api/healthz"
-      }
-    },
     "revealmd": {
       "name": "revealmd",
       "vm": "oci-A1-f_0",
@@ -1965,40 +1937,6 @@
       "dns": "hedgedoc-db.app"
     },
     {
-      "service": "paca",
-      "dns": "paca.app"
-    },
-    {
-      "service": "paca",
-      "container": "gateway",
-      "dns": "paca.app"
-    },
-    {
-      "service": "paca",
-      "container": "api",
-      "dns": "paca-api.app"
-    },
-    {
-      "service": "paca",
-      "container": "web",
-      "dns": "paca-web.app"
-    },
-    {
-      "service": "paca",
-      "container": "realtime",
-      "dns": "paca-realtime.app"
-    },
-    {
-      "service": "paca",
-      "container": "valkey",
-      "dns": "paca-valkey.app"
-    },
-    {
-      "service": "paca",
-      "container": "db",
-      "dns": "paca-postgres.app"
-    },
-    {
       "service": "revealmd",
       "dns": "revealmd.app"
     },
@@ -2098,14 +2036,6 @@
       "port": 5439,
       "db_name": "hedgedoc",
       "db_user": "hedgedoc"
-    },
-    {
-      "service": "paca",
-      "container": "db",
-      "engine": "postgres",
-      "port": 5432,
-      "db_name": "paca",
-      "db_user": "paca"
     }
   ],
   "topology": {
@@ -2194,7 +2124,6 @@
           "filebrowser",
           "grist",
           "hedgedoc",
-          "paca",
           "revealmd",
           "send",
           "vaultwarden"
@@ -3130,22 +3059,6 @@
         },
         "health": {
           "path": "/"
-        }
-      },
-      "paca": {
-        "name": "paca",
-        "vm": "oci-A1-f_0",
-        "domain": "paca.diegonmarcos.com",
-        "enabled": true,
-        "category": "app",
-        "ports": {
-          "gateway": 8095,
-          "api": 8080,
-          "realtime": 3001,
-          "db": 5432
-        },
-        "health": {
-          "path": "/api/healthz"
         }
       },
       "revealmd": {

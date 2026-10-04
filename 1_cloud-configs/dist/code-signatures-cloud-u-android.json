@@ -6,31 +6,31 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20484,
+    "files": 20428,
     "by_lang": {
       "py": 99,
-      "sh": 377,
-      "kotlin": 10368,
+      "sh": 358,
+      "kotlin": 10372,
       "java": 622,
       "ts": 8413,
-      "nix": 65,
-      "js": 453,
+      "nix": 26,
+      "js": 451,
       "rust": 87
     },
     "by_role": {
-      "script": 198,
-      "shell": 272,
+      "script": 190,
+      "shell": 261,
       "java": 621,
       "entrypoint": 23,
       "module": 6356,
       "compose": 1,
-      "flake": 24,
-      "kotlin": 10366,
+      "flake": 22,
+      "kotlin": 10370,
       "python": 36,
-      "nix-module": 40,
-      "file": 2257,
       "rust-module": 87,
+      "file": 2255,
       "hook": 150,
+      "nix-module": 3,
       "mcp-tool": 53
     }
   },
@@ -9313,6 +9313,7 @@
         "AccountFleet"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.fleetconfig.FleetPolicy",
         "android.content.Context",
         "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.appstore.StoreStages",
@@ -9328,8 +9329,8 @@
         "body(subtree: JSONObject)",
         "bodies(items: List<Pair<String, Any>>, server: JSONObject?)",
         "derive(body: JSONObject?, a: VaultCockpit.AgentAuth?, schema: (String)",
-        "isSecret(m: FleetConfig.Manifest, path: String)",
-        "driftApps(cockpit: List<AccountDrift.App>, m: FleetConfig.Manifest, labels: Map<String, String>)",
+        "isSecret(m: FleetPolicy.Manifest, path: String)",
+        "driftApps(cockpit: List<AccountDrift.App>, m: FleetPolicy.Manifest, labels: Map<String, String>)",
         "manifest(ctx: Context)",
         "fleetApps()",
         "installed(ctx: Context, pkg: String)",
@@ -9339,7 +9340,7 @@
         "push(ctx: Context, items: List<Pair<String, Any>>, server: JSONObject?)",
         "line(id: String, r: FleetConfig.Reply)",
         "refusedOf(j: JSONObject)",
-        "plan(m: FleetConfig.Manifest, declared: JSONObject?, labels: Map<String, String>, installed: (String)",
+        "plan(m: FleetPolicy.Manifest, declared: JSONObject?, labels: Map<String, String>, installed: (String)",
         "sha(o: JSONObject)",
         "journal(ctx: Context)",
         "plan(ctx: Context, declared: JSONObject?)",
@@ -12826,6 +12827,7 @@
         "AccountFleetTest"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.fleetconfig.FleetPolicy",
         "android.app.Application",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.superapp.core.FleetConfig",
@@ -12884,6 +12886,7 @@
         "AccountRuntimeCoverageTest"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.fleetconfig.FleetPolicy",
         "android.app.Application",
         "com.diegonmarcos.superapp.profile.AccountRuntime.AppRead",
         "com.diegonmarcos.superapp.profile.AccountRuntime.Status",
@@ -13037,6 +13040,8 @@
         "FleetConfigTest"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.fleetconfig.FleetPolicy",
+        "com.diegonmarcos.superapp.fleetconfig.FleetPolicyEngine",
         "android.app.Application",
         "android.content.Context",
         "android.os.Bundle",
@@ -13059,7 +13064,7 @@
       "symbols": [
         "phone(name: String)",
         "prefs(phone: String, file: String)",
-        "configure(phone: String, app: FleetConfig.App)",
+        "configure(phone: String, app: FleetPolicy.App)",
         "class FleetConfigTest"
       ]
     },
@@ -15414,1732 +15419,6 @@
         "class HostField",
         "class Bar",
         "class Editor"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "log()",
-        "log_info()",
-        "log_success()",
-        "log_warn()",
-        "log_error()",
-        "log_header()",
-        "_epoch_ms()",
-        "_fmt_duration()",
-        "_perf_dots()",
-        "perf_start()",
-        "perf_step()",
-        "perf_end()",
-        "check_nix()",
-        "check_home_manager()",
-        "publish_cloud_data_logs()",
-        "termux_declared_packages()",
-        "termux_flake_attr()",
-        "cmd_switch()",
-        "cmd_update()",
-        "cmd_show()",
-        "cmd_build()",
-        "cmd_dry_run()",
-        "cmd_check()",
-        "prune_hm_backups()",
-        "cmd_clean_backups()",
-        "cmd_clean()",
-        "cmd_status()",
-        "_oras()",
-        "_zstd()",
-        "_closure_valid()"
-      ],
-      "imports": [],
-      "symbols": [
-        "log()",
-        "log_info()",
-        "log_success()",
-        "log_warn()",
-        "log_error()",
-        "log_header()",
-        "_epoch_ms()",
-        "_fmt_duration()",
-        "_perf_dots()",
-        "perf_start()",
-        "perf_step()",
-        "perf_end()",
-        "check_nix()",
-        "check_home_manager()",
-        "publish_cloud_data_logs()",
-        "termux_declared_packages()",
-        "termux_flake_attr()",
-        "cmd_switch()",
-        "cmd_update()",
-        "cmd_show()",
-        "cmd_build()",
-        "cmd_dry_run()",
-        "cmd_check()",
-        "prune_hm_backups()",
-        "cmd_clean_backups()",
-        "cmd_clean()",
-        "cmd_status()",
-        "_oras()",
-        "_zstd()",
-        "_closure_valid()",
-        "cmd_nixcache_publish()",
-        "nixcache_switch()",
-        "_dig()",
-        "cmd_ci_build()",
-        "ghcr_pull_layered_skopeo()",
-        "cmd_pull()",
-        "run_tui()",
-        "show_help()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/claude/assets/scripts/claude-debug.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "hdr()",
-        "run_tui()"
-      ],
-      "imports": [],
-      "symbols": [
-        "hdr()",
-        "run_tui()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/claude/assets/scripts/claude-fix.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "say()",
-        "hdr()",
-        "run()"
-      ],
-      "imports": [],
-      "symbols": [
-        "say()",
-        "hdr()",
-        "run()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/claude/assets/scripts/deepseek-cleanup.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "say()",
-        "zap()"
-      ],
-      "imports": [],
-      "symbols": [
-        "say()",
-        "zap()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/claude/claude-session-sync.test.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "ok()",
-        "nope()",
-        "runs()",
-        "fire()",
-        "age_stamp()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "nope()",
-        "runs()",
-        "fire()",
-        "age_stamp()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/claude/claude.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "claudeSotDefault",
-        "stateDirs",
-        "instance",
-        "memoryRepoDefault",
-        "stateLinks",
-        "name",
-        "claudeSyncSessionsPkg",
-        "runtimeInputs",
-        "runtimeEnv",
-        "text",
-        "executable",
-        "LIMITS",
-        "n",
-        "source",
-        "REPO_SOT",
-        "DEST_CLAUDE",
-        "DEST_RGIGNORE",
-        "MCP_VARIANT",
-        "CP_BIN",
-        "RM_BIN",
-        "MKDIR_BIN",
-        "CHMOD_BIN",
-        "OVERLAY",
-        "DST",
-        "HOME_DIR",
-        "SED_BIN",
-        "JQ_BIN",
-        "LABEL",
-        "TPL",
-        "OUT",
-        "SECRETS_YAML",
-        "SOPS_BIN",
-        "YQ_BIN",
-        "AWK_BIN",
-        "MEM_REPO",
-        "INSTANCE",
-        "PROJ",
-        "SRC",
-        "STAMP"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/claude/claude.test.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "ok()",
-        "nope()",
-        "run_merge()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "nope()",
-        "run_merge()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [],
-      "imports": [
-        "modules/android-package.nix",
-        "modules/system.nix",
-        "modules/environment-packages.nix",
-        "claude/claude.nix",
-        "modules/termux-platform.nix",
-        "modules/hm-runtime.nix",
-        "modules/gemini.nix",
-        "modules/common.nix",
-        "modules/packages.nix",
-        "modules/curl-wget-wrapper.nix",
-        "modules/node-npm-deps.nix",
-        "modules/node-bins.nix",
-        "modules/wireguard.nix",
-        "modules/wireguard-wstunnel.nix"
-      ],
-      "symbols": [
-        "description",
-        "inputs",
-        "nix-on-droid",
-        "url",
-        "home-manager",
-        "outputs",
-        "pkgsNew",
-        "pkgsUnstable",
-        "buildJson",
-        "dtkNode",
-        "androidPackageDefault",
-        "androidPackages",
-        "jbMonoNerd",
-        "termux-am",
-        "fishCmds",
-        "sharedAliases",
-        "mkTermuxConfiguration",
-        "pkgs",
-        "modules",
-        "disabledModules",
-        "imports",
-        "nixOnDroidConfigurations",
-        "name",
-        "value",
-        "tag",
-        "maxLayers",
-        "contents"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/android-package.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "androidPackage",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "cfg",
-        "idsDerivation",
-        "gid",
-        "uid",
-        "ids",
-        "options",
-        "user",
-        "group",
-        "type",
-        "default",
-        "description",
-        "defaultText",
-        "home",
-        "readOnly",
-        "shell",
-        "userName",
-        "build",
-        "initialBuild",
-        "internal",
-        "installationDir",
-        "extraProotOptions",
-        "config"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/cloud-ide-sshd/cloud-ide-sshd.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "is_running()",
-        "port_holder_pids()",
-        "self_heal()",
-        "listening_on_wg()",
-        "acquire_wake_lock()",
-        "rebind_allowed()",
-        "do_ensure()",
-        "do_start()",
-        "do_stop()",
-        "do_status()"
-      ],
-      "imports": [],
-      "symbols": [
-        "is_running()",
-        "port_holder_pids()",
-        "self_heal()",
-        "listening_on_wg()",
-        "acquire_wake_lock()",
-        "rebind_allowed()",
-        "do_ensure()",
-        "do_start()",
-        "do_stop()",
-        "do_status()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/cloud-ide-sshd/cloud-ide-sshd.test.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "ok()",
-        "nope()",
-        "run()",
-        "ss_stub()",
-        "run_status()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "nope()",
-        "run()",
-        "ss_stub()",
-        "run_status()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/cloud-ide-sshd/default.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "termux-am",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "opensshPinned",
-        "configureFlags",
-        "authData",
-        "authorizedKeysContent",
-        "secretsFile",
-        "buildJson",
-        "wgIp",
-        "wgIps",
-        "sshPort",
-        "sshdRuntimeJson",
-        "wg_ip",
-        "wg_ips",
-        "ssh_port",
-        "sshdPkg",
-        "name",
-        "runtimeInputs",
-        "runtimeEnv",
-        "CLOUD_IDE_SSHD_BIN",
-        "CLOUD_IDE_SSH_KEYGEN_BIN",
-        "CLOUD_IDE_SFTP_SERVER_BIN",
-        "text",
-        "profileText",
-        "YQ_BIN",
-        "SECRETS",
-        "STATIC_KEYS_FILE",
-        "allow-external-apps",
-        "executable",
-        "i"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/common.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [
-        "programs/shells/bash.nix",
-        "programs/shells/shared-aliases.nix",
-        "programs/shells/fish.nix",
-        "programs/shells/starship.nix",
-        "programs/editors/vim.nix",
-        "programs/git.nix",
-        "programs/tmux.nix"
-      ],
-      "symbols": [
-        "gooseConfig",
-        "imports",
-        "AUTHELIA_OIDC_CREDENTIALS_DIR",
-        "AUTHELIA_OIDC_TOKENS_DIR",
-        "AUTHELIA_OIDC_CLIENT_ID",
-        "AUTHELIA_TOKEN_URL",
-        "nix",
-        "package",
-        "settings",
-        "experimental-features",
-        "warn-dirty",
-        "keep-outputs",
-        "keep-derivations",
-        "EDITOR",
-        "VISUAL",
-        "PAGER",
-        "LESS",
-        "OPENAI_BASE_URL",
-        "OPENAI_API_KEY",
-        "NIX_DIR"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/curl-wget-wrapper.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "tokenFile",
-        "mkWrapper",
-        "executable",
-        "text"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/dotfiles/node/esm-loader-register.mjs",
-      "lang": "js",
-      "role": "file",
-      "exports": [],
-      "imports": [
-        "node:module"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/dotfiles/node/esm-loader-resolve.mjs",
-      "lang": "js",
-      "role": "file",
-      "exports": [
-        "resolve"
-      ],
-      "imports": [
-        "node:fs",
-        "node:path",
-        "node:url"
-      ],
-      "symbols": [
-        "resolveExports(pkgDir, subpath)",
-        "resolve(specifier, context, nextResolve)"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/environment-packages.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "pkgsNew",
-        "pkgsUnstable",
-        "termux-am",
-        "jbMonoNerd",
-        "nix-on-droid",
-        "..."
-      ],
-      "imports": [
-        "pkgs/my-ai.nix"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/gemini.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "LABEL",
-        "TPL",
-        "OUT",
-        "SECRETS_YAML",
-        "SOPS_BIN",
-        "YQ_BIN",
-        "AWK_BIN"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/guardrails.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "..."
-      ],
-      "imports": [
-        "./managed-header.nix",
-        "managed-header.nix"
-      ],
-      "symbols": [
-        "managed",
-        "whitelist",
-        "whitelistFor",
-        "rules",
-        "subs",
-        "mkWhitelistCheck",
-        "singleSubs",
-        "multiSubs",
-        "singleChecks",
-        "multiChecks",
-        "_sub1",
-        "blocked",
-        "confirmCmds",
-        "warningCmds",
-        "blockedCmds",
-        "allCommands",
-        "blockedRulesFor",
-        "mkBlockChecks",
-        "mkCheck",
-        "mkWrapper",
-        "isWarning",
-        "blockChecks",
-        "whitelistCheck",
-        "name",
-        "value",
-        "executable",
-        "text",
-        "_tier",
-        "_log_dir",
-        "_date",
-        "_ts",
-        "_logfile",
-        "_ppid_cmd",
-        "_ppid_full",
-        "_tty_info",
-        "_ssh_info",
-        "_user",
-        "PATH",
-        "ARGS"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/hm-runtime.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "_writableTargets",
-        "TARGETS_FILE",
-        "PATH"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/managed-header.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "lib",
-        "repo"
-      ],
-      "imports": [
-        "./managed-header.nix",
-        "managed-header.nix"
-      ],
-      "symbols": [
-        "commentStyle",
-        "ext",
-        "mkHeader",
-        "line1",
-        "line2",
-        "line3",
-        "line4",
-        "injectHeader",
-        "style",
-        "header",
-        "lines",
-        "firstLine",
-        "hasShebang",
-        "rest",
-        "inject",
-        "wrap",
-        "text"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/my-webserver/default.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "myWebserverPkg",
-        "termuxPrefix",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "serviceName",
-        "httpdBin",
-        "httpdWrapperScript",
-        "name",
-        "runtimeInputs",
-        "runtimeEnv",
-        "HTTPD_WEB_SERVER_BIN",
-        "HTTPD_WRITE",
-        "HTTPD_WRITE_ROOTS",
-        "HTTPD_WRITE_TOKEN_FILE",
-        "text",
-        "runitRunScript",
-        "YQ_BIN",
-        "SECRETS",
-        "OUT",
-        "source",
-        "executable",
-        "SV_ENABLE"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/my-webserver/my-webserver.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "is_running()",
-        "do_start()",
-        "do_stop()",
-        "do_status()"
-      ],
-      "imports": [],
-      "symbols": [
-        "is_running()",
-        "do_start()",
-        "do_stop()",
-        "do_status()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/node-bins.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "nodejs",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "NODEJS_DIR"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/node-npm-deps-cloud.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "nodejs",
-        "type",
-        "default",
-        "description",
-        "NODEJS_DIR"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/node-npm-deps-front.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "nodejs",
-        "type",
-        "default",
-        "description",
-        "NODEJS_DIR"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/node-npm-deps-list.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "type",
-        "default",
-        "description"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/node-npm-deps.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [],
-      "imports": [
-        "node-npm-deps-list.nix",
-        "node-npm-deps-cloud.nix",
-        "node-npm-deps-front.nix"
-      ],
-      "symbols": [
-        "nodejs",
-        "imports",
-        "NODEJS_DIR",
-        "STATIC_DEPS"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/packages.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [
-        "pkgs/goose.nix"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/programs/editors/vim.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "enable",
-        "defaultEditor",
-        "packageConfigurable",
-        "settings",
-        "number",
-        "relativenumber",
-        "expandtab",
-        "tabstop",
-        "shiftwidth",
-        "ignorecase",
-        "smartcase",
-        "hidden",
-        "mouse",
-        "extraConfig"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/programs/git.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "enable",
-        "userName",
-        "userEmail",
-        "extraConfig",
-        "core",
-        "editor",
-        "autocrlf",
-        "whitespace",
-        "pager",
-        "color",
-        "ui",
-        "branch",
-        "diff",
-        "status",
-        "merge",
-        "tool",
-        "conflictstyle",
-        "algorithm",
-        "push",
-        "default",
-        "autoSetupRemote",
-        "aliases",
-        "s",
-        "st",
-        "c",
-        "cm",
-        "ca",
-        "can",
-        "b",
-        "ba",
-        "bd",
-        "bD",
-        "co",
-        "cob",
-        "l",
-        "lg",
-        "ll",
-        "hist",
-        "d",
-        "ds"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/programs/shells/bash.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "enable",
-        "enableCompletion",
-        "historySize",
-        "historyFileSize",
-        "historyControl",
-        "historyIgnore",
-        "shellOptions",
-        "shellAliases",
-        "ls",
-        "ll",
-        "la",
-        "l",
-        "lh",
-        "lt",
-        "cat",
-        "grep",
-        "find",
-        "rm",
-        "cp",
-        "mv",
-        "py",
-        "python",
-        "gs",
-        "ga",
-        "gaa",
-        "gc",
-        "gcm",
-        "gp",
-        "gl",
-        "gd",
-        "gds",
-        "gco",
-        "gpl",
-        "df",
-        "du",
-        "myip",
-        "h",
-        "hg",
-        "path",
-        "reload"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/programs/shells/fish.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "cmds",
-        "toAttrs",
-        "abbrAttrs",
-        "aliasAttrs",
-        "realFns",
-        "fnAttrs",
-        "name",
-        "value",
-        "visible",
-        "dispLen",
-        "pad",
-        "esc",
-        "line",
-        "itemsFor",
-        "groupBlock",
-        "helpBody",
-        "envs",
-        "padE",
-        "envLine",
-        "envGroupBlock",
-        "envHelpBody",
-        "enable",
-        "shellAbbrs",
-        "shellAliases",
-        "functions",
-        "__cloud_commands_help",
-        "__cloud_envvars_help",
-        "interactiveShellInit"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/programs/shells/shared-aliases.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "sharedAliases",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "enable",
-        "shellAliases",
-        "profileExtra"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/programs/shells/starship.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "enable",
-        "enableBashIntegration",
-        "enableZshIntegration",
-        "enableFishIntegration",
-        "settings",
-        "command_timeout",
-        "format",
-        "right_format",
-        "username",
-        "show_always",
-        "style_user",
-        "style_root",
-        "hostname",
-        "ssh_only",
-        "directory",
-        "truncation_length",
-        "truncate_to_repo",
-        "style",
-        "read_only",
-        "read_only_style",
-        "git_branch",
-        "symbol",
-        "git_status",
-        "disabled",
-        "conflicted",
-        "ahead",
-        "behind",
-        "diverged",
-        "untracked",
-        "stashed",
-        "modified",
-        "staged",
-        "renamed",
-        "deleted",
-        "container",
-        "cmd_duration",
-        "min_time",
-        "time",
-        "time_format",
-        "character"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/programs/tmux.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "enable",
-        "clock24",
-        "historyLimit",
-        "keyMode",
-        "mouse",
-        "prefix",
-        "terminal",
-        "baseIndex",
-        "escapeTime",
-        "extraConfig"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/system.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "dtkNode",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "experimental-features",
-        "max-jobs",
-        "cores",
-        "auto-optimise-store",
-        "min-free",
-        "min-free-check-interval",
-        "keep-derivations",
-        "SHELL",
-        "PATH",
-        "NODE_PATH",
-        "DTK_NODE_NAME",
-        "LD_PRELOAD",
-        "MIMALLOC_PAGE_RESET",
-        "MIMALLOC_LARGE_OS_PAGES",
-        "MALLOC_ARENA_MAX",
-        "TF_PLUGIN_CACHE_DIR",
-        "XDG_RUNTIME_DIR",
-        "LANG",
-        "LOCALE_ARCHIVE"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/termux-platform.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "jbMonoNerd",
-        "termuxPrefix",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "TERMUX_BIN",
-        "root",
-        "perms",
-        "dontchmod",
-        "links",
-        "prefer",
-        "auto",
-        "batch",
-        "path"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/wireguard-wstunnel.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "lib",
-        "pkgs",
-        "wstunnel",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "cloudRel",
-        "wsTunnelBuildJson",
-        "vpnDomain",
-        "wsEndpoint",
-        "localUdp",
-        "remoteWg",
-        "secretFile",
-        "pidFile",
-        "logFile",
-        "wgTcpConf",
-        "wstunnelBin",
-        "wg0Conf",
-        "wstunnelRuntimeJson",
-        "local_udp_port",
-        "remote_wg_port",
-        "ws_endpoint",
-        "secret_file",
-        "pid_file",
-        "log_file",
-        "wg0_conf",
-        "wg_tcp_conf",
-        "wgTcpPkg",
-        "name",
-        "runtimeInputs",
-        "runtimeEnv",
-        "WG_TCP_WSTUNNEL_BIN",
-        "text",
-        "wgTcpRenderPkg",
-        "source"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/wireguard-wstunnel.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "pid_alive()"
-      ],
-      "imports": [],
-      "symbols": [
-        "pid_alive()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/wireguard-wstunnel.test.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "ok()",
-        "nope()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "nope()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/modules/wireguard.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "config",
-        "pkgs",
-        "lib",
-        "..."
-      ],
-      "imports": [],
-      "symbols": [
-        "vaultBase",
-        "source",
-        "mirrorDir",
-        "WIREGUARD_IP",
-        "WIREGUARD_PUBLIC_IP"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/nix-version-drift.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "log_info()",
-        "log_ok()",
-        "log_warn()",
-        "log_error()",
-        "require_tools()",
-        "detect_platform()",
-        "cache_get()",
-        "cache_set()",
-        "get_latest_npm()",
-        "get_nix_version()",
-        "get_nix_hash()",
-        "get_lock_narhash()",
-        "get_lock_rev()",
-        "get_lock_date()",
-        "get_lock_ref()",
-        "get_latest_github_rev()",
-        "get_local_claude_version()",
-        "add_result()",
-        "collect_custom_derivations()",
-        "collect_flake_inputs()",
-        "extract_nix_packages()",
-        "get_installed_version()",
-        "get_unstable_version()",
-        "collect_nix_packages()",
-        "collect_npm_deps()",
-        "render_table()",
-        "render_json()",
-        "cmd_drift()",
-        "cmd_plan()",
-        "cmd_switch()"
-      ],
-      "imports": [],
-      "symbols": [
-        "log_info()",
-        "log_ok()",
-        "log_warn()",
-        "log_error()",
-        "require_tools()",
-        "detect_platform()",
-        "cache_get()",
-        "cache_set()",
-        "get_latest_npm()",
-        "get_nix_version()",
-        "get_nix_hash()",
-        "get_lock_narhash()",
-        "get_lock_rev()",
-        "get_lock_date()",
-        "get_lock_ref()",
-        "get_latest_github_rev()",
-        "get_local_claude_version()",
-        "add_result()",
-        "collect_custom_derivations()",
-        "collect_flake_inputs()",
-        "extract_nix_packages()",
-        "get_installed_version()",
-        "get_unstable_version()",
-        "collect_nix_packages()",
-        "collect_npm_deps()",
-        "render_table()",
-        "render_json()",
-        "cmd_drift()",
-        "cmd_plan()",
-        "cmd_switch()",
-        "cmd_update()",
-        "cmd_clean()",
-        "usage()",
-        "main()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/ant/default.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "stdenv",
-        "fetchurl",
-        "lib",
-        "autoPatchelfHook",
-        "glibc",
-        "gcc-unwrapped",
-        "version"
-      ],
-      "imports": [
-        "claude-code/default.nix"
-      ],
-      "symbols": [
-        "sources",
-        "arch",
-        "hash",
-        "src",
-        "pname",
-        "url",
-        "sourceRoot",
-        "dontConfigure",
-        "dontBuild",
-        "dontStrip",
-        "nativeBuildInputs",
-        "buildInputs",
-        "installPhase",
-        "meta",
-        "description",
-        "homepage",
-        "license",
-        "platforms",
-        "mainProgram"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/antigravity-cli/default.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "stdenv",
-        "fetchurl",
-        "lib",
-        "autoPatchelfHook",
-        "glibc",
-        "gcc-unwrapped",
-        "version"
-      ],
-      "imports": [
-        "claude-code/default.nix"
-      ],
-      "symbols": [
-        "sources",
-        "hash",
-        "src",
-        "pname",
-        "url",
-        "sourceRoot",
-        "dontConfigure",
-        "dontBuild",
-        "dontStrip",
-        "nativeBuildInputs",
-        "buildInputs",
-        "installPhase",
-        "meta",
-        "description",
-        "homepage",
-        "license",
-        "platforms",
-        "mainProgram"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/claude-code/default.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "stdenv",
-        "fetchurl",
-        "lib",
-        "autoPatchelfHook",
-        "glibc",
-        "gcc-unwrapped",
-        "version"
-      ],
-      "imports": [],
-      "symbols": [
-        "sources",
-        "pkg",
-        "hash",
-        "src",
-        "pkgName",
-        "pname",
-        "url",
-        "sourceRoot",
-        "dontConfigure",
-        "dontBuild",
-        "dontStrip",
-        "nativeBuildInputs",
-        "buildInputs",
-        "installPhase",
-        "meta",
-        "description",
-        "homepage",
-        "license",
-        "platforms",
-        "mainProgram"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/goose.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "lib",
-        "stdenv",
-        "fetchurl",
-        "autoPatchelfHook",
-        "gcc-unwrapped",
-        "libgcc"
-      ],
-      "imports": [],
-      "symbols": [
-        "version",
-        "assets",
-        "x86_64-linux",
-        "url",
-        "hash",
-        "aarch64-linux",
-        "asset",
-        "pname",
-        "src",
-        "sourceRoot",
-        "unpackPhase",
-        "nativeBuildInputs",
-        "buildInputs",
-        "installPhase",
-        "meta",
-        "description",
-        "homepage",
-        "license",
-        "platforms",
-        "mainProgram"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/my-ai.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "lib",
-        "stdenv",
-        "fetchurl",
-        "autoPatchelfHook",
-        "makeWrapper",
-        "gcc-unwrapped",
-        "libgcc"
-      ],
-      "imports": [],
-      "symbols": [
-        "hashes",
-        "baseUrl",
-        "pname",
-        "version",
-        "src",
-        "url",
-        "hash",
-        "dashSrc",
-        "nativeBuildInputs",
-        "buildInputs",
-        "dontUnpack",
-        "installPhase",
-        "meta",
-        "description",
-        "mainProgram"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/octocode.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "lib",
-        "stdenv",
-        "fetchurl",
-        "autoPatchelfHook"
-      ],
-      "imports": [],
-      "symbols": [
-        "version",
-        "assets",
-        "x86_64-linux",
-        "url",
-        "hash",
-        "aarch64-linux",
-        "asset",
-        "pname",
-        "src",
-        "sourceRoot",
-        "unpackPhase",
-        "nativeBuildInputs",
-        "installPhase",
-        "meta",
-        "description",
-        "homepage",
-        "license",
-        "platforms"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/openssh-pinned.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "pkgs",
-        "lib"
-      ],
-      "imports": [],
-      "symbols": [
-        "pname",
-        "version",
-        "src",
-        "url",
-        "sha256",
-        "patches",
-        "configureFlags",
-        "doCheck",
-        "meta",
-        "description"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/proot-termux-patched/default.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "stdenv",
-        "fetchFromGitHub",
-        "fetchurl",
-        "talloc",
-        "static",
-        "outputBinaryName"
-      ],
-      "imports": [],
-      "symbols": [
-        "pname",
-        "version",
-        "src",
-        "repo",
-        "owner",
-        "rev",
-        "sha256",
-        "preConfigure",
-        "buildInputs",
-        "patches",
-        "url",
-        "makeFlags",
-        "CFLAGS",
-        "LDFLAGS",
-        "preInstall",
-        "installPhase"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/pkgs/termux-api.nix",
-      "lang": "nix",
-      "role": "nix-module",
-      "exports": [
-        "lib",
-        "stdenv",
-        "fetchFromGitHub",
-        "cmake"
-      ],
-      "imports": [],
-      "symbols": [
-        "pname",
-        "version",
-        "src",
-        "owner",
-        "repo",
-        "rev",
-        "hash",
-        "nativeBuildInputs",
-        "cmakeFlags",
-        "meta",
-        "description",
-        "homepage",
-        "license",
-        "platforms",
-        "maintainers"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/scripts/code.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "get_lan_ip()",
-        "is_running()"
-      ],
-      "imports": [],
-      "symbols": [
-        "get_lan_ip()",
-        "is_running()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/scripts/greeting-version-cache.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "_v()"
-      ],
-      "imports": [],
-      "symbols": [
-        "_v()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/scripts/hm-refreeze-files.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [],
-      "imports": [
-        "hm-unfreeze-files.sh",
-        "build.sh"
-      ],
-      "symbols": []
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/scripts/hm-refreeze-files.test.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "ok()",
-        "bad()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "bad()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/scripts/render-secrets-template.sh",
-      "lang": "sh",
-      "role": "script",
-      "exports": [
-        "fresh_copy()"
-      ],
-      "imports": [],
-      "symbols": [
-        "fresh_copy()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/src/test-claude-cleanup.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "run()",
-        "run_or_skip()",
-        "env_can_orphan_to_pid1()",
-        "sweep_e2e_precond()",
-        "test_sweeper_idempotent()",
-        "test_pgrp_kill_reaps_subtree()",
-        "members()",
-        "count_marker()",
-        "test_pdeathsig_kills_direct_child()",
-        "test_sweeper_kills_orphaned_session()",
-        "count_pgrp()"
-      ],
-      "imports": [],
-      "symbols": [
-        "run()",
-        "run_or_skip()",
-        "env_can_orphan_to_pid1()",
-        "sweep_e2e_precond()",
-        "test_sweeper_idempotent()",
-        "test_pgrp_kill_reaps_subtree()",
-        "members()",
-        "count_marker()",
-        "test_pdeathsig_kills_direct_child()",
-        "test_sweeper_kills_orphaned_session()",
-        "count_pgrp()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/z_backup/build.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "usage()",
-        "ensure_compat_dirs()",
-        "setup_storage()",
-        "copy_flake()",
-        "do_switch()",
-        "do_update()",
-        "do_setup()"
-      ],
-      "imports": [],
-      "symbols": [
-        "usage()",
-        "ensure_compat_dirs()",
-        "setup_storage()",
-        "copy_flake()",
-        "do_switch()",
-        "do_update()",
-        "do_setup()"
-      ]
-    },
-    {
-      "path": "aa_cloud-terminal-flakes/z_backup/flake.nix",
-      "lang": "nix",
-      "role": "flake",
-      "exports": [],
-      "imports": [],
-      "symbols": [
-        "description",
-        "inputs",
-        "nix-on-droid",
-        "url",
-        "home-manager",
-        "outputs",
-        "sharedAliases",
-        "ll",
-        "conf",
-        "up",
-        "c",
-        "cc",
-        "pkgs",
-        "modules",
-        "experimental-features",
-        "SHELL",
-        "PATH",
-        "LD_PRELOAD",
-        "MIMALLOC_PAGE_RESET",
-        "MIMALLOC_LARGE_OS_PAGES",
-        "MALLOC_ARENA_MAX",
-        "CACHE_DIR",
-        "CERT_DIR",
-        "PORT_WEBDAV",
-        "PORT_SFTP",
-        "PORT_HTTP",
-        "SFTP_USER",
-        "SFTP_PASS",
-        "WEBDAV_USER",
-        "WEBDAV_PASS",
-        "C_RESET",
-        "C_CYAN",
-        "C_GREEN",
-        "C_YELLOW",
-        "C_RED",
-        "C_MAGENTA",
-        "C_BLUE",
-        "bind_addr",
-        "extra_args",
-        "LOG_FILE"
       ]
     },
     {
@@ -21497,49 +19776,48 @@
         "android.content.SharedPreferences",
         "android.os.Bundle",
         "android.util.Log",
-        "org.json.JSONArray",
         "org.json.JSONObject",
         "java.io.File"
       ],
       "symbols": [
         "authority(pkg: String)",
-        "filesFor(pkg: String)",
-        "json()",
-        "appByPackage(pkg: String)",
-        "classOf(s: Store, appId: String)",
-        "keyClass(s: Store, key: String, appId: String)",
-        "migrates(s: Store, appId: String)",
-        "migratesKey(s: Store, key: String, appId: String)",
-        "secret(s: Store, key: String, appId: String)",
-        "coverage(app: App)",
-        "label(i: JSONObject)",
-        "storeOfFile(pkg: String, file: String)",
-        "manifestOrNull(ctx: Context)",
-        "manifest(ctx: Context)",
-        "open(store: Store, file: String, create: Boolean)",
-        "exportApp(m: Manifest, app: App, opener: Opener)",
-        "importApp(m: Manifest, app: App, body: JSONObject, opener: Opener)",
-        "put(ed: SharedPreferences.Editor, k: String, v: Any?, type: String, existing: Any?)",
-        "deviceOpener(ctx: Context)",
-        "exportSelf(ctx: Context, m: Manifest = manifest(ctx)",
-        "importSelf(ctx: Context, body: JSONObject, m: Manifest = manifest(ctx)",
+        "manifestText(ctx: Context)",
+        "openStore(ctx: Context, kind: String, file: String, create: Boolean)",
         "export(ctx: Context, pkg: String)",
         "import(ctx: Context, pkg: String, body: JSONObject, restart: Boolean = true)",
         "hello(ctx: Context, pkg: String)",
-        "helloSelf(ctx: Context)",
         "withManifest(ctx: Context, b: Bundle)",
         "call(ctx: Context, pkg: String, method: String, extras: Bundle)",
-        "glob(p: String)",
         "class FleetConfig",
-        "class Store",
-        "class Coverage",
-        "class App",
-        "class Manifest",
-        "class Opener",
         "class Reply",
         "class Ok",
         "class Unreachable",
         "class Refused"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/core/src/main/java/com/diegonmarcos/superapp/core/FleetConfigEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetConfigEngine"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.ServiceConnection",
+        "android.os.IBinder",
+        "org.json.JSONObject",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "call(ctx: Context, method: String, vararg args: String)",
+        "onServiceConnected(name: ComponentName?, binder: IBinder?)",
+        "onServiceDisconnected(name: ComponentName?)",
+        "error(why: String)",
+        "class FleetConfigEngine"
       ]
     },
     {
@@ -21552,6 +19830,8 @@
       "imports": [
         "android.content.ContentProvider",
         "android.content.ContentValues",
+        "android.content.Context",
+        "android.content.SharedPreferences",
         "android.content.pm.PackageManager",
         "android.database.Cursor",
         "android.net.Uri",
@@ -21560,11 +19840,15 @@
         "android.os.Handler",
         "android.os.Looper",
         "android.os.Process",
+        "org.json.JSONArray",
         "org.json.JSONObject"
       ],
       "symbols": [
         "onCreate()",
         "call(method: String, arg: String?, extras: Bundle?)",
+        "apply(ctx: Context, writes: JSONObject, r: JSONObject)",
+        "put(ed: SharedPreferences.Editor, k: String, v: Any, t: String)",
+        "encode(all: Map<String, *>)",
         "ok(json: JSONObject)",
         "error(why: String)",
         "query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?)",
@@ -24343,6 +22627,117 @@
         "wifiOnly_directOnWifi_blocksCell_noImplicitVpn()",
         "incomingOnly_blocksInboundAllowsOutbound()",
         "class FirewallFlowPolicyTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleetconfig-model/src/main/java/com/diegonmarcos/superapp/fleetconfig/FleetPolicy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetPolicy"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "android.util.Log",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "filesFor(pkg: String)",
+        "json()",
+        "appByPackage(pkg: String)",
+        "classOf(s: Store, appId: String)",
+        "keyClass(s: Store, key: String, appId: String)",
+        "migrates(s: Store, appId: String)",
+        "migratesKey(s: Store, key: String, appId: String)",
+        "secret(s: Store, key: String, appId: String)",
+        "coverage(app: App)",
+        "label(i: JSONObject)",
+        "storeOfFile(pkg: String, file: String)",
+        "open(store: Store, file: String, create: Boolean)",
+        "exportApp(m: Manifest, app: App, opener: Opener)",
+        "importApp(m: Manifest, app: App, body: JSONObject, opener: Opener)",
+        "put(ed: SharedPreferences.Editor, k: String, v: Any?, type: String, existing: Any?)",
+        "manifestOrNull(ctx: Context)",
+        "manifest(ctx: Context)",
+        "glob(p: String)",
+        "class FleetPolicy",
+        "class Store",
+        "class Coverage",
+        "class App",
+        "class Manifest",
+        "class Opener"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleetconfig-model/src/main/java/com/diegonmarcos/superapp/fleetconfig/FleetPolicyEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetPolicyEngine"
+      ],
+      "imports": [
+        "android.content.SharedPreferences",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "plan(manifest: String, pkg: String)",
+        "export(manifest: String, pkg: String, dump: String)",
+        "import(manifest: String, pkg: String, body: String, dump: String)",
+        "withApp(manifest: String, pkg: String, f: (FleetPolicy.Manifest, FleetPolicy.App)",
+        "encode(values: Map<String, Any?>)",
+        "decode(o: JSONObject)",
+        "getAll()",
+        "getString(key: String?, defValue: String?)",
+        "getStringSet(key: String?, defValues: MutableSet<String>?)",
+        "getInt(key: String?, defValue: Int)",
+        "getLong(key: String?, defValue: Long)",
+        "getFloat(key: String?, defValue: Float)",
+        "getBoolean(key: String?, defValue: Boolean)",
+        "contains(key: String?)",
+        "registerOnSharedPreferenceChangeListener(l: SharedPreferences.OnSharedPreferenceChangeListener?)",
+        "unregisterOnSharedPreferenceChangeListener(l: SharedPreferences.OnSharedPreferenceChangeListener?)",
+        "edit()",
+        "putString(key: String, value: String?)",
+        "putStringSet(key: String, values: MutableSet<String>?)",
+        "putInt(key: String, value: Int)",
+        "putLong(key: String, value: Long)",
+        "putFloat(key: String, value: Float)",
+        "putBoolean(key: String, value: Boolean)",
+        "remove(key: String)",
+        "clear()",
+        "commit()",
+        "apply()",
+        "class FleetPolicyEngine",
+        "class MemPrefs"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleetconfig/src/main/java/com/diegonmarcos/superapp/fleetconfig/FleetConfigEngineService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetConfigEngineService"
+      ],
+      "imports": [
+        "android.app.Service",
+        "android.content.Intent",
+        "android.os.IBinder",
+        "com.diegonmarcos.superapp.core.FleetConfigEngine",
+        "com.diegonmarcos.superapp.core.IFleetConfigEngine",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "methodNames()",
+        "dispatch(method: String, args: Array<String>)",
+        "contractVersion()",
+        "methods()",
+        "call(method: String?, args: Array<out String>?)",
+        "onBind(intent: Intent?)",
+        "class is",
+        "class FleetConfigEngineService"
       ]
     },
     {
@@ -133232,6 +131627,7 @@
       "symbols": [
         "setUp()",
         "tearDown()",
+        "hang()",
         "clone(name: String)",
         "probe(ahead: Int = 0, behind: Int = 0, changed: Int = 0, conflicts: Int = 0)",
         "hangingStatusEndsInTimeoutErrorAndDoesNotHoldTheOthers()",
@@ -306144,11 +304540,13 @@
         "org.junit.Assert.assertNotNull",
         "org.junit.Assert.assertTrue",
         "org.junit.After",
+        "org.junit.Assume",
         "org.junit.Before",
         "org.junit.Test",
         "org.junit.runner.RunWith"
       ],
       "symbols": [
+        "schema()",
         "canonical(v: Any?)",
         "call(method: String, body: JSONObject? = null)",
         "snapshot()",
@@ -306156,7 +304554,8 @@
         "the_handshake_says_the_manifest_comes_from_the_caller()",
         "a_configured_profile_survives_wipe_and_import_through_the_provider()",
         "an_encrypted_store_in_an_app_without_the_cipher_is_refused_alone()",
-        "class FleetMigrationTest"
+        "class FleetMigrationTest",
+        "class of"
       ]
     },
     {

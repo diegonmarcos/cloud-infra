@@ -2,9 +2,9 @@
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/databases",
-  "total": 25,
+  "total": 24,
   "summary": {
-    "postgres": 5,
+    "postgres": 4,
     "mariadb": 2,
     "redis": 2,
     "sqlite": 10,
@@ -52,7 +52,7 @@
       "vm": "gcp-E2-f_0",
       "vm_alias": "gcp-proxy",
       "wg_ip": "10.0.0.1",
-      "image": "redis:alpine",
+      "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
       "port": 6379,
       "dns": "redis.app",
       "healthcheck": "redis-cli ping",
@@ -519,28 +519,6 @@
       "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
     },
     {
-      "service": "paca",
-      "container": "paca-postgres",
-      "container_key": "db",
-      "type": "postgres",
-      "enabled": true,
-      "vm": "oci-A1-f_0",
-      "vm_alias": "oci-apps",
-      "wg_ip": "10.0.0.6",
-      "image": "postgres:16-alpine",
-      "port": 5432,
-      "dns": "paca-postgres.app",
-      "user": "paca",
-      "db": "paca",
-      "healthcheck": "pg_isready -U paca -d paca",
-      "volumes": [
-        "paca_postgres:/var/lib/postgresql/data"
-      ],
-      "resources": null,
-      "backup": true,
-      "connection": "postgresql://paca@10.0.0.6:5432/paca"
-    },
-    {
       "service": "vaultwarden",
       "container": "vaultwarden",
       "container_key": "app",
@@ -790,7 +768,7 @@
         "vm": "gcp-E2-f_0",
         "vm_alias": "gcp-proxy",
         "wg_ip": "10.0.0.1",
-        "image": "redis:alpine",
+        "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
         "port": 6379,
         "dns": "redis.app",
         "healthcheck": "redis-cli ping",
@@ -982,28 +960,6 @@
         "resources": null,
         "backup": true,
         "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
-      },
-      {
-        "service": "paca",
-        "container": "paca-postgres",
-        "container_key": "db",
-        "type": "postgres",
-        "enabled": true,
-        "vm": "oci-A1-f_0",
-        "vm_alias": "oci-apps",
-        "wg_ip": "10.0.0.6",
-        "image": "postgres:16-alpine",
-        "port": 5432,
-        "dns": "paca-postgres.app",
-        "user": "paca",
-        "db": "paca",
-        "healthcheck": "pg_isready -U paca -d paca",
-        "volumes": [
-          "paca_postgres:/var/lib/postgresql/data"
-        ],
-        "resources": null,
-        "backup": true,
-        "connection": "postgresql://paca@10.0.0.6:5432/paca"
       }
     ],
     "surrealdb": [
@@ -1465,28 +1421,6 @@
           "connection": "postgresql://hedgedoc@10.0.0.6:5439/hedgedoc"
         },
         {
-          "service": "paca",
-          "container": "paca-postgres",
-          "container_key": "db",
-          "type": "postgres",
-          "enabled": true,
-          "vm": "oci-A1-f_0",
-          "vm_alias": "oci-apps",
-          "wg_ip": "10.0.0.6",
-          "image": "postgres:16-alpine",
-          "port": 5432,
-          "dns": "paca-postgres.app",
-          "user": "paca",
-          "db": "paca",
-          "healthcheck": "pg_isready -U paca -d paca",
-          "volumes": [
-            "paca_postgres:/var/lib/postgresql/data"
-          ],
-          "resources": null,
-          "backup": true,
-          "connection": "postgresql://paca@10.0.0.6:5432/paca"
-        },
-        {
           "service": "vaultwarden",
           "container": "vaultwarden",
           "container_key": "app",
@@ -1521,7 +1455,7 @@
           "vm": "gcp-E2-f_0",
           "vm_alias": "gcp-proxy",
           "wg_ip": "10.0.0.1",
-          "image": "redis:alpine",
+          "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
           "port": 6379,
           "dns": "redis.app",
           "healthcheck": "redis-cli ping",
