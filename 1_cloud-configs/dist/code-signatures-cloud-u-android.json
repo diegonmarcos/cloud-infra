@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20442,
+    "files": 20458,
     "by_lang": {
       "py": 101,
-      "sh": 364,
-      "kotlin": 10377,
+      "sh": 368,
+      "kotlin": 10387,
       "java": 623,
       "ts": 8413,
-      "nix": 26,
+      "nix": 28,
       "js": 451,
       "rust": 87
     },
     "by_role": {
       "script": 193,
-      "shell": 266,
+      "shell": 270,
       "java": 622,
       "entrypoint": 23,
       "module": 6356,
       "compose": 1,
-      "flake": 22,
-      "kotlin": 10375,
+      "flake": 24,
+      "kotlin": 10385,
       "python": 36,
       "rust-module": 87,
       "file": 2255,
@@ -278,6 +278,7 @@
         "sources(root)",
         "engine_modules(root)",
         "engine_service(module_dir)",
+        "client_sources(app_dir)",
         "client_calls(app_dir, key)",
         "handshake(path, key)",
         "visible(app_dir, key)",
@@ -302,6 +303,7 @@
         "sources(root)",
         "engine_modules(root)",
         "engine_service(module_dir)",
+        "client_sources(app_dir)",
         "client_calls(app_dir, key)",
         "handshake(path, key)",
         "visible(app_dir, key)",
@@ -2031,6 +2033,7 @@
         "sources(root)",
         "engine_modules(root)",
         "engine_service(module_dir)",
+        "client_sources(app_dir)",
         "client_calls(app_dir, key)",
         "handshake(path, key)",
         "visible(app_dir, key)",
@@ -2055,6 +2058,7 @@
         "sources(root)",
         "engine_modules(root)",
         "engine_service(module_dir)",
+        "client_sources(app_dir)",
         "client_calls(app_dir, key)",
         "handshake(path, key)",
         "visible(app_dir, key)",
@@ -5212,6 +5216,99 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/AccountHandoff.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountHandoff"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.profile.AccountData",
+        "com.diegonmarcos.superapp.profile.ProfileFragment"
+      ],
+      "symbols": [
+        "installed(ctx: Context)",
+        "open(ctx: Context)",
+        "page()",
+        "onCreate(state: Bundle?)",
+        "onCreateView(inflater: LayoutInflater, parent: ViewGroup?, state: Bundle?)",
+        "OpenCloudAccount()",
+        "class AccountHandoff",
+        "class Page"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/CloudStoreHandoff.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudStoreHandoff"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "androidx.fragment.app.Fragment"
+      ],
+      "symbols": [
+        "installed(ctx: Context)",
+        "open(ctx: Context, tab: String)",
+        "page(pageId: String)",
+        "pageIdOf(f: Fragment)",
+        "onCreate(state: Bundle?)",
+        "onCreateView(inflater: LayoutInflater, parent: ViewGroup?, state: Bundle?)",
+        "OpenCloudStore(tab: String)",
+        "class CloudStoreHandoff",
+        "class Page"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/FolderDialog.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -6412,39 +6509,6 @@
         "openManageAllFilesSettings()",
         "openSamsungNeverSleepingSettings()",
         "openNotificationListenerSettings()"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/core/ProfileSyncClient.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ProfileSyncClient"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.util.Log",
-        "org.json.JSONObject",
-        "java.io.File",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "queueFile(context: Context)",
-        "isPending(context: Context)",
-        "enqueue(context: Context, endpoint: String, installId: String, secret: String, payload: JSONObject)",
-        "flush(context: Context, endpoint: String, installId: String, secret: String)",
-        "flushBlocking(context: Context, endpoint: String, installId: String, secret: String)",
-        "fetch(endpoint: String, installId: String, secret: String)",
-        "delete(context: Context, endpoint: String, installId: String, secret: String, onResult: (Result)",
-        "send(endpoint: String, method: String, installId: String, secret: String, body: String?)",
-        "open(endpoint: String, method: String, installId: String, secret: String)",
-        "redactBody(text: String)",
-        "class ProfileSyncClient",
-        "class Result",
-        "class Delivered",
-        "class Retry",
-        "class Rejected"
       ]
     },
     {
@@ -7790,7 +7854,6 @@
         "com.diegonmarcos.superapp.cloud.CalendarMonthFragment",
         "com.diegonmarcos.superapp.cloud.CalendarAgendaFragment",
         "com.diegonmarcos.superapp.network.WireGuardFragment",
-        "com.diegonmarcos.superapp.profile.ProfileFragment",
         "com.diegonmarcos.superapp.apps.RecentAppsFragment",
         "androidx.fragment.app.Fragment",
         "com.diegonmarcos.superapp.R",
@@ -8285,6 +8348,30 @@
         "rebindCallbacks(controllers: List<MediaController>)",
         "evaluateAndDispatch()",
         "class NowPlayingMonitor"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/AccountMesh.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountMesh"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.profile.AccountHost",
+        "com.diegonmarcos.superapp.profile.VaultCockpit",
+        "com.wireguard.config.Config",
+        "java.io.BufferedReader",
+        "java.io.StringReader"
+      ],
+      "symbols": [
+        "interfaceAddress(ctx: Context)",
+        "state(ctx: Context)",
+        "apply(ctx: Context, name: String, conf: String)",
+        "tunnelState(prefs: WireGuardPrefs)",
+        "applyMesh(prefs: WireGuardPrefs, name: String, conf: String)",
+        "class AccountMesh"
       ]
     },
     {
@@ -9333,827 +9420,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountDebugApi.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountDebugApi"
-      ],
-      "imports": [
-        "android.content.Context",
-        "com.diegonmarcos.superapp.devtools.AppDebugServer",
-        "com.diegonmarcos.superapp.devtools.AppDebugServer.Op",
-        "org.json.JSONArray",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "register(ctx: Context)",
-        "handle(ctx: Context, op: String, q: Map<String, String>)",
-        "fleet(ctx: Context)",
-        "target(m: AccountModel, q: Map<String, String>, side: AccountStore.Slot)",
-        "totals(apps: JSONObject?)",
-        "unmapped()",
-        "done(line: String, m: AccountModel)",
-        "profiles(m: AccountModel)",
-        "class AccountDebugApi"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountDrift.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountDrift"
-      ],
-      "imports": [
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.security.MessageDigest"
-      ],
-      "symbols": [
-        "leaves(body: JSONObject?)",
-        "bookkeeping(key: String)",
-        "walk(v: Any?, path: String, out: MutableMap<String, Any>)",
-        "canonical(v: Any?)",
-        "text(v: Any?)",
-        "sha256(body: JSONObject)",
-        "ownerOf(path: String, apps: List<App>)",
-        "diff(a: Map<String, Any>, b: Map<String, Any>, apps: List<App>, scope: Set<String>? = null)",
-        "json()",
-        "counts(fields: List<Field>)",
-        "byApp(fields: List<Field>, apps: List<App>)",
-        "threeWay(s: Map<String, Any>, r: Map<String, Any>, l: Map<String, Any>, observed: Set<String>, apps: List<App>)",
-        "copy(o: JSONObject?)",
-        "put(body: JSONObject, path: String, value: Any)",
-        "runtimeToDeclared(l: JSONObject?, r: Map<String, Any>, observed: Set<String>, readOnly: Set<String>, paths: Collection<String>)",
-        "copyValue(v: Any)",
-        "pushPlan(s: Map<String, Any>, observed: Set<String>, paths: Collection<String>, apps: List<App>)",
-        "drifted(fields: List<Field>, app: String = \"*\")",
-        "class is",
-        "class AccountDrift",
-        "class App",
-        "class Kind",
-        "class Field",
-        "class Counts",
-        "class Three",
-        "class ThreeWay",
-        "class in",
-        "class Skip",
-        "class Written"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountFleet.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountFleet"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.fleetconfig.FleetPolicy",
-        "android.content.Context",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.appstore.StoreStages",
-        "com.diegonmarcos.superapp.core.FleetConfig",
-        "com.diegonmarcos.superapp.updater.Fleet",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.security.MessageDigest"
-      ],
-      "symbols": [
-        "owns(path: String)",
-        "flatten(appId: String, export: JSONObject)",
-        "body(subtree: JSONObject)",
-        "bodies(items: List<Pair<String, Any>>, server: JSONObject?)",
-        "derive(body: JSONObject?, a: VaultCockpit.AgentAuth?, schema: (String)",
-        "isSecret(m: FleetPolicy.Manifest, path: String)",
-        "driftApps(cockpit: List<AccountDrift.App>, m: FleetPolicy.Manifest, labels: Map<String, String>)",
-        "manifest(ctx: Context)",
-        "fleetApps()",
-        "installed(ctx: Context, pkg: String)",
-        "reads(ctx: Context)",
-        "unreadOf(fields: List<String>, observed: Set<String>, export: JSONObject)",
-        "merge(cockpit: List<AccountRuntime.AppRead>, fleet: List<AccountRuntime.AppRead>)",
-        "push(ctx: Context, items: List<Pair<String, Any>>, server: JSONObject?)",
-        "line(id: String, r: FleetConfig.Reply)",
-        "refusedOf(j: JSONObject)",
-        "plan(m: FleetPolicy.Manifest, declared: JSONObject?, labels: Map<String, String>, installed: (String)",
-        "sha(o: JSONObject)",
-        "journal(ctx: Context)",
-        "plan(ctx: Context, declared: JSONObject?)",
-        "planJson(steps: List<Step>)",
-        "run(ctx: Context, declared: JSONObject?, after: ()",
-        "class AccountFleet",
-        "class or",
-        "class Step"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountModel.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountModel"
-      ],
-      "imports": [
-        "android.content.Context",
-        "androidx.compose.runtime.mutableIntStateOf",
-        "androidx.security.crypto.EncryptedFile",
-        "androidx.security.crypto.MasterKey",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.profile.AccountStore.Slot",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.io.File"
-      ],
-      "symbols": [
-        "doc(slot: Slot)",
-        "write(slot: Slot, body: JSONObject, source: String, apps: JSONObject? = null)",
-        "server()",
-        "derived(body: JSONObject?)",
-        "runtime()",
-        "savedLocal()",
-        "changed(line: String)",
-        "landServer(body: JSONObject, via: String)",
-        "shown()",
-        "populateFromServer()",
-        "populateFromRuntime()",
-        "edit(path: String, value: String)",
-        "save(source: String = \"edited on this phone\")",
-        "refreshRuntime()",
-        "leavesOf(slot: Slot)",
-        "diff(p: FilePair)",
-        "threeWay()",
-        "pushServerToRuntime(paths: Collection<String>)",
-        "migrationSource()",
-        "migratePlan()",
-        "migrate()",
-        "pullRuntimeToLocal(paths: Collection<String>)",
-        "discardLocal()",
-        "uploadPlan(device: String)",
-        "upload(token: String, device: String)",
-        "report()",
-        "decoded(b64: String)",
-        "tabs()",
-        "pairs()",
-        "ghHost()",
-        "now()",
-        "get(ctx: Context)",
-        "enc(f: File)",
-        "read(file: File)",
-        "write(file: File, bytes: ByteArray)",
-        "class AccountModel",
-        "class Tab",
-        "class FilePair",
-        "class EncryptedIo"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountRuntime.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountRuntime"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.os.SystemClock",
-        "com.diegonmarcos.superapp.mail.JmapPrefs",
-        "com.diegonmarcos.superapp.network.WgState",
-        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
-        "com.diegonmarcos.superapp.texttools.TextToolsClient",
-        "org.json.JSONArray",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "under(path: String, field: String)",
-        "coverage(r: AppRead, vf: Map<String, VaultCockpit.VaultField>)",
-        "snapshot(reads: List<AppRead>)",
-        "observed(apps: JSONObject?)",
-        "readOnly(apps: JSONObject?)",
-        "paths(apps: JSONObject?, key: String)",
-        "aboutPaths(fields: Map<String, String>)",
-        "drivePaths()",
-        "aiPaths(tokens: Map<String, String>)",
-        "meshPath(name: String)",
-        "mailPaths(declared: JSONObject?, held: String, owner: String)",
-        "keyFor(email: String)",
-        "hostOf(server: String)",
-        "keyboardValues(export: JSONObject, lists: Map<String, String>)",
-        "deviceFor(devices: List<VaultCockpit.Device>, picked: String, liveAddress: String)",
-        "appRow(id: String, label: String, pkg: String, versionName: String?, versionCode: Long?, stage: String, stageText: String, autoUpdate: Boolean, declaredVersion: String?)",
-        "tunnelRow(t: VaultCockpit.TunnelState)",
-        "tools(ctx: Context)",
-        "read(ctx: Context, declared: JSONObject?, deadlineMs: Long)",
-        "installed(ctx: Context, pkg: String)",
-        "appsRoster(ctx: Context)",
-        "device(ctx: Context, declared: JSONObject?)",
-        "deviceLabel(d: Pair<VaultCockpit.Device, Boolean>)",
-        "readOne(ctx: Context, section: VaultCockpit.Section, declared: JSONObject?, deadlineMs: Long)",
-        "heldSecret(export: JSONObject, store: String)",
-        "fingerprint(v: String)",
-        "push(ctx: Context, path: String, value: Any, server: JSONObject)",
-        "profileField(p: ProfilePrefs, field: String)",
-        "setProfileField(p: ProfilePrefs, field: String, value: String)",
-        "class AccountRuntime",
-        "class Status",
-        "class AppRead"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountStore.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountStore"
-      ],
-      "imports": [
-        "org.json.JSONObject",
-        "java.io.File"
-      ],
-      "symbols": [
-        "read(file: File)",
-        "write(file: File, bytes: ByteArray)",
-        "json()",
-        "file(slot: Slot)",
-        "read(slot: Slot)",
-        "write(slot: Slot, body: JSONObject, source: String, at: String, apps: JSONObject? = null)",
-        "delete(slot: Slot)",
-        "export(slot: Slot)",
-        "class AccountStore",
-        "class Io",
-        "class PlainIo",
-        "class Slot",
-        "class Meta",
-        "class Doc"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountTabs.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountTags",
-        "shownValue",
-        "ProfilesTab",
-        "RuntimeTab",
-        "DriftTab",
-        "rosterLine"
-      ],
-      "imports": [
-        "androidx.compose.foundation.clickable",
-        "androidx.compose.foundation.layout.Arrangement",
-        "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.Row",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.text.KeyboardOptions",
-        "androidx.compose.material3.AlertDialog",
-        "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.OutlinedButton",
-        "androidx.compose.material3.OutlinedTextField",
-        "androidx.compose.material3.Text",
-        "androidx.compose.material3.TextButton",
-        "androidx.compose.runtime.Composable",
-        "androidx.compose.runtime.LaunchedEffect",
-        "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.rememberCoroutineScope",
-        "androidx.compose.runtime.setValue",
-        "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.platform.LocalContext",
-        "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.text.font.FontFamily",
-        "androidx.compose.ui.text.input.KeyboardType",
-        "androidx.compose.ui.text.input.PasswordVisualTransformation",
-        "androidx.compose.ui.unit.dp",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.profile.AccountStore.Slot",
-        "com.diegonmarcos.superapp.uikit.KitCard",
-        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
-        "com.diegonmarcos.superapp.uikit.KitSelectableTile",
-        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
-        "kotlinx.coroutines.Dispatchers",
-        "kotlinx.coroutines.launch",
-        "kotlinx.coroutines.withContext"
-      ],
-      "symbols": [
-        "tab(id: String)",
-        "topic(id: String)",
-        "edit(path: String)",
-        "runtimeApp(id: String)",
-        "runtimeStatus(id: String)",
-        "runtimeCounts(id: String)",
-        "runtimeRoster(id: String)",
-        "exportFile(slot: Slot)",
-        "pair(id: String)",
-        "driftApp(id: String)",
-        "pushApp(id: String)",
-        "pullApp(id: String)",
-        "pushItem(path: String)",
-        "pullItem(path: String)",
-        "shownValue(path: String, text: String?)",
-        "ActionButton(label: String, tag: String, enabled: Boolean = true, onClick: ()",
-        "ResultLine(m: AccountModel)",
-        "metaLine(d: AccountStore.Doc)",
-        "ProfilesTab(m: AccountModel, connectLabel: String, export: (name: String, text: String)",
-        "DeclaredApps(bundle: org.json.JSONObject?, route: String, openStore: (String)",
-        "RuntimeTab(m: AccountModel)",
-        "refresh()",
-        "DriftTab(m: AccountModel, device: String, export: (name: String, text: String)",
-        "io(block: ()",
-        "upload()",
-        "rosterLine(o: org.json.JSONObject?)",
-        "class AccountTags"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/AccountUpload.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountUpload"
-      ],
-      "imports": [
-        "org.json.JSONObject",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "call(method: String, url: String, headers: Map<String, String>, body: String?)",
-        "commit(target: Target, token: String, content: ByteArray, message: String, http: Http = UrlHttp)",
-        "reason(status: Int, body: String)",
-        "class AccountUpload",
-        "class Target",
-        "class Result",
-        "class Committed",
-        "class Failed",
-        "class Http",
-        "class UrlHttp"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/BusinessCardFragment.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "BusinessCardFragment"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.ui.Haptics",
-        "com.diegonmarcos.superapp.R",
-        "android.graphics.Bitmap",
-        "android.graphics.BitmapFactory",
-        "android.graphics.Canvas",
-        "android.graphics.Color",
-        "android.graphics.Paint",
-        "android.graphics.Path",
-        "android.graphics.RectF",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment",
-        "com.google.zxing.BarcodeFormat",
-        "com.google.zxing.qrcode.QRCodeWriter",
-        "java.io.File"
-      ],
-      "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "loadBitmap(path: String)",
-        "circularBitmap(src: Bitmap, size: Int)",
-        "initialsBitmap(initials: String, size: Int)",
-        "showQrGallery()",
-        "qrBitmap(text: String, size: Int)",
-        "textRow(ctx: android.content.Context, text: String, styleRes: Int, alpha: Float = 1f)",
-        "keyValueRow(ctx: android.content.Context, key: String, value: String, clickUrl: String? = null)",
-        "spacer(ctx: android.content.Context, heightDp: Int)",
-        "dp(ctx: android.content.Context, v: Int)",
-        "newInstance()",
-        "class BusinessCardFragment"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/FleetCockpitView.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "FleetCockpitView"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.core.view.ViewCompat",
-        "androidx.core.view.accessibility.AccessibilityNodeInfoCompat",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.ui.LauncherPalette",
-        "com.diegonmarcos.superapp.ui.StatusLight"
-      ],
-      "symbols": [
-        "hero(ctx: Context, title: String, subtitle: String, iconRes: Int)",
-        "card(ctx: Context, label: String, tag: String, iconRes: Int, toggleAction: String)",
-        "paint(light: TextView, state: StatusLight.State, rowLabel: String)",
-        "pill(ctx: Context, label: String, onClick: ()",
-        "lightView(ctx: Context)",
-        "badge(ctx: Context, iconRes: Int, sizeDp: Int, fill: Int, ink: Int)",
-        "surface(ctx: Context, fill: Int, hairline: Int)",
-        "dp(ctx: Context, v: Int)",
-        "class is",
-        "class FleetCockpitView",
-        "class Hero",
-        "class Card"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/GhEngine.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "GhEngine"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.content.Intent",
-        "android.content.pm.PackageManager",
-        "android.os.SystemClock",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.core.DataBackendClient",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "check()",
-        "token(host: String)",
-        "login(host: String, onPrompt: (code: String, url: String)",
-        "ask(method: String, vararg args: String)",
-        "pageOnHost(url: String, host: String)",
-        "class GhEngine",
-        "class Check",
-        "class Ready",
-        "class NotInstalled",
-        "class TooOld",
-        "class Result"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/GitSshVault.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "GitSshVault"
-      ],
-      "imports": [
-        "android.util.Log",
-        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
-        "com.diegonmarcos.superapp.core.ConfigSyncClient",
-        "com.jcraft.jsch.JSch",
-        "com.jcraft.jsch.Session",
-        "org.eclipse.jgit.api.Git",
-        "org.eclipse.jgit.api.TransportConfigCallback",
-        "org.eclipse.jgit.lib.Repository",
-        "org.eclipse.jgit.revwalk.RevWalk",
-        "org.eclipse.jgit.transport.SshTransport",
-        "org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory",
-        "org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig",
-        "org.eclipse.jgit.treewalk.TreeWalk",
-        "org.eclipse.jgit.util.FS",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.io.ByteArrayInputStream",
-        "java.io.File",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "fetchArtifact( cacheDir: File, privateKeyPem: String, passphrase: String, path: String = AuthDeclaration.configSource.gitPath, )",
-        "readBlob(repository: Repository, ref: String, path: String)",
-        "sessionFactory( privateKeyPem: String, passphrase: String, knownHosts: String, )",
-        "createDefaultJSch(fs: FS)",
-        "configure(hc: OpenSshConfig.Host, session: Session)",
-        "githubKnownHosts()",
-        "scrub(message: String?, key: String)",
-        "failed(kind: ConfigSyncClient.Kind, message: String)",
-        "class in",
-        "class GitSshVault"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/InfoMask.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "InfoMask"
-      ],
-      "imports": [
-        "org.json.JSONArray",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "hides(fullPath: String, value: String)",
-        "rows(sectionId: String, value: Any?)",
-        "schemaRows(section: SchemaSection, data: Any?)",
-        "unfilled(v: Any?)",
-        "walk(section: String, v: Any?, path: String, out: MutableList<Row>)",
-        "join(path: String, key: String)",
-        "parse(o: JSONObject?)",
-        "list(key: String)",
-        "parseSchema(o: JSONObject?)",
-        "sectionsFor(schema: List<SchemaSection>, fetched: List<Pair<String, String>>, bundle: JSONObject?)",
-        "class or",
-        "class InfoMask",
-        "class Kind",
-        "class Row",
-        "class SchemaSection"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/ProfileFragment.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ProfileFragment"
-      ],
-      "imports": [
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.EditText",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "androidx.compose.ui.platform.ComposeView",
-        "androidx.compose.ui.platform.ViewCompositionStrategy",
-        "androidx.compose.ui.viewinterop.AndroidView",
-        "androidx.fragment.app.Fragment",
-        "androidx.lifecycle.lifecycleScope",
-        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
-        "com.diegonmarcos.cloudlib.auth.ConfigArtifact",
-        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
-        "com.diegonmarcos.cloudlib.auth.SignIn",
-        "com.diegonmarcos.cloudlib.auth.SignInHost",
-        "com.diegonmarcos.cloudlib.auth.SignInResult",
-        "com.diegonmarcos.cloudlib.auth.SignInWays",
-        "com.diegonmarcos.cloudlib.auth.UserRegistry",
-        "com.diegonmarcos.cloudlib.auth.VaultConnect",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.launcher.AppTabsStyle",
-        "com.diegonmarcos.superapp.launcher.Sections",
-        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
-        "com.diegonmarcos.superapp.ui.LauncherPalette",
-        "com.diegonmarcos.superapp.ui.snack",
-        "com.diegonmarcos.superapp.uikit.kitComposeView",
-        "com.google.android.material.tabs.TabLayout",
-        "kotlinx.coroutines.Dispatchers",
-        "kotlinx.coroutines.launch",
-        "kotlinx.coroutines.withContext"
-      ],
-      "symbols": [
-        "tabLabel(index: Int)",
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "journeyState(ctx: android.content.Context)",
-        "ask(step: ProfileJourney.Step)",
-        "stepLabel(step: ProfileJourney.Step)",
-        "lockText(s: ProfileJourney.State, step: ProfileJourney.Step)",
-        "profilesText(peer: UserRegistry.Peer)",
-        "identityTag(id: UserRegistry.Identity)",
-        "summaries(s: ProfileJourney.State)",
-        "heroSummary(s: ProfileJourney.State)",
-        "paintJourney()",
-        "renderJourney(ctx: android.content.Context, into: LinearLayout)",
-        "connectDecl()",
-        "connectLines()",
-        "buildSignInStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
-        "buildWay( ctx: android.content.Context, s: ProfileJourney.State, way: Way, policy: List<String>, cell: LinearLayout, extras: LinearLayout, status: TextView, )",
-        "signInWay(ctx: android.content.Context, way: Way, providerIds: List<String>)",
-        "wayPill(ctx: android.content.Context, way: Way, onClick: ()",
-        "ghSignIn(way: Way, status: TextView)",
-        "ghPrompt(ctx: android.content.Context, status: TextView, code: String, page: String?)",
-        "lineHeld(ctx: android.content.Context, line: Line)",
-        "buildStoredBearer(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout, status: TextView)",
-        "buildWhoStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
-        "buildDeviceStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
-        "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
-        "renderRuntime(ctx: android.content.Context, into: LinearLayout)",
-        "export(name: String, text: String)",
-        "openRoute(route: String)",
-        "statusView(ctx: android.content.Context)",
-        "showMailCodeDialog()",
-        "tabStrip( ctx: android.content.Context, tabs: List<Tab>, )",
-        "show(index: Int)",
-        "onTabSelected(tab: TabLayout.Tab)",
-        "onTabUnselected(tab: TabLayout.Tab)",
-        "onTabReselected(tab: TabLayout.Tab)",
-        "mailConfirmationField(ctx: android.content.Context)",
-        "confirmMailCode()",
-        "vaultEndpoints()",
-        "vaultCredentialHeld(ctx: android.content.Context)",
-        "showVaultFetchDialog(via: String)"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/ProfileJourneyView.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ProfileJourneyView"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.graphics.Typeface",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
-        "com.diegonmarcos.superapp.ui.LauncherPalette",
-        "com.diegonmarcos.superapp.ui.StatusLight"
-      ],
-      "symbols": [
-        "light(phase: ProfileJourney.Phase)",
-        "overall(s: ProfileJourney.State)",
-        "build( ctx: Context, heroTitle: String, heroSubtitle: String, heroIcon: Int, labels: Map<ProfileJourney.Step, String>, icons: Map<ProfileJourney.Step, Int>, toggleAction: String, )",
-        "paint( j: Journey, state: ProfileJourney.State, summaries: Map<ProfileJourney.Step, String>, heroSummary: String, )",
-        "choice(ctx: Context, text: String, selected: Boolean, onClick: ()",
-        "dp(ctx: Context, v: Int)",
-        "class ProfileJourneyView",
-        "class Journey"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/ProfilePrefs.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ProfilePrefs"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.BuildConfig",
-        "android.content.Context",
-        "android.content.SharedPreferences"
-      ],
-      "symbols": [
-        "migrate()",
-        "derivedInitials()",
-        "clearPersonalData()",
-        "class is",
-        "class ProfilePrefs",
-        "class KDoc"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/ProfileSync.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ProfileSync"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.util.Log",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.core.ProfileSyncClient",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "push(context: Context, prefs: ProfilePrefs = ProfilePrefs(context)",
-        "flush(context: Context)",
-        "isPending(context: Context)",
-        "restore(context: Context)",
-        "fill(key: String, current: String, set: (String)",
-        "forgetMe(context: Context, onDone: (String)",
-        "document(prefs: ProfilePrefs)",
-        "enforceAllowlist(profile: JSONObject)",
-        "class ProfileSync",
-        "class is",
-        "class against"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/QrGalleryDialog.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "QrGalleryDialog"
-      ],
-      "imports": [
-        "android.app.Dialog",
-        "android.content.Context",
-        "android.graphics.Bitmap",
-        "android.graphics.Color",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "android.widget.GridLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "com.google.zxing.BarcodeFormat",
-        "com.google.zxing.EncodeHintType",
-        "com.google.zxing.qrcode.QRCodeWriter",
-        "com.google.zxing.qrcode.decoder.ErrorCorrectionLevel",
-        "org.json.JSONObject",
-        "java.io.BufferedReader"
-      ],
-      "symbols": [
-        "show(ctx: Context)",
-        "loadManifest(ctx: Context)",
-        "buildGalleryRoot(ctx: Context, m: JSONObject, onClose: ()",
-        "buildQrCard(ctx: Context, spec: JSONObject, manifest: JSONObject)",
-        "showFullScreen(ctx: Context, payload: String, title: String, palette: Palette)",
-        "resolvePayload(spec: JSONObject, manifest: JSONObject)",
-        "renderVcard(contact: JSONObject, links: JSONObject?)",
-        "categoryPalette(category: String)",
-        "qrBitmap(text: String, size: Int, palette: Palette)",
-        "lerpColor(a: Int, b: Int, t: Float)",
-        "showError(ctx: Context, message: String)",
-        "dp(ctx: Context, v: Int)",
-        "class QrGalleryDialog",
-        "class Palette"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/profile/VaultCockpit.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "VaultCockpit"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.util.Base64",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.appstore.AppInventory",
-        "com.diegonmarcos.superapp.mail.JmapPrefs",
-        "com.diegonmarcos.superapp.network.WireGuardPrefs",
-        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
-        "com.diegonmarcos.superapp.texttools.TextToolsClient",
-        "com.diegonmarcos.superapp.ui.StatusLight",
-        "com.wireguard.config.Config",
-        "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.io.BufferedReader",
-        "java.io.StringReader"
-      ],
-      "symbols": [
-        "parseDerivation(a: JSONObject)",
-        "parseLayout(o: JSONObject)",
-        "deviceIcon(layout: Layout, device: Device?)",
-        "devices(bundle: JSONObject)",
-        "selectedDevice(ctx: Context)",
-        "selectDevice(ctx: Context, id: String)",
-        "sectionLight(rows: List<Row>, observed: Boolean = true)",
-        "overallLight(lights: Collection<StatusLight.State>)",
-        "tally(rows: List<Row>)",
-        "pending(v: Any?)",
-        "pendingText(v: JSONObject)",
-        "addressesOf(conf: String)",
-        "meshProfiles(bundle: JSONObject, device: Device)",
-        "tunnelState(prefs: WireGuardPrefs)",
-        "meshRows(bundle: JSONObject, device: Device, current: TunnelState)",
-        "applyMesh(prefs: WireGuardPrefs, name: String, conf: String)",
-        "mailDeclared(bundle: JSONObject, email: String)",
-        "mailAccounts(bundle: JSONObject, domain: String)",
-        "mailAccountRows(accounts: List<MailDeclared>, deviceEmail: String)",
-        "mailRows(d: MailDeclared?, prefs: JmapPrefs)",
-        "applyMail(prefs: JmapPrefs, d: MailDeclared)",
-        "aboutRows(bundle: JSONObject, fields: Map<String, String>, device: (String)",
-        "applyAbout(bundle: JSONObject, fields: Map<String, String>, set: (String, String)",
-        "keyboardRows(bundle: JSONObject, deviceText: String)",
-        "driveRows(bundle: JSONObject, prefs: ConfigsPrefs, deviceRepos: String)",
-        "secretRow(label: String, item: String, section: String, key: String)",
-        "driveSessionRows(chain: List<com.diegonmarcos.cloudlib.auth.AuthDeclaration.GitRung>, device: String)",
-        "ownerEmail(bundle: JSONObject, layout: Layout)",
-        "applyDrive(bundle: JSONObject, prefs: ConfigsPrefs)",
-        "aiState(snapshotJson: String?)",
-        "aiRows(bundle: JSONObject, layout: Layout, state: AiState?, peerDownText: String, unmappedText: String)",
-        "applyAi(bundle: JSONObject, layout: Layout, client: TextToolsClient)",
-        "appsDeclared(bundle: JSONObject, device: Device, fleet: Set<String>)",
-        "appsDeclared(bundle: JSONObject, deviceId: String, fleet: Set<String>)",
-        "walk(v: Any?)",
-        "appsListed(bundle: JSONObject, deviceId: String, fleet: Set<String>)",
-        "storeLabel(sources: JSONObject, app: DeclaredApp)",
-        "consumed(layout: Layout)",
-        "class VaultCockpit",
-        "class Section"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/recovery/AdvisoryFeed.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10430,35 +9696,6 @@
         "phoneApps(scopeId: String, ctx: Context)",
         "cloudConfigs(scopeId: String, ctx: Context)",
         "class SuperappSearchIndex"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/settings/ConfigsPrefs.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ConfigsPrefs"
-      ],
-      "imports": [
-        "android.content.Context",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey"
-      ],
-      "symbols": [
-        "credential()",
-        "setAutheliaCredential(email: String, token: String)",
-        "hasOrphanToken()",
-        "adoptOrphanToken(email: String)",
-        "clearAutheliaCredential()",
-        "rawToken()",
-        "writeAuth(email: String, token: String)",
-        "secret(section: String, key: String)",
-        "putSecret(section: String, key: String, value: String)",
-        "clear()",
-        "class doesn",
-        "class ConfigsPrefs",
-        "class refuses",
-        "class rather"
       ]
     },
     {
@@ -11625,51 +10862,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/Snacks.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "snack"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.R",
-        "android.view.View",
-        "androidx.annotation.StringRes",
-        "com.google.android.material.snackbar.Snackbar"
-      ],
-      "symbols": [
-        "snack(message: String, duration: Int = Snackbar.LENGTH_SHORT)",
-        "snack(@StringRes messageRes: Int, duration: Int = Snackbar.LENGTH_SHORT)",
-        "snack( message: String, actionLabel: String, duration: Int = Snackbar.LENGTH_LONG, onClick: (View)"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/StatusLight.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "StatusLight"
-      ],
-      "imports": [
-        "android.content.Context",
-        "androidx.core.content.ContextCompat",
-        "com.diegonmarcos.superapp.R"
-      ],
-      "symbols": [
-        "of(reading: Boolean?, observed: Boolean = true)",
-        "glyph(state: State)",
-        "labelRes(state: State)",
-        "label(ctx: Context, state: State)",
-        "text(ctx: Context, state: State)",
-        "colourRes(state: State)",
-        "colour(ctx: Context, state: State)",
-        "description(ctx: Context, rowLabel: String, state: State)",
-        "class and",
-        "class StatusLight",
-        "class State"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/SystemInfoPopup.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -12439,6 +11631,7 @@
         "org.robolectric.annotation.Config"
       ],
       "symbols": [
+        "builds(f: androidx.fragment.app.Fragment)",
         "class StoreShelvesTest"
       ]
     },
@@ -12907,6 +12100,30 @@
         "store(slot: String, value: String)",
         "resolved(slot: String)",
         "class OneHandResolvedTargetTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/AccountDataTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountDataTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "androidx.test.core.app.ApplicationProvider",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "sp(name: String)",
+        "class AccountDataTest"
       ]
     },
     {
@@ -15913,6 +15130,1002 @@
       "imports": [],
       "symbols": [
         "goldens()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/core/ProfileSyncClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileSyncClient"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Log",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "queueFile(context: Context)",
+        "isPending(context: Context)",
+        "enqueue(context: Context, endpoint: String, installId: String, secret: String, payload: JSONObject)",
+        "flush(context: Context, endpoint: String, installId: String, secret: String)",
+        "flushBlocking(context: Context, endpoint: String, installId: String, secret: String)",
+        "fetch(endpoint: String, installId: String, secret: String)",
+        "delete(context: Context, endpoint: String, installId: String, secret: String, onResult: (Result)",
+        "send(endpoint: String, method: String, installId: String, secret: String, body: String?)",
+        "open(endpoint: String, method: String, installId: String, secret: String)",
+        "redactBody(text: String)",
+        "class ProfileSyncClient",
+        "class Result",
+        "class Delivered",
+        "class Retry",
+        "class Rejected"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountData.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountData"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "android.content.pm.PackageManager",
+        "android.database.Cursor",
+        "android.net.Uri",
+        "android.os.Binder",
+        "android.os.Bundle",
+        "android.os.Process",
+        "com.diegonmarcos.superapp.core.FleetConfig",
+        "com.diegonmarcos.superapp.profile.AccountStore.Slot",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "slotKey(s: Slot)",
+        "export(ctx: Context)",
+        "profileJson(all: Map<String, *>)",
+        "migrated(ctx: Context)",
+        "accountInstalled(ctx: Context)",
+        "fetch(ctx: Context)",
+        "migrate(ctx: Context)",
+        "apply(ctx: Context, b: Bundle)",
+        "applyProfile(sp: SharedPreferences, text: String)",
+        "configsOrRemote(ctx: Context, local: String)",
+        "onCreate()",
+        "call(method: String, arg: String?, extras: Bundle?)",
+        "error(why: String)",
+        "query(uri: Uri, p: Array<out String>?, s: String?, a: Array<out String>?, o: String?)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, s: String?, a: Array<out String>?)",
+        "update(uri: Uri, v: ContentValues?, s: String?, a: Array<out String>?)",
+        "class AccountData",
+        "class Provider"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountDebugApi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountDebugApi"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer.Op",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "register(ctx: Context)",
+        "handle(ctx: Context, op: String, q: Map<String, String>)",
+        "fleet(ctx: Context)",
+        "target(m: AccountModel, q: Map<String, String>, side: AccountStore.Slot)",
+        "totals(apps: JSONObject?)",
+        "unmapped()",
+        "done(line: String, m: AccountModel)",
+        "profiles(m: AccountModel)",
+        "class AccountDebugApi"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountDrift.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountDrift"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "leaves(body: JSONObject?)",
+        "bookkeeping(key: String)",
+        "walk(v: Any?, path: String, out: MutableMap<String, Any>)",
+        "canonical(v: Any?)",
+        "text(v: Any?)",
+        "sha256(body: JSONObject)",
+        "ownerOf(path: String, apps: List<App>)",
+        "diff(a: Map<String, Any>, b: Map<String, Any>, apps: List<App>, scope: Set<String>? = null)",
+        "json()",
+        "counts(fields: List<Field>)",
+        "byApp(fields: List<Field>, apps: List<App>)",
+        "threeWay(s: Map<String, Any>, r: Map<String, Any>, l: Map<String, Any>, observed: Set<String>, apps: List<App>)",
+        "copy(o: JSONObject?)",
+        "put(body: JSONObject, path: String, value: Any)",
+        "runtimeToDeclared(l: JSONObject?, r: Map<String, Any>, observed: Set<String>, readOnly: Set<String>, paths: Collection<String>)",
+        "copyValue(v: Any)",
+        "pushPlan(s: Map<String, Any>, observed: Set<String>, paths: Collection<String>, apps: List<App>)",
+        "drifted(fields: List<Field>, app: String = \"*\")",
+        "class is",
+        "class AccountDrift",
+        "class App",
+        "class Kind",
+        "class Field",
+        "class Counts",
+        "class Three",
+        "class ThreeWay",
+        "class in",
+        "class Skip",
+        "class Written"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountFleet.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountFleet"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.fleetconfig.FleetPolicy",
+        "android.content.Context",
+        "com.diegonmarcos.superapp.appstore.BuildConfig",
+        "com.diegonmarcos.superapp.appstore.StoreStages",
+        "com.diegonmarcos.superapp.core.FleetConfig",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "owns(path: String)",
+        "flatten(appId: String, export: JSONObject)",
+        "body(subtree: JSONObject)",
+        "bodies(items: List<Pair<String, Any>>, server: JSONObject?)",
+        "derive(body: JSONObject?, a: VaultCockpit.AgentAuth?, schema: (String)",
+        "isSecret(m: FleetPolicy.Manifest, path: String)",
+        "driftApps(cockpit: List<AccountDrift.App>, m: FleetPolicy.Manifest, labels: Map<String, String>)",
+        "manifest(ctx: Context)",
+        "fleetApps()",
+        "installed(ctx: Context, pkg: String)",
+        "reads(ctx: Context)",
+        "unreadOf(fields: List<String>, observed: Set<String>, export: JSONObject)",
+        "merge(cockpit: List<AccountRuntime.AppRead>, fleet: List<AccountRuntime.AppRead>)",
+        "push(ctx: Context, items: List<Pair<String, Any>>, server: JSONObject?)",
+        "line(id: String, r: FleetConfig.Reply)",
+        "refusedOf(j: JSONObject)",
+        "plan(m: FleetPolicy.Manifest, declared: JSONObject?, labels: Map<String, String>, installed: (String)",
+        "sha(o: JSONObject)",
+        "journal(ctx: Context)",
+        "plan(ctx: Context, declared: JSONObject?)",
+        "planJson(steps: List<Step>)",
+        "run(ctx: Context, declared: JSONObject?, after: ()",
+        "class AccountFleet",
+        "class or",
+        "class Step"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountHost.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountHost",
+        "AccountColors"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.Context",
+        "android.view.View",
+        "androidx.compose.ui.graphics.toArgb",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
+        "com.diegonmarcos.cloudlib.auth.VaultFile",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.google.android.material.tabs.TabLayout"
+      ],
+      "symbols": [
+        "interfaceAddress(ctx: Context)",
+        "state(ctx: Context)",
+        "apply(ctx: Context, name: String, conf: String)",
+        "of(ctx: Context)",
+        "class to",
+        "class AccountHost",
+        "class Mesh",
+        "class AccountColors"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountModel"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.security.crypto.EncryptedFile",
+        "androidx.security.crypto.MasterKey",
+        "com.diegonmarcos.superapp.account.BuildConfig",
+        "com.diegonmarcos.superapp.profile.AccountStore.Slot",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "doc(slot: Slot)",
+        "write(slot: Slot, body: JSONObject, source: String, apps: JSONObject? = null)",
+        "server()",
+        "derived(body: JSONObject?)",
+        "runtime()",
+        "savedLocal()",
+        "invalidate()",
+        "changed(line: String)",
+        "landServer(body: JSONObject, via: String)",
+        "shown()",
+        "populateFromServer()",
+        "populateFromRuntime()",
+        "edit(path: String, value: String)",
+        "save(source: String = \"edited on this phone\")",
+        "refreshRuntime()",
+        "leavesOf(slot: Slot)",
+        "diff(p: FilePair)",
+        "threeWay()",
+        "pushServerToRuntime(paths: Collection<String>)",
+        "migrationSource()",
+        "migratePlan()",
+        "migrate()",
+        "pullRuntimeToLocal(paths: Collection<String>)",
+        "discardLocal()",
+        "uploadPlan(device: String)",
+        "upload(token: String, device: String)",
+        "report()",
+        "decoded(b64: String)",
+        "tabs()",
+        "pairs()",
+        "ghHost()",
+        "now()",
+        "get(ctx: Context)",
+        "enc(f: File)",
+        "read(file: File)",
+        "write(file: File, bytes: ByteArray)",
+        "class AccountModel",
+        "class Tab",
+        "class FilePair",
+        "class EncryptedIo"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountRuntime.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountRuntime"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.SystemClock",
+        "com.diegonmarcos.superapp.mail.JmapPrefs",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "com.diegonmarcos.superapp.texttools.TextToolsClient",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "under(path: String, field: String)",
+        "coverage(r: AppRead, vf: Map<String, VaultCockpit.VaultField>)",
+        "snapshot(reads: List<AppRead>)",
+        "observed(apps: JSONObject?)",
+        "readOnly(apps: JSONObject?)",
+        "paths(apps: JSONObject?, key: String)",
+        "aboutPaths(fields: Map<String, String>)",
+        "drivePaths()",
+        "aiPaths(tokens: Map<String, String>)",
+        "meshPath(name: String)",
+        "mailPaths(declared: JSONObject?, held: String, owner: String)",
+        "keyFor(email: String)",
+        "hostOf(server: String)",
+        "keyboardValues(export: JSONObject, lists: Map<String, String>)",
+        "deviceFor(devices: List<VaultCockpit.Device>, picked: String, liveAddress: String)",
+        "appRow(id: String, label: String, pkg: String, versionName: String?, versionCode: Long?, stage: String, stageText: String, autoUpdate: Boolean, declaredVersion: String?)",
+        "tunnelRow(t: VaultCockpit.TunnelState)",
+        "tools(ctx: Context)",
+        "read(ctx: Context, declared: JSONObject?, deadlineMs: Long)",
+        "installed(ctx: Context, pkg: String)",
+        "appsRoster(ctx: Context)",
+        "device(ctx: Context, declared: JSONObject?)",
+        "deviceLabel(d: Pair<VaultCockpit.Device, Boolean>)",
+        "readOne(ctx: Context, section: VaultCockpit.Section, declared: JSONObject?, deadlineMs: Long)",
+        "heldSecret(export: JSONObject, store: String)",
+        "fingerprint(v: String)",
+        "push(ctx: Context, path: String, value: Any, server: JSONObject)",
+        "profileField(p: ProfilePrefs, field: String)",
+        "setProfileField(p: ProfilePrefs, field: String, value: String)",
+        "class AccountRuntime",
+        "class Status",
+        "class AppRead"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountStore.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountStore"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "read(file: File)",
+        "write(file: File, bytes: ByteArray)",
+        "json()",
+        "file(slot: Slot)",
+        "read(slot: Slot)",
+        "write(slot: Slot, body: JSONObject, source: String, at: String, apps: JSONObject? = null)",
+        "delete(slot: Slot)",
+        "export(slot: Slot)",
+        "class AccountStore",
+        "class Io",
+        "class PlainIo",
+        "class Slot",
+        "class Meta",
+        "class Doc"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountTabs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountTags",
+        "shownValue",
+        "ProfilesTab",
+        "RuntimeTab",
+        "DriftTab",
+        "rosterLine"
+      ],
+      "imports": [
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.input.KeyboardType",
+        "androidx.compose.ui.text.input.PasswordVisualTransformation",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.account.R",
+        "com.diegonmarcos.superapp.profile.AccountStore.Slot",
+        "com.diegonmarcos.superapp.uikit.KitCard",
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
+        "com.diegonmarcos.superapp.uikit.KitSelectableTile",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "tab(id: String)",
+        "topic(id: String)",
+        "edit(path: String)",
+        "runtimeApp(id: String)",
+        "runtimeStatus(id: String)",
+        "runtimeCounts(id: String)",
+        "runtimeRoster(id: String)",
+        "exportFile(slot: Slot)",
+        "pair(id: String)",
+        "driftApp(id: String)",
+        "pushApp(id: String)",
+        "pullApp(id: String)",
+        "pushItem(path: String)",
+        "pullItem(path: String)",
+        "shownValue(path: String, text: String?)",
+        "ActionButton(label: String, tag: String, enabled: Boolean = true, onClick: ()",
+        "ResultLine(m: AccountModel)",
+        "metaLine(d: AccountStore.Doc)",
+        "ProfilesTab(m: AccountModel, connectLabel: String, export: (name: String, text: String)",
+        "DeclaredApps(bundle: org.json.JSONObject?, route: String, openStore: (String)",
+        "RuntimeTab(m: AccountModel)",
+        "refresh()",
+        "DriftTab(m: AccountModel, device: String, export: (name: String, text: String)",
+        "io(block: ()",
+        "upload()",
+        "rosterLine(o: org.json.JSONObject?)",
+        "class AccountTags"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountUpload.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountUpload"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "call(method: String, url: String, headers: Map<String, String>, body: String?)",
+        "commit(target: Target, token: String, content: ByteArray, message: String, http: Http = UrlHttp)",
+        "reason(status: Int, body: String)",
+        "class AccountUpload",
+        "class Target",
+        "class Result",
+        "class Committed",
+        "class Failed",
+        "class Http",
+        "class UrlHttp"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/BusinessCardFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BusinessCardFragment"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.account.R",
+        "android.graphics.Bitmap",
+        "android.graphics.BitmapFactory",
+        "android.graphics.Canvas",
+        "android.graphics.Color",
+        "android.graphics.Paint",
+        "android.graphics.Path",
+        "android.graphics.RectF",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.FrameLayout",
+        "android.widget.ImageView",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "androidx.fragment.app.Fragment",
+        "com.google.zxing.BarcodeFormat",
+        "com.google.zxing.qrcode.QRCodeWriter",
+        "java.io.File"
+      ],
+      "symbols": [
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "loadBitmap(path: String)",
+        "circularBitmap(src: Bitmap, size: Int)",
+        "initialsBitmap(initials: String, size: Int)",
+        "showQrGallery()",
+        "qrBitmap(text: String, size: Int)",
+        "textRow(ctx: android.content.Context, text: String, styleRes: Int, alpha: Float = 1f)",
+        "keyValueRow(ctx: android.content.Context, key: String, value: String, clickUrl: String? = null)",
+        "spacer(ctx: android.content.Context, heightDp: Int)",
+        "dp(ctx: android.content.Context, v: Int)",
+        "newInstance()",
+        "class BusinessCardFragment"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/FleetCockpitView.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetCockpitView"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Typeface",
+        "android.graphics.drawable.GradientDrawable",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.ImageView",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "androidx.core.view.ViewCompat",
+        "androidx.core.view.accessibility.AccessibilityNodeInfoCompat",
+        "com.diegonmarcos.superapp.account.R",
+        "com.diegonmarcos.superapp.ui.StatusLight"
+      ],
+      "symbols": [
+        "hero(ctx: Context, title: String, subtitle: String, iconRes: Int)",
+        "card(ctx: Context, label: String, tag: String, iconRes: Int, toggleAction: String)",
+        "paint(light: TextView, state: StatusLight.State, rowLabel: String)",
+        "pill(ctx: Context, label: String, onClick: ()",
+        "lightView(ctx: Context)",
+        "badge(ctx: Context, iconRes: Int, sizeDp: Int, fill: Int, ink: Int)",
+        "surface(ctx: Context, fill: Int, hairline: Int)",
+        "dp(ctx: Context, v: Int)",
+        "class is",
+        "class FleetCockpitView",
+        "class Hero",
+        "class Card"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/GhEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GhEngine"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.os.SystemClock",
+        "com.diegonmarcos.superapp.account.BuildConfig",
+        "com.diegonmarcos.superapp.core.DataBackendClient",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "check()",
+        "token(host: String)",
+        "login(host: String, onPrompt: (code: String, url: String)",
+        "ask(method: String, vararg args: String)",
+        "pageOnHost(url: String, host: String)",
+        "class GhEngine",
+        "class Check",
+        "class Ready",
+        "class NotInstalled",
+        "class TooOld",
+        "class Result"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/GitSshVault.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitSshVault"
+      ],
+      "imports": [
+        "android.util.Log",
+        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "com.jcraft.jsch.JSch",
+        "com.jcraft.jsch.Session",
+        "org.eclipse.jgit.api.Git",
+        "org.eclipse.jgit.api.TransportConfigCallback",
+        "org.eclipse.jgit.lib.Repository",
+        "org.eclipse.jgit.revwalk.RevWalk",
+        "org.eclipse.jgit.transport.SshTransport",
+        "org.eclipse.jgit.transport.ssh.jsch.JschConfigSessionFactory",
+        "org.eclipse.jgit.transport.ssh.jsch.OpenSshConfig",
+        "org.eclipse.jgit.treewalk.TreeWalk",
+        "org.eclipse.jgit.util.FS",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.ByteArrayInputStream",
+        "java.io.File",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "fetchArtifact( cacheDir: File, privateKeyPem: String, passphrase: String, path: String = AuthDeclaration.configSource.gitPath, )",
+        "readBlob(repository: Repository, ref: String, path: String)",
+        "sessionFactory( privateKeyPem: String, passphrase: String, knownHosts: String, )",
+        "createDefaultJSch(fs: FS)",
+        "configure(hc: OpenSshConfig.Host, session: Session)",
+        "githubKnownHosts()",
+        "scrub(message: String?, key: String)",
+        "failed(kind: ConfigSyncClient.Kind, message: String)",
+        "class in",
+        "class GitSshVault"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/InfoMask.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InfoMask"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "hides(fullPath: String, value: String)",
+        "rows(sectionId: String, value: Any?)",
+        "schemaRows(section: SchemaSection, data: Any?)",
+        "unfilled(v: Any?)",
+        "walk(section: String, v: Any?, path: String, out: MutableList<Row>)",
+        "join(path: String, key: String)",
+        "parse(o: JSONObject?)",
+        "list(key: String)",
+        "parseSchema(o: JSONObject?)",
+        "sectionsFor(schema: List<SchemaSection>, fetched: List<Pair<String, String>>, bundle: JSONObject?)",
+        "class or",
+        "class InfoMask",
+        "class Kind",
+        "class Row",
+        "class SchemaSection"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ProfileFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileFragment"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.EditText",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.platform.ViewCompositionStrategy",
+        "androidx.compose.ui.viewinterop.AndroidView",
+        "androidx.fragment.app.Fragment",
+        "androidx.lifecycle.lifecycleScope",
+        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
+        "com.diegonmarcos.cloudlib.auth.ConfigArtifact",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.SignInHost",
+        "com.diegonmarcos.cloudlib.auth.SignInResult",
+        "com.diegonmarcos.cloudlib.auth.SignInWays",
+        "com.diegonmarcos.cloudlib.auth.UserRegistry",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
+        "com.diegonmarcos.superapp.account.R",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "com.diegonmarcos.superapp.ui.snack",
+        "com.diegonmarcos.superapp.uikit.kitComposeView",
+        "com.google.android.material.tabs.TabLayout",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "tabLabel(index: Int)",
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "journeyState(ctx: android.content.Context)",
+        "ask(step: ProfileJourney.Step)",
+        "stepLabel(step: ProfileJourney.Step)",
+        "lockText(s: ProfileJourney.State, step: ProfileJourney.Step)",
+        "profilesText(peer: UserRegistry.Peer)",
+        "identityTag(id: UserRegistry.Identity)",
+        "summaries(s: ProfileJourney.State)",
+        "heroSummary(s: ProfileJourney.State)",
+        "paintJourney()",
+        "renderJourney(ctx: android.content.Context, into: LinearLayout)",
+        "connectDecl()",
+        "connectLines()",
+        "buildSignInStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
+        "buildWay( ctx: android.content.Context, s: ProfileJourney.State, way: Way, policy: List<String>, cell: LinearLayout, extras: LinearLayout, status: TextView, )",
+        "signInWay(ctx: android.content.Context, way: Way, providerIds: List<String>)",
+        "wayPill(ctx: android.content.Context, way: Way, onClick: ()",
+        "ghSignIn(way: Way, status: TextView)",
+        "ghPrompt(ctx: android.content.Context, status: TextView, code: String, page: String?)",
+        "lineHeld(ctx: android.content.Context, line: Line)",
+        "buildStoredBearer(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout, status: TextView)",
+        "buildWhoStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
+        "buildDeviceStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
+        "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
+        "renderRuntime(ctx: android.content.Context, into: LinearLayout)",
+        "export(name: String, text: String)",
+        "openRoute(route: String)",
+        "statusView(ctx: android.content.Context)",
+        "showMailCodeDialog()",
+        "tabStrip( ctx: android.content.Context, tabs: List<Tab>, )",
+        "show(index: Int)",
+        "onTabSelected(tab: TabLayout.Tab)",
+        "onTabUnselected(tab: TabLayout.Tab)",
+        "onTabReselected(tab: TabLayout.Tab)",
+        "mailConfirmationField(ctx: android.content.Context)",
+        "confirmMailCode()",
+        "vaultEndpoints()",
+        "vaultCredentialHeld(ctx: android.content.Context)",
+        "showVaultFetchDialog(via: String)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ProfileJourneyView.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileJourneyView"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Typeface",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
+        "com.diegonmarcos.superapp.ui.StatusLight"
+      ],
+      "symbols": [
+        "light(phase: ProfileJourney.Phase)",
+        "overall(s: ProfileJourney.State)",
+        "build( ctx: Context, heroTitle: String, heroSubtitle: String, heroIcon: Int, labels: Map<ProfileJourney.Step, String>, icons: Map<ProfileJourney.Step, Int>, toggleAction: String, )",
+        "paint( j: Journey, state: ProfileJourney.State, summaries: Map<ProfileJourney.Step, String>, heroSummary: String, )",
+        "choice(ctx: Context, text: String, selected: Boolean, onClick: ()",
+        "dp(ctx: Context, v: Int)",
+        "class ProfileJourneyView",
+        "class Journey"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ProfilePrefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfilePrefs"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.account.BuildConfig",
+        "android.content.Context",
+        "android.content.SharedPreferences"
+      ],
+      "symbols": [
+        "migrate()",
+        "derivedInitials()",
+        "clearPersonalData()",
+        "class is",
+        "class ProfilePrefs",
+        "class KDoc"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ProfileSync.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProfileSync"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.account.BuildConfig",
+        "com.diegonmarcos.superapp.core.ProfileSyncClient",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "push(context: Context, prefs: ProfilePrefs = ProfilePrefs(context)",
+        "flush(context: Context)",
+        "isPending(context: Context)",
+        "restore(context: Context)",
+        "fill(key: String, current: String, set: (String)",
+        "forgetMe(context: Context, onDone: (String)",
+        "document(ctx: android.content.Context, prefs: ProfilePrefs)",
+        "enforceAllowlist(profile: JSONObject)",
+        "class ProfileSync",
+        "class is",
+        "class against"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/QrGalleryDialog.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "QrGalleryDialog"
+      ],
+      "imports": [
+        "android.app.Dialog",
+        "android.content.Context",
+        "android.graphics.Bitmap",
+        "android.graphics.Color",
+        "android.view.Gravity",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.FrameLayout",
+        "android.widget.GridLayout",
+        "android.widget.ImageView",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "com.google.zxing.BarcodeFormat",
+        "com.google.zxing.EncodeHintType",
+        "com.google.zxing.qrcode.QRCodeWriter",
+        "com.google.zxing.qrcode.decoder.ErrorCorrectionLevel",
+        "org.json.JSONObject",
+        "java.io.BufferedReader"
+      ],
+      "symbols": [
+        "show(ctx: Context)",
+        "loadManifest(ctx: Context)",
+        "buildGalleryRoot(ctx: Context, m: JSONObject, onClose: ()",
+        "buildQrCard(ctx: Context, spec: JSONObject, manifest: JSONObject)",
+        "showFullScreen(ctx: Context, payload: String, title: String, palette: Palette)",
+        "resolvePayload(spec: JSONObject, manifest: JSONObject)",
+        "renderVcard(contact: JSONObject, links: JSONObject?)",
+        "categoryPalette(category: String)",
+        "qrBitmap(text: String, size: Int, palette: Palette)",
+        "lerpColor(a: Int, b: Int, t: Float)",
+        "showError(ctx: Context, message: String)",
+        "dp(ctx: Context, v: Int)",
+        "class QrGalleryDialog",
+        "class Palette"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/VaultCockpit.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultCockpit"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.account.BuildConfig",
+        "com.diegonmarcos.superapp.appstore.AppInventory",
+        "com.diegonmarcos.superapp.mail.JmapPrefs",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "com.diegonmarcos.superapp.texttools.TextToolsClient",
+        "com.diegonmarcos.superapp.ui.StatusLight",
+        "com.wireguard.config.Config",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.BufferedReader",
+        "java.io.StringReader"
+      ],
+      "symbols": [
+        "parseDerivation(a: JSONObject)",
+        "parseLayout(o: JSONObject)",
+        "deviceIcon(layout: Layout, device: Device?)",
+        "devices(bundle: JSONObject)",
+        "selectedDevice(ctx: Context)",
+        "selectDevice(ctx: Context, id: String)",
+        "sectionLight(rows: List<Row>, observed: Boolean = true)",
+        "overallLight(lights: Collection<StatusLight.State>)",
+        "tally(rows: List<Row>)",
+        "pending(v: Any?)",
+        "pendingText(v: JSONObject)",
+        "addressesOf(conf: String)",
+        "meshProfiles(bundle: JSONObject, device: Device)",
+        "meshRows(bundle: JSONObject, device: Device, current: TunnelState)",
+        "mailDeclared(bundle: JSONObject, email: String)",
+        "mailAccounts(bundle: JSONObject, domain: String)",
+        "mailAccountRows(accounts: List<MailDeclared>, deviceEmail: String)",
+        "mailRows(d: MailDeclared?, prefs: JmapPrefs)",
+        "applyMail(prefs: JmapPrefs, d: MailDeclared)",
+        "aboutRows(bundle: JSONObject, fields: Map<String, String>, device: (String)",
+        "applyAbout(bundle: JSONObject, fields: Map<String, String>, set: (String, String)",
+        "keyboardRows(bundle: JSONObject, deviceText: String)",
+        "driveRows(bundle: JSONObject, prefs: ConfigsPrefs, deviceRepos: String)",
+        "secretRow(label: String, item: String, section: String, key: String)",
+        "driveSessionRows(chain: List<com.diegonmarcos.cloudlib.auth.AuthDeclaration.GitRung>, device: String)",
+        "ownerEmail(bundle: JSONObject, layout: Layout)",
+        "applyDrive(bundle: JSONObject, prefs: ConfigsPrefs)",
+        "aiState(snapshotJson: String?)",
+        "aiRows(bundle: JSONObject, layout: Layout, state: AiState?, peerDownText: String, unmappedText: String)",
+        "applyAi(bundle: JSONObject, layout: Layout, client: TextToolsClient)",
+        "appsDeclared(bundle: JSONObject, device: Device, fleet: Set<String>)",
+        "appsDeclared(bundle: JSONObject, deviceId: String, fleet: Set<String>)",
+        "walk(v: Any?)",
+        "appsListed(bundle: JSONObject, deviceId: String, fleet: Set<String>)",
+        "storeLabel(sources: JSONObject, app: DeclaredApp)",
+        "consumed(layout: Layout)",
+        "class VaultCockpit",
+        "class Section",
+        "class Runtime",
+        "class VaultField"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/settings/ConfigsPrefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsPrefs"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.security.crypto.EncryptedSharedPreferences",
+        "androidx.security.crypto.MasterKey"
+      ],
+      "symbols": [
+        "credential()",
+        "setAutheliaCredential(email: String, token: String)",
+        "hasOrphanToken()",
+        "adoptOrphanToken(email: String)",
+        "clearAutheliaCredential()",
+        "rawToken()",
+        "writeAuth(email: String, token: String)",
+        "secret(section: String, key: String)",
+        "putSecret(section: String, key: String, value: String)",
+        "clear()",
+        "class doesn",
+        "class ConfigsPrefs",
+        "class refuses",
+        "class rather"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/ui/Snacks.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "snack"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.account.R",
+        "android.view.View",
+        "androidx.annotation.StringRes",
+        "com.google.android.material.snackbar.Snackbar"
+      ],
+      "symbols": [
+        "snack(message: String, duration: Int = Snackbar.LENGTH_SHORT)",
+        "snack(@StringRes messageRes: Int, duration: Int = Snackbar.LENGTH_SHORT)",
+        "snack( message: String, actionLabel: String, duration: Int = Snackbar.LENGTH_LONG, onClick: (View)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/ui/StatusLight.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StatusLight"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.account.R"
+      ],
+      "symbols": [
+        "of(reading: Boolean?, observed: Boolean = true)",
+        "glyph(state: State)",
+        "labelRes(state: State)",
+        "label(ctx: Context, state: State)",
+        "text(ctx: Context, state: State)",
+        "colourRes(state: State)",
+        "colour(ctx: Context, state: State)",
+        "description(ctx: Context, rowLabel: String, state: State)",
+        "class and",
+        "class StatusLight",
+        "class State"
       ]
     },
     {
@@ -49005,6 +49218,182 @@
         "bad()",
         "eq()",
         "codehas()"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/app/src/main/java/com/diegonmarcos/cloudaccount/App.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "App"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.app.Application",
+        "android.content.Intent",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.profile.AccountDebugApi",
+        "com.diegonmarcos.superapp.profile.AccountHost"
+      ],
+      "symbols": [
+        "onCreate()",
+        "open(activity: Activity, route: String)",
+        "class supplies",
+        "class App"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/app/src/main/java/com/diegonmarcos/cloudaccount/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "androidx.activity.compose.setContent",
+        "androidx.appcompat.app.AppCompatActivity",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.systemBarsPadding",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Surface",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.ui.Modifier",
+        "androidx.fragment.compose.AndroidFragment",
+        "com.diegonmarcos.superapp.profile.ProfileFragment",
+        "com.diegonmarcos.superapp.updater.Updater"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()",
+        "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "description",
+        "inputs",
+        "outputs",
+        "pkgs",
+        "config",
+        "allowUnfree",
+        "baseAndroidArgs",
+        "toolsVersion",
+        "platformToolsVersion",
+        "buildToolsVersions",
+        "platformVersions",
+        "includeNDK",
+        "androidEnv",
+        "androidSdk",
+        "emulatorEnv",
+        "includeEmulator",
+        "includeSystemImages",
+        "systemImageTypes",
+        "abiVersions",
+        "emulatorSdk",
+        "name",
+        "buildInputs",
+        "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/test/test-account-app.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "mutate()"
       ]
     },
     {
@@ -427059,6 +427448,199 @@
       ],
       "imports": [],
       "symbols": [
+        "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/app/src/main/java/com/diegonmarcos/cloudstore/App.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "App"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.appstore.AppStoreHost",
+        "com.diegonmarcos.superapp.appstore.ConstellationWorker",
+        "com.diegonmarcos.superapp.appstore.StoreDebugApi"
+      ],
+      "symbols": [
+        "onCreate()",
+        "class supplies",
+        "class App"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/app/src/main/java/com/diegonmarcos/cloudstore/MainActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MainActivity"
+      ],
+      "imports": [
+        "android.content.Intent",
+        "android.os.Bundle",
+        "androidx.activity.compose.setContent",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.systemBarsPadding",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Surface",
+        "androidx.compose.material3.Tab",
+        "androidx.compose.material3.TabRow",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.unit.dp",
+        "androidx.appcompat.app.AppCompatActivity",
+        "androidx.fragment.compose.AndroidFragment",
+        "com.diegonmarcos.superapp.appstore.AppsMeshFragment",
+        "com.diegonmarcos.superapp.appstore.StoreCloudFragment",
+        "com.diegonmarcos.superapp.appstore.StorePhoneFragment",
+        "com.diegonmarcos.superapp.updater.Updater"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "onNewIntent(intent: Intent)",
+        "StoreShell()",
+        "tabFrom(i: Intent?)",
+        "class MainActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()"
+      ],
+      "imports": [],
+      "symbols": [
+        "_ghcr_publish()",
+        "_ghcr_source()",
+        "log()",
+        "errlog()",
+        "in_nix()",
+        "in_nix_emulator()",
+        "prefer_host()",
+        "_resolve_signing()",
+        "_enforce_signature()",
+        "step_build()",
+        "step_release()",
+        "step_dev()",
+        "step_test()",
+        "step_instrument()",
+        "step_lint()",
+        "step_clean()",
+        "step_shell()",
+        "step_ship()",
+        "step_waydroid_install()",
+        "step_emulator()",
+        "_release_var()",
+        "_variant_field()",
+        "_variant_artifact()",
+        "_variant_gh_asset()",
+        "_variant_tag_suffix()",
+        "_export_variant_abis()",
+        "_resolve_template()",
+        "_ghcr_gate_public()",
+        "step_oras_push()",
+        "step_oras_pull()",
+        "step_phone_install()",
+        "_verify_asset_abi_neutral()",
+        "_sha256_sidecar()",
+        "_verify_release_asset()",
+        "_publish_release_asset()",
+        "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "description",
+        "inputs",
+        "outputs",
+        "pkgs",
+        "config",
+        "allowUnfree",
+        "baseAndroidArgs",
+        "toolsVersion",
+        "platformToolsVersion",
+        "buildToolsVersions",
+        "platformVersions",
+        "includeNDK",
+        "androidEnv",
+        "androidSdk",
+        "emulatorEnv",
+        "includeEmulator",
+        "includeSystemImages",
+        "systemImageTypes",
+        "abiVersions",
+        "emulatorSdk",
+        "name",
+        "buildInputs",
+        "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/test/test-store-app.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "body()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "body()",
         "mutate()"
       ]
     },

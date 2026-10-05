@@ -94,7 +94,7 @@
       "wireguard": {
         "v4-full": {
           "name": "wg-v4-full",
-          "config_text": "# wg-v4-full — IPv4 wifi, FULL tunnel (v4 via gcp-proxy, v6 via oci-analytics)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — all IPv4 internet (gcp-proxy has no v6 egress) + wg0 mesh v6.\n# fd0c:1d00::/64 MUST be listed here even though v6 egress goes to\n# oci-analytics: it is more specific than the other peer's ::/0, so mesh v6\n# reaches the hub directly instead of being handed to oci-analytics (which\n# drops it — termux's allowed source there is fd0c:1d01::9, not fd0c:1d00::9).\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 0.0.0.0/0, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public mesh + ALL IPv6 (it has v6 egress + NAT64)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, ::/0\nPersistentKeepalive = 25\n",
+          "config_text": "# wg-v4-full — IPv4 wifi, FULL tunnel (v4 via gcp-proxy, v6 via oci-analytics)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — all IPv4 internet (gcp-proxy has no v6 egress) + wg0 mesh v6.\n# IPv4 default is 0.0.0.0/0 MINUS this peer's own endpoint 35.226.147.64/32\n# (wg-quick's excluded-route split). A literal 0.0.0.0/0 would route the\n# handshake into the tunnel it is establishing (same defect as v6-full, #523).\n# fd0c:1d00::/64 MUST be listed here even though v6 egress goes to\n# oci-analytics: it is more specific than the other peer's ::/0, so mesh v6\n# reaches the hub directly instead of being handed to oci-analytics (which\n# drops it — termux's allowed source there is fd0c:1d01::9, not fd0c:1d00::9).\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 0.0.0.0/3, 32.0.0.0/7, 34.0.0.0/8, 35.0.0.0/9, 35.128.0.0/10, 35.192.0.0/11, 35.224.0.0/15, 35.226.0.0/17, 35.226.128.0/20, 35.226.144.0/23, 35.226.146.0/24, 35.226.147.0/26, 35.226.147.65/32, 35.226.147.66/31, 35.226.147.68/30, 35.226.147.72/29, 35.226.147.80/28, 35.226.147.96/27, 35.226.147.128/25, 35.226.148.0/22, 35.226.152.0/21, 35.226.160.0/19, 35.226.192.0/18, 35.227.0.0/16, 35.228.0.0/14, 35.232.0.0/13, 35.240.0.0/12, 36.0.0.0/6, 40.0.0.0/5, 48.0.0.0/4, 64.0.0.0/2, 128.0.0.0/1, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public mesh + ALL IPv6 (it has v6 egress + NAT64)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, ::/0\nPersistentKeepalive = 25\n",
           "parsed": {
             "interface": {
               "address": [
@@ -115,7 +115,38 @@
                 "public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
                 "endpoint": "35.226.147.64:443",
                 "allowed_ips": [
-                  "0.0.0.0/0",
+                  "0.0.0.0/3",
+                  "32.0.0.0/7",
+                  "34.0.0.0/8",
+                  "35.0.0.0/9",
+                  "35.128.0.0/10",
+                  "35.192.0.0/11",
+                  "35.224.0.0/15",
+                  "35.226.0.0/17",
+                  "35.226.128.0/20",
+                  "35.226.144.0/23",
+                  "35.226.146.0/24",
+                  "35.226.147.0/26",
+                  "35.226.147.65/32",
+                  "35.226.147.66/31",
+                  "35.226.147.68/30",
+                  "35.226.147.72/29",
+                  "35.226.147.80/28",
+                  "35.226.147.96/27",
+                  "35.226.147.128/25",
+                  "35.226.148.0/22",
+                  "35.226.152.0/21",
+                  "35.226.160.0/19",
+                  "35.226.192.0/18",
+                  "35.227.0.0/16",
+                  "35.228.0.0/14",
+                  "35.232.0.0/13",
+                  "35.240.0.0/12",
+                  "36.0.0.0/6",
+                  "40.0.0.0/5",
+                  "48.0.0.0/4",
+                  "64.0.0.0/2",
+                  "128.0.0.0/1",
                   "fd0c:1d00::/64"
                 ],
                 "persistent_keepalive": 25
@@ -275,7 +306,7 @@
       "wireguard": {
         "v4-full": {
           "name": "wg-v4-full",
-          "config_text": "# wg-v4-full — IPv4 wifi, FULL tunnel (v4 via gcp-proxy, v6 via oci-analytics)\n# Identity: samsung-a37 (10.0.0.10 + fd0c:1d00::10 wg0 / 10.1.0.12 + fd0c:1d01::12 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.10/24, 10.1.0.12/24, fd0c:1d00::10/64, fd0c:1d01::12/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — all IPv4 internet (gcp-proxy has no v6 egress) + wg0 mesh v6.\n# fd0c:1d00::/64 MUST be listed here even though v6 egress goes to\n# oci-analytics: it is more specific than the other peer's ::/0, so mesh v6\n# reaches the hub directly instead of being handed to oci-analytics (which\n# drops it — samsung-a37's allowed source there is fd0c:1d01::12, not fd0c:1d00::10).\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 0.0.0.0/0, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public mesh + ALL IPv6 (it has v6 egress + NAT64)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, ::/0\nPersistentKeepalive = 25\n",
+          "config_text": "# wg-v4-full — IPv4 wifi, FULL tunnel (v4 via gcp-proxy, v6 via oci-analytics)\n# Identity: samsung-a37 (10.0.0.10 + fd0c:1d00::10 wg0 / 10.1.0.12 + fd0c:1d01::12 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.10/24, 10.1.0.12/24, fd0c:1d00::10/64, fd0c:1d01::12/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — all IPv4 internet (gcp-proxy has no v6 egress) + wg0 mesh v6.\n# IPv4 default is 0.0.0.0/0 MINUS this peer's own endpoint 35.226.147.64/32\n# (wg-quick's excluded-route split). A literal 0.0.0.0/0 would route the\n# handshake into the tunnel it is establishing (same defect as v6-full, #523).\n# fd0c:1d00::/64 MUST be listed here even though v6 egress goes to\n# oci-analytics: it is more specific than the other peer's ::/0, so mesh v6\n# reaches the hub directly instead of being handed to oci-analytics (which\n# drops it — samsung-a37's allowed source there is fd0c:1d01::12, not fd0c:1d00::10).\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 0.0.0.0/3, 32.0.0.0/7, 34.0.0.0/8, 35.0.0.0/9, 35.128.0.0/10, 35.192.0.0/11, 35.224.0.0/15, 35.226.0.0/17, 35.226.128.0/20, 35.226.144.0/23, 35.226.146.0/24, 35.226.147.0/26, 35.226.147.65/32, 35.226.147.66/31, 35.226.147.68/30, 35.226.147.72/29, 35.226.147.80/28, 35.226.147.96/27, 35.226.147.128/25, 35.226.148.0/22, 35.226.152.0/21, 35.226.160.0/19, 35.226.192.0/18, 35.227.0.0/16, 35.228.0.0/14, 35.232.0.0/13, 35.240.0.0/12, 36.0.0.0/6, 40.0.0.0/5, 48.0.0.0/4, 64.0.0.0/2, 128.0.0.0/1, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public mesh + ALL IPv6 (it has v6 egress + NAT64)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, ::/0\nPersistentKeepalive = 25\n",
           "parsed": {
             "interface": {
               "address": [
@@ -296,7 +327,38 @@
                 "public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
                 "endpoint": "35.226.147.64:443",
                 "allowed_ips": [
-                  "0.0.0.0/0",
+                  "0.0.0.0/3",
+                  "32.0.0.0/7",
+                  "34.0.0.0/8",
+                  "35.0.0.0/9",
+                  "35.128.0.0/10",
+                  "35.192.0.0/11",
+                  "35.224.0.0/15",
+                  "35.226.0.0/17",
+                  "35.226.128.0/20",
+                  "35.226.144.0/23",
+                  "35.226.146.0/24",
+                  "35.226.147.0/26",
+                  "35.226.147.65/32",
+                  "35.226.147.66/31",
+                  "35.226.147.68/30",
+                  "35.226.147.72/29",
+                  "35.226.147.80/28",
+                  "35.226.147.96/27",
+                  "35.226.147.128/25",
+                  "35.226.148.0/22",
+                  "35.226.152.0/21",
+                  "35.226.160.0/19",
+                  "35.226.192.0/18",
+                  "35.227.0.0/16",
+                  "35.228.0.0/14",
+                  "35.232.0.0/13",
+                  "35.240.0.0/12",
+                  "36.0.0.0/6",
+                  "40.0.0.0/5",
+                  "48.0.0.0/4",
+                  "64.0.0.0/2",
+                  "128.0.0.0/1",
                   "fd0c:1d00::/64"
                 ],
                 "persistent_keepalive": 25
@@ -448,7 +510,7 @@
   "wireguard": {
     "v4-full": {
       "name": "wg-v4-full",
-      "config_text": "# wg-v4-full — IPv4 wifi, FULL tunnel (v4 via gcp-proxy, v6 via oci-analytics)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — all IPv4 internet (gcp-proxy has no v6 egress) + wg0 mesh v6.\n# fd0c:1d00::/64 MUST be listed here even though v6 egress goes to\n# oci-analytics: it is more specific than the other peer's ::/0, so mesh v6\n# reaches the hub directly instead of being handed to oci-analytics (which\n# drops it — termux's allowed source there is fd0c:1d01::9, not fd0c:1d00::9).\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 0.0.0.0/0, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public mesh + ALL IPv6 (it has v6 egress + NAT64)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, ::/0\nPersistentKeepalive = 25\n",
+      "config_text": "# wg-v4-full — IPv4 wifi, FULL tunnel (v4 via gcp-proxy, v6 via oci-analytics)\n# Identity: termux (10.0.0.9 + fd0c:1d00::9 wg0 / 10.1.0.9 + fd0c:1d01::9 wg-public)\n# DNS is MESH-ONLY (hickory 10.0.0.1 via gcp-proxy, unbound-DNS64 10.1.0.1 /\n# fd0c:1d01::1 via oci-analytics) — two resolvers over two hubs = in-mesh\n# redundancy, no external resolver ever.\n\n[Interface]\nPrivateKey = <PROVIDED_BY_DEVICE>\nAddress = 10.0.0.9/24, 10.1.0.9/24, fd0c:1d00::9/64, fd0c:1d01::9/64\nMTU = 1380\nDNS = 10.0.0.1, 10.1.0.1\n\n[Peer]\n# gcp-proxy — all IPv4 internet (gcp-proxy has no v6 egress) + wg0 mesh v6.\n# IPv4 default is 0.0.0.0/0 MINUS this peer's own endpoint 35.226.147.64/32\n# (wg-quick's excluded-route split). A literal 0.0.0.0/0 would route the\n# handshake into the tunnel it is establishing (same defect as v6-full, #523).\n# fd0c:1d00::/64 MUST be listed here even though v6 egress goes to\n# oci-analytics: it is more specific than the other peer's ::/0, so mesh v6\n# reaches the hub directly instead of being handed to oci-analytics (which\n# drops it — termux's allowed source there is fd0c:1d01::9, not fd0c:1d00::9).\nPublicKey = vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=\nEndpoint = 35.226.147.64:443\nAllowedIPs = 0.0.0.0/3, 32.0.0.0/7, 34.0.0.0/8, 35.0.0.0/9, 35.128.0.0/10, 35.192.0.0/11, 35.224.0.0/15, 35.226.0.0/17, 35.226.128.0/20, 35.226.144.0/23, 35.226.146.0/24, 35.226.147.0/26, 35.226.147.65/32, 35.226.147.66/31, 35.226.147.68/30, 35.226.147.72/29, 35.226.147.80/28, 35.226.147.96/27, 35.226.147.128/25, 35.226.148.0/22, 35.226.152.0/21, 35.226.160.0/19, 35.226.192.0/18, 35.227.0.0/16, 35.228.0.0/14, 35.232.0.0/13, 35.240.0.0/12, 36.0.0.0/6, 40.0.0.0/5, 48.0.0.0/4, 64.0.0.0/2, 128.0.0.0/1, fd0c:1d00::/64\nPersistentKeepalive = 25\n\n[Peer]\n# oci-analytics — wg-public mesh + ALL IPv6 (it has v6 egress + NAT64)\nPublicKey = Bnyf83VpvGY4BjcjQEXgutNEzx9OXMltHIcKNh7cKkc=\nEndpoint = 129.151.228.66:51821\nAllowedIPs = 10.1.0.0/24, fd0c:1d01::/64, ::/0\nPersistentKeepalive = 25\n",
       "parsed": {
         "interface": {
           "address": [
@@ -469,7 +531,38 @@
             "public_key": "vV/phXUwnCjxACQ5Df11Uw47BzJaK4r85jPYMu2HmDc=",
             "endpoint": "35.226.147.64:443",
             "allowed_ips": [
-              "0.0.0.0/0",
+              "0.0.0.0/3",
+              "32.0.0.0/7",
+              "34.0.0.0/8",
+              "35.0.0.0/9",
+              "35.128.0.0/10",
+              "35.192.0.0/11",
+              "35.224.0.0/15",
+              "35.226.0.0/17",
+              "35.226.128.0/20",
+              "35.226.144.0/23",
+              "35.226.146.0/24",
+              "35.226.147.0/26",
+              "35.226.147.65/32",
+              "35.226.147.66/31",
+              "35.226.147.68/30",
+              "35.226.147.72/29",
+              "35.226.147.80/28",
+              "35.226.147.96/27",
+              "35.226.147.128/25",
+              "35.226.148.0/22",
+              "35.226.152.0/21",
+              "35.226.160.0/19",
+              "35.226.192.0/18",
+              "35.227.0.0/16",
+              "35.228.0.0/14",
+              "35.232.0.0/13",
+              "35.240.0.0/12",
+              "36.0.0.0/6",
+              "40.0.0.0/5",
+              "48.0.0.0/4",
+              "64.0.0.0/2",
+              "128.0.0.0/1",
               "fd0c:1d00::/64"
             ],
             "persistent_keepalive": 25
