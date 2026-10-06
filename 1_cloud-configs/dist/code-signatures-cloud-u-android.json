@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20602,
+    "files": 20647,
     "by_lang": {
-      "py": 113,
-      "sh": 405,
-      "kotlin": 10481,
+      "py": 115,
+      "sh": 408,
+      "kotlin": 10521,
       "java": 623,
       "ts": 8413,
       "nix": 28,
@@ -18,14 +18,14 @@
       "rust": 87
     },
     "by_role": {
-      "script": 209,
-      "shell": 303,
+      "script": 212,
+      "shell": 305,
       "java": 622,
       "entrypoint": 23,
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10479,
+      "kotlin": 10519,
       "python": 36,
       "rust-module": 87,
       "file": 2255,
@@ -271,6 +271,32 @@
       ],
       "symbols": [
         "violations(root)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-decisions-use-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "code(path)",
+        "sources(root, rel, skip, exts=(\".kt\", \".java\")",
+        "split_args(text, start)",
+        "check(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "code(path)",
+        "sources(root, rel, skip, exts=(\".kt\", \".java\")",
+        "split_args(text, start)",
+        "check(root)",
         "main(argv)"
       ]
     },
@@ -2195,6 +2221,32 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-decisions-use-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "code(path)",
+        "sources(root, rel, skip, exts=(\".kt\", \".java\")",
+        "split_args(text, start)",
+        "check(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob",
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "code(path)",
+        "sources(root, rel, skip, exts=(\".kt\", \".java\")",
+        "split_args(text, start)",
+        "check(root)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-dns-resolver-guard.py",
       "lang": "py",
       "role": "script",
@@ -3953,6 +4005,34 @@
         "fail()",
         "stage()",
         "mutate()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/decisions-use-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "guard()",
+        "sub()",
+        "js()",
+        "plant()",
+        "red()",
+        "green()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "guard()",
+        "sub()",
+        "js()",
+        "plant()",
+        "red()",
+        "green()"
       ]
     },
     {
@@ -5725,6 +5805,9 @@
         "androidx.fragment.app.Fragment"
       ],
       "symbols": [
+        "tabFor(sectionId: String, pageId: String)",
+        "decide(installed: Boolean, open: ()",
+        "intercept(ctx: Context, sectionId: String, pageId: String)",
         "installed(ctx: Context)",
         "open(ctx: Context, tab: String)",
         "page(pageId: String)",
@@ -5733,6 +5816,7 @@
         "onCreateView(inflater: LayoutInflater, parent: ViewGroup?, state: Bundle?)",
         "OpenCloudStore(tab: String)",
         "class CloudStoreHandoff",
+        "class Route",
         "class Page"
       ]
     },
@@ -11917,6 +12001,24 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/CloudStoreRouteTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudStoreRouteTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.apps.CloudStoreHandoff.Route",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class CloudStoreRouteTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/RecentAppsComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13853,6 +13955,27 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/updater/PassLedgerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PassLedgerTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.updater.PassLedger.Outcome",
+        "com.diegonmarcos.superapp.updater.PassLedger.State",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "pass(vararg r: Triple<Outcome, String, String>)",
+        "class PassLedgerTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -14499,7 +14622,9 @@
       "exports": [
         "ok()",
         "bad()",
-        "has()"
+        "has()",
+        "t6()",
+        "t6mut()"
       ],
       "imports": [
         "test-store-identity.sh"
@@ -14507,7 +14632,9 @@
       "symbols": [
         "ok()",
         "bad()",
-        "has()"
+        "has()",
+        "t6()",
+        "t6mut()"
       ]
     },
     {
@@ -15683,6 +15810,22 @@
       "symbols": [
         "ok()",
         "bad()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-store-row-error-actions.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "strip()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "strip()"
       ]
     },
     {
@@ -18088,7 +18231,6 @@
       ],
       "symbols": [
         "doWork()",
-        "alert(ctx: Context, key: String, title: String, text: String)",
         "constraints()",
         "triggerData(trigger: String)",
         "kick(context: Context, trigger: String)",
@@ -18568,8 +18710,9 @@
         "renderProgress(state: UpdateProgress.State, p: StoreStages.Progress?)",
         "renderHeader(ctx: Context)",
         "fleetRow(ctx: Context, app: Fleet.App)",
-        "errorArea(ctx: Context)",
+        "errorArea(ctx: Context, app: Fleet.App)",
         "showError(appId: String, look: StoreRowError.Look?)",
+        "dnsPageIntent(ctx: Context)",
         "openDnsPage(ctx: Context)",
         "detailBody(ctx: Context, app: Fleet.App, into: LinearLayout)",
         "linkChip(label: String, url: String)",
@@ -18580,8 +18723,7 @@
         "paintStage(appId: String, stg: StoreStages.Stage)",
         "human(b: Long)",
         "next(ctx: Context, app: Fleet.App)",
-        "runStage(ctx: Context, app: Fleet.App, verb: String)",
-        "rowAction(ctx: Context, app: Fleet.App, a: FleetActions.Action)"
+        "runStage(ctx: Context, app: Fleet.App, verb: String)"
       ]
     },
     {
@@ -20869,6 +21011,10 @@
         "folders()",
         "moveFolder(from: String, to: String)",
         "deleteFolder(folder: String)",
+        "applySeed(seed: FavSeed)",
+        "viewMode()",
+        "setViewMode(v: String)",
+        "edit(url: String, title: String, folder: String)",
         "save(list: List<BrowserBookmark>)",
         "class BrowserBookmark",
         "class BrowserBookmarkOps",
@@ -21007,6 +21153,30 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserFavourites.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FavSeedItem",
+        "FavSeed",
+        "BrowserFavourites"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parse(o: JSONObject?)",
+        "normView(v: String?)",
+        "toggled(v: String?)",
+        "merge(list: List<BrowserBookmark>, seed: FavSeed, seen: Set<String>, now: Long)",
+        "letter(title: String, url: String)",
+        "sections(list: List<BrowserBookmark>)",
+        "class FavSeedItem",
+        "class FavSeed",
+        "class BrowserFavourites"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserGridRows.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -21113,9 +21283,12 @@
         "android.widget.FrameLayout",
         "android.widget.LinearLayout",
         "android.widget.TextView",
+        "androidx.compose.ui.graphics.asImageBitmap",
         "androidx.activity.OnBackPressedCallback",
         "androidx.activity.result.contract.ActivityResultContracts",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.setValue",
         "androidx.fragment.app.Fragment",
         "com.diegonmarcos.superapp.uikit.KitPalette",
         "com.diegonmarcos.superapp.uikit.kitComposeView",
@@ -21128,6 +21301,7 @@
         "openSearch()",
         "openSettings()",
         "dismissOverlays()",
+        "openFavourites()",
         "openTabs()",
         "openBrowser()",
         "engine()",
@@ -21163,8 +21337,7 @@
         "startSave(wv: WebView, wholeSite: Boolean, done: (JSONObject)",
         "showOffline()",
         "openOffline(site: OfflineSite)",
-        "showStorage()",
-        "measure()"
+        "showStorage()"
       ]
     },
     {
@@ -21192,6 +21365,26 @@
         "class BrowserMenuRow",
         "class only",
         "class BrowserMenu"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserNavPolicy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserNavPolicy"
+      ],
+      "imports": [],
+      "symbols": [
+        "isFormPostResult(url: String?)",
+        "cleanUserAgent(ua: String)",
+        "hasWebViewToken(ua: String)",
+        "decide(url: String?)",
+        "class BrowserNavPolicy",
+        "class Decision",
+        "class Load",
+        "class Redirect",
+        "class Block"
       ]
     },
     {
@@ -21446,7 +21639,8 @@
         "ListRow",
         "BrowserListScreen",
         "BrowserClearScreen",
-        "BrowserScraperScreen"
+        "BrowserScraperScreen",
+        "BrowserFavScreen"
       ],
       "imports": [
         "androidx.compose.foundation.background",
@@ -21462,6 +21656,10 @@
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.heightIn",
         "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.gestures.detectTapGestures",
+        "androidx.compose.ui.input.pointer.pointerInput",
         "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.foundation.verticalScroll",
@@ -21484,10 +21682,7 @@
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.unit.dp",
-        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
-        "com.diegonmarcos.superapp.uikit.KitSettingsRow",
-        "com.diegonmarcos.superapp.uikit.KitSwitchRow",
-        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader"
       ],
       "symbols": [
         "sheet()",
@@ -21500,6 +21695,8 @@
         "BrowserListScreen( title: String, rows: List<ListRow>, empty: String, onOpen: (ListRow)",
         "BrowserClearScreen(boxes: List<Pair<String, String>>, note: String, onClear: (Set<String>)",
         "BrowserScraperScreen( result: String, onPick: ()",
+        "BrowserFavScreen( sections: List<Pair<String, List<BrowserBookmark>>>, view: String, icon: (String)",
+        "tile(b: BrowserBookmark)",
         "class SheetRow",
         "class BrowserSettingsLayout",
         "class ListRow"
@@ -24455,6 +24652,882 @@
         "class AppUsage",
         "class DayUsage",
         "class SubUsage"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/AnswerCacheTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AnswerCacheTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "answer(n: Int)",
+        "anEntryIsServedUntilItsTtlRunsOut()",
+        "anUnknownKeyIsAMiss()",
+        "thePastTheBoundTheSoonestToExpireGoesFirst()",
+        "puttingAKeyAgainReplacesItAndRestartsItsTtl()",
+        "expiredEntriesAreDroppedOnTheNextPut()",
+        "theCacheSurvivesARestartWithoutItsExpiredEntries()",
+        "theStoreHoldsOnlyHashesAndAnswers()",
+        "aGarbageStoreIsIgnored()",
+        "class AnswerCacheTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/CircuitBreakerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CircuitBreakerTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "breaker()",
+        "staysClosedUntilTheThresholdFailures()",
+        "aSuccessResetsTheCount()",
+        "afterItsPeriodOneTrialPassesAndOnlyOne()",
+        "aSuccessfulTrialClosesItAndAFailedOneOpensItForAFullPeriod()",
+        "class CircuitBreakerTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/ConsentBookTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConsentBookTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "theDefaultIsTheUsesDeclaration()",
+        "aGrantIsPerAppAndPerUse()",
+        "aGrantCanBeWithdrawnAndSurvivesARestart()",
+        "class ConsentBookTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/EngineTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EngineTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.Http",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "reason(r: JSONObject)",
+        "anAnswerCarriesTheUsesClassThresholdAndTypedResults()",
+        "theRequestIsTheDeclaredEndpointModelStateAndQuestions()",
+        "theTokenReachesThePostAndNothingElse()",
+        "theStateIsRedactedBeforeItLeaves()",
+        "aStringStateIsRedactedToo()",
+        "gatingAnswersAdviceOnlyAndNothingElseDoes()",
+        "confidenceIsTheUsesThreshold()",
+        "anUndeclaredUseIsRefusedWithoutACall()",
+        "aUseThatDidNotValidateIsMisconfiguredNotUnknown()",
+        "onlyTheAppsAUseNamesMayCallIt()",
+        "aDisabledUseIsNotServed()",
+        "badQuestionsAreRefusedBeforeAnythingIsSent()",
+        "aStateOverTheCapIsRefusedNotTruncated()",
+        "theCapAppliesAfterRedactionSoDroppedBodiesDoNotCountAgainstIt()",
+        "aUseThatReadsMailIsOffUntilTheUserGrantsIt()",
+        "aConsentIsPerAppAndNeverImpliedByAnotherUse()",
+        "onlyAConsentSetterMayGrantAndOnlyForADeclaredUseAndApp()",
+        "grant(caller: String, app: String, use: String, granted: Any? = true)",
+        "aBackgroundUseAsksOnceAndServesTheRestFromItsCache()",
+        "roomy()",
+        "theCacheKeyIsTheUseTheStateAndTheQuestionsNotTheOrderOfKeys()",
+        "arraysAndStringsAreDistinguishedInTheKey()",
+        "aCachedAnswerIsServedWhileOfflineOnAMeteredNetworkOrInBatterySaver()",
+        "aCachedAnswerExpiresWithItsTtl()",
+        "aUseWithoutATtlIsNeverCached()",
+        "aRefusalAndAFailureAreNotCached()",
+        "nothingIsSentOfflineOnAMeteredNetworkOrInBatterySaver()",
+        "eachSuppressionCanBeSwitchedOffInThePolicy()",
+        "noTokenIsNoOpinionAndCostsNoQuota()",
+        "aTokenThatThrowsIsAnExceptionNotACrash()",
+        "theFleetCapStopsTheCallsAfterSpendReachesIt()",
+        "anAnswerWithNoCostIsChargedTheEstimate()",
+        "aRefusedOrFailedCallIsNotCharged()",
+        "anAppHasADailyQuota()",
+        "aUseIsLimitedPerHour()",
+        "aTransportFailureIsNetworkAndAnHttpErrorIsHttp()",
+        "anAnswerThatCannotBeReadIsMalformedAndIsChargedBecauseItWasPaidFor()",
+        "theBreakerOpensAfterRepeatedFailuresThenTriesOnceAfterItsPeriod()",
+        "aMalformedAnswerCountsTowardTheBreaker()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/Fixture.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FakeHttp",
+        "FakeEnv",
+        "Clock",
+        "Fixtures",
+        "Rig",
+        "strings"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.Http",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "send(url: String, token: String?, body: String?, timeoutMs: Int)",
+        "ok(req: JSONObject)",
+        "online()",
+        "metered()",
+        "batterySaver()",
+        "invoke()",
+        "block(tweak: (JSONObject)",
+        "realManifest()",
+        "noulQ(id: String = \"ok\")",
+        "choiceQ(vararg opts: String)",
+        "request(use: String, state: Any? = JSONObject()",
+        "decide(use: String, state: Any? = JSONObject()",
+        "strings(key: String)",
+        "class FakeHttp",
+        "class FakeEnv",
+        "class Clock",
+        "class Fixtures",
+        "class Rig"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/JournalTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "JournalTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "aLineCarriesWhoWhatAndWhenAndTheCallersExtras()",
+        "theExtraObjectIsNotMutated()",
+        "itIsCutBackToTheNewestLinesEveryMax()",
+        "theSummaryIsNamesAndMarksOnly()",
+        "class JournalTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/LedgerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LedgerTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "ledger(s: KvStore = store)",
+        "anAdmittedCallIsCountedAgainstItsAppAndUse()",
+        "theFleetCapStopsEveryoneOnceSpendReachesIt()",
+        "spendJustUnderTheCapStillAdmits()",
+        "anAppCannotSpendMoreCallsThanItsDailyQuota()",
+        "aUseIsLimitedPerHourOnASlidingWindow()",
+        "otherUsesDoNotShareAnHourlyLimit()",
+        "aRefusedCallIsNotCounted()",
+        "aRateLimitedCallDoesNotUseUpTheAppsQuota()",
+        "aChargeIsTheAnswersCostOrTheEstimateWhenItHasNone()",
+        "theUtcDayRollsSpendAndQuotaButNotTheHourlyWindow()",
+        "theDayIsTheUtcDayBeforeTheEpochToo()",
+        "aRestartKeepsTodaysSpendAndCounts()",
+        "aChargeAloneSurvivesARestart()",
+        "aStoreThatHoldsGarbageStartsEmpty()",
+        "class LedgerTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/PolicyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PolicyTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assert.fail",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "policy(tweak: (JSONObject)",
+        "use(d: JSONObject, name: String = \"ui\")",
+        "rejects(message: String, tweak: (JSONObject)",
+        "rejectedUse(tweak: (JSONObject)",
+        "theDeclaredShapeParses()",
+        "aUseKeepsEveryDeclaredField()",
+        "aUseDefaultsToDisabledAndToRequiringConsent()",
+        "theRealManifestDeclaresAServablePolicy()",
+        "theRealRedactionPatternsMaskWhatTheyAreMeantTo()",
+        "aBlockThatIsNotUsableThrows()",
+        "theLimitsOfABlockAreInclusive()",
+        "aUseThatDoesNotValidateIsRejectedWithItsReasonNotServed()",
+        "aBackgroundUseMustCacheButOthersMayNot()",
+        "sensitiveContentNeedsConsentButOtherContentMayBeImplicit()",
+        "commentKeysInUsesAreNotUses()",
+        "class PolicyTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/RedactorTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RedactorTest"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "stringsGoThroughThePatterns()",
+        "anUntouchedStringCountsForNothing()",
+        "dropKeysAreRemovedWhateverTheirCase()",
+        "theValueOfASecretLookingKeyIsMaskedWhateverItHolds()",
+        "aSecretKeyWithNoValueStaysNull()",
+        "nestingIsWalkedAndNonStringsPassThrough()",
+        "theCallersObjectIsNeverMutated()",
+        "nullAndNumbersAreStates()",
+        "theCapIsInclusiveAndCountsTheSerialisedState()",
+        "class RedactorTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/VerdictsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VerdictsTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "q(type: String, instructions: String = \"i\")",
+        "choice(vararg o: String)",
+        "wellFormedQuestionsPass()",
+        "theCountOfQuestionsIsBoundedBothWays()",
+        "aQuestionNeedsATypeFromTheApiAndInstructions()",
+        "aChoiceNeedsAtLeastTwoCriteria()",
+        "aChoiceMayOnlyOfferTheOptionsTheUseAllows()",
+        "noulReadsPAndTheValueAndConfidence()",
+        "read(p: Double)",
+        "aChoiceReadsItsPickAndConfidence()",
+        "answer(pick: String, pa: Double, pb: Double)",
+        "aScoreReadsItsBestLevel()",
+        "anyUnreadableAnswerMakesTheWholeCallUnreadable()",
+        "c(choice: Any?, probs: JSONObject?)",
+        "class VerdictsTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/AnswerCache.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AnswerCache"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "get(key: String)",
+        "put(key: String, results: JSONObject, ttlS: Long)",
+        "size()",
+        "persist()",
+        "class AnswerCache"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/CircuitBreaker.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CircuitBreaker"
+      ],
+      "imports": [],
+      "symbols": [
+        "allow()",
+        "success()",
+        "failure()",
+        "isOpen()",
+        "class CircuitBreaker"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/ConsentBook.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConsentBook"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "granted(app: String, use: UseDecl)",
+        "set(app: String, use: String, granted: Boolean)",
+        "key(app: String, use: String)",
+        "class ConsentBook"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Engine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Engine"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.Decisions",
+        "com.diegonmarcos.superapp.decisions.Http",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "decide(app: String, request: JSONObject)",
+        "run(app: String, name: String, request: JSONObject)",
+        "setConsent(caller: String, request: JSONObject)",
+        "status(app: String)",
+        "answered(use: UseDecl, results: JSONObject, cached: Boolean)",
+        "refuse(app: String, use: String, decl: UseDecl?, reason: String, latency: Long? = null)",
+        "sha256(text: String)",
+        "canon(x: Any?)",
+        "class Engine",
+        "class keys"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Journal.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Journal"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "record(app: String, use: String, outcome: String, extra: JSONObject = JSONObject()",
+        "summary(n: Int)",
+        "class Journal"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Ledger.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Refusal",
+        "Ledger"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "admit(app: String, use: String, maxPerHour: Int)",
+        "charge(cost: Double?)",
+        "spentToday()",
+        "callsToday(app: String)",
+        "recent(a: JSONArray?, now: Long)",
+        "roll(now: Long)",
+        "class Refusal",
+        "class Ledger"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Policy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UseClass",
+        "UseDecl",
+        "BudgetRules",
+        "BreakerRules",
+        "SuppressRules",
+        "RedactRules",
+        "Policy"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "of(wire: String?)",
+        "parse(d: JSONObject)",
+        "check(u: JSONObject, sensitive: Set<String>)",
+        "decl(name: String, u: JSONObject)",
+        "positive(key: String)",
+        "class UseClass",
+        "class UseDecl",
+        "class BudgetRules",
+        "class BreakerRules",
+        "class SuppressRules",
+        "class RedactRules",
+        "class Policy",
+        "class must"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Redactor.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Redactor"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "clean(state: Any?)",
+        "fits(state: Any?)",
+        "redactString(text: String)",
+        "walk(x: Any?, c: Counter)",
+        "class is",
+        "class Redactor",
+        "class Cleaned",
+        "class Counter"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Stores.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KvStore",
+        "LineSink",
+        "Env",
+        "MemoryStore",
+        "MemorySink"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "read()",
+        "write(doc: JSONObject)",
+        "append(line: String)",
+        "tail(n: Int)",
+        "trim(keep: Int)",
+        "online()",
+        "metered()",
+        "batterySaver()",
+        "class KvStore",
+        "class LineSink",
+        "class Env",
+        "class MemoryStore",
+        "class MemorySink"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Verdicts.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Verdicts"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.Decisions",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "check(questions: JSONObject?, use: UseDecl)",
+        "read(answers: JSONObject, questions: JSONObject, threshold: Double)",
+        "class Verdicts"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/engine/AndroidEnv.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AndroidEnv"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.net.ConnectivityManager",
+        "android.net.NetworkCapabilities",
+        "android.os.PowerManager",
+        "com.diegonmarcos.superapp.decisions.core.Env"
+      ],
+      "symbols": [
+        "online()",
+        "metered()",
+        "batterySaver()",
+        "class AndroidEnv"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/engine/DebugView.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DebugView"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "mark(b: Boolean)",
+        "status(s: JSONObject)",
+        "journal(lines: List<String>)",
+        "probe(reply: JSONObject)",
+        "class DebugView"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/engine/DecisionsDebugInit.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DecisionsDebugInit"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.database.Cursor",
+        "android.net.Uri",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "onCreate()",
+        "query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?)",
+        "update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?)",
+        "class DecisionsDebugInit"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/engine/DecisionsEngineService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DecisionsEngineService"
+      ],
+      "imports": [
+        "android.app.Service",
+        "android.content.Intent",
+        "android.os.Binder",
+        "android.os.IBinder",
+        "com.diegonmarcos.superapp.decisions.link.IDecisionsEngine",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "methodNames()",
+        "dispatch(method: String, request: String, app: String)",
+        "call(method: String?, request: String?)",
+        "methods()",
+        "callerPackage()",
+        "onBind(intent: Intent?)",
+        "class DecisionsEngineService"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/engine/Dispatcher.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Dispatcher"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.core.Engine",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "decide(app: String, request: String)",
+        "status(app: String)",
+        "consent(app: String, request: String)",
+        "noPolicy()",
+        "class Dispatcher"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/engine/EngineHolder.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EngineHolder"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.SystemClock",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.decisions.UrlHttp",
+        "com.diegonmarcos.superapp.decisions.core.AnswerCache",
+        "com.diegonmarcos.superapp.decisions.core.CircuitBreaker",
+        "com.diegonmarcos.superapp.decisions.core.ConsentBook",
+        "com.diegonmarcos.superapp.decisions.core.Engine",
+        "com.diegonmarcos.superapp.decisions.core.Journal",
+        "com.diegonmarcos.superapp.decisions.core.Ledger",
+        "com.diegonmarcos.superapp.decisions.core.Policy",
+        "com.diegonmarcos.superapp.texttools.TextToolsClient",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "get(context: Context)",
+        "holder(context: Context)",
+        "build(ctx: Context)",
+        "accountToken(ctx: Context, provider: String)",
+        "class EngineHolder",
+        "class Holder"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/engine/FileStores.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FileKv",
+        "FileSink"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.core.KvStore",
+        "com.diegonmarcos.superapp.decisions.core.LineSink",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "read()",
+        "write(doc: JSONObject)",
+        "append(line: String)",
+        "tail(n: Int)",
+        "trim(keep: Int)",
+        "class FileKv",
+        "class FileSink"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/test/java/com/diegonmarcos/superapp/decisions/engine/DebugViewTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DebugViewTest"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "statusIsMarksAndNames()",
+        "anEmptyStatusIsAllCrosses()",
+        "theJournalIsItsLines()",
+        "aProbeIsAMarkAndTheReasonWhenItFailed()",
+        "class DebugViewTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/test/java/com/diegonmarcos/superapp/decisions/engine/DispatcherTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DispatcherTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.Http",
+        "com.diegonmarcos.superapp.decisions.core.AnswerCache",
+        "com.diegonmarcos.superapp.decisions.core.CircuitBreaker",
+        "com.diegonmarcos.superapp.decisions.core.ConsentBook",
+        "com.diegonmarcos.superapp.decisions.core.Engine",
+        "com.diegonmarcos.superapp.decisions.core.Env",
+        "com.diegonmarcos.superapp.decisions.core.Journal",
+        "com.diegonmarcos.superapp.decisions.core.Ledger",
+        "com.diegonmarcos.superapp.decisions.core.MemorySink",
+        "com.diegonmarcos.superapp.decisions.core.MemoryStore",
+        "com.diegonmarcos.superapp.decisions.core.Policy",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "send(url: String, token: String?, body: String?, timeoutMs: Int)",
+        "online()",
+        "metered()",
+        "batterySaver()",
+        "decideRunsTheEngineForTheCallerTheBinderNamed()",
+        "statusIsAnsweredForTheCaller()",
+        "consentIsAcceptedFromTheSettingAppOnly()",
+        "withoutAPolicyEveryMethodIsNoPolicy()",
+        "class DispatcherTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/test/java/com/diegonmarcos/superapp/decisions/engine/FileStoresTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FileStoresTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.TemporaryFolder",
+        "java.io.File"
+      ],
+      "symbols": [
+        "aDocumentIsWrittenAtomicallyAndReadBack()",
+        "aCorruptDocumentReadsAsNone()",
+        "aWriteThatCannotHappenIsSwallowed()",
+        "theJournalAppendsTailsAndTrims()",
+        "class FileStoresTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-link/src/main/java/com/diegonmarcos/superapp/decisions/link/DecisionsLink.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DecisionsLink"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.ServiceConnection",
+        "android.content.pm.PackageManager",
+        "android.os.IBinder",
+        "org.json.JSONObject",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "decide(context: Context, use: String, state: Any?, questions: JSONObject)",
+        "outcome(context: Context, use: String, state: Any?, questions: JSONObject)",
+        "status(context: Context)",
+        "setConsent(context: Context, app: String, use: String, granted: Boolean)",
+        "ask(method: String, context: Context, request: JSONObject)",
+        "fail(why: String)",
+        "onServiceConnected(name: ComponentName?, binder: IBinder?)",
+        "onServiceDisconnected(name: ComponentName?)",
+        "check(ctx: Context)",
+        "release(ctx: Context)",
+        "class DecisionsLink",
+        "class Conn"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-link/src/main/java/com/diegonmarcos/superapp/decisions/link/Verdict.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Answer",
+        "Verdict",
+        "Outcome"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "yes(question: String)",
+        "pick(question: String, allowed: Set<String>)",
+        "ranked(question: String)",
+        "parse(reply: JSONObject)",
+        "answer(o: JSONObject)",
+        "class Answer",
+        "class its",
+        "class Verdict",
+        "class Outcome",
+        "class Answered",
+        "class NoOpinion"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-link/src/test/java/com/diegonmarcos/superapp/decisions/link/VerdictTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VerdictTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "verdict(json: String = reply)",
+        "anAnswerIsReadWithItsClassAndEveryTypedResult()",
+        "onlyAConfidentAnswerIsUsable()",
+        "rankedIsMostProbableFirst()",
+        "gatingIsAdviceOnlyAndNeverPreselects()",
+        "aCachedFlagIsKept()",
+        "aRefusalKeepsItsReasonAndNothingElseIsAnAnswer()",
+        "theBoundariesOfAProbabilityAreInclusive()",
+        "class VerdictTest"
       ]
     },
     {
@@ -50382,12 +51455,55 @@
         "reapCachedApk(context: Context, path: String?)",
         "onReceive(context: Context, intent: Intent)",
         "releaseGate()",
+        "filed(outcome: PassLedger.Outcome, reason: String = \"\")",
         "legacyStatusName(code: Int)",
         "isForeground(context: Context)",
         "clearConfirmNotification(context: Context)",
         "notifyConfirm(context: Context, confirm: Intent, subject: String)",
-        "surface(context: Context, short: String, full: String, severity: String = NotificationStore.Sev.INFO, key: String = short)",
+        "isNew(context: Context, pkg: String, build: String, reason: String)",
+        "surface(context: Context, short: String, full: String, severity: String = NotificationStore.Sev.INFO, key: String = short, quiet: Boolean = false, raise: Boolean = true)",
         "class PackageInstallerReceiver"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/updater/src/main/java/com/diegonmarcos/superapp/updater/PassLedger.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PassLedger",
+        "UpdaterHost",
+        "PassLedgerStore"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.core.FleetAlerts"
+      ],
+      "symbols": [
+        "entry(pkg: String, version: String)",
+        "pkgOf(entry: String)",
+        "reasonKey(reason: String)",
+        "begin(s: State, now: Long)",
+        "end(s: State)",
+        "inWindow(s: State, now: Long)",
+        "record(s: State, outcome: Outcome, pkg: String, version: String, reason: String = \"\")",
+        "title(s: State)",
+        "text(s: State, storeName: String)",
+        "signature(s: State)",
+        "shouldRaise(s: State)",
+        "shouldWithdraw(s: State)",
+        "load(ctx: Context)",
+        "save(ctx: Context, s: PassLedger.State)",
+        "begin(ctx: Context)",
+        "end(ctx: Context)",
+        "record(ctx: Context, outcome: PassLedger.Outcome, pkg: String, version: String, reason: String = \"\")",
+        "flush(ctx: Context)",
+        "firstTimeFailure(ctx: Context, pkg: String, version: String, reason: String)",
+        "clearFailure(ctx: Context, pkg: String)",
+        "class PassLedger",
+        "class Outcome",
+        "class State",
+        "class UpdaterHost",
+        "class PassLedgerStore"
       ]
     },
     {
@@ -53385,6 +54501,28 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserFavouritesTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserFavouritesTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserBookmark",
+        "com.diegonmarcos.superapp.browser.BrowserBookmarkOps",
+        "com.diegonmarcos.superapp.browser.BrowserFavourites",
+        "com.diegonmarcos.superapp.browser.FavSeed",
+        "com.diegonmarcos.superapp.browser.FavSeedItem",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class BrowserFavouritesTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserFeaturesTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -53570,6 +54708,28 @@
       "symbols": [
         "refused(key: String, raw: String)",
         "class BrowserSettingsCatalogueTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserSignInTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserSignInTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserNavPolicy",
+        "com.diegonmarcos.superapp.browser.BrowserNavPolicy.Decision",
+        "com.diegonmarcos.superapp.browser.BrowserTab",
+        "com.diegonmarcos.superapp.browser.BrowserTabStore",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertSame",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class BrowserSignInTest"
       ]
     },
     {
@@ -431665,6 +432825,26 @@
         "bad()",
         "scratch()",
         "plant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/test/test-pass-summary.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "mutate()"
       ]
     },
     {
