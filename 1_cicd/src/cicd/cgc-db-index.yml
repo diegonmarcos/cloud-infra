@@ -80,6 +80,11 @@ on:
         required: false
         default: both
         type: string
+      restore_only:
+        description: "Skip the repo matrix and index legs; run ONLY restore-all. Used by cgc-db.yml's restore-retry when a restore-all job was lost to a runner-acquisition failure."
+        required: false
+        default: false
+        type: boolean
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -144,6 +149,7 @@ jobs:
   # ── Resolve the repo matrix from build.json (data-driven; see header) ──
   repos:
     name: "cgc-db · ${{ inputs.phase }} · resolve repo matrix"
+    if: ${{ !inputs.restore_only }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:

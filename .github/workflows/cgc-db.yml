@@ -185,6 +185,12 @@ jobs:
   # That gate was correct for the old SERIAL job (all-or-nothing); it is wrong for a
   # per-repo matrix, where each graphrag job restores its own repo's image and stands
   # or falls alone. `cancelled` stays excluded — that means the operator stopped the run.
+  # `cancelled` of the semantic NEEDS result is accepted too (2026-10-05, run 37300450193):
+  # GitHub cancels a job it cannot get a hosted runner for ("The job was not acquired by
+  # Runner of type hosted even after multiple attempts", ~15 min, no steps run), and a
+  # matrix-leg loss or a 330-min job timeout makes the whole semantic result `cancelled`.
+  # That is NOT an operator stop — an operator stop cancels the RUN, and !cancelled() below
+  # (run-level) still blocks that. Gating on the needs result skipped GraphRAG for every repo.
   # !cancelled(), not always(): always() starts this job even in a CANCELLED run, so a
   # run the operator stopped — or that #418's coalesce job cancelled — still ran graphrag.
   graphrag:
@@ -194,7 +200,7 @@ jobs:
       ${{
         !cancelled()
         && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'graphrag')
-        && (needs.semantic.result == 'success' || needs.semantic.result == 'skipped' || needs.semantic.result == 'failure')
+        && (needs.semantic.result == 'success' || needs.semantic.result == 'skipped' || needs.semantic.result == 'failure' || needs.semantic.result == 'cancelled')
       }}
     uses: ./.github/workflows/cgc-db-index.yml
     with:
@@ -208,4 +214,31 @@ jobs:
       surfaces: ${{ github.event.inputs.surfaces || 'both' }}
       # Null on schedule = 'false' = honour the manifest (the daily run must stay incremental).
       force: ${{ github.event.inputs.force || 'false' }}
+    secrets: inherit
+
+  # Phase 3 — restore retry. restore-all is a single job; if GitHub cannot hand it a hosted
+  # runner it is CANCELLED after ~15 min with no steps run (dispatch 37250416702: graphrag
+  # indexed + checkpointed cloud-infra and cloud-u-containers to GHCR, then restore-all
+  # "was not acquired by Runner of type hosted even after multiple attempts", so nothing
+  # reached oci-apps). Nothing inside the lost job can retry itself, so one more restore-only
+  # pass runs here. `!cancelled()` is the RUN-level function: an operator/unjam cancel of the
+  # run still stops this; only a lost job inside a live run triggers it. Restore is idempotent
+  # (box re-pulls the per-repo GHCR images), so a spurious retry costs time, not correctness.
+  restore-retry:
+    name: "phase · restore-retry"
+    needs: [semantic, graphrag]
+    if: >-
+      ${{
+        !cancelled()
+        && github.event.inputs.restore != 'false'
+        && (needs.semantic.result == 'cancelled' || needs.graphrag.result == 'cancelled')
+      }}
+    uses: ./.github/workflows/cgc-db-index.yml
+    with:
+      phase: graphrag
+      restore_only: true
+      repos: ${{ github.event.inputs.repos || '' }}
+      restore: true
+      surfaces: ${{ github.event.inputs.surfaces || 'both' }}
+      force: 'false'
     secrets: inherit

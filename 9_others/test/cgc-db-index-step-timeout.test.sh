@@ -12,4 +12,13 @@ for f in "$ROOT/1_cicd/src/cicd/cgc-db-index.yml" "$ROOT/.github/workflows/cgc-d
 done
 grep -q "!cancelled()" "$ROOT/1_cicd/src/cicd/cgc-db.yml" && grep -q "needs.semantic.result == 'failure'" "$ROOT/1_cicd/src/cicd/cgc-db.yml" \
   || { echo "FAIL graphrag gate no longer accepts semantic failure"; exit 1; }
+# 2026-10-05: a hosted-runner acquisition failure CANCELS a job (matrix leg or restore-all).
+# graphrag must still run after a cancelled semantic result, and a restore-only retry must exist.
+for f in "$ROOT/1_cicd/src/cicd/cgc-db.yml" "$ROOT/.github/workflows/cgc-db.yml"; do
+  grep -q "needs.semantic.result == 'cancelled'" "$f" || { echo "FAIL $f: graphrag gate rejects cancelled semantic"; exit 1; }
+  grep -q "^  restore-retry:" "$f" && grep -q "restore_only: true" "$f" || { echo "FAIL $f: restore-retry job missing"; exit 1; }
+done
+for f in "$ROOT/1_cicd/src/cicd/cgc-db-index.yml" "$ROOT/.github/workflows/cgc-db-index.yml"; do
+  grep -q "restore_only:" "$f" && grep -q "if: \${{ !inputs.restore_only }}" "$f" || { echo "FAIL $f: restore_only input/gate missing"; exit 1; }
+done
 echo PASS
