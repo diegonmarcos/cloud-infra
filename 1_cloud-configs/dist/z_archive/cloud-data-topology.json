@@ -77,6 +77,7 @@
         "host_literal": true
       },
       "containers": [
+        "jev-sidecar",
         "languagetool",
         "c3-infra-api",
         "c3-services-api",
@@ -601,6 +602,12 @@
         "service": "alerts-api"
       },
       {
+        "name": "jev-sidecar.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "jev-sidecar"
+      },
+      {
         "name": "languagetool.app",
         "type": "A",
         "value": "10.0.0.6",
@@ -1021,6 +1028,56 @@
         "ports": [],
         "networks": []
       }
+    },
+    "jev-sidecar": {
+      "category": "tools",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-ai_jev-sidecar",
+      "description": "Jev decisions sidecar on oci-apps (#881) — `jev-gate serve`: POST /decide/<use> with {state, questions} on the WireGuard mesh for the sites that cannot carry a gate of their own (Dagu DAGs, journal-ntfy.sh, maddy post-hoc). One OPENROUTER_API_KEY, one answer cache, one daily USD cap and per-use hourly limits, one journal on stdout for the fleet's log-shipper (OpenObserve). Jev only suggests: every failure answers {ok:false, reason} and the caller keeps today's behaviour. Uses are declared in _shared/jev-gate/jev-gate.json, the same file the agent CLIs' gate reads. WG-only, never public.",
+      "port": 3110,
+      "dns": "jev-sidecar.app",
+      "upstream": "10.0.0.6:3110",
+      "containers": {
+        "app": {
+          "container_name": "jev-sidecar",
+          "image": "ghcr.io/diegonmarcos/jev-sidecar:latest",
+          "port": 3110,
+          "port_env": "JEV_GATE_PORT",
+          "dns": "jev-sidecar.app",
+          "public": false,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "jev-sidecar"
+      ],
+      "all_ports": [
+        "3110"
+      ],
+      "all_dns": [
+        "jev-sidecar.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 3110
+      },
+      "health": {
+        "path": "/health"
+      },
+      "flake": "infra-ai_jev-sidecar"
     },
     "languagetool": {
       "category": "tools",

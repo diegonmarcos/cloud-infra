@@ -438,6 +438,19 @@
       "ports": null,
       "health": null
     },
+    "jev-sidecar": {
+      "name": "jev-sidecar",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "tools",
+      "ports": {
+        "app": 3110
+      },
+      "health": {
+        "path": "/health"
+      }
+    },
     "languagetool": {
       "name": "languagetool",
       "vm": "oci-A1-f_0",
@@ -1384,6 +1397,15 @@
       "dns": "alerts-api.app"
     },
     {
+      "service": "jev-sidecar",
+      "dns": "jev-sidecar.app"
+    },
+    {
+      "service": "jev-sidecar",
+      "container": "app",
+      "dns": "jev-sidecar.app"
+    },
+    {
       "service": "languagetool",
       "dns": "languagetool.app"
     },
@@ -2073,6 +2095,7 @@
         "user": "ubuntu",
         "provider": null,
         "services": [
+          "jev-sidecar",
           "languagetool",
           "c3-infra-api",
           "c3-services-api",
@@ -2172,6 +2195,19 @@
         "category": "tools",
         "ports": null,
         "health": null
+      },
+      "jev-sidecar": {
+        "name": "jev-sidecar",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "tools",
+        "ports": {
+          "app": 3110
+        },
+        "health": {
+          "path": "/health"
+        }
       },
       "languagetool": {
         "name": "languagetool",

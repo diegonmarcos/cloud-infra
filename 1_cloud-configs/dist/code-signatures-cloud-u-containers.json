@@ -6,24 +6,24 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2882,
+    "files": 2886,
     "by_lang": {
-      "sh": 140,
-      "nix": 156,
+      "sh": 141,
+      "nix": 159,
       "py": 857,
       "ts": 1131,
       "js": 64,
       "rust": 534
     },
     "by_role": {
-      "shell": 130,
-      "nix-module": 14,
+      "shell": 131,
+      "nix-module": 15,
       "python": 850,
       "module": 689,
       "file": 310,
       "script": 8,
-      "flake": 72,
-      "compose": 70,
+      "flake": 73,
+      "compose": 71,
       "entrypoint": 48,
       "mcp-tool": 107,
       "workflow-dag": 2,
@@ -293,6 +293,28 @@
       ]
     },
     {
+      "path": "_shared/jev-gate.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [
+        "pkgs"
+      ],
+      "imports": [
+        "../../_shared/jev-gate.nix",
+        "jev-gate.nix",
+        "../_shared/jev-gate.nix"
+      ],
+      "symbols": [
+        "share",
+        "bin",
+        "name",
+        "paths",
+        "meta",
+        "description",
+        "mainProgram"
+      ]
+    },
+    {
       "path": "_shared/jev-gate/__init__.py",
       "lang": "py",
       "role": "python",
@@ -319,8 +341,10 @@
         "use_cfg(cfg, use)",
         "redact(text, cfg)",
         "never_auto_approve(tool, tool_input, cfg)",
-        "decide(state, questions, cfg, budget=None)",
+        "decide(state, questions, cfg, budget=None, use=None)",
         "log(cfg, **event)",
+        "budget_admit(cfg, use, now=None)",
+        "budget_charge(cfg, cost, now=None)",
         "safety(use, tool, tool_input, project, task, cfg, cli=None, session_id=None)",
         "claude_hook(event, cfg)",
         "goose_hook(event, cfg)",
@@ -333,15 +357,19 @@
         "touched_paths(tool, tool_input, cwd, cfg)",
         "impact(cli, tool, tool_input, cwd, session_id, cfg)",
         "select_tools(request, cfg, api_call_count=1, api_mode=\"chat_completions\")",
-        "main(argv)"
+        "generic_use(cfg, use)",
+        "check_questions(questions, u)",
+        "read_verdicts(answers, questions, u)"
       ],
       "imports": [
         "hashlib",
+        "http.server",
         "json",
         "os",
         "re",
         "shlex",
         "sys",
+        "threading",
         "time",
         "urllib.request"
       ],
@@ -352,9 +380,12 @@
         "_normalize(part, patterns)",
         "never_auto_approve(tool, tool_input, cfg)",
         "_key(cfg)",
-        "decide(state, questions, cfg, budget=None)",
+        "decide(state, questions, cfg, budget=None, use=None)",
         "_prob(x)",
         "log(cfg, **event)",
+        "_ledger(cfg, txn)",
+        "budget_admit(cfg, use, now=None)",
+        "budget_charge(cfg, cost, now=None)",
         "safety(use, tool, tool_input, project, task, cfg, cli=None, session_id=None)",
         "claude_hook(event, cfg)",
         "goose_hook(event, cfg)",
@@ -378,7 +409,11 @@
         "_has_tool_traffic(messages)",
         "select_tools(request, cfg, api_call_count=1, api_mode=\"chat_completions\")",
         "_without_tools(request)",
-        "main(argv)"
+        "_redact_obj(x, cfg)",
+        "generic_use(cfg, use)",
+        "check_questions(questions, u)",
+        "read_verdicts(answers, questions, u)",
+        "_decide_cache(cfg)"
       ]
     },
     {
@@ -681,6 +716,14 @@
         "load(path, name)",
         "suite(mod)",
         "code_graph_suite(mod, check)",
+        "generic_config(mod)",
+        "noul_q(**kw)",
+        "choice_q(*options)",
+        "choice_reply(pick, p, extra=None)",
+        "decide_suite(mod, check)",
+        "sidecar_suite(mod)",
+        "decide_mutation_tests()",
+        "package_and_parity()",
         "mutation_tests()",
         "cli_and_wiring()",
         "main()",
@@ -712,6 +755,14 @@
         "load(path, name)",
         "suite(mod)",
         "code_graph_suite(mod, check)",
+        "generic_config(mod)",
+        "noul_q(**kw)",
+        "choice_q(*options)",
+        "choice_reply(pick, p, extra=None)",
+        "decide_suite(mod, check)",
+        "sidecar_suite(mod)",
+        "decide_mutation_tests()",
+        "package_and_parity()",
         "mutation_tests()",
         "cli_and_wiring()",
         "main()",
@@ -1024,6 +1075,113 @@
         "defaultPkg",
         "default",
         "docs"
+      ]
+    },
+    {
+      "path": "infra-ai_jev-sidecar/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "infra-ai_jev-sidecar/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "svc",
+        "wgIp",
+        "home",
+        "services",
+        "jev-sidecar",
+        "image",
+        "container_name",
+        "network_mode",
+        "environment",
+        "HOME",
+        "JEV_GATE_BIND",
+        "JEV_GATE_PORT",
+        "JEV_GATE_CONFIG",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "jev_sidecar_data"
+      ]
+    },
+    {
+      "path": "infra-ai_jev-sidecar/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "dockerfile",
+        "extraFiles",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
       ]
     },
     {

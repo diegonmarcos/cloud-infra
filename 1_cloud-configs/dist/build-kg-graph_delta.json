@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 309,
-    "edges": 425,
+    "nodes": 312,
+    "edges": 429,
     "by_table": {
       "vm": 4,
-      "service": 72,
-      "container": 88,
+      "service": 73,
+      "container": 89,
       "domain": 42,
       "repo": 3,
-      "module": 72,
+      "module": 73,
       "package": 28
     }
   },
@@ -141,6 +141,32 @@
         "image": "",
         "role": "app",
         "port": 5050,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "jev_sidecar",
+      "key": "service:jev_sidecar",
+      "properties": {
+        "name": "jev-sidecar",
+        "category": "tools",
+        "description": "Jev decisions sidecar on oci-apps (#881) — `jev-gate serve`: POST /decide/<use> with {state, questions} on the WireGuard mesh for the sites that cannot carry a gate of their own (Dagu DAGs, journal-ntfy.sh, maddy post-hoc). One OPENROUTER_API_KEY, one answer cache, one daily USD cap and per-use hourly limits, one journal on stdout for the fleet's log-shipper (OpenObserve). Jev only suggests: every failure answers {ok:false, reason} and the caller keeps today's behaviour. Uses are declared in _shared/jev-gate/jev-gate.json, the same file the agent CLIs' gate reads. WG-only, never public.",
+        "domain": null,
+        "port": 3110,
+        "vm": "oci-apps",
+        "folder": "infra-ai_jev-sidecar"
+      }
+    },
+    {
+      "table": "container",
+      "id": "jev_sidecar",
+      "key": "container:jev_sidecar",
+      "properties": {
+        "name": "jev-sidecar",
+        "image": "ghcr.io/diegonmarcos/jev-sidecar:latest",
+        "role": "app",
+        "port": 3110,
         "public": false
       }
     },
@@ -2540,6 +2566,17 @@
     },
     {
       "table": "module",
+      "id": "infra_ai_jev_sidecar",
+      "key": "module:infra_ai_jev_sidecar",
+      "properties": {
+        "name": "infra-ai_jev-sidecar",
+        "repo": "cloud",
+        "category": "tools",
+        "service": "jev-sidecar"
+      }
+    },
+    {
+      "table": "module",
       "id": "infra_ai_languagetool",
       "key": "module:infra_ai_languagetool",
       "properties": {
@@ -3685,6 +3722,22 @@
       "from": "service:alerts_api",
       "to": "container:alerts_api",
       "key": "service:alerts_api->runs_container->container:alerts_api",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:jev_sidecar",
+      "to": "vm:oci_apps",
+      "key": "service:jev_sidecar->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:jev_sidecar",
+      "to": "container:jev_sidecar",
+      "key": "service:jev_sidecar->runs_container->container:jev_sidecar",
       "properties": {
         "role": "app"
       }
@@ -5702,6 +5755,20 @@
       "from": "module:bc_obs_alerts_api",
       "to": "service:alerts_api",
       "key": "module:bc_obs_alerts_api->implements->service:alerts_api",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_ai_jev_sidecar",
+      "to": "repo:cloud",
+      "key": "module:infra_ai_jev_sidecar->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_ai_jev_sidecar",
+      "to": "service:jev_sidecar",
+      "key": "module:infra_ai_jev_sidecar->implements->service:jev_sidecar",
       "properties": {}
     },
     {
