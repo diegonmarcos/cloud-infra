@@ -807,6 +807,43 @@ checkpoint_publish() {  # $1 = repo local name
   fi
 }
 
+# GRAPH PERSISTED? (graphrag phase, #888). octocode writes graphrag_nodes.lance only
+# when the graph pass COMPLETES; an index killed by the slice timeout leaves a project
+# dir with storage (blocks, embeddings, metadata) and no graph. Run 37415858605: a forced
+# cloud-u-containers index stopped at 2233/3462 files, published exactly that, and the job
+# was green -- the timeout branch only warned, and assert_llm_graph reads a 0-node overview
+# as a "small corpus". "Present" means a data fragment exists, not just the directory.
+graph_nodes_present() {  # $1 = project dir name under OCTO_HOME → rc 0 when a node fragment exists
+  [ -n "${1:-}" ] || return 1
+  [ -n "$(find "$OCTO_HOME/$1/storage/graphrag_nodes.lance/data" -type f -name '*.lance' -print -quit 2>/dev/null)" ]
+}
+
+# FORCED-RUN RESUME (#888). A forced index restarts from base on purpose (see the restore
+# loop), so a repo too big for one slice could never finish: every forced run redid the
+# same 64% and then overwrote :latest with a graph-less partial. A forced run that times
+# out now publishes its partial to a SEPARATE tag, never :latest (the served graph
+# survives), stamped with a marker; the next forced run of the same phase resumes from it
+# when the marker's octocode version matches the pinned one, else starts from base as before.
+FORCE_PARTIAL_MARKER=".cgc-force-partial"
+force_partial_tag() { printf '%s-force-%s' "$REPO_TAG" "${MANIFEST_PHASE:-default}"; }
+
+resume_force_partial() {  # $1 = repo local name → layers the resumable partial into OCTO_HOME, or nothing
+  _rfp_before=$(project_dirs_snapshot "$OCTO_HOME")
+  CGC_PULL_MERGE=1 sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "${REPO_PREFIX}${1}:$(force_partial_tag)" || true
+  for _rfp_d in $(project_dirs_snapshot "$OCTO_HOME"); do
+    printf '%s\n' "$_rfp_before" | grep -qxF "$_rfp_d" && continue
+    _rfp_m="$OCTO_HOME/$_rfp_d/$FORCE_PARTIAL_MARKER"
+    if [ -f "$_rfp_m" ] && [ "$(jq -r '.octocode // ""' "$_rfp_m" 2>/dev/null)" = "$OCTO_VERSION" ] \
+       && [ "$(jq -r '.phase // ""' "$_rfp_m" 2>/dev/null)" = "${MANIFEST_PHASE:-default}" ]; then
+      rm -f "$_rfp_m"   # :latest must never carry the marker
+      echo "[cgc-db] CGC_FORCE — resuming $1 from its unfinished forced index ($(force_partial_tag), project $_rfp_d)"
+    else
+      rm -rf "$OCTO_HOME/$_rfp_d"
+      echo "[cgc-db] CGC_FORCE — $1: tag $(force_partial_tag) is not a resumable partial for octocode $OCTO_VERSION, starting from base"
+    fi
+  done
+}
+
 # BOOTSTRAP config.toml (per-repo mode only). Before the versioned base image
 # exists on GHCR (the first cycle after every octocode bump) the base restore is a
 # no-op and OCTO_HOME has no config.toml; an `octocode index` in that state would
@@ -1027,6 +1064,7 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
     # binary). Forced means from base, in both phases.
     if [ "${CGC_FORCE:-0}" = "1" ]; then
       echo "[cgc-db] CGC_FORCE — skipping prior checkpoint of $_r: full re-index from base (USE_LLM=$USE_LLM)"
+      resume_force_partial "$_r"
       continue
     fi
     CGC_PULL_MERGE=1 sh "$HERE/cloud-cgc-db-pull.sh" "$OCTO_HOME" "${REPO_PREFIX}${_r}:${REPO_TAG}" || true
@@ -1369,6 +1407,7 @@ N_INDEX=0; N_SKIP=0; N_TIMEOUT=0; N_DEFER=0
 # served answers are lies, and that is the whole difference between the twice-daily
 # run being a drift detector and being a green tick nobody reads.
 STALE_REPOS=""
+NO_GRAPH_REPOS=""
 
 # What to show of octocode's own output once an index run ends. octocode drives
 # a progress spinner: thousands of \r-separated frames that together form ONE
@@ -1594,6 +1633,10 @@ for r in $REPOS; do
     octo_log_digest "$_log" 40; rm -f "$_log"
     # graphrag phase only: no LLM-derived edges = no checkpoint (see assert_llm_graph).
     if [ "$USE_LLM" = "true" ]; then assert_llm_graph "$d" "$r" || exit 1; fi
+    if [ "$USE_LLM" = "true" ] && [ -n "${_proj_resolved:-}" ] && [ "${_files:-0}" -ge 30 ] && ! graph_nodes_present "$_proj_resolved"; then
+      echo "::error::[cgc-db] $r · graphrag phase finished but project dir $_proj_resolved holds NO graphrag_nodes data — nothing was persisted, refusing to publish a graph-less checkpoint as a graphrag result (#888)"
+      exit 1
+    fi
     if [ "$_noop_index" = "1" ]; then
       echo "::warning::[cgc-db] $r · the indexer processed 0 of 0 files although the change gate let it through (was=${last:-none} now=$cur) — octocode treats the DB as current at a commit it never indexed, so the published store answers for an older tree. The checkpoint is published, the manifest is NOT advanced, and this repo stays 'not indexed' and retries. Only a reindex (workflow input force=true) actually clears it."
       STALE_REPOS="$STALE_REPOS $r"
@@ -1617,6 +1660,16 @@ for r in $REPOS; do
     # successive runs ratchet forward instead of resetting. Worst case if octocode does not
     # skip already-embedded files, this costs one extra push and converges no slower than
     # before; it cannot mark a repo done that is not done, because the manifest is untouched.
+    if [ "$USE_LLM" = "true" ] && [ -n "${_proj_resolved:-}" ] && [ "${_files:-0}" -ge 30 ] && ! graph_nodes_present "$_proj_resolved"; then
+      NO_GRAPH_REPOS="$NO_GRAPH_REPOS $r"
+      echo "::error::[cgc-db] $r · the slice expired before the graph pass: project dir $_proj_resolved has storage but NO graphrag_nodes — this is a resumable partial, not a graphrag result, and the job fails below so it cannot read as success (#888)"
+      if [ "${CGC_FORCE:-0}" = "1" ]; then
+        printf '{"octocode":"%s","phase":"%s","commit":"%s"}\n' "$OCTO_VERSION" "${MANIFEST_PHASE:-default}" "$cur" > "$OCTO_HOME/$_proj_resolved/$FORCE_PARTIAL_MARKER"
+        echo "[cgc-db] checkpoint publish after $r to $(force_partial_tag) (forced partial — :latest and the manifest untouched)"
+        ( REPO_TAG="$(force_partial_tag)"; checkpoint_publish "$r" )
+        continue
+      fi
+    fi
     echo "[cgc-db] checkpoint publish after $r (PARTIAL — manifest not advanced)"
     checkpoint_publish "$r"
     PUSHED=1
@@ -1633,6 +1686,11 @@ for r in $REPOS; do
   _tmp=$(mktemp); jq --arg r "$r" --arg c "$cur" '.[$r]=$c' "$_mf" > "$_tmp" && mv "$_tmp" "$_mf"
   echo "[cgc-db] checkpoint publish after $r"
   checkpoint_publish "$r"
+  if [ "${CGC_FORCE:-0}" = "1" ] && [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
+    # The forced index finished: overwrite the resume tag with the (marker-less) result so
+    # a later forced run cannot resume from a stale partial.
+    ( REPO_TAG="$(force_partial_tag)"; checkpoint_publish "$r" ) || echo "::warning::[cgc-db] $r · could not clear $(force_partial_tag); its marker may still read as resumable"
+  fi
   # FIX 2 — see seed_base_if_missing() above. Only after a genuinely SUCCESSFUL
   # index + checkpoint (not the PARTIAL/timeout branch above): the home now holds
   # a complete config.toml + whatever model caches this index run touched.
@@ -1644,6 +1702,11 @@ done
 echo "[cgc-db] SUMMARY phase=${MANIFEST_PHASE:-default}: ${N_INDEX} indexed, ${N_SKIP} unchanged, ${N_TIMEOUT} timed out, ${N_DEFER} deferred"
 if [ -n "$STALE_REPOS" ]; then
   echo "::warning::[cgc-db] ${MANIFEST_PHASE:-default} index NOT current for:${STALE_REPOS} — the cgc surfaces are serving an older tree for these repos. A run whose matrix job is green but whose repo appears here has published progress, not currency."
+fi
+
+if [ -n "$NO_GRAPH_REPOS" ]; then
+  echo "::error::[cgc-db] graphrag phase persisted NO graph for:${NO_GRAPH_REPOS} — the slice expired before graphrag_nodes was written. A forced run's partial is on tag $(force_partial_tag) (re-dispatch force=true to resume); the served image was not replaced by it."
+  exit 1
 fi
 
 # 5/6) Propagate to the deployed consumer (oci-apps) so it serves the new DB now.
