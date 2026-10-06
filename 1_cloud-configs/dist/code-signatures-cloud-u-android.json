@@ -6,15 +6,15 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20575,
+    "files": 20600,
     "by_lang": {
       "py": 113,
       "sh": 404,
-      "kotlin": 10456,
+      "kotlin": 10480,
       "java": 623,
       "ts": 8413,
       "nix": 28,
-      "js": 451,
+      "js": 452,
       "rust": 87
     },
     "by_role": {
@@ -22,10 +22,10 @@
       "shell": 302,
       "java": 622,
       "entrypoint": 23,
-      "module": 6356,
+      "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10454,
+      "kotlin": 10478,
       "python": 36,
       "rust-module": 87,
       "file": 2255,
@@ -20878,6 +20878,54 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserDataScreens.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StorageState",
+        "SaveState",
+        "BrowserStorageScreen",
+        "BrowserOfflineScreen",
+        "BrowserSavePanel"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Checkbox",
+        "androidx.compose.material3.HorizontalDivider",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.KitConfirmDialog",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "BrowserStorageScreen(state: StorageState, onClear: (Set<String>)",
+        "BrowserOfflineScreen(sites: List<OfflineSite>, onOpen: (OfflineSite)",
+        "BrowserSavePanel(state: SaveState, onStop: ()",
+        "class StorageState",
+        "class SaveState"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserDownloads.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20905,6 +20953,8 @@
         "enqueue(url: String, userAgent: String?, contentDisposition: String?, mime: String?, dir: String)",
         "status(id: Long)",
         "clear()",
+        "bytes()",
+        "removeAllFiles()",
         "class BrowserDownload",
         "class BrowserDownloadIndex",
         "class device",
@@ -20927,6 +20977,48 @@
         "class GroupHeader",
         "class TabCard",
         "class BrowserGridRows"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserGroupEditor.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserGroupEditor"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "BrowserGroupEditor( group: String, color: Int, otherGroups: Set<String>, onSave: (name: String, color: Int)"
       ]
     },
     {
@@ -20965,7 +21057,6 @@
         "android.graphics.Canvas",
         "android.graphics.Color",
         "android.graphics.Typeface",
-        "android.graphics.drawable.ColorDrawable",
         "android.graphics.drawable.GradientDrawable",
         "android.os.Bundle",
         "android.view.LayoutInflater",
@@ -20974,9 +21065,6 @@
         "android.webkit.WebChromeClient",
         "android.webkit.WebView",
         "android.webkit.WebViewClient",
-        "android.widget.ArrayAdapter",
-        "android.widget.AutoCompleteTextView",
-        "android.widget.Filter",
         "android.widget.FrameLayout",
         "android.widget.LinearLayout",
         "android.widget.TextView",
@@ -20995,43 +21083,43 @@
         "openSearch()",
         "openSettings()",
         "dismissOverlays()",
+        "openTabs()",
+        "openBrowser()",
         "engine()",
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
         "onResume()",
+        "onStop()",
         "onPause()",
         "onBusChange(change: String)",
         "toggleAllCollapsed()",
         "showGrid()",
         "closeTab(tab: BrowserTab)",
+        "grouped(c: BrowserTabGroups.Change)",
+        "showGroupEditor(group: String)",
         "promptForGroup(tab: BrowserTab)",
         "pill(ctx: Context, text: String, onTap: ()",
         "promptForUrl(private_: Boolean = browserSettings.bool(\"private_by_default\")",
-        "openEntry(raw: String, private_: Boolean = false)",
-        "suggestField(ctx: Context, initial: String)",
-        "performFiltering(constraint: CharSequence?)",
-        "publishResults(c: CharSequence?, r: Filter.FilterResults?)",
-        "getFilter()",
-        "getView(pos: Int, convert: View?, parent: ViewGroup)",
-        "beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
-        "onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int)",
-        "afterTextChanged(e: android.text.Editable?)",
-        "navigateTo(url: String)",
-        "showDetail(url: String)",
-        "onPageStarted(view: WebView?, startedUrl: String?, favicon: Bitmap?)",
-        "onPageFinished(view: WebView?, finishedUrl: String?)",
-        "onReceivedTitle(view: WebView?, title: String?)",
-        "onPermissionRequest(request: android.webkit.PermissionRequest)",
-        "onGeolocationPermissionsShowPrompt(origin: String?, callback: android.webkit.GeolocationPermissions.Callback?)",
-        "showHistory()",
-        "showBookmarks()",
-        "showDownloads()",
-        "download(url: String, ua: String?, disposition: String?, mime: String?)",
-        "addToHome(url: String, title: String)",
-        "capturePreview(wv: WebView, url: String)",
-        "sha256(s: String)",
-        "applySettings(wv: WebView, url: String? = wv.url)",
-        "applyShields(wv: WebView, url: String?)",
-        "shieldDenied(host: String, perm: String)"
+        "openEntry(raw: String, private_: Boolean = false, joinTabKey: String? = null)",
+        "openUrlInTab(url: String, private_: Boolean = false)",
+        "refreshSuggestions(state: SuggestState, q: String, private_: Boolean)",
+        "local(remote: List<String>)",
+        "unwrapJs(raw: String?)",
+        "collect(maxChars: Int, done: (String?)",
+        "apply(mapJson: String, done: (String?)",
+        "restore(done: (String?)",
+        "background(work: ()",
+        "main(work: ()",
+        "textToolsPort()",
+        "engineSetting()",
+        "engineName(engine: String)",
+        "targetTag()",
+        "toggleTranslate()",
+        "showTopics(wv: WebView)",
+        "startSave(wv: WebView, wholeSite: Boolean, done: (JSONObject)",
+        "showOffline()",
+        "openOffline(site: OfflineSite)",
+        "showStorage()",
+        "measure()"
       ]
     },
     {
@@ -21087,7 +21175,6 @@
         "find(wv: WebView, q: String, done: (Int)",
         "print(wv: WebView)",
         "textTools(ctx: Context)",
-        "translate(wv: WebView, text: String, done: (String?, String?)",
         "canRequestDefault(ctx: Context)",
         "defaultBrowserIntent(ctx: Context)",
         "esc(s: String)",
@@ -21199,6 +21286,27 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserRemoteSuggest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserRemoteSuggest"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "java.net.HttpURLConnection",
+        "java.net.URL",
+        "java.net.URLEncoder"
+      ],
+      "symbols": [
+        "urlFor(template: String?, query: String)",
+        "shouldAsk(enabled: Boolean, query: String, privateTab: Boolean)",
+        "parse(body: String?)",
+        "fetch(template: String?, query: String, timeoutMs: Int = 2500)",
+        "class BrowserRemoteSuggest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserSearch.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -21288,6 +21396,7 @@
         "BrowserSheet",
         "BrowserFindBar",
         "BrowserSettingsScreen",
+        "BrowserSettingsLayout",
         "BrowserTextPanel",
         "ListRow",
         "BrowserListScreen",
@@ -21301,6 +21410,8 @@
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.ExperimentalLayoutApi",
+        "androidx.compose.foundation.layout.FlowRow",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
@@ -21310,6 +21421,7 @@
         "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material3.Checkbox",
+        "androidx.compose.material3.FilterChip",
         "androidx.compose.material3.HorizontalDivider",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedTextField",
@@ -21328,7 +21440,6 @@
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.superapp.uikit.KitSectionHeader",
-        "com.diegonmarcos.superapp.uikit.KitSelectableTile",
         "com.diegonmarcos.superapp.uikit.KitSettingsRow",
         "com.diegonmarcos.superapp.uikit.KitSwitchRow",
         "com.diegonmarcos.superapp.uikit.LocalKitPalette"
@@ -21338,12 +21449,92 @@
         "BrowserSheet( icons: List<SheetRow>, sections: List<Pair<String, List<SheetRow>>>, onPick: (String)",
         "BrowserFindBar(count: Int?, onQuery: (String)",
         "BrowserSettingsScreen( catalogue: BrowserSettingsCatalogue, value: (String)",
+        "order(settings: List<BrowserSetting>, declared: List<Pair<String, String>>, extraSections: Set<String>)",
+        "optionLabel(s: BrowserSetting, opt: String)",
         "BrowserTextPanel(title: String, text: String, rows: List<SheetRow> = emptyList()",
         "BrowserListScreen( title: String, rows: List<ListRow>, empty: String, onOpen: (ListRow)",
         "BrowserClearScreen(boxes: List<Pair<String, String>>, note: String, onClear: (Set<String>)",
         "BrowserScraperScreen( result: String, onPick: ()",
         "class SheetRow",
+        "class BrowserSettingsLayout",
         "class ListRow"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserSiteData.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SiteScope",
+        "CrawlLimits",
+        "SiteCrawl",
+        "SiteData",
+        "OfflinePage",
+        "OfflineSite",
+        "OfflineIndex",
+        "CookieScope"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.net.URI"
+      ],
+      "symbols": [
+        "origin(url: String?)",
+        "sameOrigin(a: String?, b: String?)",
+        "normalize(url: String?)",
+        "isPage(url: String)",
+        "inScope(base: String, candidates: List<String>)",
+        "of(depth: Int?, maxPages: Int?, maxMb: Int?)",
+        "next()",
+        "saved(size: Long)",
+        "offer(depth: Int, links: List<String>)",
+        "human(bytes: Long)",
+        "total(items: List<Item>)",
+        "everything(items: List<Item>)",
+        "toJson(sites: List<OfflineSite>)",
+        "fromJson(raw: String?)",
+        "remove(sites: List<OfflineSite>, id: String)",
+        "pageFor(site: OfflineSite, url: String)",
+        "find(sites: List<OfflineSite>, url: String)",
+        "names(header: String?)",
+        "hosts(host: String)",
+        "expiries(host: String, names: List<String>, secure: Boolean = true)",
+        "class SiteScope",
+        "class CrawlLimits",
+        "class SiteCrawl",
+        "class Item",
+        "class SiteData",
+        "class OfflinePage",
+        "class OfflineSite",
+        "class OfflineIndex",
+        "class CookieScope"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserStorage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserStorage"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.webkit.CookieManager",
+        "android.webkit.WebStorage",
+        "android.webkit.WebView",
+        "android.webkit.WebViewDatabase",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "size(f: File)",
+        "webData(ctx: Context)",
+        "breakdown(ctx: Context)",
+        "inWd(vararg names: String)",
+        "clear(ctx: Context, ids: Set<String>, done: (JSONObject)",
+        "clearSiteCookies(url: String, done: (Int)",
+        "class BrowserStorage"
       ]
     },
     {
@@ -21356,9 +21547,74 @@
       "imports": [],
       "symbols": [
         "suggest( query: String, tabs: List<BrowserTab>, history: List<BrowserVisit>, engine: BrowserSearchEngine, limit: Int = 8, )",
+        "sections( query: String, tabs: List<BrowserTab>, history: List<BrowserVisit>, engine: BrowserSearchEngine, remote: List<String> = emptyList()",
+        "matchScore(needle: String, url: String, title: String)",
+        "recency(ts: Long, now: Long)",
+        "class still",
         "class BrowserSuggest",
         "class Source",
-        "class Suggestion"
+        "class Suggestion",
+        "class Sections"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserSuggestPanel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SuggestState",
+        "SuggestRow",
+        "BrowserSuggestOverlay",
+        "BrowserOpenScreen"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.BoxWithConstraints",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material3.HorizontalDivider",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.foundation.text.KeyboardActions",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.ui.focus.FocusRequester",
+        "androidx.compose.ui.focus.focusRequester",
+        "androidx.compose.ui.text.input.ImeAction",
+        "androidx.compose.ui.text.input.KeyboardType",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "build(sections: BrowserSuggest.Sections, engineLabel: String)",
+        "SuggestRows(rows: List<SuggestRow>, onPick: (BrowserSuggest.Suggestion)",
+        "BrowserSuggestOverlay(state: SuggestState, onPick: (BrowserSuggest.Suggestion)",
+        "BrowserOpenScreen( title: String, hint: String, state: SuggestState, onQuery: (String)",
+        "class SuggestState",
+        "class SuggestRow",
+        "class Title",
+        "class Item"
       ]
     },
     {
@@ -21416,13 +21672,17 @@
         "submit(rows: List<BrowserGridRow>)",
         "isLongPressDragEnabled()",
         "getMovementFlags(rv: RecyclerView, vh: RecyclerView.ViewHolder)",
+        "onSelectedChanged(vh: RecyclerView.ViewHolder?, actionState: Int)",
         "canDropOver( rv: RecyclerView, cur: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder, )",
+        "onChildDraw( c: android.graphics.Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean, )",
+        "setHighlight(v: View?, on: Boolean)",
         "onMove( rv: RecyclerView, vh: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder, )",
         "onSwiped(vh: RecyclerView.ViewHolder, direction: Int)",
         "clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder)",
         "rowAt(pos: Int)",
         "submit(next: List<BrowserGridRow>)",
         "visibleTabUrls()",
+        "tabByKey(key: String)",
         "tabIndex(pos: Int)",
         "canMove(from: Int, to: Int)",
         "move(from: Int, to: Int)",
@@ -21442,6 +21702,38 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserTabGroups.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserTabGroups"
+      ],
+      "imports": [
+        "java.net.URI"
+      ],
+      "symbols": [
+        "siteLabel(url: String)",
+        "baseName(a: BrowserTab, b: BrowserTab)",
+        "unique(base: String, taken: Set<String>)",
+        "nameFor(a: BrowserTab, b: BrowserTab, taken: Set<String>)",
+        "nextColor(colors: Map<String, Int>, groups: Collection<String>)",
+        "colorOf(colors: Map<String, Int>, group: String)",
+        "groupsOf(tabs: List<BrowserTab>)",
+        "pruned(tabs: List<BrowserTab>, colors: Map<String, Int>)",
+        "dropOnTab(tabs: List<BrowserTab>, colors: Map<String, Int>, dragId: String, targetId: String)",
+        "dropOnGroup(tabs: List<BrowserTab>, colors: Map<String, Int>, dragId: String, group: String)",
+        "join(tabs: List<BrowserTab>, colors: Map<String, Int>, dragId: String, group: String)",
+        "withGroup(tab: BrowserTab, group: String)",
+        "startOrJoin(tabs: List<BrowserTab>, colors: Map<String, Int>, currentId: String, freshId: String)",
+        "rename(tabs: List<BrowserTab>, colors: Map<String, Int>, from: String, to: String, color: Int? = null)",
+        "ungroup(tabs: List<BrowserTab>, colors: Map<String, Int>, group: String)",
+        "hit(slots: List<Slot>, x: Int, y: Int, dragKey: String)",
+        "class BrowserTabGroups",
+        "class Change",
+        "class Slot"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserTabPrefs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -21457,22 +21749,249 @@
         "all()",
         "read()",
         "add(url: String, title: String = url, isPrivate: Boolean = false)",
+        "addNew(url: String, title: String = url, isPrivate: Boolean = false, group: String = \"\")",
+        "byId(id: String?)",
+        "commit(id: String, url: String?, title: String? = null)",
         "updateTitle(url: String, title: String)",
+        "updateTitleById(id: String, title: String)",
+        "setIcon(id: String, path: String)",
+        "updatePreviewById(id: String, path: String)",
+        "setGroupById(id: String, group: String)",
+        "removeById(id: String)",
+        "groupColors()",
+        "saveColors(m: Map<String, Int>)",
+        "apply(c: BrowserTabGroups.Change?, renamedFrom: String? = null)",
+        "dropOnTab(dragId: String, targetId: String)",
+        "dropOnGroup(dragId: String, group: String)",
+        "startOrJoinGroup(currentId: String, freshId: String)",
+        "renameGroup(from: String, to: String, color: Int? = null)",
+        "ungroup(group: String)",
         "clearPreviews()",
         "updatePreview(url: String, path: String)",
         "remove(url: String)",
         "setPinned(url: String, pinned: Boolean)",
+        "setPinnedById(id: String, pinned: Boolean)",
         "setGroup(url: String, group: String)",
-        "reorder(urlsInOrder: List<String>)",
+        "reorder(keysInOrder: List<String>)",
         "collapsedGroups()",
         "setGroupCollapsed(group: String, collapsed: Boolean)",
         "seedOnce(urls: List<String>)",
         "seeded()",
         "clear()",
+        "activeTab()",
+        "activeId()",
         "activeUrl()",
         "setActive(url: String?)",
+        "setActiveId(id: String?)",
         "save(tabs: List<BrowserTab>)",
         "class BrowserTabPrefs"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserTabStore.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserTabStore"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.util.UUID"
+      ],
+      "symbols": [
+        "newId()",
+        "legacyId(url: String, ts: Long)",
+        "parse(raw: String?)",
+        "serialize(tabs: List<BrowserTab>)",
+        "shouldCommit(url: String?)",
+        "commit(tabs: List<BrowserTab>, id: String, url: String?, title: String? = null)",
+        "active(tabs: List<BrowserTab>, activeId: String?, activeUrl: String?)",
+        "class BrowserTabStore"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserTabStrip.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserStripRules",
+        "BrowserTabStrip"
+      ],
+      "imports": [
+        "android.graphics.BitmapFactory",
+        "androidx.compose.foundation.Image",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.layout.ContentScale",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "java.io.File"
+      ],
+      "symbols": [
+        "visible(all: List<BrowserTab>, current: BrowserTab?)",
+        "letter(tab: BrowserTab)",
+        "BrowserTabStrip( tabs: List<BrowserTab>, activeKey: String, groupName: String, groupColor: Int, onSelect: (BrowserTab)",
+        "class BrowserStripRules"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserTopicsPanel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TopicsState",
+        "BrowserTopicsPanel"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "BrowserTopicsPanel(state: TopicsState, onCopy: ()",
+        "class TopicsState"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserTranslateChip.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "translateChipText",
+        "BrowserTranslateChip"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "translateChipText(state: PageTranslator.State, engineLabel: String)",
+        "BrowserTranslateChip(state: PageTranslator.State, engineLabel: String, onTap: ()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserWebState.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserWebState"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Bundle",
+        "android.os.Parcel",
+        "android.webkit.WebView",
+        "java.io.File"
+      ],
+      "symbols": [
+        "dir(ctx: Context)",
+        "file(ctx: Context, tabKey: String)",
+        "save(ctx: Context, wv: WebView, tabKey: String)",
+        "restore(ctx: Context, wv: WebView, tabKey: String)",
+        "delete(ctx: Context, tabKey: String)",
+        "bytes(ctx: Context)",
+        "clearAll(ctx: Context)",
+        "prune(ctx: Context, liveKeys: Set<String>)",
+        "class BrowserWebState"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/OfflineSites.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OfflineSites",
+        "SaveProgress",
+        "OfflineSiteJob",
+        "OfflinePageSaver"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "java.io.File",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "list()",
+        "write(sites: List<OfflineSite>)",
+        "add(site: OfflineSite)",
+        "dir(id: String)",
+        "delete(id: String)",
+        "deleteAll()",
+        "bytes()",
+        "fileUrl(p: OfflinePage)",
+        "isOffline(url: String?)",
+        "resolve(url: String)",
+        "newId(origin: String, ts: Long)",
+        "start()",
+        "cancel()",
+        "report(current: String, stopped: String = \"\", done: Boolean = false, error: String = \"\")",
+        "step()",
+        "onPageFinished(view: WebView?, url: String?)",
+        "capture(h: WebView, item: SiteCrawl.Item)",
+        "finish(stopped: String)",
+        "save(store: OfflineSites, wv: WebView, done: (OfflineSite?, String?)",
+        "class OfflineSites",
+        "class SaveProgress",
+        "class OfflineSiteJob",
+        "class OfflinePageSaver"
       ]
     },
     {
@@ -21495,6 +22014,103 @@
         "extractive(text: String, n: Int, minChars: Int = 40)",
         "class PageSummary",
         "class Result"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/PageTopics.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTopics"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parsePage(json: String?)",
+        "llmInput(page: Page, cap: Int)",
+        "prompt(targetName: String, maxTopics: Int = 6)",
+        "parseTopics(reply: String?)",
+        "outline(page: Page, maxTopics: Int = 8, pointsPerTopic: Int = 3)",
+        "asText(topics: List<Topic>)",
+        "toJson(topics: List<Topic>)",
+        "class PageTopics",
+        "class Section",
+        "class Page",
+        "class Topic",
+        "class of",
+        "class with"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/PageTranslate.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTranslate"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.texttools.TextTools",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parseCollect(json: String?)",
+        "applyMap(results: Map<Int, String>)",
+        "batches(segs: List<Seg>, maxChars: Int, maxItems: Int)",
+        "targetTag(setting: String?, deviceLanguage: String)",
+        "languageName(tag: String)",
+        "supports(languages: List<String>, tag: String)",
+        "llmPrompt(targetName: String)",
+        "llmPayload(segs: List<Seg>)",
+        "parseLlm(reply: String?, expected: Int)",
+        "installed()",
+        "translate(text: String, tag: String)",
+        "translateLanguages()",
+        "enhanceWith(text: String, systemPrompt: String)",
+        "summariseWith(text: String, systemPrompt: String)",
+        "providerLabel()",
+        "translate(segs: List<Seg>, targetTag: String)",
+        "ask(segs: List<Seg>, prompt: String)",
+        "backend(engine: String?, tools: TextToolsPort)",
+        "class PageTranslate",
+        "class Seg",
+        "class Collected",
+        "class TextToolsPort",
+        "class Outcome",
+        "class Backend",
+        "class OnDeviceBackend",
+        "class LlmBackend"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/PageTranslator.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTranslator"
+      ],
+      "imports": [],
+      "symbols": [
+        "collect(maxChars: Int, done: (String?)",
+        "apply(mapJson: String, done: (String?)",
+        "restore(done: (String?)",
+        "background(work: ()",
+        "main(work: ()",
+        "set(s: State)",
+        "start(backend: PageTranslate.Backend, targetTag: String)",
+        "more()",
+        "restore()",
+        "abandon()",
+        "step(j: Int)",
+        "class PageTranslator",
+        "class Io",
+        "class State",
+        "class Idle",
+        "class Working",
+        "class Done",
+        "class Failed"
       ]
     },
     {
@@ -21536,6 +22152,27 @@
       "symbols": [
         "crawl(remote: JSONObject?, url: String, css: String?)",
         "class ScrapeRemote"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/TextToolsClientPort.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TextToolsClientPort"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.texttools.TextTools",
+        "com.diegonmarcos.superapp.texttools.TextToolsClient"
+      ],
+      "symbols": [
+        "installed()",
+        "translate(text: String, tag: String)",
+        "translateLanguages()",
+        "enhanceWith(text: String, systemPrompt: String)",
+        "summariseWith(text: String, systemPrompt: String)",
+        "providerLabel()",
+        "class TextToolsClientPort"
       ]
     },
     {
@@ -52682,6 +53319,27 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserConfigsLayoutTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserConfigsLayoutTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserConfig",
+        "com.diegonmarcos.superapp.browser.BrowserSettingsLayout",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class BrowserConfigsLayoutTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserFeaturesTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -52711,6 +53369,29 @@
       "symbols": [
         "shippedConfig()",
         "class BrowserFeaturesTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserGroupsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserGroupsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserStripRules",
+        "com.diegonmarcos.superapp.browser.BrowserTab",
+        "com.diegonmarcos.superapp.browser.BrowserTabGroups",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "tab(id: String, url: String, group: String = \"\", ts: Long = 1L)",
+        "class BrowserGroupsTest"
       ]
     },
     {
@@ -52847,6 +53528,60 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserSiteDataTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserSiteDataTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.CookieScope",
+        "com.diegonmarcos.superapp.browser.CrawlLimits",
+        "com.diegonmarcos.superapp.browser.OfflineIndex",
+        "com.diegonmarcos.superapp.browser.OfflinePage",
+        "com.diegonmarcos.superapp.browser.OfflineSite",
+        "com.diegonmarcos.superapp.browser.SiteCrawl",
+        "com.diegonmarcos.superapp.browser.SiteData",
+        "com.diegonmarcos.superapp.browser.SiteScope",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "site(vararg links: Pair<String, List<String>>)",
+        "run(start: String, limits: CrawlLimits, graph: Map<String, List<String>>, size: Long = 1000)",
+        "class BrowserSiteDataTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserSuggestSectionsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserSuggestSectionsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserRemoteSuggest",
+        "com.diegonmarcos.superapp.browser.BrowserSearchEngine",
+        "com.diegonmarcos.superapp.browser.BrowserSuggest",
+        "com.diegonmarcos.superapp.browser.BrowserTab",
+        "com.diegonmarcos.superapp.browser.BrowserVisit",
+        "com.diegonmarcos.superapp.browser.SuggestRow",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "visit(url: String, title: String, ageDays: Double)",
+        "class BrowserSuggestSectionsTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserSummaryTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -52865,6 +53600,85 @@
       ],
       "symbols": [
         "class BrowserSummaryTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserTabStateTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserTabStateTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserTab",
+        "com.diegonmarcos.superapp.browser.BrowserTabStore",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertSame",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "restart(tabs: List<BrowserTab>)",
+        "class BrowserTabStateTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/PageTopicsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTopicsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.PageTopics",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class PageTopicsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/PageTranslateTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTranslateTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.PageTranslate",
+        "com.diegonmarcos.superapp.browser.PageTranslator",
+        "com.diegonmarcos.superapp.browser.translateChipText",
+        "com.diegonmarcos.superapp.texttools.TextTools",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "installed()",
+        "translate(text: String, tag: String)",
+        "translateLanguages()",
+        "enhanceWith(text: String, systemPrompt: String)",
+        "summariseWith(text: String, systemPrompt: String)",
+        "providerLabel()",
+        "collect(maxChars: Int, done: (String?)",
+        "apply(mapJson: String, done: (String?)",
+        "restore(done: (String?)",
+        "background(work: ()",
+        "main(work: ()",
+        "seg(i: Int, t: String)",
+        "class PageTranslateTest",
+        "class FakePort",
+        "class FakePage"
       ]
     },
     {
@@ -53052,6 +53866,22 @@
         "bad()",
         "scratch()",
         "plant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/test/translate_js_harness.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "fs",
+        "vm",
+        "path"
+      ],
+      "symbols": [
+        "el(tag, attrs, parent, rect)",
+        "text(v, parent)",
+        "page(scrollY)"
       ]
     },
     {
