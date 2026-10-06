@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20458,
+    "files": 20474,
     "by_lang": {
-      "py": 101,
-      "sh": 368,
-      "kotlin": 10387,
+      "py": 107,
+      "sh": 370,
+      "kotlin": 10395,
       "java": 623,
       "ts": 8413,
       "nix": 28,
@@ -18,14 +18,14 @@
       "rust": 87
     },
     "by_role": {
-      "script": 193,
+      "script": 201,
       "shell": 270,
       "java": 622,
       "entrypoint": 23,
       "module": 6356,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10385,
+      "kotlin": 10393,
       "python": 36,
       "rust-module": 87,
       "file": 2255,
@@ -50,7 +50,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
-        "refreshed(wf_dir, files)",
+        "refreshed(wf_dir, files, root=\".\")",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -71,7 +71,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
-        "refreshed(wf_dir, files)",
+        "refreshed(wf_dir, files, root=\".\")",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -124,10 +124,15 @@
         "make_header(app)",
         "stale_overlap(text)",
         "deferred_inputs(text)",
-        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()",
+        "isolation(root)",
+        "lib_apk_modules(root)",
+        "is_manifest(root, path)",
+        "refresh_input(root, path)"
       ],
       "imports": [
-        "re"
+        "re",
+        "fnmatch"
       ],
       "symbols": [
         "make_header(app)",
@@ -138,7 +143,11 @@
         "_drop_indexes(comments)",
         "_split(region_lines)",
         "deferred_inputs(text)",
-        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()",
+        "isolation(root)",
+        "lib_apk_modules(root)",
+        "is_manifest(root, path)",
+        "refresh_input(root, path)"
       ]
     },
     {
@@ -529,6 +538,26 @@
       ]
     },
     {
+      "path": ".github/workflows/scripts/cloud-android-lib-apks-engines.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "modules(root)",
+        "engines(root)",
+        "wanted(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "modules(root)",
+        "engines(root)",
+        "wanted(root)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": ".github/workflows/scripts/cloud-android-lib-classes.py",
       "lang": "py",
       "role": "script",
@@ -706,6 +735,34 @@
       ]
     },
     {
+      "path": ".github/workflows/scripts/cloud-android-nav-shape-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "read(p)",
+        "blank_comments(text, xml=False)",
+        "walk(top, exts)",
+        "line_of(text, idx)",
+        "page_ids(pages)",
+        "needs_strip(sections)",
+        "check_app(root, app, ui, spec, bad)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob"
+      ],
+      "symbols": [
+        "read(p)",
+        "blank_comments(text, xml=False)",
+        "walk(top, exts)",
+        "line_of(text, idx)",
+        "page_ids(pages)",
+        "needs_strip(sections)",
+        "check_app(root, app, ui, spec, bad)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": ".github/workflows/scripts/cloud-android-one-pdf-engine-guard.py",
       "lang": "py",
       "role": "script",
@@ -792,6 +849,33 @@
       "symbols": [
         "_summary()",
         "_red()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-rebuild-isolation-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "ship_workflows(wf_dir)",
+        "static_owners(root, wf_dir)",
+        "owns(root, iso, owners, app, name, f)",
+        "static_check(root, wf_dir)",
+        "dynamic_check(root, wf_dir, files, label=\"\")",
+        "main(argv)"
+      ],
+      "imports": [
+        "cloud_android_workflow_paths",
+        "cloud_android_lib_closure",
+        "fnmatch",
+        "cloud_android_ci_fanout"
+      ],
+      "symbols": [
+        "ship_workflows(wf_dir)",
+        "static_owners(root, wf_dir)",
+        "owns(root, iso, owners, app, name, f)",
+        "static_check(root, wf_dir)",
+        "dynamic_check(root, wf_dir, files, label=\"\")",
+        "main(argv)"
       ]
     },
     {
@@ -1805,7 +1889,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
-        "refreshed(wf_dir, files)",
+        "refreshed(wf_dir, files, root=\".\")",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -1826,7 +1910,7 @@
         "lib_apk_paths(root, module)",
         "companions(root, app)",
         "builds(root, wf_dir, hit, files)",
-        "refreshed(wf_dir, files)",
+        "refreshed(wf_dir, files, root=\".\")",
         "scenarios_table(root, wf_dir, path)",
         "changed(spec, root)",
         "main(argv)"
@@ -1879,10 +1963,15 @@
         "make_header(app)",
         "stale_overlap(text)",
         "deferred_inputs(text)",
-        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()",
+        "isolation(root)",
+        "lib_apk_modules(root)",
+        "is_manifest(root, path)",
+        "refresh_input(root, path)"
       ],
       "imports": [
-        "re"
+        "re",
+        "fnmatch"
       ],
       "symbols": [
         "make_header(app)",
@@ -1893,7 +1982,11 @@
         "_drop_indexes(comments)",
         "_split(region_lines)",
         "deferred_inputs(text)",
-        "rewrite_paths_block(region_lines, final_entries, app, deferred=()"
+        "rewrite_paths_block(region_lines, final_entries, app, deferred=()",
+        "isolation(root)",
+        "lib_apk_modules(root)",
+        "is_manifest(root, path)",
+        "refresh_input(root, path)"
       ]
     },
     {
@@ -2284,6 +2377,26 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-lib-apks-engines.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "modules(root)",
+        "engines(root)",
+        "wanted(root)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "modules(root)",
+        "engines(root)",
+        "wanted(root)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-lib-classes.py",
       "lang": "py",
       "role": "script",
@@ -2461,6 +2574,34 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-nav-shape-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "read(p)",
+        "blank_comments(text, xml=False)",
+        "walk(top, exts)",
+        "line_of(text, idx)",
+        "page_ids(pages)",
+        "needs_strip(sections)",
+        "check_app(root, app, ui, spec, bad)",
+        "main(argv)"
+      ],
+      "imports": [
+        "glob"
+      ],
+      "symbols": [
+        "read(p)",
+        "blank_comments(text, xml=False)",
+        "walk(top, exts)",
+        "line_of(text, idx)",
+        "page_ids(pages)",
+        "needs_strip(sections)",
+        "check_app(root, app, ui, spec, bad)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-one-pdf-engine-guard.py",
       "lang": "py",
       "role": "script",
@@ -2547,6 +2688,33 @@
       "symbols": [
         "_summary()",
         "_red()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-rebuild-isolation-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "ship_workflows(wf_dir)",
+        "static_owners(root, wf_dir)",
+        "owns(root, iso, owners, app, name, f)",
+        "static_check(root, wf_dir)",
+        "dynamic_check(root, wf_dir, files, label=\"\")",
+        "main(argv)"
+      ],
+      "imports": [
+        "cloud_android_workflow_paths",
+        "cloud_android_lib_closure",
+        "fnmatch",
+        "cloud_android_ci_fanout"
+      ],
+      "symbols": [
+        "ship_workflows(wf_dir)",
+        "static_owners(root, wf_dir)",
+        "owns(root, iso, owners, app, name, f)",
+        "static_check(root, wf_dir)",
+        "dynamic_check(root, wf_dir, files, label=\"\")",
+        "main(argv)"
       ]
     },
     {
@@ -4018,6 +4186,26 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/nav-shape-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "mutate()",
+        "J()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "stage()",
+        "mutate()",
+        "J()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/one-pdf-engine-guard.test.sh",
       "lang": "sh",
       "role": "script",
@@ -4171,6 +4359,24 @@
         "fail()",
         "compare()",
         "mutant()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/rebuild-isolation-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "mut()",
+        "red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "mut()",
+        "red()"
       ]
     },
     {
@@ -5364,36 +5570,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/PhoneAppClassifier.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "PhoneAppClassifier",
-        "AppMetadata",
-        "PhoneApp"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.content.Intent",
-        "android.content.pm.ApplicationInfo",
-        "android.content.pm.PackageManager"
-      ],
-      "symbols": [
-        "classify( packageName: String, label: String, folders: List<PhoneFolders.Folder>, metadata: AppMetadata = AppMetadata.NONE, )",
-        "matchByKeyword( packageName: String, label: String, folders: List<PhoneFolders.Folder>, )",
-        "matchByMetadata( metadata: AppMetadata, folders: List<PhoneFolders.Folder>, )",
-        "metadataMatches(signal: String, value: String, metadata: AppMetadata)",
-        "categoryIdOf(name: String)",
-        "matches(kw: String, pkg: String, lbl: String, haystack: String)",
-        "metadataFor( ctx: Context, folders: List<PhoneFolders.Folder>, packages: Collection<String>, )",
-        "groupByFolder( apps: List<PhoneApp>, folders: List<PhoneFolders.Folder>, ctx: Context? = null, )",
-        "class PhoneAppClassifier",
-        "class doc",
-        "class AppMetadata",
-        "class PhoneApp"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/PhoneAppsFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -5469,45 +5645,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/PhoneFolders.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "PhoneFolders"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.BuildConfig",
-        "android.util.Base64",
-        "org.json.JSONArray"
-      ],
-      "symbols": [
-        "loadFromBuildConfig()",
-        "parseDeclaredFolders()",
-        "constellationKeywordsByFolder()",
-        "sinkFolderId(folders: List<Folder>)",
-        "class PhoneFolders",
-        "class Folder"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/PhoneSections.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "PhoneSections"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.BuildConfig",
-        "android.util.Base64",
-        "org.json.JSONArray"
-      ],
-      "symbols": [
-        "loadFromBuildConfig()",
-        "class PhoneSections",
-        "class Section"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/PhoneSmartFolders.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -5542,26 +5679,6 @@
         "class PhoneSmartFolders",
         "class Rule",
         "class SmartFolder"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/PhoneTaxonomy.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "PhoneTaxonomy"
-      ],
-      "imports": [
-        "android.content.Context"
-      ],
-      "symbols": [
-        "folderLabelOf(folderId: String)",
-        "sectionPrefixOf(packageName: String, label: String, ctx: Context? = null)",
-        "folderIdOf(packageName: String, label: String, ctx: Context? = null)",
-        "prime(ctx: Context, labelsByPackage: Map<String, String>)",
-        "prefixOfFolder(folderId: String)",
-        "resolve(ctx: Context?, labelsByPackage: Map<String, String>)",
-        "class PhoneTaxonomy"
       ]
     },
     {
@@ -5619,22 +5736,6 @@
         "resolve(pkg: String)",
         "class RecentAppsFragment",
         "class AppInfo"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/StoreShelves.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "StoreShelves"
-      ],
-      "imports": [
-        "android.content.Context",
-        "com.diegonmarcos.superapp.appstore.AppStoreHost"
-      ],
-      "symbols": [
-        "of(ctx: Context, labelsByPackage: Map<String, String>)",
-        "class StoreShelves"
       ]
     },
     {
@@ -5992,6 +6093,38 @@
         "parseEpochMs(raw: String)",
         "class DaguRunsFeed",
         "class Run"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/cloud/FleetBearerProvider.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetBearerProvider"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.content.pm.PackageManager",
+        "android.database.Cursor",
+        "android.net.Uri",
+        "android.os.Binder",
+        "android.os.Bundle",
+        "android.os.Process",
+        "com.diegonmarcos.superapp.appstore.FleetBearer",
+        "com.diegonmarcos.superapp.core.FleetConfig",
+        "com.diegonmarcos.superapp.ops.dagu.DaguPrefs"
+      ],
+      "symbols": [
+        "onCreate()",
+        "call(method: String, arg: String?, extras: Bundle?)",
+        "refuse()",
+        "query(uri: Uri, p: Array<out String>?, s: String?, a: Array<out String>?, o: String?)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, s: String?, a: Array<out String>?)",
+        "update(uri: Uri, v: ContentValues?, s: String?, a: Array<out String>?)",
+        "class FleetBearerProvider"
       ]
     },
     {
@@ -8625,49 +8758,6 @@
         "class NetworkInfoPopup",
         "class Sample",
         "class Mesh"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/StoreDns.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "StoreDns"
-      ],
-      "imports": [
-        "android.content.Context",
-        "android.net.ConnectivityManager",
-        "android.net.Network",
-        "android.net.NetworkCapabilities",
-        "java.io.IOException",
-        "java.io.InputStream",
-        "java.io.OutputStream",
-        "java.net.InetAddress",
-        "java.net.InetSocketAddress",
-        "java.net.Proxy",
-        "java.net.ProxySelector",
-        "java.net.ServerSocket",
-        "java.net.Socket",
-        "java.net.SocketAddress",
-        "java.net.URI",
-        "java.util.concurrent.ConcurrentHashMap",
-        "javax.net.SocketFactory"
-      ],
-      "symbols": [
-        "plan(p: FleetDns.Preset, underlying: List<String>)",
-        "isStoreHost(host: String)",
-        "pick(host: String, steps: List<Pair<Step, T>>, resolves: (Step, T)",
-        "underlyingNetworks(ctx: Context)",
-        "route(ctx: Context, host: String)",
-        "install(ctx: Context)",
-        "select(uri: URI)",
-        "connectFailed(uri: URI, sa: SocketAddress, ioe: IOException)",
-        "tunnel(client: Socket)",
-        "readLine(i: InputStream)",
-        "pipe(i: InputStream, o: OutputStream)",
-        "class StoreDns",
-        "class Step",
-        "class Via"
       ]
     },
     {
@@ -11969,6 +12059,7 @@
       ],
       "imports": [
         "android.app.Application",
+        "com.diegonmarcos.superapp.appstore.StoreDns",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertNull",
@@ -16203,6 +16294,111 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/PhoneAppClassifier.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneAppClassifier",
+        "AppMetadata",
+        "PhoneApp"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.ApplicationInfo",
+        "android.content.pm.PackageManager"
+      ],
+      "symbols": [
+        "classify( packageName: String, label: String, folders: List<PhoneFolders.Folder>, metadata: AppMetadata = AppMetadata.NONE, )",
+        "matchByKeyword( packageName: String, label: String, folders: List<PhoneFolders.Folder>, )",
+        "matchByMetadata( metadata: AppMetadata, folders: List<PhoneFolders.Folder>, )",
+        "metadataMatches(signal: String, value: String, metadata: AppMetadata)",
+        "categoryIdOf(name: String)",
+        "matches(kw: String, pkg: String, lbl: String, haystack: String)",
+        "metadataFor( ctx: Context, folders: List<PhoneFolders.Folder>, packages: Collection<String>, )",
+        "groupByFolder( apps: List<PhoneApp>, folders: List<PhoneFolders.Folder>, ctx: Context? = null, )",
+        "class PhoneAppClassifier",
+        "class doc",
+        "class AppMetadata",
+        "class PhoneApp"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/PhoneFolders.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneFolders"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.appstore.BuildConfig",
+        "android.util.Base64",
+        "org.json.JSONArray"
+      ],
+      "symbols": [
+        "loadFromBuildConfig()",
+        "parseDeclaredFolders()",
+        "constellationKeywordsByFolder()",
+        "sinkFolderId(folders: List<Folder>)",
+        "class PhoneFolders",
+        "class Folder"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/PhoneSections.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneSections"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.appstore.BuildConfig",
+        "android.util.Base64",
+        "org.json.JSONArray"
+      ],
+      "symbols": [
+        "loadFromBuildConfig()",
+        "class PhoneSections",
+        "class Section"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/PhoneTaxonomy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneTaxonomy"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "folderLabelOf(folderId: String)",
+        "sectionPrefixOf(packageName: String, label: String, ctx: Context? = null)",
+        "folderIdOf(packageName: String, label: String, ctx: Context? = null)",
+        "prime(ctx: Context, labelsByPackage: Map<String, String>)",
+        "prefixOfFolder(folderId: String)",
+        "resolve(ctx: Context?, labelsByPackage: Map<String, String>)",
+        "class PhoneTaxonomy"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/StoreShelves.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreShelves"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.appstore.AppStoreHost"
+      ],
+      "symbols": [
+        "of(ctx: Context, labelsByPackage: Map<String, String>)",
+        "class StoreShelves"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/ApkDetailSheet.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -16604,6 +16800,30 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FleetBearer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetBearer"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "android.net.Uri",
+        "androidx.security.crypto.EncryptedSharedPreferences",
+        "androidx.security.crypto.MasterKey"
+      ],
+      "symbols": [
+        "superAppInstalled(ctx: Context)",
+        "fromSuperApp(ctx: Context)",
+        "source(ctx: Context)",
+        "resolve(ctx: Context)",
+        "class FleetBearer",
+        "class Source",
+        "class Own"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/FleetInstall.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -16998,6 +17218,69 @@
         "entry(e: ApkCache.Entry, verify: Boolean)",
         "class StoreDebugApi",
         "class the"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreDensity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreDensity"
+      ],
+      "imports": [
+        "android.content.Context",
+        "kotlin.math.roundToInt"
+      ],
+      "symbols": [
+        "dp(ctx: Context, step: Int)",
+        "dpValue(step: Int)",
+        "class StoreDensity"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreDns.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreDns"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.net.ConnectivityManager",
+        "android.net.Network",
+        "android.net.NetworkCapabilities",
+        "com.diegonmarcos.superapp.updater.source.DownloadFailure",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.Proxy",
+        "java.net.ProxySelector",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.net.SocketAddress",
+        "java.net.URI",
+        "java.util.concurrent.ConcurrentHashMap",
+        "javax.net.SocketFactory"
+      ],
+      "symbols": [
+        "plan(p: Preset, underlying: List<String>)",
+        "isStoreHost(host: String)",
+        "pick(host: String, steps: List<Pair<Step, T>>, resolves: (Step, T)",
+        "underlyingNetworks(ctx: Context)",
+        "route(ctx: Context, host: String)",
+        "start(ctx: Context)",
+        "install(ctx: Context)",
+        "select(uri: URI)",
+        "connectFailed(uri: URI, sa: SocketAddress, ioe: IOException)",
+        "tunnel(client: Socket)",
+        "readLine(i: InputStream)",
+        "pipe(i: InputStream, o: OutputStream)",
+        "class StoreDns",
+        "class Preset",
+        "class Step",
+        "class Via"
       ]
     },
     {
@@ -18319,23 +18602,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/bottomnav/src/main/kotlin/com/diegonmarcos/superapp/bottomnav/BottomNav.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "BottomNavAction",
-        "BottomNavItem",
-        "bottomNavItems",
-        "bottomNavOwns"
-      ],
-      "imports": [],
-      "symbols": [
-        "bottomNavOwns(route: String)",
-        "class BottomNavAction",
-        "class BottomNavItem"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/bottomnav/src/main/kotlin/com/diegonmarcos/superapp/bottomnav/BottomNavBar.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -18346,13 +18612,12 @@
         "BottomNavIsland",
         "BottomNavCollapse",
         "rememberBottomNavCollapse",
-        "BottomNavBar"
+        "BottomNavHost"
       ],
       "imports": [
         "android.content.Context",
         "android.os.PowerManager",
         "android.provider.Settings",
-        "android.widget.Toast",
         "androidx.compose.animation.core.animateFloatAsState",
         "androidx.compose.animation.core.snap",
         "androidx.compose.animation.core.tween",
@@ -18374,12 +18639,6 @@
         "androidx.compose.foundation.layout.union",
         "androidx.compose.foundation.selection.selectable",
         "androidx.compose.foundation.shape.RoundedCornerShape",
-        "androidx.compose.material.icons.Icons",
-        "androidx.compose.material.icons.filled.ChatBubble",
-        "androidx.compose.material.icons.filled.Home",
-        "androidx.compose.material.icons.filled.Mail",
-        "androidx.compose.material.icons.filled.RssFeed",
-        "androidx.compose.material.icons.filled.Videocam",
         "androidx.compose.material3.Icon",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
@@ -18388,7 +18647,14 @@
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
         "androidx.compose.runtime.setValue",
-        "androidx.compose.ui.Alignment"
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.graphicsLayer",
+        "androidx.compose.ui.graphics.painter.Painter",
+        "androidx.compose.ui.input.nestedscroll.NestedScrollConnection"
       ],
       "symbols": [
         "itemTag(id: String)",
@@ -18400,13 +18666,7 @@
         "rememberBarMotion(key: Any?)",
         "onPreScroll(available: Offset, source: NestedScrollSource)",
         "rememberBottomNavCollapse()",
-        "mailEntries()",
-        "BottomNavBar(nav: NavController, currentRoute: String, content: @Composable ()",
-        "onItemTap( context: android.content.Context, nav: NavController, item: BottomNavItem, currentRoute: String, leaveOnce: (()",
-        "launchInstalledApp( context: android.content.Context, packageName: String, missingMessage: String, )",
-        "missingResource(id: String)",
-        "itemDescription(id: String)",
-        "iconFor(id: String)",
+        "BottomNavHost( entries: List<BottomNavEntry>, selectedId: String?, onSelect: (BottomNavEntry)",
         "class BottomNavEntry",
         "class BottomNavCollapse"
       ]
@@ -18487,6 +18747,131 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/main/kotlin/com/diegonmarcos/superapp/bottomnav/NavDecl.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MAX_BOTTOM",
+        "NavPage",
+        "NavSection",
+        "NavDecl",
+        "islandEntries"
+      ],
+      "imports": [
+        "android.util.Base64",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "leaf()",
+        "path(id: String?)",
+        "page(id: String?)",
+        "allPages()",
+        "section(id: String?)",
+        "bottomSections()",
+        "default()",
+        "viewItems(icon: (String)",
+        "fromBuildConfig( uiSectionsB64: String, uiBottomNav: String = \"\", uiDefaultSection: String = \"\", )",
+        "parse(sections: JSONArray, bottomNav: String = \"\", defaultSection: String = \"\")",
+        "bottomIds(text: String)",
+        "section(o: JSONObject)",
+        "pages(a: JSONArray?)",
+        "pathTo(pages: List<NavPage>, id: String?)",
+        "flatten(pages: List<NavPage>)",
+        "islandEntries( icon: @androidx.compose.runtime.Composable (String)",
+        "class NavPage",
+        "class NavSection",
+        "class NavDecl"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/main/kotlin/com/diegonmarcos/superapp/bottomnav/PageTabs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTabs",
+        "PageTabsTags"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.BoxWithConstraints",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.displayCutout",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.statusBars",
+        "androidx.compose.foundation.layout.union",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalDensity",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.res.integerResource",
+        "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.semantics.role",
+        "androidx.compose.ui.semantics.selected",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.PlatformTextStyle",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.rememberTextMeasurer",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.Density"
+      ],
+      "symbols": [
+        "PageTabs( pages: List<NavPage>, selectedId: String?, onSelect: (NavPage)",
+        "styleAt(px: Float, color: Color = Color.Unspecified)",
+        "Pill( page: NavPage, label: String, on: Boolean, plan: PillPlan, marginPx: Float, padHPx: Float, style: (Float, Color)",
+        "pillStyle(density: Density, px: Float, spacing: Float, color: Color)",
+        "planPills( availPx: Float, count: Int, longest: Int, padPx: Float, marginPx: Float, startPx: Float, minPx: Float, stepPx: Float, minChars: Int, charWidth: (Float)",
+        "tab(id: String)",
+        "label(id: String)",
+        "class PillPlan",
+        "class PageTabsTags"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/main/kotlin/com/diegonmarcos/superapp/bottomnav/PageTabsView.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTabsView"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.AttributeSet",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.material3.ColorScheme",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.platform.AbstractComposeView"
+      ],
+      "symbols": [
+        "Content()",
+        "Strip()",
+        "class PageTabsView"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/bottomnav/src/test/kotlin/com/diegonmarcos/superapp/bottomnav/BottomNavIslandTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -18538,6 +18923,7 @@
       "symbols": [
         "evaluate()",
         "px(id: Int)",
+        "fixtureEntries()",
         "show(select: String?)",
         "bounds(tag: String)",
         "pixels(tag: String)",
@@ -18556,6 +18942,72 @@
         "assertScreenAboveIsland(why: String)",
         "BottomNavIsland(\")",
         "class BottomNavIslandTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/test/kotlin/com/diegonmarcos/superapp/bottomnav/PageTabsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTabsTest"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.util.Base64",
+        "android.view.View",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Rect",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.PixelMap",
+        "androidx.compose.ui.graphics.compositeOver",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.graphics.toPixelMap",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "kotlin.math.abs",
+        "kotlin.math.roundToInt",
+        "org.json.JSONArray",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.Robolectric",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment"
+      ],
+      "symbols": [
+        "evaluate()",
+        "px(id: Int)",
+        "colour(id: Int)",
+        "page(id: String, label: String = id, action: String = \"\")",
+        "show(pages: List<NavPage>)",
+        "bounds(tag: String)",
+        "pixels(tag: String)",
+        "near(msg: String, expected: Float, actual: Float)",
+        "plan(avail: Float, longest: Int)",
+        "centre(id: String)",
+        "flat(c: Color)",
+        "isClose(a: Color, b: Color)",
+        "close(msg: String, expected: Color, actual: Color)",
+        "class PageTabsTest"
       ]
     },
     {
@@ -134989,6 +135441,23 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/BottomNav.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BottomNavAction",
+        "BottomNavItem",
+        "bottomNavItems",
+        "bottomNavOwns"
+      ],
+      "imports": [],
+      "symbols": [
+        "bottomNavOwns(route: String)",
+        "class BottomNavAction",
+        "class BottomNavItem"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/browser/InAppBrowser.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -137393,6 +137862,42 @@
       "symbols": [
         "numberingStampsCover(awaited: Set<EmailKey>, published: Map<EmailKey, Long?>)",
         "tickedNumberingWhenCovered( awaited: Set<EmailKey>, published: StateFlow<Map<EmailKey, Long?>>, budgetMs: Long = TICKED_NUMBERING_BUDGET_MS, )"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/MailBottomNav.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BottomNavBar"
+      ],
+      "imports": [
+        "android.widget.Toast",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.ChatBubble",
+        "androidx.compose.material.icons.filled.Home",
+        "androidx.compose.material.icons.filled.Mail",
+        "androidx.compose.material.icons.filled.RssFeed",
+        "androidx.compose.material.icons.filled.Videocam",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "androidx.compose.ui.graphics.vector.rememberVectorPainter",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.navigation.NavController",
+        "app.sterna.R",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavEntry",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
+        "com.diegonmarcos.superapp.bottomnav.rememberLeaveOnce"
+      ],
+      "symbols": [
+        "mailEntries()",
+        "BottomNavBar(nav: NavController, currentRoute: String, content: @Composable ()",
+        "onItemTap( context: android.content.Context, nav: NavController, item: BottomNavItem, currentRoute: String, leaveOnce: (()",
+        "launchInstalledApp( context: android.content.Context, packageName: String, missingMessage: String, )",
+        "missingResource(id: String)",
+        "itemDescription(id: String)",
+        "iconFor(id: String)"
       ]
     },
     {
@@ -427463,6 +427968,10 @@
         "android.util.Log",
         "com.diegonmarcos.superapp.appstore.AppStoreHost",
         "com.diegonmarcos.superapp.appstore.ConstellationWorker",
+        "com.diegonmarcos.superapp.appstore.FeedViewer",
+        "com.diegonmarcos.superapp.appstore.FleetBearer",
+        "com.diegonmarcos.superapp.appstore.StoreDns",
+        "com.diegonmarcos.superapp.apps.StoreShelves",
         "com.diegonmarcos.superapp.appstore.StoreDebugApi"
       ],
       "symbols": [
@@ -427485,6 +427994,8 @@
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.systemBarsPadding",
         "androidx.compose.material3.MaterialTheme",
@@ -427499,9 +428010,13 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "androidx.compose.foundation.layout.height",
+        "com.diegonmarcos.superapp.appstore.StoreDensity",
         "androidx.appcompat.app.AppCompatActivity",
         "androidx.fragment.compose.AndroidFragment",
         "com.diegonmarcos.superapp.appstore.AppsMeshFragment",
+        "com.diegonmarcos.superapp.appstore.FleetBearer",
         "com.diegonmarcos.superapp.appstore.StoreCloudFragment",
         "com.diegonmarcos.superapp.appstore.StorePhoneFragment",
         "com.diegonmarcos.superapp.updater.Updater"
@@ -427510,6 +428025,7 @@
         "onCreate(savedInstanceState: Bundle?)",
         "onNewIntent(intent: Intent)",
         "StoreShell()",
+        "SettingsPage()",
         "tabFrom(i: Intent?)",
         "class MainActivity"
       ]
