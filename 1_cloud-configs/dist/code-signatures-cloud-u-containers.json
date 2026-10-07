@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2886,
+    "files": 2888,
     "by_lang": {
       "sh": 141,
       "nix": 159,
-      "py": 857,
+      "py": 859,
       "ts": 1131,
       "js": 64,
       "rust": 534
@@ -18,7 +18,7 @@
     "by_role": {
       "shell": 131,
       "nix-module": 15,
-      "python": 850,
+      "python": 852,
       "module": 689,
       "file": 310,
       "script": 8,
@@ -71851,6 +71851,7 @@
         "health()",
         "list_targets()",
         "scrape(platform: str, req: ScrapeReq)",
+        "prices(q: str, brands: str | None = None)",
         "run_target(target_id: str)",
         "class ScrapeReq"
       ],
@@ -71871,6 +71872,7 @@
         "health()",
         "list_targets()",
         "scrape(platform: str, req: ScrapeReq)",
+        "prices(q: str, brands: str | None = None)",
         "run_target(target_id: str)",
         "class ScrapeReq"
       ]
@@ -72024,6 +72026,37 @@
       ]
     },
     {
+      "path": "user-data_scrappers-api/src/code/scrapers/prices.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "config()",
+        "parse_offers(html: str, base_url: str)",
+        "best_match(hits: list, q: str)",
+        "lookup(adapter_id: str, a: dict, q: str, cfg: dict, fetch=_fetch, now=time.time)",
+        "scrape(q: str, brands: str | None = None, **_)"
+      ],
+      "imports": [
+        "pathlib",
+        "urllib.parse",
+        "._robots",
+        "json",
+        "re",
+        "threading",
+        "time"
+      ],
+      "symbols": [
+        "config()",
+        "_walk(node, out)",
+        "_price(offers)",
+        "parse_offers(html: str, base_url: str)",
+        "best_match(hits: list, q: str)",
+        "_fetch(adapter_id: str, url: str, gap: float)",
+        "lookup(adapter_id: str, a: dict, q: str, cfg: dict, fetch=_fetch, now=time.time)",
+        "scrape(q: str, brands: str | None = None, **_)"
+      ]
+    },
+    {
       "path": "user-data_scrappers-api/src/code/scrapers/youtube.py",
       "lang": "py",
       "role": "python",
@@ -72042,6 +72075,31 @@
         "_find(node, pred)",
         "_duration_seconds(text: str)",
         "scrape(playlist_url=None, playlist_id=None, url=None, **_)"
+      ]
+    },
+    {
+      "path": "user-data_scrappers-api/src/code/test_prices.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "check(name, cond, detail=\"\")",
+        "page(*products, extra=\"\")",
+        "prod(name, price, url=\"/p/1\", brand=\"Bosch\", cur=\"EUR\")",
+        "fake(body=None, exc=None)",
+        "counting(aid, url, gap)"
+      ],
+      "imports": [
+        "scrapers",
+        "json",
+        "os",
+        "sys"
+      ],
+      "symbols": [
+        "check(name, cond, detail=\"\")",
+        "page(*products, extra=\"\")",
+        "prod(name, price, url=\"/p/1\", brand=\"Bosch\", cur=\"EUR\")",
+        "fake(body=None, exc=None)",
+        "counting(aid, url, gap)"
       ]
     },
     {
