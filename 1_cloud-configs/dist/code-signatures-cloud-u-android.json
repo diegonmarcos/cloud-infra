@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20687,
+    "files": 20697,
     "by_lang": {
       "py": 118,
-      "sh": 418,
-      "kotlin": 10547,
+      "sh": 421,
+      "kotlin": 10554,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 217,
-      "shell": 313,
+      "shell": 316,
       "java": 623,
       "entrypoint": 23,
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10544,
+      "kotlin": 10551,
       "python": 37,
       "rust-module": 87,
       "file": 2255,
@@ -9687,6 +9687,39 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/NetworkBadgeModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NetworkBadgeModel"
+      ],
+      "imports": [
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "card(s: Snapshot)",
+        "title(s: Snapshot)",
+        "alwaysOnLabel(s: Snapshot)",
+        "toggleLabel(s: Snapshot)",
+        "actions(s: Snapshot)",
+        "meshIp(s: Snapshot)",
+        "collapsed(s: Snapshot)",
+        "expanded(s: Snapshot)",
+        "uptime(s: Snapshot)",
+        "relative(thenMs: Long, nowMs: Long)",
+        "duration(ms: Long)",
+        "bytes(n: Long)",
+        "peerCount(n: Int)",
+        "class NetworkBadgeModel",
+        "class PeerRow",
+        "class Snapshot",
+        "class Act",
+        "class Action",
+        "class Card",
+        "class address"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/NetworkInfoPopup.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10324,6 +10357,66 @@
         "class MarketsQuotes",
         "class Status",
         "class Quote"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/NetworkBadgeService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NetworkBadgeService"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.net.ConnectivityManager",
+        "android.net.Network",
+        "android.net.NetworkCapabilities",
+        "android.net.NetworkRequest",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.IBinder",
+        "android.os.Looper",
+        "android.provider.Settings",
+        "androidx.core.app.NotificationCompat",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.MainActivity",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.network.NetworkBadgeModel",
+        "com.diegonmarcos.superapp.network.NetworkBadgeModel.Act",
+        "com.diegonmarcos.superapp.network.WgState",
+        "com.wireguard.android.backend.Tunnel",
+        "com.wireguard.crypto.Key",
+        "java.util.concurrent.Executors"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onCreate()",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "watchVpnTransport()",
+        "onAvailable(network: Network)",
+        "onLost(network: Network)",
+        "requestRefresh()",
+        "scheduleTick(connected: Boolean)",
+        "refreshNow()",
+        "gather()",
+        "toggle()",
+        "placeholder()",
+        "build(s: NetworkBadgeModel.Snapshot)",
+        "split(csv: String)",
+        "canPost(ctx: Context)",
+        "openMeshPage(ctx: Context)",
+        "servicePi(ctx: Context, action: String, rc: Int)",
+        "ensureChannel(ctx: Context)",
+        "class NetworkBadgeService"
       ]
     },
     {
@@ -13220,6 +13313,27 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/NetworkBadgeModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NetworkBadgeModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.NetworkBadgeModel.Act",
+        "com.diegonmarcos.superapp.network.NetworkBadgeModel.PeerRow",
+        "com.diegonmarcos.superapp.network.NetworkBadgeModel.Snapshot",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "up(vararg p: PeerRow)",
+        "class NetworkBadgeModelTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/StoreDnsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13289,6 +13403,27 @@
         "markets()",
         "okQuote(price: Double, asOf: Long)",
         "class MarketsBadgeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/NetworkBadgeDeclarationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NetworkBadgeDeclarationTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class NetworkBadgeDeclarationTest"
       ]
     },
     {
@@ -15349,6 +15484,22 @@
         "ok()",
         "bad()",
         "code()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-network-badge.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
       ]
     },
     {
@@ -140227,10 +140378,10 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.style.TextAlign",
-        "androidx.compose.ui.unit.dp",
         "androidx.core.content.ContextCompat",
         "androidx.fragment.app.FragmentActivity",
-        "app.sterna.R"
+        "app.sterna.R",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "canAuthenticate(context: Context)",
@@ -140611,8 +140762,8 @@
         "androidx.compose.material3.DropdownMenu",
         "androidx.compose.material3.DropdownMenuItem",
         "androidx.compose.material3.ExperimentalMaterial3Api",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.LinearProgressIndicator",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Scaffold",
@@ -140669,7 +140820,6 @@
         "androidx.compose.foundation.layout.width",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.OpenInNew",
-        "androidx.compose.material3.Icon",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
@@ -140679,7 +140829,8 @@
         "androidx.compose.ui.unit.dp",
         "app.sterna.R",
         "app.sterna.ui.browser.InAppBrowser",
-        "app.sterna.ui.rememberLeaveOnce"
+        "app.sterna.ui.rememberLeaveOnce",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "AppPasswordHelpLink()"
@@ -140729,14 +140880,36 @@
         "androidx.compose.ui.graphics.ImageBitmap",
         "androidx.compose.ui.layout.ContentScale",
         "androidx.compose.ui.platform.LocalContext",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.contacts.AndroidContacts",
         "app.sterna.contacts.ContactPhotos",
-        "app.sterna.contacts.SenderAvatarLoader"
+        "app.sterna.contacts.SenderAvatarLoader",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "ContactAvatar( email: String, name: String?, photoUri: String?, modifier: Modifier = Modifier, )",
         "resolve( context: android.content.Context, email: String, photoUri: String?, )"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/components/DenseMaterial.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Icon",
+        "IconButton"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "app.sterna.ui.theme.MailMetrics"
+      ],
+      "symbols": [
+        "Icon( imageVector: ImageVector, contentDescription: String?, modifier: Modifier = Modifier, tint: Color = LocalContentColor.current, )",
+        "IconButton( onClick: ()"
       ]
     },
     {
@@ -140767,8 +140940,6 @@
         "androidx.compose.material.icons.filled.ExpandMore",
         "androidx.compose.material3.ColorScheme",
         "androidx.compose.material3.CircularProgressIndicator",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
         "androidx.compose.material3.LocalContentColor",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
@@ -140786,7 +140957,9 @@
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.rememberCoroutineScope"
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "app.sterna.core.jmap.model.EmailBodyPart"
       ],
       "symbols": [
         "rowBackground( scheme: ColorScheme, selected: Boolean, current: Boolean, flash: Float, card: Color, )",
@@ -140830,7 +141003,7 @@
         "androidx.compose.ui.graphics.vector.ImageVector",
         "androidx.compose.ui.graphics.vector.PathParser",
         "androidx.compose.ui.text.style.TextAlign",
-        "androidx.compose.ui.unit.dp"
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "stroke(d: String, color: Color, width: Float = 2.4f)",
@@ -140906,7 +141079,7 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.draw.clip",
         "androidx.compose.ui.graphics.Color",
-        "androidx.compose.ui.unit.dp"
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "Monogram(seed: String, label: String, modifier: Modifier = Modifier, color: Color? = null)",
@@ -140949,7 +141122,6 @@
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.ChevronRight",
-        "androidx.compose.material3.Icon",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
@@ -140969,7 +141141,8 @@
         "androidx.compose.ui.layout.onSizeChanged",
         "androidx.compose.ui.platform.LocalHapticFeedback",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.text.style.TextOverflow"
+        "androidx.compose.ui.text.style.TextOverflow",
+        "app.sterna.R"
       ],
       "symbols": [
         "PendingImportAccountsSection( accounts: List<StoredAccount>, onSignIn: (StoredAccount)",
@@ -141010,9 +141183,9 @@
         "androidx.compose.ui.graphics.drawscope.translate",
         "androidx.compose.ui.graphics.graphicsLayer",
         "androidx.compose.ui.graphics.vector.PathParser",
-        "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.util.lerp",
-        "app.sterna.ui.rememberMotionEnabled"
+        "app.sterna.ui.rememberMotionEnabled",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "TernRefreshIndicator( state: PullToRefreshState, isRefreshing: Boolean, modifier: Modifier = Modifier, )",
@@ -141040,10 +141213,10 @@
         "androidx.compose.ui.geometry.Size",
         "androidx.compose.ui.platform.LocalDensity",
         "androidx.compose.ui.unit.Dp",
-        "androidx.compose.ui.unit.dp"
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
-        "verticalScrollbar( state: LazyListState, itemCount: Int, width: Dp = 4.dp, )"
+        "verticalScrollbar( state: LazyListState, itemCount: Int, width: Dp = MailMetrics.s4, )"
       ]
     },
     {
@@ -141712,8 +141885,8 @@
         "androidx.compose.material3.CircularProgressIndicator",
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.FilterChip",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton"
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton"
       ],
       "symbols": [
         "ConnectScreen( onConnected: ()",
@@ -142162,7 +142335,7 @@
         "androidx.compose.material.icons.filled.Star",
         "androidx.compose.material3.AssistChip",
         "androidx.compose.material3.HorizontalDivider",
-        "androidx.compose.material3.Icon",
+        "app.sterna.ui.components.Icon",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable"
@@ -142683,7 +142856,7 @@
         "androidx.compose.material.icons.filled.ExpandMore",
         "androidx.compose.material3.DropdownMenu",
         "androidx.compose.material3.DropdownMenuItem",
-        "androidx.compose.material3.Icon",
+        "app.sterna.ui.components.Icon",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
@@ -142698,9 +142871,9 @@
         "androidx.compose.ui.semantics.role",
         "androidx.compose.ui.semantics.semantics",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.R",
-        "app.sterna.core.data.account.StoredAccount"
+        "app.sterna.core.data.account.StoredAccount",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "MoveAccountRow( accounts: List<StoredAccount>, owner: String?, chosen: String?, onChoose: (String?)"
@@ -142765,7 +142938,8 @@
         "androidx.compose.ui.unit.dp",
         "app.sterna.R",
         "app.sterna.ui.PaneSplit",
-        "app.sterna.ui.message.MessageScreen"
+        "app.sterna.ui.message.MessageScreen",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "ReadingPane( state: ReadingPaneState, inboxViewModel: InboxViewModel, onReply: (mode: String, replyToId: String, accountId: String?)",
@@ -143084,7 +143258,7 @@
         "androidx.compose.material3.AlertDialog",
         "androidx.compose.material3.AssistChip",
         "androidx.compose.material3.ExperimentalMaterial3Api",
-        "androidx.compose.material3.Icon",
+        "app.sterna.ui.components.Icon",
         "androidx.compose.material3.InputChip",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.ModalBottomSheet",
@@ -143097,9 +143271,9 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.R",
-        "app.sterna.core.jmap.model.Mailbox"
+        "app.sterna.core.jmap.model.Mailbox",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "LabelSheet( /** Mailboxes this message is in right now, straight from the server. */ tags: List<MessageTag>, /** Mailboxes of this message's account it is NOT in — what \"add\" can offer. */ addableMailboxes: List<Mailbox>, nameOf: (Mailbox)",
@@ -143544,10 +143718,10 @@
         "androidx.compose.ui.platform.LocalClipboardManager",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.AnnotatedString",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.R",
         "app.sterna.ui.text.TextTool",
-        "app.sterna.ui.text.TextToolRunner"
+        "app.sterna.ui.text.TextToolRunner",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "ResumeBox(runner: TextToolRunner, emailId: String)"
@@ -143652,10 +143826,10 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.draw.clip",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.R",
         "app.sterna.ui.components.EmptyArt",
-        "app.sterna.ui.components.EmptyState"
+        "app.sterna.ui.components.EmptyState",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "WelcomeScreen(onDone: ()",
@@ -143717,8 +143891,8 @@
         "androidx.compose.material3.AlertDialog",
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.HorizontalDivider",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Scaffold",
         "androidx.compose.material3.Text",
@@ -143733,14 +143907,14 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "androidx.lifecycle.compose.collectAsStateWithLifecycle",
         "androidx.lifecycle.viewmodel.compose.viewModel",
         "androidx.compose.runtime.LaunchedEffect",
         "app.sterna.R",
         "app.sterna.core.data.db.OutboxLogic",
         "app.sterna.ui.components.EmptyArt",
-        "app.sterna.ui.components.EmptyState"
+        "app.sterna.ui.components.EmptyState",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "OutboxScreen( onBack: ()"
@@ -143888,8 +144062,8 @@
         "androidx.compose.material.icons.filled.RssFeed",
         "androidx.compose.material3.Button",
         "androidx.compose.material3.HorizontalDivider",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.Text",
@@ -143904,10 +144078,10 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "androidx.lifecycle.compose.collectAsStateWithLifecycle",
         "androidx.lifecycle.viewmodel.compose.viewModel",
-        "app.sterna.R"
+        "app.sterna.R",
+        "app.sterna.ui.browser.MiniBrowserActivity"
       ],
       "symbols": [
         "RssScreen( onBack: ()",
@@ -144016,8 +144190,8 @@
         "androidx.compose.material.icons.filled.Close",
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.HorizontalDivider",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Scaffold",
         "androidx.compose.material3.SnackbarHost",
@@ -144033,10 +144207,10 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "androidx.lifecycle.compose.collectAsStateWithLifecycle",
         "androidx.lifecycle.viewmodel.compose.viewModel",
-        "app.sterna.R"
+        "app.sterna.R",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "ScheduledSendsScreen( onBack: ()"
@@ -144191,8 +144365,8 @@
         "androidx.compose.material3.DatePicker",
         "androidx.compose.material3.DatePickerDialog",
         "androidx.compose.material3.ExperimentalMaterial3Api",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.Scaffold",
@@ -144288,8 +144462,8 @@
         "androidx.compose.material3.DropdownMenuItem",
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.HorizontalDivider",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Scaffold",
         "androidx.compose.material3.SnackbarDuration",
@@ -144552,7 +144726,7 @@
         "androidx.compose.material3.Button",
         "androidx.compose.material3.CircularProgressIndicator",
         "androidx.compose.material3.HorizontalDivider",
-        "androidx.compose.material3.Icon",
+        "app.sterna.ui.components.Icon",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedButton",
         "androidx.compose.material3.OutlinedTextField",
@@ -144725,8 +144899,8 @@
         "androidx.compose.material.icons.filled.VisibilityOff",
         "androidx.compose.material3.AlertDialog",
         "androidx.compose.material3.Checkbox",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.RadioButton",
@@ -144951,12 +145125,12 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.graphics.toArgb",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "androidx.lifecycle.compose.collectAsStateWithLifecycle",
         "app.sterna.R",
         "app.sterna.core.data.account.StoredAccount",
         "app.sterna.push.PushController",
-        "app.sterna.ui.components.AccountPalette"
+        "app.sterna.ui.components.AccountPalette",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "sharedAccountFor(id: String, accounts: List<StoredAccount>)",
@@ -144993,9 +145167,9 @@
         "androidx.compose.ui.text.AnnotatedString",
         "androidx.compose.ui.text.font.FontFamily",
         "androidx.compose.ui.text.fromHtml",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.R",
-        "app.sterna.core.data.account.StoredSignature"
+        "app.sterna.core.data.account.StoredSignature",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "SignatureListEditor( signatures: List<StoredSignature>, defaultSignatureId: String?, delimiter: Boolean, onChange: (List<StoredSignature>)",
@@ -145061,11 +145235,11 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.R",
         "app.sterna.ui.text.MailAiRegistry",
         "app.sterna.ui.text.MailTextToolsPrefs",
         "app.sterna.ui.text.textToolsClient",
+        "app.sterna.ui.theme.MailMetrics",
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.withContext"
       ],
@@ -145168,9 +145342,9 @@
         "androidx.compose.ui.graphics.vector.ImageVector",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.unit.dp",
         "app.sterna.BuildConfig",
         "app.sterna.R",
+        "app.sterna.ui.theme.MailMetrics",
         "com.diegonmarcos.superapp.updater.AutoUpdatePrefs",
         "com.diegonmarcos.superapp.updater.BuildAge",
         "com.diegonmarcos.superapp.updater.Fleet",
@@ -145258,8 +145432,8 @@
         "androidx.compose.material3.DropdownMenuItem",
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.HorizontalDivider",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Scaffold",
         "androidx.compose.material3.Text",
@@ -145274,11 +145448,11 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
         "androidx.lifecycle.compose.collectAsStateWithLifecycle",
         "androidx.lifecycle.viewmodel.compose.viewModel",
         "app.sterna.R",
-        "app.sterna.ui.message.snoozePresets"
+        "app.sterna.ui.message.snoozePresets",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "SnoozedScreen( onBack: ()",
@@ -145464,8 +145638,8 @@
         "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material3.AlertDialog",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
         "androidx.compose.material3.LinearProgressIndicator",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
@@ -145476,8 +145650,8 @@
         "androidx.compose.ui.platform.LocalClipboardManager",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.AnnotatedString",
-        "androidx.compose.ui.unit.dp",
-        "app.sterna.R"
+        "app.sterna.R",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "TextToolPanel(runner: TextToolRunner, onApply: ((String)",
@@ -145584,8 +145758,7 @@
         "androidx.compose.runtime.compositionLocalOf",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.graphics.lerp",
-        "androidx.compose.ui.text.font.FontWeight",
-        "androidx.compose.ui.unit.dp"
+        "androidx.compose.ui.text.font.FontWeight"
       ],
       "symbols": [
         "pulledToBlack()",
@@ -145594,6 +145767,30 @@
         "class MailListPalette",
         "class MailListDimens",
         "class MailListTextInk"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/theme/MailMetrics.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.material3.Typography",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.TextUnit",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.isSpecified",
+        "androidx.compose.ui.unit.sp"
+      ],
+      "symbols": [
+        "dense(scale: Float)",
+        "denseTypography(base: Typography = Typography()",
+        "ProvideDenseTouchTargets(content: @Composable ()",
+        "class MailMetrics"
       ]
     },
     {
@@ -145631,9 +145828,7 @@
       "exports": [
         "SternaTypography"
       ],
-      "imports": [
-        "androidx.compose.material3.Typography"
-      ],
+      "imports": [],
       "symbols": []
     },
     {
@@ -152653,14 +152848,20 @@
         "app.sterna.core.jmap.model.Email",
         "app.sterna.core.jmap.model.EmailBodyPart",
         "app.sterna.core.jmap.model.EmailBodyValue",
+        "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertTrue",
-        "org.junit.Test"
+        "org.junit.Test",
+        "java.io.File"
       ],
       "symbols": [
         "email(html: String = fixture)",
         "doc(theme: EmailTheme, plainText: Boolean = false)",
         "stylesheet(doc: String)",
         "weakDeclarations(css: String, property: String)",
+        "resource(name: String)",
+        "viewportMetas(page: String)",
+        "applyFitSettings()",
+        "codeOf(path: String)",
         "class exists",
         "class ReaderFitDocumentTest",
         "class into",
@@ -154488,6 +154689,25 @@
       ],
       "symbols": [
         "class MailListPaletteTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/theme/MailMetricsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailMetricsTest"
+      ],
+      "imports": [
+        "androidx.compose.material3.Typography",
+        "androidx.compose.ui.text.TextStyle",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "all()",
+        "class MailMetricsTest"
       ]
     },
     {
@@ -169965,6 +170185,42 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/test/test-mail-density.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "d4()",
+        "d5()",
+        "d6()",
+        "d7()",
+        "d7res()",
+        "fresh()",
+        "sub()",
+        "red()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "d1()",
+        "d2()",
+        "d3()",
+        "d4()",
+        "d5()",
+        "d6()",
+        "d7()",
+        "d7res()",
+        "fresh()",
+        "sub()",
+        "red()"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/test/test-mail-filters-foreign-script.sh",
       "lang": "sh",
       "role": "shell",
@@ -169980,6 +170236,32 @@
         "bad()",
         "has()",
         "hasnt()"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/test/test-mail-fit.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "code()",
+        "f1()",
+        "f2()",
+        "f3()",
+        "f4()",
+        "mut()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "code()",
+        "f1()",
+        "f2()",
+        "f3()",
+        "f4()",
+        "mut()"
       ]
     },
     {
