@@ -10,8 +10,8 @@ for f in "$ROOT/1_cicd/src/cicd/cgc-db-index.yml" "$ROOT/.github/workflows/cgc-d
   step=$(awk '/^  index:/{i=1} i&&/- name: "cgc-db incremental update/{s=1} s&&/^        timeout-minutes:/{print $2; exit}' "$f")
   budget=$(awk '/^  index:/{i=1} i&&/^          CGC_BUDGET_MIN:/{gsub(/"/,"",$2); print $2; exit}' "$f")
   [ -n "$step" ] && [ -n "$budget" ] || { echo "FAIL $f: step=$step budget=$budget (missing)"; exit 1; }
-  [ $((budget + 25)) -le "$step" ] || { echo "FAIL $f: budget $budget + 25min publish reserve > step $step"; exit 1; }
-  echo "ok $f: budget $budget + 25 <= step $step"
+  [ $((budget + 70)) -le "$step" ] || { echo "FAIL $f: budget $budget + 70min restore+publish reserve > step $step"; exit 1; }
+  echo "ok $f: budget $budget + 70 <= step $step"
 done
 # The script must honour the env budget, and its clock must start before any clone.
 grep -q 'BUDGET_MIN="${CGC_BUDGET_MIN:-' "$UPD" || { echo "FAIL update.sh ignores CGC_BUDGET_MIN"; exit 1; }

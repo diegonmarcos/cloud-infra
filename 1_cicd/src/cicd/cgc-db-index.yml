@@ -315,9 +315,12 @@ jobs:
           # the step timeout-minutes above minus room for the partial-checkpoint
           # publish (~4G package+push): with build.json's 300 the slice outlived the
           # 315-min step, the step timeout killed the publish, and cloud-u-android
-          # never kept a minute of progress. cgc-db-index-budget.test.sh pins
-          # budget + 25 <= step timeout.
-          CGC_BUDGET_MIN: "285"
+          # never kept a minute of progress. 285 still lost: on 2026-10-06/07
+          # cloud-u-android spent ~30m restoring its base image before indexing and
+          # >29m packaging the partial after, so the 315-min step killed the publish
+          # in BOTH phases (#888). 240 leaves 75m. cgc-db-index-budget.test.sh pins
+          # budget + 70 <= step timeout.
+          CGC_BUDGET_MIN: "240"
         run: sh 1_cicd/src/ops/cloud-cgc-db-update.sh
   # ── Multi-image restore onto oci-apps: base + every per-repo image, ONCE
   # per phase. if: always() so a partial/failed matrix still propagates
