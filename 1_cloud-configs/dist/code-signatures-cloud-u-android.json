@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20666,
+    "files": 20687,
     "by_lang": {
-      "py": 117,
-      "sh": 412,
-      "kotlin": 10533,
+      "py": 118,
+      "sh": 418,
+      "kotlin": 10547,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -18,15 +18,15 @@
       "rust": 87
     },
     "by_role": {
-      "script": 215,
-      "shell": 308,
+      "script": 217,
+      "shell": 313,
       "java": 623,
       "entrypoint": 23,
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10531,
-      "python": 36,
+      "kotlin": 10544,
+      "python": 37,
       "rust-module": 87,
       "file": 2255,
       "hook": 150,
@@ -413,6 +413,7 @@
         "modules(repo, cfg)",
         "scan(repo, cfg)",
         "check(repo, cfg, manifest, roster)",
+        "libs_drift(manifest, consumers)",
         "coverage(manifest, app)",
         "matrix(manifest, roster)",
         "main(argv)"
@@ -429,6 +430,7 @@
         "modules(repo, cfg)",
         "scan(repo, cfg)",
         "check(repo, cfg, manifest, roster)",
+        "libs_drift(manifest, consumers)",
         "coverage(manifest, app)",
         "matrix(manifest, roster)",
         "main(argv)"
@@ -2391,6 +2393,7 @@
         "modules(repo, cfg)",
         "scan(repo, cfg)",
         "check(repo, cfg, manifest, roster)",
+        "libs_drift(manifest, consumers)",
         "coverage(manifest, app)",
         "matrix(manifest, roster)",
         "main(argv)"
@@ -2407,6 +2410,7 @@
         "modules(repo, cfg)",
         "scan(repo, cfg)",
         "check(repo, cfg, manifest, roster)",
+        "libs_drift(manifest, consumers)",
         "coverage(manifest, app)",
         "matrix(manifest, roster)",
         "main(argv)"
@@ -4775,6 +4779,46 @@
         "edit_translator()",
         "empty_manifest()",
         "move_entry_source()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/store-dns-ladder.test.kt",
+      "lang": "kotlin",
+      "role": "script",
+      "exports": [
+        "main"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.appstore.DnsLadder",
+        "com.sun.net.httpserver.HttpServer",
+        "java.net.HttpURLConnection",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.URL",
+        "java.util.Base64",
+        "java.util.concurrent.atomic.AtomicInteger"
+      ],
+      "symbols": [
+        "check(name: String, ok: Boolean, extra: String = \"\")",
+        "releaseServer()",
+        "dohServer(hits: AtomicInteger)",
+        "download(host: String, port: Int)",
+        "relayFor(host: String, rungs: ()",
+        "main()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/store-dns-ladder.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "build_and_run()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "build_and_run()",
+        "mutate()"
       ]
     },
     {
@@ -9011,6 +9055,7 @@
         "bad(why: String)",
         "meshUp(ctx: Context)",
         "fleetResolvers(ctx: Context)",
+        "meshResolve(ctx: Context, host: String)",
         "engineLabel(ctx: Context)",
         "live(ctx: Context)",
         "syncAndCheck(ctx: Context, raiseNow: Boolean, settleMs: Long = 4_000)",
@@ -12961,6 +13006,7 @@
         "theCrashCountReadsOnlyReportsThroughTheBridge()",
         "everyKnownServerIsListedOnceWithEveryRoleItPlays()",
         "theAnsweringServerIsTheFirstReachableOneAndroidIsHanded()",
+        "aMemberNetpolicyCutOffReadsBlockedNotNone()",
         "class DnsOverviewTest"
       ]
     },
@@ -14274,6 +14320,28 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-account-api-import.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "has()",
+        "hasnt()",
+        "code()",
+        "codehasnt()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "has()",
+        "hasnt()",
+        "code()",
+        "codehasnt()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-account-four-tabs.sh",
       "lang": "sh",
       "role": "shell",
@@ -14774,6 +14842,20 @@
     },
     {
       "path": "aa_cloud-superapp/test/test-dashboard-cross-app-deeplink.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-devcontrol-control-route.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
@@ -15810,6 +15892,20 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-store-batch-foreground.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-store-controls.sh",
       "lang": "sh",
       "role": "shell",
@@ -16619,6 +16715,7 @@
         "vault(ctx: Context)",
         "setup(ctx: Context, q: Map<String, String>, m: AccountModel)",
         "handle(ctx: Context, op: String, q: Map<String, String>)",
+        "importBundle(ctx: Context, text: String, m: AccountModel)",
         "fleet(ctx: Context)",
         "target(m: AccountModel, q: Map<String, String>, side: AccountStore.Slot)",
         "totals(apps: JSONObject?)",
@@ -16817,6 +16914,7 @@
         "uploadPlan(device: String)",
         "upload(token: String, device: String)",
         "report()",
+        "landBundle(ctx: Context?, body: JSONObject, via: String)",
         "decoded(b64: String)",
         "tabs()",
         "pairs()",
@@ -16827,8 +16925,7 @@
         "read(file: File)",
         "write(file: File, bytes: ByteArray)",
         "class AccountModel",
-        "class Tab",
-        "class FilePair"
+        "class Tab"
       ]
     },
     {
@@ -18322,7 +18419,9 @@
         "androidx.work.WorkManager",
         "androidx.work.WorkerParameters",
         "com.diegonmarcos.superapp.core.FleetAlerts",
+        "androidx.work.ForegroundInfo",
         "com.diegonmarcos.superapp.updater.Advisory",
+        "com.diegonmarcos.superapp.updater.BatchForeground",
         "com.diegonmarcos.superapp.updater.AutoUpdatePrefs",
         "com.diegonmarcos.superapp.updater.InstallIdentity",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
@@ -18333,6 +18432,7 @@
         "java.util.concurrent.TimeUnit"
       ],
       "symbols": [
+        "getForegroundInfo()",
         "doWork()",
         "constraints()",
         "triggerData(trigger: String)",
@@ -18340,6 +18440,60 @@
         "start(context: Context)",
         "checkNow(context: Context)",
         "class ConstellationWorker"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/DnsLadder.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DnsLadder"
+      ],
+      "imports": [
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.net.Inet4Address",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.Proxy",
+        "java.net.ProxySelector",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.net.SocketAddress",
+        "java.net.URI",
+        "java.net.URL",
+        "java.util.Base64",
+        "java.util.concurrent.ConcurrentHashMap",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.TimeUnit",
+        "java.util.concurrent.TimeoutException"
+      ],
+      "symbols": [
+        "walk(host: String, rungs: List<Rung>, skip: Set<String> = emptySet()",
+        "ladder( bridgeLabel: String, bridge: (String)",
+        "doh(label: String, endpoint: String, timeoutMs: Int = 3_000)",
+        "get(url: String, timeoutMs: Int)",
+        "query(name: String, type: Int)",
+        "u16(m: ByteArray, i: Int)",
+        "skip(m: ByteArray, i: Int)",
+        "addresses(m: ByteArray)",
+        "failureFor(host: String?)",
+        "install()",
+        "select(uri: URI)",
+        "connectFailed(uri: URI, sa: SocketAddress, ioe: IOException)",
+        "resolveFor(host: String, skip: Set<String> = emptySet()",
+        "tunnel(client: Socket)",
+        "dial(via: Via, port: Int)",
+        "readLine(i: InputStream)",
+        "pipe(i: InputStream, o: OutputStream)",
+        "class DnsLadder",
+        "class Rung",
+        "class Attempt",
+        "class Result",
+        "class Wire",
+        "class Via",
+        "class Relay"
       ]
     },
     {
@@ -18946,28 +19100,14 @@
         "android.net.ConnectivityManager",
         "com.diegonmarcos.superapp.updater.source.DownloadFailure",
         "com.diegonmarcos.superapp.updater.source.MeshMirror",
-        "java.io.IOException",
-        "java.io.InputStream",
-        "java.io.OutputStream",
         "java.net.InetAddress",
-        "java.net.InetSocketAddress",
-        "java.net.Proxy",
-        "java.net.ProxySelector",
-        "java.net.ServerSocket",
-        "java.net.Socket",
-        "java.net.SocketAddress",
-        "java.net.URI",
-        "java.util.concurrent.ConcurrentHashMap"
+        "java.net.URI"
       ],
       "symbols": [
         "isStoreHost(host: String)",
+        "rungs()",
         "start(ctx: Context)",
-        "install(ctx: Context)",
-        "select(uri: URI)",
-        "connectFailed(uri: URI, sa: SocketAddress, ioe: IOException)",
-        "tunnel(client: Socket)",
-        "readLine(i: InputStream)",
-        "pipe(i: InputStream, o: OutputStream)",
+        "install(@Suppress(\"UNUSED_PARAMETER\")",
         "class StoreDns"
       ]
     },
@@ -19267,6 +19407,8 @@
         "android.net.NetworkCapabilities",
         "android.os.Build",
         "android.util.Log",
+        "android.content.Intent",
+        "com.diegonmarcos.superapp.updater.BatchForeground",
         "com.diegonmarcos.superapp.updater.Fleet",
         "com.diegonmarcos.superapp.updater.FleetIdentity",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
@@ -19287,7 +19429,7 @@
         "fetch(ctx: Context, app: Fleet.App)",
         "install(ctx: Context, app: Fleet.App, remote: Fleet.State? = null)",
         "versionOf(remote: Fleet.State?, cached: ApkCache.Entry?)",
-        "named(app: Fleet.App, stage: String, version: String, verb: ()",
+        "named(ctx: Context, app: Fleet.App, stage: String, version: String, verb: ()",
         "stageOf(verb: String)",
         "auto(ctx: Context, app: Fleet.App, remote: Fleet.State? = null)",
         "installCached(ctx: Context, app: Fleet.App, e: ApkCache.Entry)",
@@ -19297,7 +19439,9 @@
         "installedKey(ctx: Context, app: Fleet.App)",
         "installedCode(ctx: Context, app: Fleet.App)",
         "downloadAll(ctx: Context, apps: List<Fleet.App>, online: Boolean = isOnline(ctx)",
+        "downloadAllRun(ctx: Context, apps: List<Fleet.App>, online: Boolean, dryRun: Boolean)",
         "updateAll(ctx: Context, apps: List<Fleet.App>, online: Boolean = isOnline(ctx)",
+        "updateAllRun(ctx: Context, apps: List<Fleet.App>, online: Boolean, dryRun: Boolean)",
         "beginNext(j: UpdateProgress.Job)",
         "finishBatch(out: List<Outcome>)",
         "progress(state: UpdateProgress.State = UpdateProgress.state, job: UpdateProgress.Job? = UpdateProgress.job)",
@@ -21211,6 +21355,53 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserContextMenu.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserContextMenu",
+        "BrowserContextSheet"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "java.net.URLEncoder"
+      ],
+      "symbols": [
+        "target(type: Int, extra: String?, hrefUrl: String? = null, hrefTitle: String? = null)",
+        "isWeb(url: String?)",
+        "actions(t: Target, hasPrivate: Boolean)",
+        "placement(a: Action, fromPrivate: Boolean)",
+        "imageSearchUrl(engineId: String, imageUrl: String)",
+        "BrowserContextSheet(title: String, actions: List<BrowserContextMenu.Action>, onPick: (BrowserContextMenu.Action)",
+        "class BrowserContextMenu",
+        "class Action",
+        "class Target",
+        "class Placement"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserDataScreens.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -21313,6 +21504,10 @@
         "merge(list: List<BrowserBookmark>, seed: FavSeed, seen: Set<String>, now: Long)",
         "letter(title: String, url: String)",
         "sections(list: List<BrowserBookmark>)",
+        "tokens(q: String)",
+        "matches(b: BrowserBookmark, q: String)",
+        "filter(sections: List<Pair<String, List<BrowserBookmark>>>, q: String)",
+        "suggest(list: List<BrowserBookmark>, q: String, limit: Int, skip: Set<String> = emptySet()",
         "class FavSeedItem",
         "class FavSeed",
         "class BrowserFavourites"
@@ -21796,6 +21991,7 @@
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
         "androidx.compose.foundation.layout.heightIn",
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
@@ -21823,8 +22019,7 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.unit.dp",
-        "com.diegonmarcos.superapp.uikit.KitSectionHeader"
+        "androidx.compose.ui.unit.dp"
       ],
       "symbols": [
         "sheet()",
@@ -21991,6 +22186,7 @@
         "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
+        "searchTitle(engineLabel: String)",
         "build(sections: BrowserSuggest.Sections, engineLabel: String)",
         "SuggestRows(rows: List<SuggestRow>, onPick: (BrowserSuggest.Suggestion)",
         "BrowserSuggestOverlay(state: SuggestState, onPick: (BrowserSuggest.Suggestion)",
@@ -25846,6 +26042,7 @@
         "handle(ctx: Context, s: Socket)",
         "contentLengthOf(header: String)",
         "readBody(reader: java.io.Reader, bytes: Int)",
+        "bodyLimit(op: String)",
         "withBody(query: Map<String, String>, body: String?)",
         "canonicalOp(path: String)",
         "infoJson(ctx: Context)",
@@ -47351,6 +47548,7 @@
         "setIdleTunnel(tunnelName: String?, wgQuickConfig: String?, raiseNow: Boolean)",
         "getIdleStatus()",
         "methods()",
+        "needsConsent()",
         "methodNames()",
         "onBind(intent: Intent?)",
         "class is",
@@ -49838,6 +50036,8 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.os.SystemClock",
+        "android.util.Log",
         "java.util.UUID"
       ],
       "symbols": [
@@ -49847,6 +50047,8 @@
         "token(ctx: Context)",
         "serverCommand(ctx: Context)",
         "shellCommand(ctx: Context)",
+        "ensureServer(ctx: Context, ladder: List<ShellChannel>)",
+        "bootstrapState(ctx: Context)",
         "class is",
         "class AdbShellBootstrap"
       ]
@@ -49947,6 +50149,7 @@
         "name()",
         "isReady(ctx: Context)",
         "exec(ctx: Context, command: String)",
+        "probe(ctx: Context)",
         "status(ctx: Context)",
         "class LocalShellChannel"
       ]
@@ -50585,6 +50788,7 @@
         "mirror(preset: String? = null)",
         "underlying()",
         "start(ctx: Context, port: Int)",
+        "forget(name: String)",
         "walk(q: ByteArray)",
         "ask(q: ByteArray, r: Route)",
         "android(q: ByteArray, network: Network?)",
@@ -51221,12 +51425,14 @@
         "android.content.Context",
         "android.util.Log",
         "androidx.work.CoroutineWorker",
+        "androidx.work.ForegroundInfo",
         "androidx.work.WorkerParameters",
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.withContext",
         "java.io.File"
       ],
       "symbols": [
+        "getForegroundInfo()",
         "doWork()",
         "class ApkInstallWorker"
       ]
@@ -51262,6 +51468,46 @@
         "class AutoUpdatePrefs",
         "class LastCheck",
         "class of"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/updater/src/main/java/com/diegonmarcos/superapp/updater/BatchForegroundService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatchForeground",
+        "BatchForegroundService"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.ServiceInfo",
+        "android.os.Build",
+        "android.os.IBinder",
+        "android.util.Log",
+        "androidx.core.app.NotificationCompat",
+        "androidx.core.app.ServiceCompat",
+        "androidx.core.content.ContextCompat",
+        "androidx.work.ForegroundInfo",
+        "java.util.concurrent.atomic.AtomicInteger"
+      ],
+      "symbols": [
+        "begin(ctx: Context)",
+        "end(ctx: Context)",
+        "hold(ctx: Context, on: Boolean = true, body: ()",
+        "nm(ctx: Context)",
+        "notification(ctx: Context)",
+        "foregroundInfo(ctx: Context)",
+        "onBind(intent: Intent?)",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "class BatchForeground",
+        "class BatchForegroundService"
       ]
     },
     {
@@ -51756,7 +52002,7 @@
         "kind(t: Throwable)",
         "isFinal(t: Throwable)",
         "host(t: Throwable)",
-        "describe(t: Throwable, resolver: String? = runCatching { activeResolver()",
+        "describe(t: Throwable, resolver: String? = runCatching { activeResolverFor(host(t)",
         "mentionsDns(text: String?)",
         "class DownloadFailure",
         "class Kind",
@@ -51962,11 +52208,13 @@
         "android.content.Context",
         "android.util.Log",
         "androidx.work.CoroutineWorker",
+        "androidx.work.ForegroundInfo",
         "androidx.work.WorkerParameters",
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.withContext"
       ],
       "symbols": [
+        "getForegroundInfo()",
         "doWork()",
         "updateFleet()",
         "installSelf(apk: VerifiedApk)",
@@ -54682,6 +54930,30 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserContextMenuTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserContextMenuTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserContextMenu",
+        "com.diegonmarcos.superapp.browser.BrowserContextMenu.Action",
+        "com.diegonmarcos.superapp.browser.BrowserTab",
+        "com.diegonmarcos.superapp.browser.BrowserTabGroups",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "tab(id: String, url: String, group: String = \"\")",
+        "class BrowserContextMenuTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserFavouritesTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -54696,6 +54968,7 @@
         "com.diegonmarcos.superapp.browser.FavSeedItem",
         "org.json.JSONObject",
         "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertTrue",
         "org.junit.Test"
       ],
@@ -54950,6 +55223,7 @@
         "BrowserSuggestSectionsTest"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserBookmark",
         "com.diegonmarcos.superapp.browser.BrowserRemoteSuggest",
         "com.diegonmarcos.superapp.browser.BrowserSearchEngine",
         "com.diegonmarcos.superapp.browser.BrowserSuggest",
@@ -54964,6 +55238,7 @@
       ],
       "symbols": [
         "visit(url: String, title: String, ageDays: Double)",
+        "fav(url: String, title: String, folder: String = \"\")",
         "class BrowserSuggestSectionsTest"
       ]
     },
@@ -55268,6 +55543,28 @@
         "el(tag, attrs, parent, rect)",
         "text(v, parent)",
         "page(scrollY)"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/tools/gen-github-pages.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "derive(topology)",
+        "read(src)",
+        "probe(rows)",
+        "render(rows)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "derive(topology)",
+        "read(src)",
+        "probe(rows)",
+        "render(rows)",
+        "main(argv)"
       ]
     },
     {
@@ -140129,6 +140426,7 @@
         "android.util.Log",
         "app.sterna.core.data.DataFactory",
         "app.sterna.core.data.account.AccountStore",
+        "app.sterna.core.data.account.VaultMailImport",
         "app.sterna.core.data.mail.BodyCachePurge",
         "app.sterna.core.data.mail.LocalDraftScheduler",
         "app.sterna.core.data.mail.MailRepository",
@@ -155530,6 +155828,28 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/account/VaultMailImport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultMailImport"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Log",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parse(mailText: String, owner: String)",
+        "l4(prefix: String)",
+        "run(context: Context, store: AccountStore)",
+        "class VaultMailImport",
+        "class Declared",
+        "class Plan"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/autoconfig/MailAutoconfig.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -169890,6 +170210,20 @@
         "bad()",
         "has()",
         "lacks()"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/test/test-vault-mail-import.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
@@ -313702,6 +314036,7 @@
       "symbols": [
         "onCreate()",
         "startDnsBridge()",
+        "bindDnsBridge()",
         "dnsBridgeState()",
         "setLogConfig(Context context)",
         "class TermuxApplication"
@@ -431470,6 +431805,51 @@
       ]
     },
     {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/FleetBearer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetBearer"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.net.Uri"
+      ],
+      "symbols": [
+        "token(ctx: Context)",
+        "read(ctx: Context)",
+        "class FleetBearer"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/Locator.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Locator"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.location.Location",
+        "android.location.LocationManager",
+        "android.os.SystemClock",
+        "androidx.core.content.ContextCompat",
+        "androidx.core.location.LocationManagerCompat",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "granted(ctx: Context)",
+        "fix(ctx: Context)",
+        "read(ctx: Context)",
+        "class Locator",
+        "class Fix"
+      ]
+    },
+    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/SearchHost.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -431510,6 +431890,7 @@
         "com.diegonmarcos.cloudsearch.core.Http",
         "com.diegonmarcos.cloudsearch.core.SearchConfig",
         "com.diegonmarcos.cloudsearch.core.SearchEngine",
+        "com.diegonmarcos.cloudsearch.core.ThingsEngine",
         "com.diegonmarcos.cloudsearch.core.UrlHttp",
         "java.io.File"
       ],
@@ -431555,6 +431936,26 @@
       ]
     },
     {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/ThingsArea.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ThingsArea"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudsearch.core.SearchEngine",
+        "com.diegonmarcos.cloudsearch.core.Things"
+      ],
+      "symbols": [
+        "resolve(s: Services, ctx: Context)",
+        "class ThingsArea",
+        "class How",
+        "class Why",
+        "class Resolved"
+      ]
+    },
+    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/debugapi/SearchDebugApi.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -431565,6 +431966,7 @@
         "android.content.Context",
         "com.diegonmarcos.cloudsearch.BuildConfig",
         "com.diegonmarcos.cloudsearch.core.Calculators",
+        "com.diegonmarcos.cloudsearch.core.Things",
         "com.diegonmarcos.cloudsearch.data.Services",
         "com.diegonmarcos.superapp.devtools.AppDebugServer",
         "org.json.JSONArray",
@@ -431577,6 +431979,7 @@
         "calc(s: Services, q: Map<String, String>)",
         "analysis(s: Services, q: Map<String, String>)",
         "feed(s: Services, q: Map<String, String>)",
+        "things(s: Services, q: Map<String, String>)",
         "class SearchDebugApi"
       ]
     },
@@ -431856,10 +432259,13 @@
         "showSubpage(v: SearchConfig.Vertical, id: String)",
         "filtersOf(v: String)",
         "listing(v: String)",
+        "things(v: String)",
+        "areaChanged()",
         "open(id: String)",
         "toggle(m: Menu)",
         "toggleDark()",
         "pickCity(id: String)",
+        "thingsRow(osm: String)",
         "nav(id: String)",
         "subpage(id: String)",
         "page(kind: String)",
@@ -431929,6 +432335,71 @@
         "class Glass",
         "class Metrics",
         "class Type"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/ui/ThingsPage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ThingsModel",
+        "stamp",
+        "ThingsPage",
+        "ThingsSettings"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.text.format.DateUtils",
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.material3.LinearProgressIndicator",
+        "androidx.compose.material3.Switch",
+        "androidx.compose.material3.SwitchDefaults",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.cloudsearch.R",
+        "com.diegonmarcos.cloudsearch.core.SearchConfig",
+        "com.diegonmarcos.cloudsearch.core.ThingsEngine",
+        "com.diegonmarcos.cloudsearch.core.Things",
+        "com.diegonmarcos.cloudsearch.data.Browser",
+        "com.diegonmarcos.cloudsearch.data.Locator"
+      ],
+      "symbols": [
+        "run(state: SearchState, scope: CoroutineScope, ctx: android.content.Context)",
+        "stamp(ms: Long)",
+        "ThingsPage(v: SearchConfig.Vertical)",
+        "hasAnswer()",
+        "AreaLine(w: ThingsArea.Resolved?, r: ThingsEngine.Result?)",
+        "StoresLine(r: ThingsEngine.Result)",
+        "PriceTable(rows: List<Things.Row>)",
+        "ThingsSettings(state: SearchState)",
+        "apply()",
+        "class ThingsModel"
       ]
     },
     {
@@ -432093,6 +432564,13 @@
         "houseAnalysisShowsTheSeriesAndSaysWhatIsMissing()",
         "theSearchTabIsOnePageWithTheEnginesAndTheChat()",
         "debugRoutesAnswerFromTheSameEngine()",
+        "openThings(item: String)",
+        "thingsComparesStoresWithTheirRealPriceOrWhyNone()",
+        "thingsWithoutTheFleetSignInShowsNoStorePriceAndSaysSo()",
+        "thingsCentresOnTheCoarseFixWhenAllowed()",
+        "thingsFallsBackToTheTypedCityAndNamesWhy()",
+        "thingsSettingsKeepTheCityAndClampTheRadius()",
+        "theDebugRouteAnswersTheThingsComparison()",
         "class SearchShellTest",
         "class FakeHttp",
         "class I"
@@ -432518,6 +432996,81 @@
       ]
     },
     {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/Things.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Things"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.util.Locale",
+        "kotlin.math.asin",
+        "kotlin.math.cos",
+        "kotlin.math.pow",
+        "kotlin.math.sin",
+        "kotlin.math.sqrt"
+      ],
+      "symbols": [
+        "category(id: String)",
+        "clampRadius(km: Int)",
+        "coarse(minKm: Int, maxKm: Int)",
+        "config(o: JSONObject)",
+        "cat(c: JSONObject)",
+        "problems(c: Config)",
+        "tokens(q: String)",
+        "categoryFor(q: String, c: Config)",
+        "hit(w: String)",
+        "haversineKm(lat1: Double, lon1: Double, lat2: Double, lon2: Double)",
+        "overpassQuery(area: Area, cat: Category, limit: Int)",
+        "parseStores(body: String, area: Area, max: Int)",
+        "parseGeocode(body: String, radiusKm: Int)",
+        "parseShelf(body: String, q: String, now: Long, maxAgeDays: Int)",
+        "parseBackend(body: String)",
+        "chainOf(store: Store, adapter: Adapter)",
+        "brandsOf(stores: List<Store>)",
+        "compare(stores: List<Store>, shelf: List<Shelf>, backend: Backend?, backendWhy: String, max: Int)",
+        "whyNone(backend: Backend?, chain: Adapter?, offer: Offer?, backendWhy: String)",
+        "strings(a: JSONArray?)",
+        "class Things",
+        "class Category",
+        "class Config",
+        "class Area",
+        "class Store",
+        "class Shelf",
+        "class Offer",
+        "class Adapter",
+        "class Backend",
+        "class Source",
+        "class Row"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/ThingsEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ThingsEngine"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.SearchEngine.SourceStatus",
+        "com.diegonmarcos.cloudsearch.core.SearchEngine.State",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "fetch(key: String, url: String, headers: Map<String, String>, ttlMs: Long)",
+        "fetchAny(key: String, urls: List<String>, ttlMs: Long)",
+        "geocode(city: String, radiusKm: Int)",
+        "compare(area0: Things.Area, q: String)",
+        "json(r: Result)",
+        "class ThingsEngine",
+        "class Result",
+        "class Fetched"
+      ]
+    },
+    {
       "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/CalculatorsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -432803,6 +433356,85 @@
         "pvReductionsCountFromTheSecondChildCapped()",
         "lowWagesAreFlaggedNotModelled()",
         "class PayslipTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/ThingsEngineTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ThingsEngineTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.TemporaryFolder"
+      ],
+      "symbols": [
+        "get(url: String, headers: Map<String, String>, timeoutMs: Int)",
+        "post(url: String, headers: Map<String, String>, body: String, timeoutMs: Int)",
+        "engine()",
+        "status(r: ThingsEngine.Result, id: String)",
+        "aSearchAsksTheStoresTheShelfAndTheSiteServiceAndSortsTheTable()",
+        "theTokenAuthorisesTheServiceCallAndIsNeverCachedOrInTheKey()",
+        "withoutTheFleetSignInTheServiceIsSkippedAndSaysSo()",
+        "anItemNoCategoryNamesFallsBackToGeneralStoresAndSaysSo()",
+        "anEmptyItemAsksOnlyForTheStores()",
+        "storesAreCachedPerAreaAndCategoryAndTheOtherSourcesPerTheirTtl()",
+        "offlineShowsTheLastAnswersMarkedStaleAndANeverFetchedOneAsAnError()",
+        "anOverloadedOverpassInstanceFallsThroughToTheNext()",
+        "aPriceServiceFaultKeepsTheStoresAndNamesTheFault()",
+        "anUnreadableStoresOrShelfAnswerIsAnErrorNotAnEmptyList()",
+        "theCentreLeavesThePhoneRoundedToAboutAKilometre()",
+        "theRadiusIsClampedToTheDeclaredRange()",
+        "aTypedCityBecomesAnAreaThroughTheCacheAndAnUnknownOneIsSaid()",
+        "theDebugJsonCarriesTheRowsHonestly()",
+        "class ThingsEngineTest",
+        "class FakeHttp"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/ThingsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ThingsTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "store(osm: String, name: String, brand: String? = name, km: Double = 1.0, site: String? = null)",
+        "theShippedDeclarationIsConsistentAndTwentyKmByDefault()",
+        "problemsAfter(edit: (org.json.JSONObject)",
+        "anInconsistentDeclarationIsNamed()",
+        "aThingsPageNeedsTheDeclaration()",
+        "anItemIsMatchedToTheShopTypesThatSellIt()",
+        "distanceIsGreatCircle()",
+        "theOverpassQueryAsksTheShopTypesWithinTheRadius()",
+        "storesComeNearestFirstAndOnlyThoseWithAPlaceAndAName()",
+        "aTypedCityIsGeocodedToAnAreaOfTheAskedRadius()",
+        "shelfPricesAreTheMatchingPerUnitDatedOnesAtAPlace()",
+        "thePriceServiceAnswerIsReadAsPublished()",
+        "aPriceIsOnlyReadFromAnOkAnswer()",
+        "aStoreBelongsToAChainByWholeWordsOfItsBrand()",
+        "backend(vararg offers: Things.Offer)",
+        "ok(a: String, p: Double)",
+        "no(a: String, s: String)",
+        "theTableIsCheapestFirstThenNearestAndNeverInventsAPrice()",
+        "theCheaperOfAShelfAndAnOnlinePriceWins()",
+        "everyStoreWithoutAPriceSaysWhy()",
+        "note(name: String, be: Things.Backend?, why: String = \"\")",
+        "theTableIsCappedAtTheDeclaredRows()",
+        "class ThingsTest"
       ]
     },
     {
@@ -435048,6 +435680,7 @@
       "symbols": [
         "CloudDnsBridge()",
         "start()",
+        "bind()",
         "state()",
         "class CloudDnsBridge"
       ]
@@ -440484,6 +441117,20 @@
       "symbols": [
         "build()",
         "check()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/test/test-dns-bridge-owner.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
