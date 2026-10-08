@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20697,
+    "files": 20715,
     "by_lang": {
       "py": 118,
-      "sh": 421,
-      "kotlin": 10554,
+      "sh": 425,
+      "kotlin": 10568,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 217,
-      "shell": 316,
+      "shell": 320,
       "java": 623,
       "entrypoint": 23,
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10551,
+      "kotlin": 10565,
       "python": 37,
       "rust-module": 87,
       "file": 2255,
@@ -5897,6 +5897,26 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/CalcHandoff.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcHandoff"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent"
+      ],
+      "symbols": [
+        "decide(calcInstalled: Boolean, storeInstalled: Boolean)",
+        "installed(ctx: Context)",
+        "target(ctx: Context)",
+        "launch(ctx: Context)",
+        "class CalcHandoff",
+        "class Target"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/CloudStoreHandoff.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -8902,6 +8922,38 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/DataBadgeModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DataBadgeModel"
+      ],
+      "imports": [
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "card(s: Snapshot)",
+        "title(s: Snapshot)",
+        "collapsed(s: Snapshot)",
+        "expanded(s: Snapshot)",
+        "actions(s: Snapshot)",
+        "simLines(s: Snapshot)",
+        "simName(x: Sim)",
+        "forecastBytes(used: Long, elapsedMs: Long, monthLengthMs: Long)",
+        "forecast(used: Long, s: Snapshot)",
+        "split(w: Window)",
+        "bytes(n: Long)",
+        "class DataBadgeModel",
+        "class Window",
+        "class App",
+        "class Sim",
+        "class Snapshot",
+        "class Act",
+        "class Action",
+        "class Card"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/DnsFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9705,6 +9757,8 @@
         "meshIp(s: Snapshot)",
         "collapsed(s: Snapshot)",
         "expanded(s: Snapshot)",
+        "bridgeLine(listening: Boolean, port: Int, route: String?, why: String?)",
+        "privateDnsLine(mode: String?, specifier: String?, active: Boolean?, server: String?)",
         "uptime(s: Snapshot)",
         "relative(thenMs: Long, nowMs: Long)",
         "duration(ms: Long)",
@@ -10130,6 +10184,170 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BatteryBadgeModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatteryBadgeModel"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.notificationcenter.BatteryEstimator.ChargeSource",
+        "com.diegonmarcos.superapp.notificationcenter.BatteryEstimator.DischargeState",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "card(s: Snapshot)",
+        "title(s: Snapshot)",
+        "headline(s: Snapshot)",
+        "estimateCharge(s: Snapshot)",
+        "estimateDischarge(s: Snapshot)",
+        "collapsed(s: Snapshot)",
+        "expanded(s: Snapshot)",
+        "currentLine(s: Snapshot)",
+        "cycleLine(s: Snapshot)",
+        "capacityLine(s: Snapshot)",
+        "estimateLines(s: Snapshot)",
+        "sinceLines(s: Snapshot)",
+        "statusText(s: Snapshot)",
+        "plugText(s: Snapshot)",
+        "healthText(h: Int)",
+        "fmtHm(ms: Long)",
+        "fmtMa(ma: Int)",
+        "fmtV(mv: Int)",
+        "fmtTemp(c: Double)",
+        "fmtRate(pctPerHour: Double)",
+        "class BatteryBadgeModel",
+        "class Snapshot",
+        "class Card"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BatteryBadgeService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatteryBadgeService"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.app.Service",
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.IntentFilter",
+        "android.content.pm.PackageManager",
+        "android.os.BatteryManager",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.IBinder",
+        "android.os.Looper",
+        "androidx.core.app.NotificationCompat",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.MainActivity",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.battery.BatteryCapacity",
+        "com.diegonmarcos.superapp.battery.BatterySessionStats",
+        "java.util.concurrent.Executors"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onCreate()",
+        "onReceive(context: Context, intent: Intent)",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "requestRefresh()",
+        "refreshNow()",
+        "gather()",
+        "prop(id: Int)",
+        "trackRate(now: Long, pct: Int, counterUah: Long, capacityUah: Long, charging: Boolean)",
+        "placeholder()",
+        "build(s: BatteryBadgeModel.Snapshot)",
+        "canPost(ctx: Context)",
+        "ensureChannel(ctx: Context)",
+        "class only",
+        "class BatteryBadgeService"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BatteryEstimator.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatteryEstimator"
+      ],
+      "imports": [
+        "kotlin.math.abs",
+        "kotlin.math.exp"
+      ],
+      "symbols": [
+        "rawToMa(raw: Int?)",
+        "intoBatteryMa(raw: Int?, status: Int)",
+        "discharge( levelPct: Int, nowMs: Long, anchorMs: Long, anchorPct: Int, recentPctPerMin: Double = 0.0, )",
+        "remainingMs(levelPct: Int, pctPerMin: Double)",
+        "charge( levelPct: Int, full: Boolean, platformRemainingMs: Long, recentPctPerMin: Double, currentMa: Int?, capacityMah: Int?, )",
+        "pctPerHourFromMa(ma: Int?, capacityMah: Int?)",
+        "track( prev: RateState?, nowMs: Long, levelPct: Int, counterUah: Long, capacityUah: Long, charging: Boolean, )",
+        "ema(prev: Double, sample: Double, dtMs: Long)",
+        "class BatteryEstimator",
+        "class DischargeState",
+        "class Discharge",
+        "class ChargeSource",
+        "class Charge",
+        "class RateState"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/DataBadgeService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DataBadgeService"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.app.Service",
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.IntentFilter",
+        "android.net.Uri",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.IBinder",
+        "android.os.Looper",
+        "androidx.core.app.NotificationCompat",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.MainActivity",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.datamanager.DataUsageProvider",
+        "com.diegonmarcos.superapp.network.DataBadgeModel",
+        "com.diegonmarcos.superapp.network.DataBadgeModel.Act",
+        "java.util.concurrent.Executors"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onCreate()",
+        "onReceive(context: Context, intent: Intent)",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "requestRefresh(force: Boolean)",
+        "refreshNow()",
+        "gather()",
+        "win(t: DataUsageProvider.Totals)",
+        "build(s: DataBadgeModel.Snapshot)",
+        "openDataManager(ctx: Context)",
+        "ensureChannel(ctx: Context)",
+        "class DataBadgeService"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/FleetAlertsProvider.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10391,7 +10609,10 @@
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.network.NetworkBadgeModel",
         "com.diegonmarcos.superapp.network.NetworkBadgeModel.Act",
+        "com.diegonmarcos.superapp.network.FleetDns",
         "com.diegonmarcos.superapp.network.WgState",
+        "com.diegonmarcos.cloudlib.sysdns.FleetDnsBridge",
+        "org.json.JSONObject",
         "com.wireguard.android.backend.Tunnel",
         "com.wireguard.crypto.Key",
         "java.util.concurrent.Executors"
@@ -10408,6 +10629,7 @@
         "scheduleTick(connected: Boolean)",
         "refreshNow()",
         "gather()",
+        "bridgeLine()",
         "toggle()",
         "placeholder()",
         "build(s: NetworkBadgeModel.Snapshot)",
@@ -12222,6 +12444,25 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/CalcHandoffTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CalcHandoffTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.apps.CalcHandoff.Target",
+        "java.io.File",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class CalcHandoffTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/CloudStoreRouteTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13070,6 +13311,28 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/DataBadgeModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DataBadgeModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.DataBadgeModel.Act",
+        "com.diegonmarcos.superapp.network.DataBadgeModel.App",
+        "com.diegonmarcos.superapp.network.DataBadgeModel.Sim",
+        "com.diegonmarcos.superapp.network.DataBadgeModel.Snapshot",
+        "com.diegonmarcos.superapp.network.DataBadgeModel.Window",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class DataBadgeModelTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/DnsOverviewTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13382,6 +13645,74 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/BatteryBadgeDeclarationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatteryBadgeDeclarationTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class BatteryBadgeDeclarationTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/BatteryBadgeModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatteryBadgeModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.notificationcenter.BatteryBadgeModel.STATUS_CHARGING",
+        "com.diegonmarcos.superapp.notificationcenter.BatteryBadgeModel.STATUS_DISCHARGING",
+        "com.diegonmarcos.superapp.notificationcenter.BatteryBadgeModel.STATUS_FULL",
+        "com.diegonmarcos.superapp.notificationcenter.BatteryBadgeModel.STATUS_NOT_CHARGING",
+        "com.diegonmarcos.superapp.notificationcenter.BatteryBadgeModel.Snapshot",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "discharging(level: Int = 80, usedFrom: Int = 100, ago: Long = 2 * hour)",
+        "charging(level: Int = 50, sys: Long = 65 * min)",
+        "p(v: Int)",
+        "class BatteryBadgeModelTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/BatteryEstimatorTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatteryEstimatorTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.notificationcenter.BatteryEstimator.ChargeSource",
+        "com.diegonmarcos.superapp.notificationcenter.BatteryEstimator.DischargeState",
+        "com.diegonmarcos.superapp.notificationcenter.BatteryEstimator.RateState",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "charge(level: Int, sys: Long = -1, ema: Double = 0.0, ma: Int? = null, cap: Int? = null, full: Boolean = false)",
+        "class BatteryEstimatorTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/MarketsBadgeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13424,6 +13755,31 @@
       ],
       "symbols": [
         "class NetworkBadgeDeclarationTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/NetworkGroupTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NetworkGroupTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.app.NotificationManager",
+        "androidx.core.app.NotificationCompat",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "badge(id: String)",
+        "class NetworkGroupTest"
       ]
     },
     {
@@ -14704,6 +15060,22 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-battery-badge.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-bottom-nav-selected-pill.sh",
       "lang": "sh",
       "role": "shell",
@@ -14990,6 +15362,22 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-data-badge.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-devcontrol-control-route.sh",
       "lang": "sh",
       "role": "shell",
@@ -15109,6 +15497,20 @@
         "_stage()",
         "_sub()",
         "_mut()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-fleet-config-restart-defers.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
@@ -16738,6 +17140,20 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/lib-apks/test/test-lib-apk-label.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/lib-apks/test/test-mesh-membership.sh",
       "lang": "sh",
       "role": "shell",
@@ -16866,7 +17282,7 @@
         "vault(ctx: Context)",
         "setup(ctx: Context, q: Map<String, String>, m: AccountModel)",
         "handle(ctx: Context, op: String, q: Map<String, String>)",
-        "importBundle(ctx: Context, text: String, m: AccountModel)",
+        "importBundle(ctx: Context, text: String, q: Map<String, String>, m: AccountModel)",
         "fleet(ctx: Context)",
         "target(m: AccountModel, q: Map<String, String>, side: AccountStore.Slot)",
         "totals(apps: JSONObject?)",
@@ -23305,6 +23721,7 @@
         "org.json.JSONObject"
       ],
       "symbols": [
+        "normalize(expr: String)",
         "parse(json: String?)",
         "base(key: String, def: Int)",
         "class EvalOptions"
@@ -23854,6 +24271,7 @@
         "insert(uri: Uri, values: ContentValues?)",
         "update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?)",
         "delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?)",
+        "servingForeground(ctx: Context)",
         "class FleetConfigProvider"
       ]
     },
@@ -58168,6 +58586,29 @@
       ]
     },
     {
+      "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/Editor.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Edit",
+        "Editor"
+      ],
+      "imports": [],
+      "symbols": [
+        "at(text: String, cursor: Int = text.length)",
+        "of(text: String, start: Int, end: Int)",
+        "insert(e: Edit, s: String)",
+        "backspace(e: Edit)",
+        "press(e: Edit, key: Declarations.Key)",
+        "replaceAll(s: String)",
+        "reuse(e: Edit, s: String)",
+        "wordBeforeCursor(e: Edit)",
+        "complete(e: Edit, name: String)",
+        "class Edit",
+        "class Editor"
+      ]
+    },
+    {
       "path": "ac_cloud-calc/app/src/main/java/com/diegonmarcos/cloudcalc/engine/CalcApi.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -58239,7 +58680,10 @@
         "refreshIfStale(api: CalcApi, nowMs: Long)",
         "refresh(api: CalcApi, nowMs: Long)",
         "pinned(codes: List<String>, favourites: List<String>)",
-        "cell(resultText: String)",
+        "numberIn(text: String)",
+        "trunc(x: Double)",
+        "truncateNumbers(text: String)",
+        "matrix(codes: List<String>, perEur: Map<String, Double>)",
         "class Fx"
       ]
     },
@@ -58255,11 +58699,10 @@
         "org.json.JSONObject"
       ],
       "symbols": [
-        "press(text: String, key: Declarations.Key)",
         "lastWord(text: String)",
-        "complete(text: String, name: String)",
         "placeholders(template: String)",
         "fill(template: String, values: Map<String, String>)",
+        "normalize(expr: String)",
         "convert(value: String, from: String, to: String)",
         "options(base: String, overrides: Map<String, Int>)",
         "result(json: String)",
@@ -58337,7 +58780,21 @@
         "CalcTags"
       ],
       "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.lazy.LazyRow",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
@@ -58354,7 +58811,6 @@
         "com.diegonmarcos.cloudcalc.R",
         "com.diegonmarcos.cloudcalc.engine.CalcApi",
         "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
-        "com.diegonmarcos.superapp.bottomnav.NavPage",
         "com.diegonmarcos.superapp.bottomnav.PageTabs",
         "com.diegonmarcos.superapp.bottomnav.islandEntries"
       ],
@@ -58362,6 +58818,7 @@
         "CalcShell(api: CalcApi, state: CalcState)",
         "PageStrip(state: CalcState)",
         "TabContent(tabId: String)",
+        "ModeIcons(modes: List<Declarations.Mode>, selectedId: String, pageIcon: String, onSelect: (String)",
         "matrixCell(row: String, col: String)",
         "pickerItem(name: String)",
         "historyExpr(i: Int)",
@@ -58603,7 +59060,16 @@
       "imports": [
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.Apps",
+        "androidx.compose.material.icons.filled.Bolt",
         "androidx.compose.material.icons.filled.Build",
+        "androidx.compose.material.icons.filled.CurrencyExchange",
+        "androidx.compose.material.icons.filled.Event",
+        "androidx.compose.material.icons.filled.Functions",
+        "androidx.compose.material.icons.filled.GraphicEq",
+        "androidx.compose.material.icons.filled.Memory",
+        "androidx.compose.material.icons.filled.Payments",
+        "androidx.compose.material.icons.filled.Science",
+        "androidx.compose.material.icons.filled.Straighten",
         "androidx.compose.material.icons.filled.AccessTime",
         "androidx.compose.material.icons.filled.Calculate",
         "androidx.compose.material.icons.filled.History",
@@ -58796,6 +59262,8 @@
         "io(block: ()",
         "ModeScreen(mode: Declarations.Mode)",
         "ExpressionMode(mode: Declarations.Mode)",
+        "current()",
+        "setEdit(e: Edit)",
         "historyMax()",
         "ChoiceRow(choices: List<Declarations.Choice>, options: String, onPick: (Declarations.Choice)",
         "ResultBlock(result: Logic.Result?)",
@@ -58910,7 +59378,10 @@
       "imports": [
         "android.content.ComponentName",
         "androidx.activity.ComponentActivity",
+        "androidx.compose.ui.semantics.SemanticsActions",
         "androidx.compose.ui.test.assertTextContains",
+        "androidx.compose.ui.test.performSemanticsAction",
+        "androidx.compose.ui.test.performTextReplacement",
         "androidx.compose.ui.test.getBoundsInRoot",
         "androidx.compose.ui.test.isToggleable",
         "androidx.compose.ui.test.onNodeWithText",
@@ -58955,6 +59426,10 @@
         "send(url: String, token: String?, body: String?, timeoutMs: Int)",
         "online()",
         "launch()",
+        "typeKeys(vararg keys: String)",
+        "select(start: Int, end: Int = start)",
+        "resultIs(text: String)",
+        "openStandard()",
         "top()",
         "has(text: String)",
         "day(d: java.time.LocalDate)",
@@ -59090,6 +59565,24 @@
       ],
       "symbols": [
         "class DeclarationsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/app/src/test/java/com/diegonmarcos/cloudcalc/EditorTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EditorTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "e(text: String, start: Int = text.length, end: Int = start)",
+        "show()",
+        "class EditorTest"
       ]
     },
     {
