@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20876,
+    "files": 20882,
     "by_lang": {
       "py": 121,
       "sh": 445,
-      "kotlin": 10706,
+      "kotlin": 10712,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -25,7 +25,7 @@
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10703,
+      "kotlin": 10709,
       "python": 40,
       "rust-module": 87,
       "file": 2255,
@@ -9202,6 +9202,7 @@
         "com.diegonmarcos.superapp.firewall.FirewallController",
         "com.diegonmarcos.superapp.network.AccountMesh",
         "com.diegonmarcos.superapp.network.FleetDns",
+        "com.diegonmarcos.superapp.network.MeshTransport",
         "com.diegonmarcos.superapp.network.WgState",
         "com.diegonmarcos.superapp.network.WireGuardPrefs",
         "com.diegonmarcos.superapp.network.WireGuardProfiles",
@@ -9282,7 +9283,8 @@
       "symbols": [
         "MeshControlsPage(store: MeshStore, modifier: Modifier = Modifier)",
         "remember0(f: ()",
-        "ControlRow(store: MeshStore, c: MeshDecl.Control, seeds: Map<String, String>)"
+        "ControlRow(store: MeshStore, c: MeshDecl.Control, seeds: Map<String, String>)",
+        "class private"
       ]
     },
     {
@@ -9480,7 +9482,9 @@
       "role": "kotlin",
       "exports": [
         "MeshPort",
-        "MeshHost"
+        "MeshHost",
+        "TransportView",
+        "ProbeLine"
       ],
       "imports": [
         "android.content.Intent"
@@ -9525,7 +9529,7 @@
         "activateProfile(name: String)",
         "installDeclared(id: String)",
         "importText(name: String, conf: String)",
-        "requestConsent(intent: Intent, then: ()"
+        "transport()"
       ]
     },
     {
@@ -9675,6 +9679,7 @@
       "symbols": [
         "MeshStatusPage(store: MeshStore, modifier: Modifier = Modifier)",
         "StatusRow(id: String, store: MeshStore, s: MeshSnapshot)",
+        "probeVerdict(ok: Boolean?)",
         "handshakeText(ageS: Long?, up: Boolean, engine: Boolean)",
         "healthWord(h: Health)"
       ]
@@ -9798,6 +9803,71 @@
         "FieldLine(label: String, modifier: Modifier = Modifier, content: @Composable ()",
         "class MeshTags",
         "class MeshRoles"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/MeshTransport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshTransport"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.appstore.DnsLadder",
+        "com.diegonmarcos.superapp.net.RelaySpec",
+        "com.diegonmarcos.superapp.network.mesh.MeshDecl",
+        "com.wireguard.android.backend.Tunnel",
+        "com.wireguard.config.Config",
+        "com.wireguard.crypto.Key",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.BufferedReader",
+        "java.io.IOException",
+        "java.io.StringReader",
+        "java.net.InetAddress"
+      ],
+      "symbols": [
+        "parseDecl(json: String)",
+        "parseBootstrap(meshJson: String)",
+        "of(id: String?)",
+        "toJson()",
+        "parse(json: String?)",
+        "splitEndpoint(ep: String)",
+        "joinEndpoint(ip: String, port: Int)",
+        "isIpLiteral(host: String)",
+        "agrees(answers: Collection<String>, pinned: Collection<String>)",
+        "pathOf(rung: String?)",
+        "worse(a: Path, b: Path)",
+        "relayLegs(peerKeys: List<String>, relay: Relay, base: Int)",
+        "rewrite(wgQuick: String, endpoints: Map<String, String>)",
+        "flush()",
+        "rungs(host: String, b: Bootstrap = boot, d: Decl = decl, system: (String)",
+        "plan(ctx: Context)",
+        "save(ctx: Context, p: Plan?)",
+        "route(ctx: Context, cfg: Config)",
+        "ensureRelay(ctx: Context, p: Plan)",
+        "release(ctx: Context)",
+        "directPlan(peers: List<WireGuardPrefs.PeerData>)",
+        "handshakeSince(ctx: Context, since: Long, waitMs: Long)",
+        "connect(ctx: Context, bringUp: ()",
+        "relayPlan(ctx: Context, peers: List<WireGuardPrefs.PeerData>, trail: MutableList<String>)",
+        "rungWord(rung: String)",
+        "current(ctx: Context)",
+        "relayLine(ctx: Context)",
+        "test(ctx: Context)",
+        "udpProbe(ctx: Context)",
+        "class MeshTransport",
+        "class Doh",
+        "class Decl",
+        "class RelayRoute",
+        "class Relay",
+        "class Bootstrap",
+        "class Path",
+        "class Plan",
+        "class Probe"
       ]
     },
     {
@@ -10031,6 +10101,7 @@
         "stripPrivateKey(conf: String)",
         "privateKeyOf(conf: String)",
         "class WireGuardPrefs",
+        "class in",
         "class key",
         "class public",
         "class PeerData"
@@ -10673,6 +10744,7 @@
         "com.diegonmarcos.superapp.MainActivity",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.network.NetworkBadgeModel",
+        "com.diegonmarcos.superapp.network.MeshTransport",
         "com.diegonmarcos.superapp.network.NetworkBadgeModel.Act",
         "com.diegonmarcos.superapp.network.FleetDns",
         "com.diegonmarcos.superapp.network.WgState",
@@ -13743,6 +13815,39 @@
         "applyCloudPreset()",
         "class MeshStoreTest",
         "class controls"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/MeshTransportTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshTransportTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.appstore.DnsLadder",
+        "com.diegonmarcos.superapp.net.RelaySpec",
+        "com.wireguard.config.Config",
+        "org.json.JSONArray",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.BufferedReader",
+        "java.io.IOException",
+        "java.io.StringReader",
+        "java.net.InetAddress",
+        "java.net.URI"
+      ],
+      "symbols": [
+        "ladder(system: (String)",
+        "class MeshTransportTest"
       ]
     },
     {
@@ -49382,6 +49487,49 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/net-wg/src/main/java/com/diegonmarcos/superapp/netwg/MeshRelay.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshRelay"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.net.RelayProbe",
+        "com.diegonmarcos.superapp.net.RelaySpec",
+        "com.diegonmarcos.superapp.net.RelayStatus",
+        "java.io.BufferedInputStream",
+        "java.io.IOException",
+        "java.net.DatagramPacket",
+        "java.net.DatagramSocket",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.Socket",
+        "java.net.SocketAddress",
+        "javax.net.ssl.SNIHostName",
+        "javax.net.ssl.SSLPeerUnverifiedException",
+        "javax.net.ssl.SSLSession",
+        "javax.net.ssl.SSLSocket",
+        "javax.net.ssl.SSLSocketFactory"
+      ],
+      "symbols": [
+        "apply(next: RelaySpec?)",
+        "stop()",
+        "status()",
+        "probe(s: RelaySpec)",
+        "connect(s: RelaySpec, addr: String)",
+        "dial(s: RelaySpec, remote: String)",
+        "pumpOut()",
+        "tunnel()",
+        "pumpIn(sock: Socket)",
+        "drop(sock: Socket, why: String)",
+        "close()",
+        "failed(relay: MeshRelay, spec: RelaySpec, route: RelaySpec.Route, t: Throwable)",
+        "why(t: Throwable)",
+        "class MeshRelay",
+        "class Leg"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/net-wg/src/main/java/com/diegonmarcos/superapp/netwg/NetBackendService.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -49394,10 +49542,14 @@
         "android.os.IBinder",
         "android.util.Log",
         "com.diegonmarcos.superapp.net.INetBackend",
+        "com.diegonmarcos.superapp.net.RelayProbe",
+        "com.diegonmarcos.superapp.net.RelaySpec",
+        "com.diegonmarcos.superapp.net.RelayStatus",
         "com.wireguard.android.backend.BackendException",
         "com.wireguard.android.backend.GoBackend",
         "com.wireguard.android.backend.Tunnel",
-        "com.wireguard.config.Config"
+        "com.wireguard.config.Config",
+        "javax.net.ssl.HttpsURLConnection"
       ],
       "symbols": [
         "getName()",
@@ -49416,6 +49568,9 @@
         "getIdleStatus()",
         "methods()",
         "needsConsent()",
+        "setRelay(specJson: String?)",
+        "getRelayStatus()",
+        "probeRelay(specJson: String?)",
         "methodNames()",
         "onBind(intent: Intent?)",
         "sharedBackend(ctx: android.content.Context)",
@@ -49445,6 +49600,41 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/net-wg/src/main/java/com/diegonmarcos/superapp/netwg/WsTunnel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "java.io.ByteArrayOutputStream",
+        "java.io.EOFException",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.net.Socket",
+        "java.security.MessageDigest",
+        "java.security.SecureRandom",
+        "java.util.Base64",
+        "java.util.UUID",
+        "javax.crypto.Mac",
+        "javax.crypto.spec.SecretKeySpec"
+      ],
+      "symbols": [
+        "esc(s: String)",
+        "jwt(host: String, port: Int)",
+        "splitRemote(remote: String)",
+        "upgrade(sock: Socket, host: String, prefix: String, remote: String)",
+        "readHead(i: InputStream)",
+        "writeFrame(out: OutputStream, opcode: Int, data: ByteArray, off: Int = 0, len: Int = data.size)",
+        "readFully(i: InputStream, n: Int)",
+        "readFrame(i: InputStream)",
+        "readMessage(i: InputStream, pong: (ByteArray)",
+        "class WsTunnel",
+        "class Frame",
+        "class Refused",
+        "class doc"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/net-wg/src/main/java/com/wireguard/android/backend/GoBackend.java",
       "lang": "java",
       "role": "java",
@@ -49453,6 +49643,7 @@
         "AlwaysOnCallback",
         "VpnService",
         "setAlwaysOnCallback",
+        "protectSocket",
         "getRunningTunnelNames",
         "getState",
         "getStatisticsRaw",
@@ -49497,6 +49688,7 @@
       "symbols": [
         "GoBackend(final Context context)",
         "setAlwaysOnCallback(final AlwaysOnCallback cb)",
+        "protectSocket(final java.net.Socket socket)",
         "getRunningTunnelNames()",
         "getState(final Tunnel tunnel)",
         "getStatisticsRaw(final Tunnel tunnel)",
@@ -49551,6 +49743,50 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/net-wg/src/test/java/com/diegonmarcos/superapp/netwg/MeshRelayTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshRelayTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.net.RelayProbe",
+        "com.diegonmarcos.superapp.net.RelaySpec",
+        "com.diegonmarcos.superapp.net.RelayStatus",
+        "org.json.JSONObject",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.BufferedInputStream",
+        "java.io.ByteArrayInputStream",
+        "java.io.ByteArrayOutputStream",
+        "java.net.DatagramPacket",
+        "java.net.DatagramSocket",
+        "java.net.InetAddress",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.security.MessageDigest",
+        "java.util.Base64",
+        "java.util.concurrent.CopyOnWriteArrayList",
+        "kotlin.concurrent.thread"
+      ],
+      "symbols": [
+        "tearDown()",
+        "serve(s: Socket)",
+        "freeUdpPort()",
+        "spec(listen: Int, key: String = prefix)",
+        "relay()",
+        "datagramsCrossTheRelayAndComeBack()",
+        "aWrongKeyIsNamedNotHidden()",
+        "anUnreachableAddressFallsToTheNext()",
+        "stoppingReleasesThePort()",
+        "framesOfEveryLengthClassRoundTrip()",
+        "specCrossesTheWireIntact()",
+        "class MeshRelayTest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/net/src/main/java/com/diegonmarcos/superapp/net/AidlBackend.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -49588,9 +49824,38 @@
         "setIdleTunnel(tunnelName: String, config: Config?, raiseNow: Boolean)",
         "idleStatus()",
         "idleAnswer(call: (INetBackend)",
+        "setRelay(spec: RelaySpec?)",
+        "relayStatus()",
+        "probeRelay(spec: RelaySpec)",
+        "hasRelay()",
+        "relayMissing()",
+        "relayCall(call: (INetBackend)",
         "unbind()",
         "class AidlBackend",
         "class the"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/net/src/main/java/com/diegonmarcos/superapp/net/RelaySpec.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RelaySpec",
+        "RelayStatus",
+        "RelayProbe"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "toJson()",
+        "parse(json: String?)",
+        "class RelaySpec",
+        "class Route",
+        "class RelayStatus",
+        "class Leg",
+        "class RelayProbe"
       ]
     },
     {
