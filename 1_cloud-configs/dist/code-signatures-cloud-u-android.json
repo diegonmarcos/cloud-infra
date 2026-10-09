@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20889,
+    "files": 20893,
     "by_lang": {
       "py": 121,
       "sh": 445,
-      "kotlin": 10719,
+      "kotlin": 10723,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -25,7 +25,7 @@
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10716,
+      "kotlin": 10720,
       "python": 40,
       "rust-module": 87,
       "file": 2255,
@@ -146164,6 +146164,40 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/inbox/DomainGroupHeader.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.semantics.heading",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "app.sterna.R",
+        "app.sterna.core.data.mail.InboxRow",
+        "app.sterna.core.data.mail.SenderDomain",
+        "app.sterna.ui.theme.MailMetrics",
+        "app.sterna.util.MailDates"
+      ],
+      "symbols": [
+        "of(row: InboxRow)",
+        "DomainGroupHeader(heading: DomainGroupHeading, modifier: Modifier = Modifier)",
+        "class DomainGroupHeading"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/inbox/DrawerGesture.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -160603,7 +160637,9 @@
         "AccountMessageCount",
         "AccountHomeCounts",
         "MailboxUnread",
-        "AuthIndexRow"
+        "AuthIndexRow",
+        "DomainIndexRow",
+        "FromDomainUpdate"
       ],
       "imports": [
         "androidx.paging.PagingSource",
@@ -160611,6 +160647,7 @@
         "androidx.room.Query",
         "androidx.room.RawQuery",
         "androidx.room.Transaction",
+        "androidx.room.Update",
         "androidx.room.Upsert",
         "androidx.sqlite.db.SupportSQLiteQuery",
         "app.sterna.core.data.getOrElseUnlessCancelled",
@@ -160637,6 +160674,9 @@
         "unclassifiedAuth(limit: Int)",
         "setAuthClass(accountId: String, id: String, authClass: Int)",
         "cachedSenderEmails(accountId: String, mailboxIds: List<String>, sender: String)",
+        "unindexedDomains(limit: Int)",
+        "setFromDomains(rows: List<FromDomainUpdate>)",
+        "cachedDomainEmails(accountId: String, mailboxIds: List<String>, domain: String)",
         "upsertAll(emails: List<EmailEntity>)",
         "deleteNotIn(accountId: String, mailboxId: String, keepIds: List<String>)",
         "deleteNotInSparing(accountId: String, mailboxId: String, keepIds: List<String>, spareIds: List<String>)",
@@ -160656,10 +160696,7 @@
         "representativeCountForMailbox(accountId: String, mailboxId: String)",
         "idsForMailbox(accountId: String, mailboxId: String)",
         "keysForSelection(query: SupportSQLiteQuery)",
-        "emailsByIds(ids: List<String>)",
-        "emailsByIds(accountId: String, ids: List<String>)",
-        "numberingOfRows(accountId: String, ids: List<String>)",
-        "threadMembersInMailbox(accountId: String, mailboxId: String, threadIds: List<String>)"
+        "emailsByIds(ids: List<String>)"
       ]
     },
     {
@@ -162380,6 +162417,28 @@
         "scheduledSendDelayMillis(sendAtMillis: Long, nowMillis: Long)",
         "scheduledSendJobs(rows: List<ScheduledSendEntity>, nowMillis: Long)",
         "class ScheduledSendJob"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/mail/SenderDomain.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SenderDomain"
+      ],
+      "imports": [
+        "app.sterna.core.data.db.DomainIndexRow",
+        "app.sterna.core.data.db.FromDomainUpdate"
+      ],
+      "symbols": [
+        "host(address: String?)",
+        "registrable(address: String?)",
+        "indexed(fromEmail: String?)",
+        "label(domain: String?)",
+        "domainKey(fromEmail: String?)",
+        "backfill( batch: Int, next: suspend (limit: Int)",
+        "class SenderDomain",
+        "class doc"
       ]
     },
     {
@@ -164628,6 +164687,35 @@
         "folder(accountId: String, id: String, role: String?, name: String = id)",
         "roles(accountIds: List<String>)",
         "class FolderRolesSqlTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/db/FromDomainMigrationSqlTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FromDomainMigrationSqlTest"
+      ],
+      "imports": [
+        "androidx.sqlite.db.SupportSQLiteDatabase",
+        "app.sterna.core.data.mail.SenderDomain",
+        "kotlinx.coroutines.runBlocking",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.lang.reflect.Proxy",
+        "java.sql.Connection",
+        "java.sql.DriverManager"
+      ],
+      "symbols": [
+        "setUp()",
+        "tearDown()",
+        "supportDb()",
+        "domainOf(id: String)",
+        "class FromDomainMigrationSqlTest"
       ]
     },
     {
@@ -167483,9 +167571,10 @@
       "symbols": [
         "setUp()",
         "tearDown()",
-        "insert(id: String, thread: String?, subject: String, from: String, seen: Int, flagged: Int, att: Int, auth: Int?, key: Long)",
+        "insert( id: String, thread: String?, subject: String, from: String, seen: Int, flagged: Int, att: Int, auth: Int?, key: Long, // what the mappers store; null is a row cached before the domain index existed domain: String? = SenderDomain.indexed(from)",
         "flat(sort: SortOrder = SortOrder.DATE_DESC, unread: Boolean = false, shape: ListShape = ListShape.NONE)",
         "grouped(sort: SortOrder = SortOrder.DATE_DESC, unread: Boolean = false, shape: ListShape = ListShape.NONE)",
+        "groupedRows(sort: SortOrder = SortOrder.DATE_DESC, unread: Boolean = false, shape: ListShape = ListShape.NONE)",
         "class ListViewSqlTest"
       ]
     },
@@ -169188,6 +169277,27 @@
       ],
       "symbols": [
         "class SendDraftTargetTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/mail/SenderDomainTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SenderDomainTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.db.DomainIndexRow",
+        "app.sterna.core.data.db.FromDomainUpdate",
+        "kotlinx.coroutines.runBlocking",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "reg(address: String?)",
+        "class SenderDomainTest"
       ]
     },
     {
