@@ -8,15 +8,21 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 UPD="$ROOT/1_cicd/src/ops/cloud-cgc-db-update.sh"
 check() { # $1 file → rc 0 when every property holds
   local f="$1"
+  # Match against captured text, never `cmd | grep -q`: grep -q exits at the first hit,
+  # the writer then dies of SIGPIPE, and under pipefail that reads as "not found" (this
+  # tester failed ~1 run in 20 that way on hosted runners).
+  local body; body=$(awk '/^chunk_index_repo\(\)/,/^}/' "$f")
   # 1. the chunk loop drops octocode's commit marker before every window
-  awk '/^chunk_index_repo\(\)/,/^}/' "$f" | grep -q 'storage/git_metadata.lance' || { echo "  no git_metadata drop"; return 1; }
+  grep -q 'storage/git_metadata.lance' <<<"$body" || { echo "  no git_metadata drop"; return 1; }
   # 2. the graphrag phase touches the new-work files, the semantic phase does not
-  awk '/^chunk_index_repo\(\)/,/^}/' "$f" | grep -q '"\$MANIFEST_PHASE" = "graphrag" \] && chunk_touch_next' || { echo "  graphrag touch not phase-gated"; return 1; }
+  grep -q '"\$MANIFEST_PHASE" = "graphrag" \] && chunk_touch_next' <<<"$body" || { echo "  graphrag touch not phase-gated"; return 1; }
   # 3. the HEAD gate also consults the chunk state
   grep -q '\[ "\$cur" = "\$last" \] && chunk_gate_current "\$cur"' "$f" || { echo "  manifest gate ignores chunk state"; return 1; }
   # 4. a forced, not-converged chunk run publishes to the force tag, never :latest
-  grep -A1 'to $(force_partial_tag) (forced, not converged' "$f" | tail -1 | grep -q 'REPO_TAG="$(force_partial_tag)"; checkpoint_publish' || { echo "  forced partial not routed to the force tag"; return 1; }
-  grep -B4 'forced, not converged' "$f" | grep -q 'CGC_FORCE:-0}" = "1"' || { echo "  force routing not gated on CGC_FORCE"; return 1; }
+  local nxt; nxt=$(grep -A1 'to $(force_partial_tag) (forced, not converged' "$f" | tail -1)
+  grep -q 'REPO_TAG="$(force_partial_tag)"; checkpoint_publish' <<<"$nxt" || { echo "  forced partial not routed to the force tag"; return 1; }
+  local pre; pre=$(grep -B4 'forced, not converged' "$f")
+  grep -q 'CGC_FORCE:-0}" = "1"' <<<"$pre" || { echo "  force routing not gated on CGC_FORCE"; return 1; }
   # 5. the forced graphrag purge is skipped for a resumed partial
   grep -q 'CGC_FORCE:-0}" = "1" \] && \[ "\${RESUMED_FORCE_PARTIAL:-0}" != "1" \]' "$f" || { echo "  purge would wipe a resumed partial"; return 1; }
   # 6. the gate function itself: converged state at HEAD skips, anything else runs

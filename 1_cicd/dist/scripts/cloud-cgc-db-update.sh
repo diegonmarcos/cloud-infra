@@ -791,10 +791,13 @@ lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir
         | grep -E '[0-9a-f]{32,}\.lance$' | sed 's/^/R /'
     } | awk '
       $1 == "D" { have[$2] = 1; next }
-      $1 == "R" {
+      # No early `exit` on the first miss: awk must drain its input, or the writers
+      # above die of SIGPIPE and a caller running under pipefail reads the whole
+      # pipeline as failed -- i.e. a torn table as clean.
+      $1 == "R" && !torn {
         hit = 0
         for (i = 1; i <= length($2); i++) if ((substr($2, i)) in have) { hit = 1; break }
-        if (!hit) { torn = 1; exit }
+        if (!hit) torn = 1
       }
       END { exit torn ? 0 : 1 }' && printf '%s\n' "$_ldt_t"
   done

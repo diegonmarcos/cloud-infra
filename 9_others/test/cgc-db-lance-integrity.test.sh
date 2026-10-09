@@ -429,11 +429,19 @@ lance_dangling_tables \"\$1\"" _ "$SC"); _sc_rc=$?
     ok "$_sc_name: 1500-fragment healthy table scanned clean in ${_sc_dt}s"
   fi
 done
-# ...and the fast path still catches one missing fragment among 1500.
-rm -f "$ST/data/$(sed -n 777p "$WORK/scale.names")"
-case "$(lance_dangling_tables "$SC")" in
-  *"file_metadata.lance"*) ok "a single missing fragment among 1500 is still reported" ;;
-  *) bad "missed a single absent fragment in a 1500-fragment table" ;;
+# ...and the fast path still catches one missing fragment -- the FIRST one the manifest
+# names, among 8000, under this tester's pipefail. A checker that stops reading at the
+# first miss leaves ~430K of references unread (far more than a pipe buffer), its writers
+# die of SIGPIPE, and pipefail turns the torn table into "clean": run 37993871863's
+# lint-pipeline failed exactly so on an early version of the hash-set scan.
+TC="$WORK/tamper"; TT="$TC/repo/storage/file_metadata.lance"
+mkdir -p "$TT/_versions" "$TT/data"
+awk 'BEGIN { srand(11); for (i = 1; i <= 8000; i++) { h = ""; for (j = 0; j < 24; j++) h = h sprintf("%x", int(rand() * 16)); printf "%026d%s.lance\n", i, h } }' > "$WORK/tamper.names"
+( cd "$TT/data" && sed 1d "$WORK/tamper.names" | xargs touch )
+awk 'BEGIN { printf "LANC" } { printf "\070%s%c", $0, 0 }' "$WORK/tamper.names" > "$TT/_versions/$V_NEW"
+case "$(lance_dangling_tables "$TC")" in
+  *"file_metadata.lance"*) ok "the first of 8000 fragments missing is still reported under pipefail" ;;
+  *) bad "missed an absent fragment (the first of 8000) -- the scan's pipeline fails under pipefail and reads as clean" ;;
 esac
 
 echo

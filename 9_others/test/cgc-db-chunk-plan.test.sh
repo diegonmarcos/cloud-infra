@@ -98,8 +98,10 @@ run_suite() {
     printf 'libs/**/*.png\n!libs/**\n' > "$P/.gitignore"; printf '*.png\n' > "$P/.noindex"
     echo a > "$P/libs/k/a.kt"; echo b > "$P/libs/k/b.png"
     git -C "$P" add -f -A && git -C "$P" commit -qm p
-    chunk_indexable "$P" | grep -qxF 'libs/k/b.png' && f ".noindex'd file counted indexable because a .gitignore re-include outranked it"
-    chunk_indexable "$P" | grep -qxF 'libs/k/a.kt' || f "re-included source file dropped"
+    # Captured, not piped into grep -q: under pipefail an early grep exit can SIGPIPE the writer.
+    PI=$(chunk_indexable "$P")
+    grep -qxF 'libs/k/b.png' <<<"$PI" && f ".noindex'd file counted indexable because a .gitignore re-include outranked it"
+    grep -qxF 'libs/k/a.kt' <<<"$PI" || f "re-included source file dropped"
 
     # adapt
     [ "$(chunk_adapt 2000 timeout 0 100 100 20000)" = 1000 ] || f "timeout must halve"
