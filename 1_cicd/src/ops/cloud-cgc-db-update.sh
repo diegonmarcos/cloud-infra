@@ -36,6 +36,11 @@ set -eu
 # on every run). CGC_START_TS lets a caller anchor it even earlier.
 START_TS="${CGC_START_TS:-$(date +%s)}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+# #888: the phase must be known before the first use of it. resume_force_partial
+# runs in the per-repo restore loop, long before the manifest block below; with
+# MANIFEST_PHASE still empty there it asked GHCR for <repo>:latest-force-default
+# while publish wrote -force-graphrag, so every forced run re-indexed from zero.
+MANIFEST_PHASE="${CGC_MANIFEST_PHASE:-}"
 ROOT="${CLOUD_ROOT:-$(cd "$HERE/../../.." && pwd)}"
 BJ="${CGC_BUILD_JSON:-$ROOT/a_solutions/user-ai_cloud-cgc-pub-mcp/build.json}"
 [ -f "$BJ" ] || { echo "::error::cloud-cgc-pub-mcp build.json not found at $BJ"; exit 1; }
