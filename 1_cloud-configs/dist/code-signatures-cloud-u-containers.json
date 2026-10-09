@@ -6,19 +6,19 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2888,
+    "files": 2890,
     "by_lang": {
       "sh": 141,
       "nix": 159,
-      "py": 859,
+      "py": 860,
       "ts": 1131,
       "js": 64,
-      "rust": 534
+      "rust": 535
     },
     "by_role": {
       "shell": 131,
       "nix-module": 15,
-      "python": 852,
+      "python": 853,
       "module": 689,
       "file": 310,
       "script": 8,
@@ -27,7 +27,7 @@
       "entrypoint": 48,
       "mcp-tool": 107,
       "workflow-dag": 2,
-      "rust-module": 529,
+      "rust-module": 530,
       "hook": 53
     }
   },
@@ -431,6 +431,7 @@
         "folderParents",
         "folderPath",
         "toSieve",
+        "authAxisRules",
         "toMaddyJson",
         "toLegacyJson"
       ],
@@ -460,6 +461,8 @@
         "sieveTagBlock(predicates: Record<string, Json>, account: string, rule: Json)",
         "sieveRouteBlock(\n  predicates: Record<string, Json>, account: string,\n  folders: Record<string, string>, inboxSeen: boolean, rule: Json,\n)",
         "toSieve(merged: Merged)",
+        "withoutMaddyAxes(f: Json)",
+        "authAxisRules(merged: Merged)",
         "toMaddyJson(merged: Merged)",
         "toLegacyJson(merged: Merged)",
         "artifacts()",
@@ -468,6 +471,23 @@
         "class has",
         "class char",
         "class is"
+      ]
+    },
+    {
+      "path": "_shared/lib/mail-rules.tests/auth_patterns_parity.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "ev(node, subject)",
+        "first_match(subject)"
+      ],
+      "imports": [
+        "json",
+        "itertools"
+      ],
+      "symbols": [
+        "ev(node, subject)",
+        "first_match(subject)"
       ]
     },
     {
@@ -71217,6 +71237,31 @@
       ]
     },
     {
+      "path": "user-comm_tools-maddy/src/crate/src/axes.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "folder_for",
+        "declared_axes"
+      ],
+      "imports": [
+        "crate::email::",
+        "crate::rules::",
+        "super::",
+        "serde_json::json"
+      ],
+      "symbols": [
+        "declared_axes(rules: &Rules)",
+        "rules()",
+        "email(from: &str, subject: &str)",
+        "a_message_gets_one_folder_per_axis()",
+        "the_sender_axis_falls_back_to_the_routing_default_and_auth_to_gc()",
+        "a_link_phrase_without_a_code_is_gb_and_with_a_code_is_ga()",
+        "rules_without_an_axis_are_sender_rules_and_auth_rules_never_claim_the_sender_axis()",
+        "a_ruleset_without_the_auth_axis_declares_only_sender()"
+      ]
+    },
+    {
       "path": "user-comm_tools-maddy/src/crate/src/db.rs",
       "lang": "rust",
       "role": "rust-module",
@@ -71225,6 +71270,10 @@
         "find_user_id",
         "find_mailbox_id",
         "ruleset_hash",
+        "sender_ruleset_hash",
+        "sender_state_file_path",
+        "auth_backfill_state_path",
+        "auth_ruleset_hash",
         "state_file_path",
         "read_state_hash",
         "write_state_hash",
@@ -71233,6 +71282,7 @@
         "clear_distributed",
         "backup",
         "resync_msgs_count",
+        "inbox_rows_page",
         "apply_plan",
         "parse_email",
         "list_mailboxes",
@@ -71254,6 +71304,10 @@
         "find_mailbox_id(conn: &Connection, user_id: i64, name: &str)",
         "fnv1a(bytes: &[u8])",
         "ruleset_hash(rules_path: &str)",
+        "sender_ruleset_hash(rules_path: &str)",
+        "sender_state_file_path(db_path: &str)",
+        "auth_backfill_state_path(db_path: &str)",
+        "auth_ruleset_hash(rules_path: &str)",
         "state_file_path(db_path: &str)",
         "read_state_hash(state_path: &str)",
         "write_state_hash(state_path: &str, hash: u64)",
@@ -71262,6 +71316,7 @@
         "clear_distributed(conn: &Connection, inbox_id: i64, ids: &[i64])",
         "backup(db_path: &str)",
         "resync_msgs_count(conn: &Connection, user_id: i64)",
+        "inbox_rows_page(\n    conn: &Connection,\n    inbox_id: i64,\n    after_msg_id: i64,\n    limit: i64,\n)",
         "apply_plan(\n    conn: &mut Connection,\n    inbox_id: i64,\n    user_id: i64,\n    plans: &[Plan],\n    all_scanned_ids: &[i64],\n)",
         "parse_email(cached_header: &[u8])",
         "list_mailboxes(conn: &Connection, user_id: i64)",
@@ -71308,13 +71363,15 @@
       "exports": [],
       "imports": [
         "anyhow::Result",
-        "rules::Rules",
+        "rules::",
         "std::time::Duration",
         "folders"
       ],
       "symbols": [
         "valid_folder_names(rules: &Rules)",
         "one_run(db_path: &str, rules_path: &str, rules: &Rules)",
+        "auth_backfill_mode()",
+        "auth_backfill(\n    db_path: &str,\n    rules_path: &str,\n    rules: &Rules,\n    conn: &mut rusqlite::Connection,\n    inbox_id: i64,\n    user_id: i64,\n)",
         "main()"
       ]
     },
@@ -71323,6 +71380,7 @@
       "lang": "rust",
       "role": "rust-module",
       "exports": [
+        "axis_name",
         "load",
         "Rules",
         "Route",
@@ -71333,6 +71391,7 @@
         "serde::Deserialize"
       ],
       "symbols": [
+        "axis_name(&self)",
         "from_value(value: serde_json::Value)",
         "load(path: &str)"
       ]

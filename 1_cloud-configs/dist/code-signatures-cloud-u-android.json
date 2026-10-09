@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20866,
+    "files": 20872,
     "by_lang": {
-      "py": 120,
-      "sh": 443,
-      "kotlin": 10699,
+      "py": 121,
+      "sh": 445,
+      "kotlin": 10702,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -19,14 +19,14 @@
     },
     "by_role": {
       "script": 217,
-      "shell": 338,
+      "shell": 340,
       "java": 623,
       "entrypoint": 23,
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10696,
-      "python": 39,
+      "kotlin": 10699,
+      "python": 40,
       "rust-module": 87,
       "file": 2255,
       "hook": 150,
@@ -19847,6 +19847,7 @@
       "symbols": [
         "stage(ctx: Context, cfg: SourceResolver.Config, app: SourceResolver.External)",
         "install(ctx: Context, app: SourceResolver.External, apk: VerifiedApk)",
+        "nothingToFetch(ctx: Context, app: SourceResolver.External)",
         "run(ctx: Context, cfg: SourceResolver.Config, app: SourceResolver.External)",
         "class ExternalInstall"
       ]
@@ -20145,6 +20146,61 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/PlayAnonFetcher.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PlayAnonFetcher"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
+        "com.diegonmarcos.superapp.updater.cache.ApkCache",
+        "com.diegonmarcos.superapp.updater.source.Download",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL",
+        "java.net.URLEncoder",
+        "java.util.Properties"
+      ],
+      "symbols": [
+        "config(o: JSONObject)",
+        "profile(ctx: Context, cfg: Config)",
+        "token(ctx: Context, cfg: Config, fresh: Boolean = false)",
+        "host(url: String)",
+        "stored(ctx: Context)",
+        "store(ctx: Context, a: Auth)",
+        "userAgent(p: Properties)",
+        "headers(a: Auth, p: Properties, locale: String)",
+        "call(url: String, h: Map<String, String>, form: Map<String, String>? = null)",
+        "query(m: Map<String, String>)",
+        "details(ctx: Context, cfg: Config, pkg: String)",
+        "delivery(ctx: Context, cfg: Config, pkg: String)",
+        "hex(b64: ByteArray)",
+        "withSession(ctx: Context, cfg: Config, block: (Auth, Properties)",
+        "fetch(ctx: Context, cfg: Config, pkg: String)",
+        "verify(file: java.io.File, sha256: String)",
+        "describe(cfg: Config)",
+        "fields(b: ByteArray)",
+        "varint()",
+        "get(b: ByteArray, vararg path: Int)",
+        "all(b: ByteArray, no: Int)",
+        "varint(b: ByteArray, no: Int)",
+        "class PlayAnonFetcher",
+        "class TokenUnavailable",
+        "class Dispenser",
+        "class Config",
+        "class Auth",
+        "class Details",
+        "class PlayFile",
+        "class Proto",
+        "class Field"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/ProgressBarModel.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20219,7 +20275,8 @@
         "check(ctx: Context, cfg: Config, app: External)",
         "compareNames(remote: String?, installed: String?)",
         "parts(s: String?)",
-        "remoteVersion(cfg: Config, app: External, src: Source)",
+        "playAnon(cfg: Config)",
+        "remoteVersion(ctx: Context, cfg: Config, app: External, src: Source)",
         "normalise(src: Source.Vendor, raw: String)",
         "path(o: JSONObject, p: String?)",
         "fetch(ctx: Context, cfg: Config, app: External, src: Source)",
@@ -20235,6 +20292,7 @@
         "class Source",
         "class Vendor",
         "class FDroid",
+        "class PlayAnon",
         "class Play",
         "class Store",
         "class External",
@@ -20243,9 +20301,7 @@
         "class Check",
         "class NotInstalled",
         "class Installed",
-        "class UpdateAvailable",
-        "class Unknown",
-        "class Remote"
+        "class UpdateAvailable"
       ]
     },
     {
@@ -20501,6 +20557,7 @@
         "pkgs(l: List<AppInventory.Entry>)",
         "feeds(ctx: Context, load: Boolean)",
         "verb(ctx: Context, q: Map<String, String>, op: String = \"auto\")",
+        "external(ctx: Context, pkg: String, op: String)",
         "auto(ctx: Context, run: Boolean)",
         "verb(ctx: Context, app: Fleet.App, op: String, remote: Boolean)",
         "batch(ctx: Context, op: String, dryRun: Boolean, online: Boolean)",
@@ -54021,6 +54078,7 @@
         "java.io.File"
       ],
       "symbols": [
+        "withSplits(parts: List<VerifiedApk>)",
         "toString()",
         "byDigest(file: File, expectedSha256: String)",
         "bySize(file: File, expectedBytes: Long)",
@@ -54358,6 +54416,8 @@
       "symbols": [
         "install(ctx: Context, app: Fleet.App, apk: VerifiedApk)",
         "shellInstall(ctx: Context, apk: VerifiedApk)",
+        "sessionInstall()",
+        "abandon(why: String)",
         "class to",
         "class InstallChannel",
         "class ShellInstall",
@@ -54413,7 +54473,7 @@
       ],
       "symbols": [
         "install(apk: VerifiedApk, targetPackage: String = context.packageName)",
-        "installLocked(apk: File, targetPackage: String)",
+        "installLocked(apk: File, targetPackage: String, splits: List<File> = emptyList()",
         "refuseDowngrade(apk: File, targetPackage: String)",
         "installedVersionCode(pkg: String)",
         "refuse(targetPackage: String, apk: File, why: String)",
@@ -162380,6 +162440,16 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/AuthPatterns.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "class AuthPatterns"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/DraftRichBody.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -170100,6 +170170,25 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/AuthPatternsParityTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AuthPatternsParityTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "listOf(key: String)",
+        "class AuthPatternsParityTest",
+        "class names"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/DetectionSeesOnlyVisibleTextTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -174267,6 +174356,20 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/test/gen-auth-patterns.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "lst(name, items)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "lst(name, items)"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/test/test-fleet-setup.sh",
       "lang": "sh",
       "role": "shell",
@@ -174332,6 +174435,20 @@
         "bad()",
         "has()",
         "hasnt()"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/test/test-mail-auth-patterns.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
       ]
     },
     {
@@ -439259,6 +439376,22 @@
       "symbols": [
         "check()",
         "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/test/test-store-upstream-sources.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "copy()",
+        "mut()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "copy()",
+        "mut()"
       ]
     },
     {
