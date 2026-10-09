@@ -4,7 +4,7 @@
 #
 # The workflow runs in a public repository, so its logs are public. Run
 # 37843203892 (job 113811440672, cloud-data-my-ai-memory, graphrag) printed lines
-# such as "Updated description for: 1.1.Product-Backlog/tasks/<uuid>/919.json"
+# such as "Updated description for: <private dir>/<file>.json"
 # and export strings, through octo_log_digest's replay of octocode's last lines.
 # This EXECUTES the real functions extracted from cloud-cgc-db-update.sh on a log
 # shaped like that one, then checks the call sites and the fail-safe.
@@ -30,13 +30,13 @@ esc=$(printf '\033'); cr=$(printf '\r')
   printf '%s\n' "✓ Git repository detected: /repos/secret-repo"
   printf '%s\n' "📊 Loaded metadata for 189 files from database"
   printf '%s[K⠋ Indexing: 1/75 files (1%%)%s' "$esc" "$cr"
-  printf '%s\n' "📝 Using simple description for: 1.1.Product-Backlog/dist/by-project/cloud-dialer.md (AI criteria not met)"
-  printf '%s\n' "📦 Found 0 imports, 3 exports in 1.1.Product-Backlog/dist/by-project/cloud-dialer.md"
-  printf '%s\n' '  Exports: ["cloud-dialer — 0 open / 1 total", "Open", "Done"]'
+  printf '%s\n' "📝 Using simple description for: p-notes/proj/alpha-notes.md (AI criteria not met)"
+  printf '%s\n' "📦 Found 0 imports, 3 exports in p-notes/proj/alpha-notes.md"
+  printf '%s\n' '  Exports: ["alpha-notes — 0 open / 1 total", "Open", "Done"]'
   printf '%s\n' "🔄 Updating 8 nodes with AI-generated descriptions"
-  printf '%s\n' "✅ Updated description for: 1.1.Product-Backlog/tasks/3ff19f58/919.json"
-  printf '%s\n' "⚠️  Fallback to simple description for: 1.1.Product-Backlog/dist/P-Backlog-pry.md"
-  printf '%s\n' "➕ Added new node: 1.1.Product-Backlog/dist/by-project/cloud-web.md"
+  printf '%s\n' "✅ Updated description for: p-notes/items/0001/919.json"
+  printf '%s\n' "⚠️  Fallback to simple description for: p-notes/summary.md"
+  printf '%s\n' "➕ Added new node: p-notes/proj/beta-notes.md"
   printf '%s\n' "Warning: AI architectural analysis failed: could not parse a_secret/dir/file.ts"
   printf '%s\n' "Error: failed to read /repos/secret-repo/x.json"
   printf '%s\n' "Info: AI analyzing 74 files for architectural relationships"
@@ -48,8 +48,8 @@ esc=$(printf '\033'); cr=$(printf '\r')
 octo_log_report "$T/octo.log" 60 secret-repo > "$T/priv.out"
 ck "private: no path separator survives"   "$(grep -c '/' "$T/priv.out" | tr -d ' ' | sed 's/^[1-9].*/leak/')" "$(grep -c 'Indexing: [0-9]*/[0-9]* files' "$T/priv.out" | tr -d ' ' | sed 's/^[1-9].*/leak/')"
 ck "private: no .md/.json/.ts name"        "$(grep -cE '\.(md|json|ts)\b' "$T/priv.out" || true)" "0"
-ck "private: no Backlog string"            "$(grep -c 'Backlog' "$T/priv.out" || true)" "0"
-ck "private: no export content"            "$(grep -c 'cloud-dialer' "$T/priv.out" || true)" "0"
+ck "private: no private dir name"            "$(grep -c 'p-notes' "$T/priv.out" || true)" "0"
+ck "private: no export content"            "$(grep -c 'alpha-notes' "$T/priv.out" || true)" "0"
 ck "private: completion count kept"        "$(grep -c '^✓ Indexing complete! 75 of 75 files processed, GraphRAG: 82 blocks$' "$T/priv.out")" "1"
 ck "private: progress kept"                "$(grep -c '^\[cgc-db\] last octocode progress: Indexing: 75/75 files (100%)$' "$T/priv.out")" "1"
 ck "private: LLM warning class kept"       "$(grep -c '^Warning: AI architectural analysis failed \[detail withheld' "$T/priv.out")" "1"
@@ -62,10 +62,10 @@ ck "public: output is the plain digest"    "$(cmp -s "$T/pub.out" "$T/plain.out"
 
 BJ="$T/missing.json"
 octo_log_report "$T/octo.log" 60 public-repo > "$T/failsafe.out"
-ck "fail-safe: unreadable build.json redacts" "$(grep -c 'Backlog' "$T/failsafe.out" || true)" "0"
+ck "fail-safe: unreadable build.json redacts" "$(grep -c 'p-notes' "$T/failsafe.out" || true)" "0"
 BJ="$T/build.json"
 CGC_LOG_REDACT=1 octo_log_report "$T/octo.log" 60 public-repo > "$T/forced.out"
-ck "CGC_LOG_REDACT=1 forces redaction"     "$(grep -c 'Backlog' "$T/forced.out" || true)" "0"
+ck "CGC_LOG_REDACT=1 forces redaction"     "$(grep -c 'p-notes' "$T/forced.out" || true)" "0"
 
 # Call sites: no octocode log may reach stdout without the private-aware wrapper.
 ck "no bare octo_log_digest of an index log" "$(grep -cE '^[[:space:]]*octo_log_digest "\$_log"' "$SCRIPT" || true)" "0"
