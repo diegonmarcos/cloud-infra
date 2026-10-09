@@ -21,4 +21,25 @@ done
 for f in "$ROOT/1_cicd/src/cicd/cgc-db-index.yml" "$ROOT/.github/workflows/cgc-db-index.yml"; do
   grep -q "restore_only:" "$f" && grep -q "if: \${{ !inputs.restore_only }}" "$f" || { echo "FAIL $f: restore_only input/gate missing"; exit 1; }
 done
+# #888: per-repo graphrag gating. Schedule and phase=both make ONE index call whose matrix
+# job runs graphrag right after its own repo's semantic step; that step keeps the old
+# gate's guarantee (runs after a failed semantic step) through !cancelled().
+for f in "$ROOT/1_cicd/src/cicd/cgc-db.yml" "$ROOT/.github/workflows/cgc-db.yml"; do
+  awk '/^  per-repo:/{p=1} p&&/^  [a-z]/&&!/^  per-repo:/{exit} p' "$f" | grep -q '^      phase: both$' \
+    || { echo "FAIL $f: schedule/both no longer runs the per-repo semantic→graphrag call"; exit 1; }
+  grep -q "needs.per-repo.result == 'cancelled'" "$f" || { echo "FAIL $f: restore-retry ignores a cancelled per-repo call"; exit 1; }
+done
+for f in "$ROOT/1_cicd/src/cicd/cgc-db-index.yml" "$ROOT/.github/workflows/cgc-db-index.yml"; do
+  awk '/^  index:/{i=1} i&&/- name: "cgc-db graphrag update/{s=1} s&&/^        if:/{print; exit}' "$f" | grep -q "!cancelled() && (inputs.phase == 'graphrag' || inputs.phase == 'both')" \
+    || { echo "FAIL $f: the graphrag step is not gated on !cancelled() (a failed semantic step would skip it)"; exit 1; }
+  sem=$(awk '/^  index:/{i=1} i&&/- name: "cgc-db incremental update/{s=1} s&&/^      - name:/&&!/incremental update/{exit} s' "$f")
+  gr=$(awk '/^  index:/{i=1} i&&/- name: "cgc-db graphrag update/{s=1} s' "$f")
+  printf '%s\n' "$sem" | grep -q 'CGC_MANIFEST_PHASE: semantic' && printf '%s\n' "$sem" | grep -q 'USE_LLM: "false"' \
+    || { echo "FAIL $f: semantic step is not pinned to the semantic phase"; exit 1; }
+  printf '%s\n' "$gr" | grep -q 'CGC_MANIFEST_PHASE: graphrag' && printf '%s\n' "$gr" | grep -q 'USE_LLM: "true"' \
+    || { echo "FAIL $f: graphrag step is not pinned to the graphrag phase"; exit 1; }
+  gstep=$(printf '%s\n' "$gr" | awk '/^        timeout-minutes:/{print $2; exit}')
+  job=$(awk '/^  index:/{i=1} i&&/^    timeout-minutes:/{print $2; exit}' "$f")
+  [ -n "$gstep" ] && [ "$gstep" -lt "$job" ] || { echo "FAIL $f: graphrag step timeout ${gstep:-missing} not below job $job"; exit 1; }
+done
 echo PASS

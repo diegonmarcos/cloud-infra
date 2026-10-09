@@ -14,8 +14,10 @@
 # │  cloud-cgc octocode DB — TWO-PHASE ORCHESTRATOR.            │
 # │                                                              │
 # │  Schedule + workflow_dispatch entry point. Carries ZERO      │
-# │  logic: it only chains the reusable cgc-db-index.yml twice,   │
-# │  once per phase, in order.                                   │
+# │  logic: it only calls the reusable cgc-db-index.yml. Schedule │
+# │  and phase=both run ONE call whose per-repo matrix job does   │
+# │  semantic then graphrag for its repo (#888); a single-phase   │
+# │  dispatch runs just that phase.                               │
 # │                                                              │
 # │    1. semantic — structural FastEmbed index (USE_LLM=false), │
 # │       change-gated on the .cgc-manifest-semantic.json commit │
@@ -151,14 +153,43 @@ jobs:
           echo "::error::cancel of run $ME did not take effect within 300s"
           exit 1
 
-  # Phase 1 — structural semantic index. Runs unless the manual dispatch asked for
-  # graphrag only. On schedule (event_name != workflow_dispatch) it always runs.
+  # Both phases, PER REPO (#888). Schedule and phase=both dispatches. Each repo's
+  # matrix job in cgc-db-index.yml runs its semantic step and then, in the same job,
+  # its graphrag step, so a repo's graphrag starts the moment its OWN semantic ends.
+  # The phase-wide chain below made every repo's graphrag wait for the slowest
+  # repo's semantic job: on run 37929244331 cloud-u-containers finished semantic at
+  # 15:31 and its graphrag could not start before 20:22. It also restores once per
+  # run instead of once per phase, halving the time restore-all holds ship-wg-runner.
+  # The old gate's guarantees carry over inside the job: the graphrag step runs on
+  # `!cancelled()`, so a failed or timed-out semantic step still lets it run.
+  per-repo:
+    name: "phase · semantic → graphrag (per repo)"
+    # needs coalesce, which is SKIPPED on dispatch — hence !cancelled() (a status
+    # function), without which a skipped need would skip this job too.
+    needs: coalesce
+    if: ${{ !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both') }}
+    uses: ./.github/workflows/cgc-db-index.yml
+    with:
+      phase: both
+      # Empty on schedule (github.event.inputs is null there) = all repos.
+      repos: ${{ github.event.inputs.repos || '' }}
+      # Scheduled runs have no inputs and must always propagate, hence the
+      # "not explicitly false" form rather than a plain truthy check.
+      restore: ${{ github.event.inputs.restore != 'false' }}
+      # Null on schedule (github.event.inputs is null there) = both surfaces.
+      surfaces: ${{ github.event.inputs.surfaces || 'both' }}
+      # Null on schedule = 'false' = honour the manifest (the daily run must stay incremental).
+      force: ${{ github.event.inputs.force || 'false' }}
+    secrets: inherit
+
+  # Phase 1 — structural semantic index, for a phase=semantic dispatch only (schedule
+  # and phase=both go through per-repo above).
   semantic:
     name: "phase · semantic"
     # needs coalesce, which is SKIPPED on dispatch — hence !cancelled() (a status
     # function), without which a skipped need would skip this job too.
     needs: coalesce
-    if: ${{ !cancelled() && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'semantic') }}
+    if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.phase == 'semantic' }}
     uses: ./.github/workflows/cgc-db-index.yml
     with:
       phase: semantic
@@ -173,8 +204,10 @@ jobs:
       force: ${{ github.event.inputs.force || 'false' }}
     secrets: inherit
 
-  # Phase 2 — GraphRAG LLM enrichment. On a full run it waits for semantic; a
-  # graphrag-only manual dispatch skips that dependency entirely (needs is conditional).
+  # Phase 2 — GraphRAG LLM enrichment, for a phase=graphrag dispatch only (schedule and
+  # phase=both go through per-repo above). semantic is then skipped, which this gate
+  # accepts; the gate is kept whole so the phase-wide chain stays correct if a dispatch
+  # ever runs both jobs again.
   #
   # `failure` is ACCEPTED, not just success. Since the per-repo split, semantic is a
   # fail-fast:false matrix — one repo failing is the NORMAL case (a private repo with
@@ -199,7 +232,7 @@ jobs:
     if: >-
       ${{
         !cancelled()
-        && (github.event_name != 'workflow_dispatch' || inputs.phase == 'both' || inputs.phase == 'graphrag')
+        && github.event_name == 'workflow_dispatch' && inputs.phase == 'graphrag'
         && (needs.semantic.result == 'success' || needs.semantic.result == 'skipped' || needs.semantic.result == 'failure' || needs.semantic.result == 'cancelled')
       }}
     uses: ./.github/workflows/cgc-db-index.yml
@@ -226,12 +259,12 @@ jobs:
   # (box re-pulls the per-repo GHCR images), so a spurious retry costs time, not correctness.
   restore-retry:
     name: "phase · restore-retry"
-    needs: [semantic, graphrag]
+    needs: [per-repo, semantic, graphrag]
     if: >-
       ${{
         !cancelled()
         && github.event.inputs.restore != 'false'
-        && (needs.semantic.result == 'cancelled' || needs.graphrag.result == 'cancelled')
+        && (needs.per-repo.result == 'cancelled' || needs.semantic.result == 'cancelled' || needs.graphrag.result == 'cancelled')
       }}
     uses: ./.github/workflows/cgc-db-index.yml
     with:

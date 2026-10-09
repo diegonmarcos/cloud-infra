@@ -95,9 +95,11 @@ print('no' if 'cloud-ship-ci-setup-wireguard' in matrix else 'yes')" "$_yml")" "
 # 6) the force path must be wired end to end, or a fixed indexer silently
 #    re-skips every repo whose HEAD did not move. Three links, all breakable
 #    independently: dispatch input -> reusable-workflow input -> script env.
-ck "orchestrator passes force through to both phases" \
+# Three index calls carry it since #888: per-repo (schedule / phase=both) and the
+# single-phase semantic and graphrag dispatches.
+ck "orchestrator passes force through to every index call" \
    "$(python3 -c "
-print(open('$ROOT/.github/workflows/cgc-db.yml',encoding='utf8').read().count('github.event.inputs.force'))")" "2"
+print(open('$ROOT/.github/workflows/cgc-db.yml',encoding='utf8').read().count('github.event.inputs.force'))")" "3"
 ck "index workflow maps force -> CGC_FORCE" \
    "$(grepq 'CGC_FORCE:' "$ROOT/.github/workflows/cgc-db-index.yml" && echo yes || echo no)" "yes"
 ck "script honours CGC_FORCE at the change gate" \
