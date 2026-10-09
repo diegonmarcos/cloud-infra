@@ -1,0 +1,462 @@
+# ┌──────────────────────────────────────────────────────────────┐
+# │  cgc-db RESTORE — one surface onto oci-apps.                 │
+# │                                                              │
+# │  Dispatched by the two cgc orchestrators after they index:   │
+# │    surfaces=pub  diegonmarcos/cloud-u-containers_cgc (public) │
+# │    surfaces=pvt  diegonmarcos/cloud-u-containers_cgc-pvt      │
+# │  The box pulls base + per-repo images from GHCR into the     │
+# │  surface's volume (pub: octocode_db, public repos only; pvt: │
+# │  octocode_db_pvt, every repo), swaps it under the MCP        │
+# │  container and refreshes ONLY that surface's kg-store.       │
+# │                                                              │
+# │  It lives HERE, not with the pipeline, because it needs the  │
+# │  mesh: the gha-runner WireGuard peer is one slot shared with │
+# │  every fleet deploy, serialised by ship-wg-runner, and a     │
+# │  concurrency group cannot span repositories. Spec:           │
+# │  cloud-u-containers_cgc a0_docs/eng-specs/                   │
+# │  cgc-public-private-split.md                                 │
+# └──────────────────────────────────────────────────────────────┘
+
+name: "cgc-db restore (one surface → oci-apps)"
+run-name: "cgc-db restore · surfaces=${{ inputs.surfaces }} · cgc_ref=${{ inputs.cgc_ref }} · source=${{ inputs.source || 'manual' }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      surfaces:
+        description: "Which surface to restore: pub (cloud-cgc-pub-mcp, public repos only) or pvt (cloud-cgc-pvt-mcp, every repo)."
+        required: true
+        type: choice
+        options:
+          - pub
+          - pvt
+      cgc_ref:
+        description: "cloud-u-containers_cgc commit (40-hex) whose restore script runs. Must be on its main."
+        required: true
+        type: string
+      source:
+        description: "URL of the index run that asked for this restore (for the record)."
+        required: false
+        default: ""
+        type: string
+
+env:
+  CGC_GHCR_PAT: ${{ secrets.CGC_GHCR_PAT }}
+  GITHUB_ACTOR: ${{ github.actor }}
+  WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
+  WG_HUB_PUBKEY: ${{ vars.WG_HUB_PUBKEY }}
+  OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
+
+jobs:
+  restore-all:
+    name: "cgc-db · restore-all ${{ inputs.surfaces }} → oci-apps"
+    runs-on: ubuntu-latest
+    # The only cgc job that holds the mesh, so the only one in the fleet's deploy lock.
+    concurrency:
+      group: ship-wg-runner
+      cancel-in-progress: false
+      # #844: FIFO queue instead of GitHub's one-pending-slot eviction (rationale: ship.yml deploy.concurrency).
+      queue: max
+    # One surface per run now; the old 240 covered pub+pvt back to back.
+    timeout-minutes: 240
+    permissions:
+      contents: read
+      packages: read
+    env:
+      CGC_BOOTSTRAP_TOLERANT: "1"
+    steps:
+      - uses: actions/checkout@v4
+      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
+      # NOT a submodule of this one (split out 2026-09-06). It is checked out
+      # at the path every in-repo reference already uses, so nothing
+      # downstream changes. fetch-depth: 0 — per-service change detection
+      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
+      - name: Checkout cloud-u-containers into a_solutions
+        uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: a_solutions
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Init submodules (a_solutions)
+        uses: ./.github/actions/init-submodules
+        with:
+          include: I_cloud
+      - name: Fetch restore-all from cloud-u-containers_cgc at the dispatched commit
+        # The pipeline's code lives in the public diegonmarcos/cloud-u-containers_cgc. The
+        # dispatcher names the commit it indexed with; restore runs the restore script of
+        # that SAME commit (image layout and in-image state are a contract between them).
+        # Only a commit on that repo's main is accepted: a dispatch token must not be able
+        # to make this job, which holds the mesh key and the box's SSH key, run code from
+        # an unreviewed branch.
+        env:
+          REF: ${{ inputs.cgc_ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          printf '%s' "$REF" | grep -Eq '^[0-9a-f]{40}$' || { echo "::error::cgc_ref '$REF' is not a 40-hex commit sha"; exit 1; }
+          ST=$(gh api "repos/diegonmarcos/cloud-u-containers_cgc/compare/$REF...main" -q .status 2>/dev/null || echo error)
+          case "$ST" in
+            identical|ahead) echo "[cgc-db] cgc_ref $REF is on cloud-u-containers_cgc main ($ST)" ;;
+            *) echo "::error::cgc_ref $REF is not an ancestor of cloud-u-containers_cgc main (compare: $ST) — refusing to run its restore script"; exit 1 ;;
+          esac
+          curl -sSfL -o "$RUNNER_TEMP/cgc-restore-all.sh" \
+            "https://raw.githubusercontent.com/diegonmarcos/cloud-u-containers_cgc/$REF/1_cicd/src/ops/cloud-cgc-db-restore-all.sh"
+          sh -n "$RUNNER_TEMP/cgc-restore-all.sh"
+          echo "[cgc-db] restore-all script: cloud-u-containers_cgc@$REF ($(wc -l < "$RUNNER_TEMP/cgc-restore-all.sh") lines)"
+      - name: WireGuard up
+        continue-on-error: true
+        run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
+      - name: Provision SSH key for propagation
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$OCI_SSH_KEY" > ~/.ssh/cgc_deploy && chmod 600 ~/.ssh/cgc_deploy
+      # NO runner-side `docker login` here, deliberately. There used to be one, named
+      # "restore-all pulls every per-repo image itself" -- which is exactly backwards:
+      # the BOX pulls, the runner only holds an ssh control channel. The runner's
+      # credentials were never used by anything in this job. The login that matters is
+      # the one made ON the box inside the step below, and it is undone afterwards.
+      # PROPAGATION: the BOX PULLS, the runner does not push.
+      #
+      # This step used to assemble the whole octocode home on the runner and rsync
+      # it into oci-apps' volume. That transfer never once succeeded. The last
+      # failure is the clearest: ssh connected fine, then died 53s into the data
+      # with "client_loop: send disconnect: Broken pipe" -- ServerAliveInterval=15
+      # times the default ServerAliveCountMax of 3 is exactly 45s of silence, and a
+      # loaded ARM VM at 80%+ disk stalls longer than that while writing hundreds of
+      # MB into a docker volume. Raising the keepalive would only move the cliff.
+      #
+      # The transfer itself is the defect. Every per-repo image is already sitting
+      # on GHCR, and oci-apps can fetch them directly at registry speed, so nothing
+      # bulk needs to cross WireGuard at all -- only a short ssh control channel.
+      # That is the path cloud-cgc-db-restore-all.sh was written for, and it is the
+      # one proven to work end to end on this box (rc=0, 6 repos + base).
+      #
+      # Run DETACHED and poll: the restore takes ~50 min on this hardware, and
+      # holding one ssh session open that long invites exactly the broken pipe this
+      # step exists to avoid. Each poll is its own short-lived connection, so a
+      # dropped link costs one poll instead of the whole restore.
+      - name: restore-all on oci-apps (box pulls per-repo images from GHCR)
+        env:
+          CGC_SURFACES: ${{ inputs.surfaces }}
+          CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
+        run: |
+          set -eu
+          BJ="a_solutions/user-ai_cloud-cgc-pub-mcp/build.json"
+          HOST=$(jq -r '.db_publish.host' "$BJ")
+          # The PUBLIC volume's name, passed to every surface. The private restore
+          # refuses to run unless it can prove its target is not this one (see the
+          # CGC_INCLUDE_PRIVATE guard in cloud-cgc-db-restore-all.sh), and the box
+          # has no checkout to look it up in.
+          PUBVOL=$(jq -r '.runtime.octocode.db_volume' "$BJ")
+          PREFIX=$(jq -r '.per_repo_publish.image_prefix' "$BJ")
+          BASE=$(jq -r '.per_repo_publish.base_image' "$BJ")
+          TAG=$(jq -r '.per_repo_publish.tag' "$BJ")
+          # The box has no repo checkout, so every value the script would otherwise
+          # read from build.json is passed in explicitly -- including the private
+          # list, without which the restore's public/private filter has nothing to
+          # filter on and a private repo could land in the PUBLIC MCP's volume.
+          REPOS=$(jq -r '.runtime.octocode.index_repos | join(" ")' "$BJ")
+          PRIV=$(jq -r '.runtime.octocode.private_repos // [] | join(" ")' "$BJ")
+          # Same SSH-target resolution as cloud-cgc-db-update.sh's propagate_to_host()
+          # and cloud-cgc-db-seed.sh: user@wg_ip from build-gha.json in CI, ssh alias locally.
+          GHA="1_cloud-configs/dist/build-gha.json"
+          TARGET="$HOST"
+          if [ -f "$GHA" ]; then
+            WGIP=$(jq -r --arg h "$HOST" '.vms[$h].wg_ip // empty'  "$GHA" 2>/dev/null)
+            SUSER=$(jq -r --arg h "$HOST" '.vms[$h].user // "ubuntu"' "$GHA" 2>/dev/null)
+            [ -n "$WGIP" ] && TARGET="$SUSER@$WGIP"
+          fi
+          echo "[cgc-db] restore-all → $TARGET (box pulls ${PREFIX}<repo>:${TAG} from GHCR)"
+          # Script transfer happens further down through ssh_retry (feeding the
+          # file on stdin into `cat >`), NOT scp: a raw scp here was the step's
+          # first network call and the whole job died on its exit 255 within 91
+          # seconds when a concurrent Ship deploy held the WireGuard peer slot
+          # (2026-08-24, run 32721840450). Nothing between here and there needs
+          # the file on the box yet.
+
+          # TWO SURFACES, one script. cloud-cgc-pub-mcp serves a volume the private
+          # repos are filtered OUT of; cloud-cgc-pvt-mcp serves its own volume with
+          # everything in it. Same restore, different target volume and container --
+          # which is the entire public/private mechanism: octocode can only answer
+          # about the LanceDB tree it is pointed at.
+          #
+          # Serial, not parallel, and that is cheap rather than slow: the public pass
+          # pulls every shared image, so the private pass re-pulls nothing but the two
+          # private repos' own images and spends the rest of its time on cp -a.
+          # Parallel would also mean two multi-GB staging trees on a box that sits at
+          # ~87% disk.
+          # The BOX pulls, so the BOX is what needs GHCR credentials -- the runner's
+          # own `docker login` in the step above pulls nothing at all. Public packages
+          # need none, which is why the public surface has worked against an
+          # unauthenticated box all along (verified: oci-apps' ~/.docker/config.json
+          # has an empty auths map, and cgc-db-base + every public repo's package are
+          # public). The two private repos' packages are the reason this exists.
+          #
+          # The token crosses the WireGuard ssh channel straight into
+          # --password-stdin: never in argv, never in an env var on the box, never
+          # echoed. And it is removed again in the trap below rather than left at rest
+          # in ~/.docker/config.json on a box that holds no other registry credentials
+          # -- the implicit "oci-apps cannot pull private packages" guard the restore
+          # script's header describes stays true outside this step's own window.
+          cleanup_box_ghcr() {
+            # shellcheck disable=SC2086
+            ssh $CGC_SSH_OPTS "$TARGET" 'docker logout ghcr.io' >/dev/null 2>&1 || true
+          }
+          # oci-apps is a 4-core box that keeps serving the live MCP throughout a
+          # restore; its load average sits above 6 for the duration and a single ssh
+          # can simply time out. On 2026-08-23 one such timeout on the launch below
+          # took the whole step down with exit 255 *after* all 8 repos had indexed
+          # successfully. Transient unreachability is the normal case here, so the
+          # one-shot ssh calls retry. The poll loop already tolerates failure by
+          # construction ("|| echo ''"), so it is left alone.
+          #   $1 = file to feed on stdin (/dev/null when there is nothing to send)
+          # Retries ONLY on rc=255 — ssh's own "connection failed" code. Any other
+          # rc means the REMOTE command ran and failed, and re-running it would
+          # mask a real error (or double-execute a non-idempotent one). Twenty
+          # attempts x 30s ≈ 10 min of tolerance, sized for the second killer
+          # found here: a concurrent Ship deploy authenticates as the SAME
+          # gha-runner WireGuard peer and steals the slot for its whole run
+          # (2026-08-24, run 32721840450: two Ships at 15:18–15:31Z, restore's
+          # first network call dead 91s in). Box load spikes (the 2026-08-23
+          # timeout) are covered by the same loop.
+          # set -e trap, learned the hard way (run 32746314822): a BARE ssh that
+          # fails kills the whole step before `$?` can be read — the retry loop
+          # never loops. The `|| _sr_rc=$?` capture keeps the failure "tested",
+          # which is the set -e exemption, and every branch below is an explicit
+          # `if` for the same reason.
+          ssh_retry() {
+            _sr_f=$1; shift
+            _sr_n=0
+            while :; do
+              _sr_n=$((_sr_n + 1))
+              _sr_rc=0
+              # shellcheck disable=SC2086
+              ssh $CGC_SSH_OPTS "$@" < "$_sr_f" || _sr_rc=$?
+              if [ "$_sr_rc" -eq 0 ]; then return 0; fi
+              if [ "$_sr_rc" -ne 255 ]; then return "$_sr_rc"; fi
+              if [ "$_sr_n" -ge 20 ]; then return "$_sr_rc"; fi
+              echo "[cgc-db] ssh to $HOST unreachable (attempt $_sr_n/20) — mesh slot likely held by a concurrent deploy; retrying in 30s"
+              sleep 30
+            done
+          }
+          # The transfer scp used to do at the top of the step — same stdin-feed
+          # contract as every other ssh_retry call, and `cat >` re-runs clean on
+          # a retry.
+          ssh_retry "$RUNNER_TEMP/cgc-restore-all.sh" "$TARGET" 'cat > /tmp/cgc-restore-all.sh'
+          # Called LAZILY, immediately before the pvt restore, never up front. Only the
+          # private surface's packages need auth -- the public ones pull anonymously --
+          # so an eager login buys nothing and costs two things: the token sits at rest
+          # on the box for the whole ~2h step instead of the pvt window, and the attempt
+          # lands exactly when the box is busiest, at the start of the pub pass. On
+          # 2026-08-23 that eager login lost all three of its attempts to box saturation
+          # inside its first minute; an hour later the pvt half was refused purely on the
+          # stale flag it left behind, while the box itself was idle and perfectly able
+          # to authenticate. Retrying after the pub pass instead means retrying against a
+          # box that has just gone quiet.
+          box_ghcr_login() {
+            [ -n "${CGC_GHCR_PAT:-}" ] || {
+              echo "::error::[cgc-db] CGC_GHCR_PAT is empty in this job. The per-repo images are private by design and are linked to their OWN source repos, not to this one, so this job's GITHUB_TOKEN cannot read them either — a cross-repo classic PAT with read:packages is the only credential that works here."
+              return 1
+            }
+            trap cleanup_box_ghcr EXIT INT TERM
+            _li=0
+            while :; do
+              _li=$((_li + 1))
+              # Keep the error text. Discarding it bought five identical retries and
+              # a restore that aborted with no cause recorded anywhere. The token
+              # goes in on stdin and docker never echoes it, so this is safe to log.
+              # ConnectTimeout is overridden UP for this one call. The login lands
+              # immediately after the pub restore, i.e. at the box's busiest moment
+              # of the whole job -- on 2026-08-23 ssh carried a full pub restore at
+              # 18:32 and then every login attempt died in ~15s at 18:33, which is
+              # the inherited ConnectTimeout=15 expiring against a saturated box,
+              # not GHCR turning the credential down. A later -o wins in ssh.
+              # shellcheck disable=SC2086
+              _lo=$(printf '%s' "$CGC_GHCR_PAT" | ssh $CGC_SSH_OPTS -o ConnectTimeout=60 "$TARGET" \
+                   "docker login ghcr.io -u '$GITHUB_ACTOR' --password-stdin" 2>&1) && {
+                echo "[cgc-db] box authenticated to GHCR (needed for the private surface's images)"
+                return 0
+              }
+              # A rejected credential is not a transient fault. Retrying one costs
+              # 100s and cannot ever succeed, so separate the two cases: back off
+              # only for things that might clear on their own.
+              case "$_lo" in
+                *denied*|*unauthorized*|*"incorrect username or password"*)
+                  echo "::error::[cgc-db] GHCR rejected CGC_GHCR_PAT as '$GITHUB_ACTOR': $_lo"
+                  echo "::error::[cgc-db] not retried — a rejected credential is not transient. ghcr.io accepts CLASSIC PATs with read:packages; a fine-grained PAT is refused here no matter which repositories or permissions it grants. Verified the same day: a classic token with read:packages reads these exact manifests, so the package side is fine and the token is not."
+                  return 1 ;;
+              esac
+              # 5x20s gave a 3-minute window to outlast congestion on a box that
+              # needs ~60 minutes just to complete one restore. Widened to ~12min,
+              # which is proportionate to how long the box actually stays busy.
+              if [ "$_li" -ge 8 ]; then
+                echo "::error::[cgc-db] box GHCR login failed 8x over ~12min, last error: $_lo"
+                return 1
+              fi
+              echo "[cgc-db] box GHCR login failed (attempt $_li/8): $_lo — retrying in 30s"
+              sleep 30
+            done
+          }
+
+          # Surface selection exists because the two restores are independent -- the
+          # pvt pass reads the public volume's NAME only, as the "target is not the
+          # public volume" safety check, never its contents. So repairing the private
+          # surface does not require re-running the ~50 min public one, and a failed
+          # pvt half no longer costs a full cycle to retry.
+          case "${CGC_SURFACES:-both}" in
+            pub) SURFACE_LIST="pub" ;;
+            pvt) SURFACE_LIST="pvt" ;;
+            *)   SURFACE_LIST="pub pvt" ;;
+          esac
+          echo "[cgc-db] restoring surface(s): $SURFACE_LIST"
+          for SURFACE in $SURFACE_LIST; do
+            case "$SURFACE" in
+              pub)
+                VOL=$(jq -r '.runtime.octocode.db_volume' "$BJ")
+                CTR=$(jq -r '.containers.app.container_name' "$BJ")
+                INCPRIV=0
+                ;;
+              pvt)
+                VOL=$(jq -r '.runtime.octocode.pvt_db_volume // empty' "$BJ")
+                CTR=$(jq -r '.containers.pvt.container_name // empty' "$BJ")
+                INCPRIV=1
+                # Absent keys = no private surface declared yet. Skip quietly rather
+                # than failing the propagation of the public one.
+                if [ -z "$VOL" ] || [ -z "$CTR" ]; then
+                  echo "[cgc-db] no private surface declared in build.json — skipping pvt restore"
+                  continue
+                fi
+                # Without GHCR auth the box can pull only the PUBLIC packages, so an
+                # include_private=1 restore would quietly produce a private volume
+                # holding exactly the public repos -- a pvt surface indistinguishable
+                # from the pub one, and nothing in the logs saying so. Refuse instead.
+                # The pub surface above has already propagated by this point.
+                #
+                # Gate on the CAPABILITY, not on bookkeeping. A recorded "login ok" flag
+                # can be true while the pull still fails (token scope, package renamed,
+                # tag never pushed) and -- the case that actually bit -- false while the
+                # box is perfectly able to pull, refusing a restore that would have
+                # worked. So: log in, then ask the box to resolve one private package's
+                # manifest for real. Manifest only, no layers, so the probe is cheap.
+                box_ghcr_login || true
+                _probe_repo=$(printf '%s\n' "$PRIV" | awk '{print $1}')
+                if [ -n "$_probe_repo" ]; then
+                  _probe_img="${PREFIX}${_probe_repo}:${TAG}"
+                  # ssh_retry so a mesh-slot steal (rc=255) retries instead of
+                  # reading as "box cannot pull" — this condition hard-refuses
+                  # the pvt restore, so a connection blip here must not be
+                  # mistaken for a capability verdict. A real remote docker
+                  # failure returns 1-254 and still lands in the else, which is
+                  # the verdict this gate exists to give.
+                  if ssh_retry /dev/null "$TARGET" "docker manifest inspect $_probe_img" >/dev/null 2>&1; then
+                    echo "[cgc-db] box can resolve $_probe_img — private packages are pullable"
+                    BOX_GHCR_OK=1
+                  else
+                    BOX_GHCR_OK=0
+                  fi
+                else
+                  # Nothing declared private: the pvt volume is the pub set by definition
+                  # and no auth is required to build it.
+                  BOX_GHCR_OK=1
+                fi
+                if [ "$BOX_GHCR_OK" != "1" ]; then
+                  echo "::error::[cgc-db] refusing the pvt restore: box cannot resolve $_probe_img, so the private repos' images are unpullable and $VOL would silently end up with public data only"
+                  exit 1
+                fi
+                ;;
+            esac
+            LOG="/tmp/cgc-restore-$SURFACE.log"
+            RCF="/tmp/cgc-restore-$SURFACE.rc"
+            echo "[cgc-db] --- surface $SURFACE → volume $VOL, container $CTR (include_private=$INCPRIV) ---"
+            # Deliberately NOT stopping the container here. The restore stays up through
+          # the pull/stage phases (~50 min) and takes itself down only across the volume
+          # swap, via MCP_CONTAINER below. Bracketing the whole restore from out here --
+          # which is what this step used to do -- made every scheduled refresh a
+          # 50-minute MCP outage in order to protect a swap that lasts seconds.
+          # Built as a heredoc and piped to `sh -s` rather than crammed into one
+          # ssh argument: the launch needs nested quoting three levels deep
+          # (ssh -> sh -c -> nohup sh -c) and inlining it is how quoting bugs get
+          # shipped. Unquoted heredoc so the runner expands the values below,
+          # with \$? escaped so the REMOTE shell is the one that evaluates it.
+          cat > /tmp/remote-restore.sh <<EOF
+          rm -f $LOG $RCF
+          setsid nohup env \
+            CGC_DB_IMAGE_PREFIX='$PREFIX' \
+            CGC_DB_BASE_IMAGE='$BASE' \
+            CGC_DB_TAG='$TAG' \
+            CGC_DB_TARGET_VOLUME='$VOL' \
+            CGC_PUBLIC_DB_VOLUME='$PUBVOL' \
+            CGC_INCLUDE_PRIVATE='$INCPRIV' \
+            CGC_DB_OWNER='10001:999' \
+            CGC_INDEX_REPOS='$REPOS' \
+            CGC_PRIVATE_REPOS='$PRIV' \
+            MCP_CONTAINER='$CTR' \
+            sh -c 'sh /tmp/cgc-restore-all.sh > $LOG 2>&1; echo \$? > $RCF' \
+            >/dev/null 2>&1 </dev/null &
+          sleep 2
+          echo launched
+          EOF
+          ssh_retry /tmp/remote-restore.sh "$TARGET" 'sh -s'
+          # Poll with short-lived connections. The termination condition is the real
+          # one -- the restore either writes its rc file or its process disappears --
+          # not a stopwatch. The old 60-minute ceiling encoded "a restore takes ~50
+          # min on this box", which stopped being true the moment graphrag enrichment
+          # grew the per-repo images: on 2026-08-23 the box was pulling at ~25 min per
+          # repo, so the step would have declared a perfectly healthy restore dead at
+          # 2 repos of 6, killed the job, and left the detached script still running on
+          # the box for another two hours with nobody reading its result.
+          #
+          # A wall-clock guess cannot tell "slow" from "stuck"; process liveness can.
+          # The 4h counter below is a backstop against a poll loop that somehow never
+          # terminates, not the thing that is supposed to fire.
+            RC=""
+            i=0
+            GONE=0
+            while [ $i -lt 480 ]; do
+              sleep 30
+              i=$((i + 1))
+              # One round trip for both facts. `[c]gc` so the poll's own remote command
+              # line -- which contains this very pattern -- does not count itself.
+              # The parent `sh -c` holds the same string in its argv and outlives the
+              # script until `echo $? > $RCF` has run, so "alive" cannot go 0 before
+              # the rc file exists.
+              # shellcheck disable=SC2086
+              OUT=$(ssh $CGC_SSH_OPTS "$TARGET" \
+                "cat $RCF 2>/dev/null; echo '@'; ps -o args 2>/dev/null | grep -c '[c]gc-restore-all.sh'" \
+                2>/dev/null || echo "@?")
+              RC=$(printf '%s' "${OUT%%@*}" | tr -d ' \n')
+              ALIVE=$(printf '%s' "${OUT##*@}" | tr -d ' \n')
+              [ -n "$RC" ] && break
+              # A failed poll reports "?" — unknown, not dead. Never let a flaky ssh
+              # over a loaded WireGuard link be read as a crashed restore.
+              if [ "$ALIVE" = "0" ]; then
+                GONE=$((GONE + 1))
+              else
+                GONE=0
+              fi
+              if [ "$GONE" -ge 3 ]; then
+                echo "::error::[cgc-db] $SURFACE restore process is gone from $HOST and never wrote $RCF — it died mid-restore"
+                break
+              fi
+              [ $((i % 10)) -eq 0 ] && echo "[cgc-db] $SURFACE still restoring ($((i / 2)) min elapsed, process alive)..."
+            done
+            # shellcheck disable=SC2086
+            ssh $CGC_SSH_OPTS "$TARGET" "tail -25 $LOG" || true
+            # shellcheck disable=SC2086
+            # Safety net only: the script restarts the container itself on success, but a
+            # failure between its stop and its restart would otherwise leave the MCP down.
+            # Starting an already-running container is a no-op error here, hence || true.
+            ssh $CGC_SSH_OPTS "$TARGET" "sudo docker start $CTR" >/dev/null 2>&1 || true
+            if [ -z "$RC" ]; then
+              echo "::error::[cgc-db] $SURFACE restore-all produced no result on $HOST (process gone, or the 4h backstop fired)"
+              exit 1
+            fi
+            if [ "$RC" != "0" ]; then
+              echo "::error::[cgc-db] $SURFACE restore-all failed on $HOST (rc=$RC)"
+              exit "$RC"
+            fi
+            echo "[cgc-db] $SURFACE restore-all OK — $CTR now serving volume $VOL"
+          done
+          echo "[cgc-db] restore-all OK — $HOST serving surface(s) $SURFACE_LIST from the freshly pulled multi-image DB"

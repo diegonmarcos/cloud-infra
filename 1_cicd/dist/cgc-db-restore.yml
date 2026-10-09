@@ -2,7 +2,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : 1_cicd/src/cicd/cgc-db-index.yml
+# ║   Source : 1_cicd/src/cicd/cgc-db-restore.yml
 # ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
@@ -11,404 +11,70 @@
 # ╚══════════════════════════════════════════════════════════════════╝
 
 # ┌──────────────────────────────────────────────────────────────┐
-# │  cloud-cgc octocode DB — REUSABLE index / checkpoint /       │
-# │  propagate phase (workflow_call).                            │
+# │  cgc-db RESTORE — one surface onto oci-apps.                 │
 # │                                                              │
-# │  ALL the index + checkpoint-push + propagate logic lives     │
-# │  here; the orchestrator (cgc-db.yml) calls this twice — once  │
-# │  per phase — and carries ZERO logic itself.                  │
+# │  Dispatched by the two cgc orchestrators after they index:   │
+# │    surfaces=pub  diegonmarcos/cloud-u-containers_cgc (public) │
+# │    surfaces=pvt  diegonmarcos/cloud-u-containers_cgc-pvt      │
+# │  The box pulls base + per-repo images from GHCR into the     │
+# │  surface's volume (pub: octocode_db, public repos only; pvt: │
+# │  octocode_db_pvt, every repo), swaps it under the MCP        │
+# │  container and refreshes ONLY that surface's kg-store.       │
 # │                                                              │
-# │  The `phase` input drives exactly two things, both passed as  │
-# │  environment into cloud-cgc-db-update.sh (environment wins    │
-# │  over build.json):                                           │
-# │    · USE_LLM             — false for semantic, true for       │
-# │                            graphrag (selects the GraphRAG LLM │
-# │                            enrichment pass inside octocode).  │
-# │    · CGC_MANIFEST_PHASE  — selects the PER-PHASE manifest so  │
-# │                            each phase change-gates on its own │
-# │                            last-indexed commit per repo and   │
-# │                            is not skipped by the other phase. │
-# │                                                              │
-# │  MATRIX: one job per repo (repos job resolves index_repos     │
-# │  from build.json into a JSON list at runtime — GitHub          │
-# │  matrices are static YAML, so this is the established         │
-# │  read-config/emit-fromJSON pattern this repo already uses     │
-# │  in ship.yml's `detect` job; the src→dist→.github header-     │
-# │  injection engine (9_others/build.sh) does NOT template       │
-# │  build.json values into workflow content, it only stamps a    │
-# │  banner, so there is no build-time injection path to reuse    │
-# │  here). Each job indexes ONE repo into a FRESH octocode home  │
-# │  (never the 15G monolith base) and packages ONLY that repo's  │
-# │  own project into its own ghcr.io/diegonmarcos/cgc-db-<repo>   │
-# │  image (cloud-cgc-db-update.sh CGC_PACKAGE_MODE=per-repo).    │
-# │  fail-fast: false — one repo timing out or failing must never  │
-# │  cancel the others. Per-job propagation is OFF                │
-# │  (CGC_SKIP_PROPAGATE=1); the restore-all job below runs        │
-# │  ONCE per phase, after every matrix job settles (if: always(),│
-# │  so a partial matrix still propagates whatever DID publish):  │
-# │  cloud-cgc-db-restore-all.sh (Task 4) assembles the shared     │
-# │  base + every per-repo image into one octocode home on the     │
-# │  runner, then rsync streams that home onto oci-apps.          │
-# │                                                              │
-# │  Runs on GitHub-hosted ubuntu-latest x86 runners (~14GB disk).│
-# │  Using x86 avoids oci-apps disk pressure (disk full).        │
-# │  The octocode DB (FastEmbed vectors + graph) is arch-portable│
-# │  so an x86 index is consumed by arm oci-apps cgc-mcp fine.   │
-# │  Runner SSHes into oci-apps over WireGuard to propagate.     │
-# │                                                              │
-# │  MONOLITH PATH NOT YET RETIRED: cloud-cgc-db-update.sh's      │
-# │  default (non per-repo) mode, cloud-cgc-db-package.sh, and     │
-# │  db_publish.image keep working untouched — the monolith        │
-# │  publish/propagate is retired only after this matrix is        │
-# │  proven green, per the migration plan.                        │
+# │  It lives HERE, not with the pipeline, because it needs the  │
+# │  mesh: the gha-runner WireGuard peer is one slot shared with │
+# │  every fleet deploy, serialised by ship-wg-runner, and a     │
+# │  concurrency group cannot span repositories. Spec:           │
+# │  cloud-u-containers_cgc a0_docs/eng-specs/                   │
+# │  cgc-public-private-split.md                                 │
 # └──────────────────────────────────────────────────────────────┘
 
-name: "cgc-db-index (reusable octocode index phase)"
+name: "cgc-db restore (one surface → oci-apps)"
+run-name: "cgc-db restore · surfaces=${{ inputs.surfaces }} · cgc_ref=${{ inputs.cgc_ref }} · source=${{ inputs.source || 'manual' }}"
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
-      phase:
-        description: "Index phase: semantic (structural, no LLM) or graphrag (LLM relationship enrichment)."
+      surfaces:
+        description: "Which surface to restore: pub (cloud-cgc-pub-mcp, public repos only) or pvt (cloud-cgc-pvt-mcp, every repo)."
+        required: true
+        type: choice
+        options:
+          - pub
+          - pvt
+      cgc_ref:
+        description: "cloud-u-containers_cgc commit (40-hex) whose restore script runs. Must be on its main."
         required: true
         type: string
-      repos:
-        description: "Optional subset of .runtime.octocode.index_repos to build the matrix from. Empty = all."
+      source:
+        description: "URL of the index run that asked for this restore (for the record)."
         required: false
         default: ""
         type: string
-      force:
-        description: "Reindex even when the repo HEAD matches the phase manifest. Needed whenever the INDEXER changed rather than the code — a fixed LLM endpoint, a new embedding model — since the manifest is keyed on HEAD alone and would otherwise skip every repo forever."
-        required: false
-        default: "false"
-        type: string
-      restore:
-        description: "Run the restore-all propagation job after indexing. Empty/true = yes."
-        required: false
-        default: true
-        type: boolean
-      surfaces:
-        description: "Which DB surfaces the restore propagates to: both (default), pub, or pvt."
-        required: false
-        default: both
-        type: string
-      restore_only:
-        description: "Skip the repo matrix and index legs; run ONLY restore-all. Used by cgc-db.yml's restore-retry when a restore-all job was lost to a runner-acquisition failure."
-        required: false
-        default: false
-        type: boolean
 
 env:
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  # GITHUB_TOKEN is scoped to cloud-infra alone. Cloning other private repos was already
-  # worked around below with per-repo deploy keys, but two things still need real repo
-  # reach and had no workaround at all:
-  #   1. cloud-cgc-db-package.sh's `gh repo view <repo> --json isPrivate` — with no reach
-  #      it returns empty, the resolver fails safe to "private", and the job errors.
-  #   2. GHCR package auto-linking. A pushed package inherits the visibility of the repo
-  #      named in its org.opencontainers.image.source LABEL, but ONLY if the pushing token
-  #      can see that repo. It could not, so the package was created PUBLIC and the
-  #      verify-or-delete backstop deleted it — every run, for cloud-data and cloud-data-my-ai-memory.
-  # A PAT with repo + read:packages + delete:packages fixes both. Optional by design:
-  # unset, everything falls back to GITHUB_TOKEN and the public repos index exactly as
-  # before, so a missing secret degrades to today's behaviour instead of breaking the run.
   CGC_GHCR_PAT: ${{ secrets.CGC_GHCR_PAT }}
-  # gh(1) reads GH_TOKEN first. This is what gives the package script's visibility probe
-  # its reach; it falls back to GITHUB_TOKEN when no PAT is configured.
-  GH_TOKEN: ${{ secrets.CGC_GHCR_PAT || secrets.GITHUB_TOKEN }}
-  # THE ONE THAT ACTUALLY MATTERS. cloud-cgc-db-update.sh:143 reads
-  #   TOKEN="${GHCR_TOKEN:-${GITHUB_TOKEN:-}}"
-  # and that login is what pushes every per-repo package. Setting CGC_GHCR_PAT and
-  # GH_TOKEN alone (67f7c12e1) fixed the `gh repo view` probe and the restore-all
-  # login -- neither of which pushes anything -- and left the push itself on
-  # GITHUB_TOKEN. GHCR associates a GITHUB_TOKEN push with the WORKFLOW'S repo
-  # (cloud-infra, public), so the package was created PUBLIC no matter what
-  # org.opencontainers.image.source said, and the backstop deleted it. Every run.
-  #
-  # Verified empirically 2026-08-23 with content-free busybox probes:
-  #   no label, PAT           -> private   (this account defaults new pkgs private)
-  #   label -> cloud-data, PAT -> private, linked diegonmarcos/cloud-data
-  # i.e. with a PAT that can see the private repo, the auto-link resolves and the
-  # package is born private with no UI step and no race (private at t+0s).
-  #
-  # Falls back to GITHUB_TOKEN when no PAT is configured, so a missing secret
-  # degrades to public-repos-only exactly as before instead of breaking the run.
-  GHCR_TOKEN: ${{ secrets.CGC_GHCR_PAT || secrets.GITHUB_TOKEN }}
   GITHUB_ACTOR: ${{ github.actor }}
-  # NO OPENROUTER_API_KEY here — deliberately. octocode's LLM is my-ai-api on the
-  # mesh (.runtime.octocode.llm), which injects its own OpenRouter key inside the
-  # container (passthrough_auth=false); the caller sends the `sk-dummy` placeholder.
-  # A `secrets.OPENROUTER_API_KEY` used to be passed here, but no such repo secret
-  # exists, so it expanded to "" and the graphrag phase logged "LLM client not
-  # initialized" and shipped structural-only graphs. cloud-cgc-db-update.sh now
-  # exports OPENAI_API_URL/OPENAI_API_KEY from build.json and preflights the
-  # endpoint, so this path needs no GHA secret at all.
-  CGC_FORCE: ${{ inputs.force == 'true' && '1' || '0' }}
   WG_PRIVATE_KEY: ${{ secrets.WG_PRIVATE_KEY }}
   WG_HUB_PUBKEY: ${{ vars.WG_HUB_PUBKEY }}
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
-  # PRIVATE index_repos: GITHUB_TOKEN above is scoped to cloud-infra alone and can never
-  # clone another private repo — cloud-data failed here on every run and was silently absent
-  # from the DB. ensure_repos() reads CGC_DEPLOY_KEY_<local_dir, non-alnum folded to _>, so
-  # the script stays generic; only this wiring is per-repo, because Actions resolves secrets
-  # by literal name and cannot index into them dynamically. Add one line per private repo in
-  # .runtime.octocode.index_repos — public repos need nothing. Declared at the WORKFLOW level
-  # so it reaches every job below (repos/index/restore-all) without repeating it per job.
-  CGC_DEPLOY_KEY_cloud_data: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
-  CGC_DEPLOY_KEY_cloud_my_ai_memory: ${{ secrets.CLOUD_MY_AI_MEMORY_DEPLOY_KEY }}
 
 jobs:
-  # ── Resolve the repo matrix from build.json (data-driven; see header) ──
-  repos:
-    name: "cgc-db · ${{ inputs.phase }} · resolve repo matrix"
-    if: ${{ !inputs.restore_only }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    outputs:
-      repos: ${{ steps.repos.outputs.repos }}
-    steps:
-      - uses: actions/checkout@v4
-      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
-      # NOT a submodule of this one (split out 2026-09-06). It is checked out
-      # at the path every in-repo reference already uses, so nothing
-      # downstream changes. fetch-depth: 0 — per-service change detection
-      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
-      - name: Checkout cloud-u-containers into a_solutions
-        uses: actions/checkout@v4
-        with:
-          repository: diegonmarcos/cloud-u-containers
-          path: a_solutions
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Init submodules (a_solutions)
-        uses: ./.github/actions/init-submodules
-        with:
-          include: I_cloud
-      - name: Validate phase input
-        run: |
-          case "${{ inputs.phase }}" in
-            semantic|graphrag) : ;;
-            *) echo "::error::unknown phase '${{ inputs.phase }}' (expected semantic|graphrag)"; exit 1 ;;
-          esac
-      - name: Resolve .runtime.octocode.index_repos → matrix JSON
-        id: repos
-        run: |
-          set -eu
-          BJ="a_solutions/user-ai_cloud-cgc-pub-mcp/build.json"
-          [ -f "$BJ" ] || { echo "::error::$BJ not found"; exit 1; }
-          REPOS_JSON=$(jq -c '[.runtime.octocode.index_repos[]]' "$BJ")
-          # Optional subset. index_repos stays the single source of truth: the input
-          # can only NARROW it, never introduce a repo, and an unknown name is a hard
-          # error rather than a silently-empty matrix that looks like a clean run.
-          FILTER='${{ inputs.repos }}'
-          if [ -n "$FILTER" ]; then
-            SEL=$(printf '%s' "$FILTER" | tr ' ,' '\n\n' | jq -Rc . | jq -sc 'map(select(length > 0))')
-            UNKNOWN=$(jq -nc --argjson all "$REPOS_JSON" --argjson sel "$SEL" '$sel - $all')
-            [ "$UNKNOWN" = "[]" ] || { echo "::error::repos input names repo(s) not in .runtime.octocode.index_repos: $(printf '%s' "$UNKNOWN" | jq -r 'join(" ")')"; exit 1; }
-            # Intersection that preserves index_repos order, so matrix order is stable.
-            REPOS_JSON=$(jq -nc --argjson all "$REPOS_JSON" --argjson sel "$SEL" '$all - ($all - $sel)')
-            echo "[cgc-db] repos input active — matrix narrowed to: $(printf '%s' "$REPOS_JSON" | jq -r 'join(" ")')"
-          fi
-          COUNT=$(printf '%s' "$REPOS_JSON" | jq 'length')
-          [ "$COUNT" -gt 0 ] || { echo "::error::.runtime.octocode.index_repos is empty — nothing to index"; exit 1; }
-          echo "repos=$REPOS_JSON" >> "$GITHUB_OUTPUT"
-          echo "[cgc-db] ${{ inputs.phase }} matrix ($COUNT repos): $(printf '%s' "$REPOS_JSON" | jq -r 'join(" ")')"
-
-  # ── One job per repo. fail-fast: false — one repo's failure/timeout must
-  # never cancel the others; each publishes to its OWN GHCR image so a
-  # failure is isolated to that one repo's checkpoint, not the whole cycle.
-  index:
-    name: "cgc-db · ${{ inputs.phase }} · ${{ matrix.repo }}"
-    needs: repos
-    runs-on: ubuntu-latest
-    # Same declared ceiling as the pre-matrix single job (see build.json
-    # .runtime.octocode.update._budget_comment): max_minutes(300) is the true
-    # worst case per repo now that repo_timeout_min is a clamp, not a
-    # reservation, so 330 leaves slack for clone + packaging + push. Per-job
-    # now, not per-cycle — a slow repo no longer eats every other repo's turn.
-    #
-    # This ceiling may stay long because this job holds NO concurrency group:
-    # it reaches GHCR and openrouter.ai over the public internet and never
-    # brings WireGuard up, so a slow repo costs runner minutes and nothing
-    # else. Only restore-all below is in ship-wg-runner, and its ceiling is
-    # bounded accordingly.
-    timeout-minutes: 330
-    permissions:
-      contents: read
-      packages: write
-    strategy:
-      fail-fast: false
-      # Full fan-out for BOTH phases. The graphrag phase used to be pinned to
-      # max-parallel:1 because its LLM calls crossed the WireGuard mesh to
-      # my-ai-api, and N matrix jobs sharing the single gha-runner peer slot
-      # stole each other's endpoint (random preflight failures — and worse, a
-      # job losing the slot MID-index, where octocode logs the dead LLM as a
-      # warning and ships a structural-only graph with exit 0). The LLM now
-      # goes straight to openrouter.ai over the public internet (env on the
-      # update step below), so no job in this matrix touches the mesh at all:
-      # nothing left to contend for, and the WireGuard step is gone with it.
-      max-parallel: 8
-      matrix:
-        repo: ${{ fromJson(needs.repos.outputs.repos) }}
-    steps:
-      - uses: actions/checkout@v4
-      # a_solutions is its OWN repository (diegonmarcos/cloud-u-containers),
-      # NOT a submodule of this one (split out 2026-09-06). It is checked out
-      # at the path every in-repo reference already uses, so nothing
-      # downstream changes. fetch-depth: 0 — per-service change detection
-      # walks its history. Both repos are public, so GITHUB_TOKEN suffices.
-      - name: Checkout cloud-u-containers into a_solutions
-        uses: actions/checkout@v4
-        with:
-          repository: diegonmarcos/cloud-u-containers
-          path: a_solutions
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Init submodules (a_solutions)
-        uses: ./.github/actions/init-submodules
-        with:
-          include: I_cloud
-      - name: Fresh per-repo octocode home
-        # Must end in /octocode: cloud-cgc-db-update.sh's per-repo mode exports
-        # XDG_DATA_HOME as this path's PARENT so octocode 0.12.2's own
-        # $XDG_DATA_HOME/octocode resolution (it has no relocation knob of its
-        # own — storage.rs:39-47) lands exactly here instead of silently
-        # writing the real DB to $HOME/.local/share/octocode (production
-        # incident: run 32512759559, every job "no project directory found").
-        # update.sh normalizes+warns if this ever drifts, but the source of
-        # truth should already conform.
-        run: |
-          mkdir -p "$RUNNER_TEMP/octocode-home/octocode"
-          echo "OCTOCODE_HOME=$RUNNER_TEMP/octocode-home/octocode" >> "$GITHUB_ENV"
-      - name: "cgc-db incremental update — ${{ matrix.repo }} only (checkpoint push, no propagate)"
-        # #352/#375: STEP ceiling strictly below the 330-min JOB ceiling. When the
-        # JOB timeout fires, GitHub concludes the job (and so the whole run)
-        # CANCELLED, and cgc-db.yml's graphrag gate is `!cancelled()` — so one
-        # never-converging repo (cloud-u-android, every scheduled run since
-        # 2026-09-30) skipped GraphRAG for ALL repos, and GraphRAG nodes are the
-        # only source of kg-store `file` rows (octocode-export.py). A STEP timeout
-        # concludes FAILURE instead, which the graphrag gate already accepts.
-        timeout-minutes: 315
-        # No SSH key / CGC_SSH_OPTS here (unlike the pre-matrix single job): with
-        # CGC_SKIP_PROPAGATE=1 + CGC_PACKAGE_MODE=per-repo, update.sh's
-        # propagate_to_host() is NEVER reached in this job (see cloud-cgc-db-update.sh),
-        # so provisioning deploy-key material on every one of N parallel runners would
-        # be pure unused attack surface. restore-all below is the only job that needs it.
-        env:
-          # phase → USE_LLM (environment is authoritative over build.json).
-          # semantic = structural only (no LLM); graphrag = LLM relationship pass.
-          USE_LLM: ${{ inputs.phase == 'graphrag' && 'true' || 'false' }}
-          # DIRECT OpenRouter, not the mesh-only my-ai-api relay that build.json
-          # declares. Environment is authoritative over build.json in
-          # cloud-cgc-db-update.sh, so these three override the declared mesh
-          # URL / placeholder key / health triple for CI only; local and dagu
-          # runs keep the relay, which injects this same key server-side.
-          # Going direct is what freed this matrix from WireGuard (see
-          # max-parallel above). /models answers 200 unauthenticated, which
-          # makes it a valid keyless preflight target.
-          OPENROUTER_API_URL: https://openrouter.ai/api/v1/chat/completions
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          LLM_HEALTH_URL: https://openrouter.ai/api/v1/models
-          # phase → PER-PHASE manifest so each phase change-gates independently and
-          # graphrag is not skipped just because semantic already advanced HEAD.
-          CGC_MANIFEST_PHASE: ${{ inputs.phase }}
-          # ONE repo, indexed into the FRESH home set up above.
-          CGC_INDEX_REPOS: ${{ matrix.repo }}
-          # Per-repo packaging path (cloud-cgc-db-package.sh, mode auto-detected
-          # from the image name) instead of monolith package+propagate — see
-          # cloud-cgc-db-update.sh checkpoint_publish().
-          CGC_PACKAGE_MODE: per-repo
-          # Propagation is centralised in the restore-all job below, which runs ONCE
-          # per phase after every matrix job settles, not once per repo per job.
-          CGC_SKIP_PROPAGATE: "1"
-          # #352/#375: the script's time budget, counted from its own start. MUST be
-          # the step timeout-minutes above minus room for the partial-checkpoint
-          # publish (~4G package+push): with build.json's 300 the slice outlived the
-          # 315-min step, the step timeout killed the publish, and cloud-u-android
-          # never kept a minute of progress. 285 still lost: on 2026-10-06/07
-          # cloud-u-android spent ~30m restoring its base image before indexing and
-          # >29m packaging the partial after, so the 315-min step killed the publish
-          # in BOTH phases (#888). 240 leaves 75m. cgc-db-index-budget.test.sh pins
-          # budget + 70 <= step timeout.
-          CGC_BUDGET_MIN: "240"
-        run: sh 1_cicd/src/ops/cloud-cgc-db-update.sh
-  # ── Multi-image restore onto oci-apps: base + every per-repo image, ONCE
-  # per phase. if: always() so a partial/failed matrix still propagates
-  # whatever DID publish this run instead of leaving oci-apps stale on a
-  # single unrelated repo's failure; this job's own success is what gates
-  # the phase.
-  #
-  # cloud-cgc-db-restore-all.sh (Task 4) assembles base + every per-repo
-  # image into a LOCAL target dir — it runs docker directly against whatever
-  # host it is invoked on, the same contract as cloud-cgc-db-pull.sh, not an
-  # SSH-remote script. So this job assembles the full home HERE on the runner
-  # (where build.json/GHCR-auth/docker already are, from the checkout above),
-  # then transports the assembled result onto oci-apps with the SAME
-  # rsync-into-the-live-volume mechanism cloud-cgc-db-update.sh's
-  # propagate_to_host() already uses for the monolith path (stop container,
-  # rsync --delete, start container) — proven, not reinvented.
-  #
-  # THIS JOB IS ALSO WHAT KEEPS kg-store (SurrealDB) OUT OF SYNC NO LONGER:
-  # this job never touched SurrealDB before — only octocode's LanceDB — so
-  # cgc.kgstore.* went stale by construction, refreshed solely by a manual
-  # `docker compose --profile reindex` CI never runs. cloud-cgc-db-restore-
-  # all.sh now closes that gap itself: once it swaps in the fresh LanceDB
-  # volume and restarts the MCP container below, it `docker exec`s into that
-  # SAME container (already carrying python3/node/octocode-export.py/kg-
-  # ingest.mjs + KG_STORE_PASS) with OCTOCODE_SKIP_INDEX=1, running ONLY the
-  # cheap export→ingest mirror (no LLM) for the repos this run staged.
-  # Indexing/LLM stays GHA-x86-only and freeze-guarded off oci-apps; nothing
-  # in this workflow needed to change to get that — see reindex.sh.
   restore-all:
-    name: "cgc-db · ${{ inputs.phase }} · restore-all → oci-apps"
-    needs: index
-    # always() so a single repo's failure still propagates the ones that DID
-    # succeed; inputs.restore lets a caller skip propagation entirely when the
-    # run only touched repos this volume filters out anyway.
-    if: always() && inputs.restore
+    name: "cgc-db · restore-all ${{ inputs.surfaces }} → oci-apps"
     runs-on: ubuntu-latest
-    # THE ONLY JOB IN THIS FILE THAT NEEDS THE MESH, so the only one that may
-    # hold the fleet's deploy lock. It brings WireGuard up and ssh's to
-    # oci-apps at its wg_ip (see the steps below); `repos` and `index` do
-    # neither — index reaches GHCR and openrouter.ai over the public internet
-    # only. The group used to be declared workflow-level in cgc-db.yml, which
-    # meant the 5.5-hour index matrix held the lock too; see the concurrency
-    # comment there for the outage that caused.
+    # The only cgc job that holds the mesh, so the only one in the fleet's deploy lock.
     concurrency:
       group: ship-wg-runner
       cancel-in-progress: false
       # #844: FIFO queue instead of GitHub's one-pending-slot eviction (rationale: ship.yml deploy.concurrency).
       queue: max
-    # 240, not 340: this ceiling is now a bound on how long ONE job may hold
-    # the fleet-wide deploy lock, not just on its own runtime, so "the highest
-    # safe value under GitHub's 360-min cap" is the wrong thing to optimise
-    # for. The measured worst case is run 32754160748: pub alone ~108min, and
-    # pvt still alive at 65min when a 180-min ceiling killed it — the two
-    # surfaces run sequentially in this one job, so ~220min is the real
-    # ceiling-setting number. 240 clears that with ~10% headroom and cuts 100
-    # minutes off the maximum time a deploy can sit pending behind a wedged
-    # restore. It is deliberately NOT lower: the debt that makes restore this
-    # slow (amd64 images emulated on the arm64 box, docker rmi between
-    # surfaces forcing full re-pulls) is tracked separately, and until it
-    # lands a tighter ceiling would kill restores that were going to succeed.
+    # One surface per run now; the old 240 covered pub+pvt back to back.
     timeout-minutes: 240
     permissions:
       contents: read
       packages: read
     env:
-      # BOOTSTRAP: this cron job's very first run ever has no base image on GHCR
-      # yet (nothing seeded, no matrix job publishes the base — see
-      # cloud-cgc-db-package.sh). Without this, cloud-cgc-db-restore-all.sh hard-
-      # errors on the missing base and this job goes red, which — because cgc-db.yml
-      # gates the graphrag phase on the semantic phase's result — blocks graphrag too,
-      # on every scheduled run, forever, until someone manually seeds a base out of
-      # band. CGC_BOOTSTRAP_TOLERANT=1 makes a missing base a ::warning:: + exit 0
-      # instead, so the cycle goes green and simply has nothing to propagate yet.
-      # The dagu/manual restore path (cloud-cgc-db-restore-all.sh invoked directly,
-      # not through this workflow) does NOT set this and keeps the hard error, since
-      # there a missing base is an operator mistake worth surfacing loudly.
       CGC_BOOTSTRAP_TOLERANT: "1"
     steps:
       - uses: actions/checkout@v4
@@ -429,6 +95,28 @@ jobs:
         uses: ./.github/actions/init-submodules
         with:
           include: I_cloud
+      - name: Fetch restore-all from cloud-u-containers_cgc at the dispatched commit
+        # The pipeline's code lives in the public diegonmarcos/cloud-u-containers_cgc. The
+        # dispatcher names the commit it indexed with; restore runs the restore script of
+        # that SAME commit (image layout and in-image state are a contract between them).
+        # Only a commit on that repo's main is accepted: a dispatch token must not be able
+        # to make this job, which holds the mesh key and the box's SSH key, run code from
+        # an unreviewed branch.
+        env:
+          REF: ${{ inputs.cgc_ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          printf '%s' "$REF" | grep -Eq '^[0-9a-f]{40}$' || { echo "::error::cgc_ref '$REF' is not a 40-hex commit sha"; exit 1; }
+          ST=$(gh api "repos/diegonmarcos/cloud-u-containers_cgc/compare/$REF...main" -q .status 2>/dev/null || echo error)
+          case "$ST" in
+            identical|ahead) echo "[cgc-db] cgc_ref $REF is on cloud-u-containers_cgc main ($ST)" ;;
+            *) echo "::error::cgc_ref $REF is not an ancestor of cloud-u-containers_cgc main (compare: $ST) — refusing to run its restore script"; exit 1 ;;
+          esac
+          curl -sSfL -o "$RUNNER_TEMP/cgc-restore-all.sh" \
+            "https://raw.githubusercontent.com/diegonmarcos/cloud-u-containers_cgc/$REF/1_cicd/src/ops/cloud-cgc-db-restore-all.sh"
+          sh -n "$RUNNER_TEMP/cgc-restore-all.sh"
+          echo "[cgc-db] restore-all script: cloud-u-containers_cgc@$REF ($(wc -l < "$RUNNER_TEMP/cgc-restore-all.sh") lines)"
       - name: WireGuard up
         continue-on-error: true
         run: bash 1_cicd/src/scripts/cloud-ship-ci-setup-wireguard.sh
@@ -568,7 +256,7 @@ jobs:
           # The transfer scp used to do at the top of the step — same stdin-feed
           # contract as every other ssh_retry call, and `cat >` re-runs clean on
           # a retry.
-          ssh_retry 1_cicd/dist/scripts/cloud-cgc-db-restore-all.sh "$TARGET" 'cat > /tmp/cgc-restore-all.sh'
+          ssh_retry "$RUNNER_TEMP/cgc-restore-all.sh" "$TARGET" 'cat > /tmp/cgc-restore-all.sh'
           # Called LAZILY, immediately before the pvt restore, never up front. Only the
           # private surface's packages need auth -- the public ones pull anonymously --
           # so an eager login buys nothing and costs two things: the token sits at rest
