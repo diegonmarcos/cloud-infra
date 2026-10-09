@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20874,
+    "files": 20876,
     "by_lang": {
       "py": 121,
       "sh": 445,
-      "kotlin": 10704,
+      "kotlin": 10706,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -25,7 +25,7 @@
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10701,
+      "kotlin": 10703,
       "python": 40,
       "rust-module": 87,
       "file": 2255,
@@ -23353,6 +23353,10 @@
         "toggleAllCollapsed()",
         "showGrid()",
         "closeTab(tab: BrowserTab)",
+        "swipeClose(tab: BrowserTab)",
+        "closeWithUndo(tab: BrowserTab)",
+        "onDismissed(sb: com.google.android.material.snackbar.Snackbar?, event: Int)",
+        "commitSwipe()",
         "grouped(c: BrowserTabGroups.Change)",
         "showGroupEditor(group: String)",
         "promptForGroup(tab: BrowserTab)",
@@ -23370,11 +23374,7 @@
         "background(work: ()",
         "main(work: ()",
         "textToolsPort()",
-        "engineSetting()",
-        "engineName(engine: String)",
-        "targetTag()",
-        "toggleTranslate()",
-        "showTopics(wv: WebView)"
+        "engineSetting()"
       ]
     },
     {
@@ -23898,6 +23898,30 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserSwipeClose.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SwipeGesture",
+        "SwipeClose"
+      ],
+      "imports": [
+        "kotlin.math.abs"
+      ],
+      "symbols": [
+        "lock(dx: Float, dy: Float, slop: Float, dragging: Boolean)",
+        "swipeable(row: BrowserGridRow?)",
+        "needsConfirm(tab: BrowserTab)",
+        "begin(tab: BrowserTab)",
+        "undo(tabs: List<BrowserTab>)",
+        "commit(left: List<BrowserTab>)",
+        "class SwipeGesture",
+        "class Axis",
+        "class SwipeClose",
+        "class Commit"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserTab.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -23916,6 +23940,8 @@
         "groups(tabs: List<BrowserTab>)",
         "plan( alreadySeeded: Boolean, openUrls: Set<String>, configUrls: List<String>, now: Long, )",
         "close(tabs: List<BrowserTab>, url: String)",
+        "closeAll(tabs: List<BrowserTab>, scope: (BrowserTab)",
+        "restore(tabs: List<BrowserTab>, tab: BrowserTab)",
         "class BrowserTab",
         "class BrowserTabOrder",
         "class BrowserSeed",
@@ -23949,7 +23975,11 @@
       ],
       "symbols": [
         "getSpanSize(position: Int)",
+        "onInterceptTouchEvent(rv: RecyclerView, e: android.view.MotionEvent)",
+        "onTouchEvent(rv: RecyclerView, e: android.view.MotionEvent)",
+        "onRequestDisallowInterceptTouchEvent(disallow: Boolean)",
         "submit(rows: List<BrowserGridRow>)",
+        "getSwipeThreshold(vh: RecyclerView.ViewHolder)",
         "isLongPressDragEnabled()",
         "getMovementFlags(rv: RecyclerView, vh: RecyclerView.ViewHolder)",
         "onSelectedChanged(vh: RecyclerView.ViewHolder?, actionState: Int)",
@@ -24038,6 +24068,8 @@
         "updatePreviewById(id: String, path: String)",
         "setGroupById(id: String, group: String)",
         "removeById(id: String)",
+        "restore(tab: BrowserTab)",
+        "closeAll(incognito: Boolean = false)",
         "groupColors()",
         "saveColors(m: Map<String, Int>)",
         "apply(c: BrowserTabGroups.Change?, renamedFrom: String? = null)",
@@ -24063,8 +24095,7 @@
         "activeUrl()",
         "setActive(url: String?)",
         "setActiveId(id: String?)",
-        "save(tabs: List<BrowserTab>)",
-        "class BrowserTabPrefs"
+        "save(tabs: List<BrowserTab>)"
       ]
     },
     {
@@ -58325,6 +58356,39 @@
       ],
       "symbols": [
         "class BrowserSummaryTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserTabCardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserTabCardTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserGridRow",
+        "com.diegonmarcos.superapp.browser.BrowserGridRows",
+        "com.diegonmarcos.superapp.browser.BrowserTab",
+        "com.diegonmarcos.superapp.browser.BrowserTabGroups",
+        "com.diegonmarcos.superapp.browser.BrowserTabOps",
+        "com.diegonmarcos.superapp.browser.BrowserTabOrder",
+        "com.diegonmarcos.superapp.browser.BrowserTabStore",
+        "com.diegonmarcos.superapp.browser.PrivateSession",
+        "com.diegonmarcos.superapp.browser.SwipeClose",
+        "com.diegonmarcos.superapp.browser.SwipeGesture",
+        "com.diegonmarcos.superapp.browser.SwipeGesture.Axis",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "tab(id: String, ts: Long = 1L, pinned: Boolean = false, priv: Boolean = false, group: String = \"\")",
+        "gridSource()",
+        "class BrowserTabCardTest"
       ]
     },
     {
