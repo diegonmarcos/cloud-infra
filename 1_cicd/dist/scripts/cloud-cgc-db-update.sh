@@ -854,6 +854,7 @@ resume_force_partial() {  # $1 = repo local name → layers the resumable partia
     if [ -f "$_rfp_m" ] && [ "$(jq -r '.octocode // ""' "$_rfp_m" 2>/dev/null)" = "$OCTO_VERSION" ] \
        && [ "$(jq -r '.phase // ""' "$_rfp_m" 2>/dev/null)" = "${MANIFEST_PHASE:-default}" ]; then
       rm -f "$_rfp_m"   # :latest must never carry the marker
+      RESUMED_FORCE_PARTIAL=1
       echo "[cgc-db] CGC_FORCE — resuming $1 from its unfinished forced index ($(force_partial_tag), project $_rfp_d)"
     else
       rm -rf "$OCTO_HOME/$_rfp_d"
@@ -1237,7 +1238,9 @@ if [ "$USE_LLM" = "true" ] && [ -f "$CFG" ]; then
   # the LLM endpoint has answered, so we cannot delete a graph we then cannot
   # rebuild. A failure after this point aborts before package/push anyway, so the
   # DB on GHCR is never the damaged one.
-  if [ "${CGC_FORCE:-0}" = "1" ]; then
+  # A resumed forced partial carries the graph its completed chunks built (chunk mode,
+  # #888): purging it would throw away exactly the progress the resume exists to keep.
+  if [ "${CGC_FORCE:-0}" = "1" ] && [ "${RESUMED_FORCE_PARTIAL:-0}" != "1" ]; then
     _purged=0
     for _t in "$OCTO_HOME"/*/storage/graphrag_nodes.lance \
               "$OCTO_HOME"/*/storage/graphrag_relationships.lance \
@@ -1487,6 +1490,171 @@ assert_llm_graph() { # $1 = repo dir, $2 = repo name → rc 1 when no LLM-derive
   return 1
 }
 
+# ── CHUNKED INDEX (#888) — spec a0_docs/eng-specs/cgc-incremental-chunked.md ──────────
+# Per-repo mode with a phase: every `octocode index` runs over a bounded WINDOW (files
+# already done + files changed since the last window + the next chunk of the sorted
+# remainder) so it can COMPLETE inside the slice. Only a completed run records skip state
+# for touched-but-unchanged files and only a completed walk reaches the graph pass, so a
+# repo too big for one slice used to make no durable progress at all (cloud-u-android sat
+# at ~13.6k files for days). Chunks repeat within one job while the budget allows, with a
+# checkpoint publish between them; the chunk state travels inside the project dir.
+. "$HERE/cloud-cgc-db-chunk.sh"
+CHUNK_N_DEFAULT="${CGC_CHUNK_FILES:-$(jq -r --arg p "${MANIFEST_PHASE:-default}" '(.runtime.octocode.update.chunk // {}) | (.[$p] // .default // (if $p == "graphrag" then 1000 elif $p == "semantic" then 3000 else 0 end))' "$BJ")}"
+CHUNK_MIN=$(jq -r '.runtime.octocode.update.chunk.min // 100' "$BJ")
+CHUNK_MAX=$(jq -r '.runtime.octocode.update.chunk.max // 20000' "$BJ")
+CHUNK_STALE_ALERT=$(jq -r '.runtime.octocode.update.chunk.stale_alert_runs // 6' "$BJ")
+CHUNK_PUBLISH_RESERVE_MIN="${CGC_PUBLISH_RESERVE_MIN:-$(jq -r '.runtime.octocode.update.chunk.publish_reserve_min // 40' "$BJ")}"
+CHUNK_MODE=0
+if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && [ -n "$MANIFEST_PHASE" ] \
+   && [ "${CHUNK_N_DEFAULT:-0}" -gt 0 ] 2>/dev/null && [ "${CGC_CHUNK:-1}" != "0" ]; then
+  CHUNK_MODE=1
+fi
+echo "[cgc-db] chunk mode=${CHUNK_MODE} (default chunk ${CHUNK_N_DEFAULT:-0} files, min ${CHUNK_MIN}, max ${CHUNK_MAX}, publish reserve ${CHUNK_PUBLISH_RESERVE_MIN}m)"
+
+# The one project dir of a per-repo home, or empty.
+chunk_home_project() {
+  _chp=""; _chn=0
+  for _chd in $(project_dirs_snapshot "$OCTO_HOME"); do _chp="$_chd"; _chn=$((_chn + 1)); done
+  [ "$_chn" -eq 1 ] && printf '%s\n' "$_chp"
+  return 0
+}
+
+# Runs the chunk loop for one repo. In: $1 repo, $2 dir, $3 head; uses _before_dirs,
+# _idx_marker (STRAY-SELECT). Out: _rc (0 converged, 124 not converged or slice expired,
+# else octocode failure), _log (last octocode log), _proj_resolved when known,
+# CHUNK_STATUS (one JSON line).
+chunk_index_repo() {
+  _cr_r="$1"; _cr_d="$2"; _cr_head="$3"
+  _cr_o="${CGC_SCRATCH:?}/chunk-$_cr_r"; rm -rf "${_cr_o:?}"; mkdir -p "$_cr_o"
+  _cr_pd=$(chunk_home_project)
+  _cr_sf_stage="$OCTO_HOME/.cgc-chunks-$MANIFEST_PHASE.json"
+  rm -f "$_cr_sf_stage"
+  if [ -n "$_cr_pd" ] && [ -f "$(chunk_state_path "$OCTO_HOME/$_cr_pd" "$MANIFEST_PHASE")" ]; then
+    cp "$(chunk_state_path "$OCTO_HOME/$_cr_pd" "$MANIFEST_PHASE")" "$_cr_sf_stage"
+  fi
+  # graphrag never runs ahead of the embeddings: its chunks come from the semantic
+  # phase's done set. A repo whose semantic index converged before chunk mode existed
+  # (manifest entry, no state) has every file embedded, so no allowlist is needed.
+  _cr_allow=""
+  if [ "$MANIFEST_PHASE" = "graphrag" ] && [ -n "$_cr_pd" ]; then
+    _cr_sem="$(chunk_state_path "$OCTO_HOME/$_cr_pd" semantic)"
+    if [ -f "$_cr_sem" ]; then
+      jq -r '.done[]' "$_cr_sem" > "$_cr_o/allow"; _cr_allow="$_cr_o/allow"
+      echo "[cgc-db] $_cr_r · graphrag chunks limited to the $(wc -l < "$_cr_o/allow" | tr -d ' ') files the semantic phase has embedded"
+    fi
+  fi
+  _cr_n=$(chunk_state_read "$_cr_sf_stage" | jq -r '.chunk // 0')
+  [ "${_cr_n:-0}" -gt 0 ] 2>/dev/null || _cr_n="$CHUNK_N_DEFAULT"
+  [ -n "${CGC_CHUNK_FILES:-}" ] && _cr_n="$CGC_CHUNK_FILES"
+  _cr_pub_s=$(( CHUNK_PUBLISH_RESERVE_MIN * 60 ))
+  _cr_i=0; _rc=0; _log="$(mktemp)"; _cr_conv=0
+  while :; do
+    _cr_i=$((_cr_i + 1))
+    _cr_remain=$(( BUDGET_MIN - ( $(date +%s) - START_TS ) / 60 ))
+    # Leave room for the publish that follows this window (the last one is the outer
+    # loop's), so the slice can never end inside the step's own timeout.
+    _cr_slice=$(( _cr_remain - _cr_pub_s / 60 ))
+    if [ -n "$REPO_TIMEOUT_EFF" ] && [ "$REPO_TIMEOUT_EFF" != "0" ] && [ "$REPO_TIMEOUT_EFF" -lt "$_cr_slice" ]; then
+      _cr_slice="$REPO_TIMEOUT_EFF"
+    fi
+    if [ "$_cr_slice" -lt "${CGC_MIN_SLICE_MIN:-20}" ]; then
+      echo "[cgc-db] $_cr_r · chunk $_cr_i: only ${_cr_slice}m usable — stopping here, the next run continues"
+      _rc=124; break
+    fi
+    chunk_plan "$_cr_d" "$_cr_sf_stage" "$_cr_head" "$_cr_n" "$_cr_allow" "$_cr_o"
+    if [ ! -s "$_cr_o/next" ]; then
+      chunk_exclude_clear "$_cr_d"
+      if chunk_converged "$_cr_o/state" "$_cr_o/indexable" ""; then
+        jq --arg h "$_cr_head" '.seen = $h' "$_cr_o/state" > "$_cr_sf_stage"
+        echo "[cgc-db] $_cr_r · converged — nothing outstanding in the $MANIFEST_PHASE phase"
+        _cr_conv=1; _rc=0
+      else
+        cp "$_cr_o/state" "$_cr_sf_stage"
+        echo "[cgc-db] $_cr_r · nothing plannable this run (graphrag waits for the semantic phase to embed the rest)"
+        _rc=124
+      fi
+      break
+    fi
+    [ "$MANIFEST_PHASE" = "graphrag" ] && chunk_touch_next "$_cr_d" "$_cr_o/next"
+    # octocode's own commit marker would short-circuit a same-HEAD window ("No commit
+    # changes since last index, skipping reindex") or narrow it to its own git diff. The
+    # window is ours; let octocode walk it with its per-file mtime check.
+    for _cr_gm in "${OCTO_HOME:?}"/*/storage/git_metadata.lance; do
+      [ -d "$_cr_gm" ] && rm -rf "${_cr_gm:?}"
+    done
+    echo "[cgc-db] $_cr_r · chunk $_cr_i: $(wc -l < "$_cr_o/next" | tr -d ' ') new-work files in a $(wc -l < "$_cr_o/window" | tr -d ' ')-file window, slice ${_cr_slice}m"
+    _cr_t0=$(date +%s); _rc=0
+    ( cd "$_cr_d" && timeout "${_cr_slice}m" octocode index ) >"$_log" 2>&1 || _rc=$?
+    _cr_dt=$(( $(date +%s) - _cr_t0 ))
+    chunk_exclude_clear "$_cr_d"
+    if [ "$_rc" = "124" ]; then
+      _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_slice * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+      jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_o/state0" > "$_cr_sf_stage"
+      echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i did not finish in ${_cr_slice}m — chunk size halved to $_cr_n for the next run; this window's files stay outstanding"
+      break
+    fi
+    [ "$_rc" = "0" ] || break
+    _cr_n=$(chunk_adapt "$_cr_n" ok "$_cr_dt" $(( _cr_slice * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+    chunk_commit "$_cr_o" "$_cr_head" "$_cr_sf_stage"
+    jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_sf_stage" > "$_cr_sf_stage.tmp" && mv "$_cr_sf_stage.tmp" "$_cr_sf_stage"
+    echo "[cgc-db] $_cr_r · chunk $_cr_i done in ${_cr_dt}s; next chunk size $_cr_n"
+    if chunk_converged "$_cr_sf_stage" "$_cr_o/indexable" ""; then _cr_conv=1; break; fi
+    # Durable progress before the next window: resolve this repo's project dir, put the
+    # state inside it and publish. A forced run publishes to its partial tag only.
+    if [ -z "${_proj_resolved:-}" ]; then
+      _proj_resolved=$(resolve_project_dir "$OCTO_HOME" "$_before_dirs" "$_idx_marker") || { _rc=1; break; }
+    fi
+    cp "$_cr_sf_stage" "$(chunk_state_path "$OCTO_HOME/$_proj_resolved" "$MANIFEST_PHASE")"
+    _cr_p0=$(date +%s)
+    if [ "${CGC_FORCE:-0}" = "1" ]; then
+      printf '{"octocode":"%s","phase":"%s","commit":"%s"}\n' "$OCTO_VERSION" "$MANIFEST_PHASE" "$_cr_head" > "$OCTO_HOME/$_proj_resolved/$FORCE_PARTIAL_MARKER"
+      ( REPO_TAG="$(force_partial_tag)"; checkpoint_publish "$_cr_r" ) || { _rc=1; break; }
+      rm -f "$OCTO_HOME/$_proj_resolved/$FORCE_PARTIAL_MARKER"
+    else
+      checkpoint_publish "$_cr_r" || { _rc=1; break; }
+    fi
+    _cr_pub_s=$(( $(date +%s) - _cr_p0 + 300 ))
+    echo "[cgc-db] $_cr_r · chunk $_cr_i checkpointed (publish took $(( _cr_pub_s / 60 - 5 ))m)"
+  done
+  # Convergence record: stale_runs counts consecutive runs that ended outstanding.
+  if [ "$_cr_conv" = "1" ]; then
+    chunk_state_read "$_cr_sf_stage" | jq '.stale_runs = 0' > "$_cr_sf_stage.tmp"
+  else
+    chunk_state_read "$_cr_sf_stage" | jq '.stale_runs = ((.stale_runs // 0) + 1)' > "$_cr_sf_stage.tmp"
+  fi
+  mv "$_cr_sf_stage.tmp" "$_cr_sf_stage"
+  [ -s "$_cr_o/indexable" ] || chunk_indexable "$_cr_d" > "$_cr_o/indexable"
+  CHUNK_STATUS=$(chunk_status_json "$_cr_r" "$MANIFEST_PHASE" "$_cr_sf_stage" "$_cr_o/indexable" "$_cr_head" "$_cr_conv")
+  echo "[cgc-db] CONVERGENCE $CHUNK_STATUS"
+  _cr_stale=$(printf '%s' "$CHUNK_STATUS" | jq -r '.stale_runs')
+  if [ "$_cr_stale" -ge "$CHUNK_STALE_ALERT" ] 2>/dev/null; then
+    echo "::error::[cgc-db] $_cr_r has ended $_cr_stale consecutive $MANIFEST_PHASE runs without converging ($(printf '%s' "$CHUNK_STATUS" | jq -r '"\(.done)/\(.total) done, \(.dirty) dirty"')) — check the chunk size and the per-chunk timings above"
+  fi
+  if [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+    printf '%s' "$CHUNK_STATUS" | jq -r '"| \(.repo) | \(.phase) | \(.done)/\(.total) | \(.dirty) | \(.chunk) | \(.stale_runs) | \(if .converged then "yes" else "no" end) | \(.head[0:8]) |"' \
+      | { [ -s "$GITHUB_STEP_SUMMARY" ] || printf '| repo | phase | done/total | dirty | chunk | stale runs | converged | head |\n|---|---|---|---|---|---|---|---|\n'; cat; } >> "$GITHUB_STEP_SUMMARY"
+  fi
+  # Put state + status inside the project dir so the outer publish carries them.
+  _cr_pd=${_proj_resolved:-$(chunk_home_project)}
+  if [ -n "$_cr_pd" ]; then
+    cp "$_cr_sf_stage" "$(chunk_state_path "$OCTO_HOME/$_cr_pd" "$MANIFEST_PHASE")"
+    printf '%s\n' "$CHUNK_STATUS" > "$OCTO_HOME/$_cr_pd/.cgc-status-$MANIFEST_PHASE.json"
+  fi
+  return 0
+}
+
+# The HEAD-only change gate is not enough in chunk mode: a manifest entry written by a
+# run that graphed 11 of 3,470 files (cloud-u-containers, before chunking) matches HEAD
+# forever. Skip only when this phase's chunk state also says converged at this HEAD.
+chunk_gate_current() {  # $1 = head → rc 0 when the repo may be skipped
+  [ "$CHUNK_MODE" = "1" ] || return 0
+  _cg_pd=$(chunk_home_project)
+  [ -n "$_cg_pd" ] || return 1
+  _cg_sf=$(chunk_state_path "$OCTO_HOME/$_cg_pd" "$MANIFEST_PHASE")
+  [ -f "$_cg_sf" ] || return 1
+  [ "$(jq -r '"\(.seen)|\(.stale_runs)|\(.dirty | length)"' "$_cg_sf" 2>/dev/null)" = "$1|0|0" ]
+}
+
 for r in $REPOS; do
   d="$REPOS_ROOT/$r"
   [ -d "$d" ] || { echo "::error::missing repo $d — refusing to publish an incomplete DB"; exit 1; }
@@ -1556,7 +1724,7 @@ for r in $REPOS; do
   last=$(manifest_read "$(manifest_path '')" "$r")
   if [ "${CGC_FORCE:-0}" = "1" ] && [ -n "$last" ]; then
     echo "[cgc-db] === force $r — ignoring manifest entry @ $last (CGC_FORCE=1) ==="
-  elif [ -n "$cur" ] && [ "$cur" = "$last" ]; then
+  elif [ -n "$cur" ] && [ "$cur" = "$last" ] && chunk_gate_current "$cur"; then
     echo "[cgc-db] === skip $r — unchanged @ $cur ==="
     N_SKIP=$(( N_SKIP + 1 ))
     continue
@@ -1593,7 +1761,7 @@ for r in $REPOS; do
   # above): snapshot the project dirs under OCTO_HOME and stamp an mtime marker
   # RIGHT BEFORE this repo's own index, so the diff after it can tell which dir
   # this specific index run produced/touched regardless of what else is in the home.
-  _before_dirs="" _idx_marker=""
+  _before_dirs="" _idx_marker="" _proj_resolved=""
   if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
     _before_dirs=$(project_dirs_snapshot "$OCTO_HOME")
     _idx_marker=$(mktemp)
@@ -1604,7 +1772,11 @@ for r in $REPOS; do
   # failed index FATAL — never package/push an unindexed base as a fake update.
   _log="$(mktemp)"
   _rc=0
-  if [ -n "$REPO_TIMEOUT_EFF" ] && [ "$REPO_TIMEOUT_EFF" != "0" ]; then
+  CHUNK_STATUS=""
+  if [ "$CHUNK_MODE" = "1" ]; then
+    rm -f "$_log"
+    chunk_index_repo "$r" "$d" "$cur"
+  elif [ -n "$REPO_TIMEOUT_EFF" ] && [ "$REPO_TIMEOUT_EFF" != "0" ]; then
     echo "[cgc-db] $r · slice ${REPO_TIMEOUT_EFF}m (ceiling ${REPO_TIMEOUT_MIN:-none}m, budget left ${_remain:-?}m)"
     ( cd "$d" && timeout "${REPO_TIMEOUT_EFF}m" octocode index ) >"$_log" 2>&1 || _rc=$?
   else
@@ -1626,9 +1798,8 @@ for r in $REPOS; do
   # (the else branch) exits before ever reaching checkpoint_publish, so it needs no
   # resolved dir. Ambiguity is fatal here, same severity as an index failure: we
   # refuse to package/push a checkpoint we cannot positively identify.
-  _proj_resolved=""
   if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && { [ "$_rc" = "0" ] || [ "$_rc" = "124" ]; }; then
-    _proj_resolved=$(resolve_project_dir "$OCTO_HOME" "$_before_dirs" "$_idx_marker") \
+    [ -n "${_proj_resolved:-}" ] || _proj_resolved=$(resolve_project_dir "$OCTO_HOME" "$_before_dirs" "$_idx_marker") \
       || { rm -f "$_idx_marker" "$_log" 2>/dev/null; echo "::error::[cgc-db] $r · cannot identify which project dir this index produced — refusing to package/push an unidentifiable checkpoint"; exit 1; }
     echo "[cgc-db] $r · resolved project dir: $_proj_resolved"
   fi
@@ -1664,6 +1835,7 @@ for r in $REPOS; do
       continue
     fi
   elif [ "$_rc" = "124" ]; then
+    [ -n "$CHUNK_STATUS" ] && echo "[cgc-db] $r · not converged this run: $(printf '%s' "$CHUNK_STATUS" | jq -r '"\(.done)/\(.total) done, \(.dirty) dirty, next chunk \(.chunk)"') — completed chunks are durable"
     echo "::warning::[cgc-db] $r is STALE in the ${MANIFEST_PHASE:-default} index: the slice of ${REPO_TIMEOUT_EFF}m expired mid-index, so the DB stays at ${last:-no indexed commit} while origin/main is at $cur. Partial progress is published and the next run resumes; every run until it converges repeats this warning."
     STALE_REPOS="$STALE_REPOS $r"
     octo_log_digest "$_log" 40; rm -f "$_log"
@@ -1687,6 +1859,16 @@ for r in $REPOS; do
         ( REPO_TAG="$(force_partial_tag)"; checkpoint_publish "$r" )
         continue
       fi
+    fi
+    # Chunk mode (#888): a forced rebuild restarts from base, so any not-yet-converged
+    # state of it is SMALLER than the served graph even when it already holds graph nodes.
+    # It goes to the force tag; :latest keeps the last complete graph until the forced
+    # rebuild converges and replaces it in one publish.
+    if [ "$CHUNK_MODE" = "1" ] && [ "${CGC_FORCE:-0}" = "1" ] && [ -n "${_proj_resolved:-}" ]; then
+      printf '{"octocode":"%s","phase":"%s","commit":"%s"}\n' "$OCTO_VERSION" "${MANIFEST_PHASE:-default}" "$cur" > "$OCTO_HOME/$_proj_resolved/$FORCE_PARTIAL_MARKER"
+      echo "[cgc-db] checkpoint publish after $r to $(force_partial_tag) (forced, not converged — :latest and the manifest untouched)"
+      ( REPO_TAG="$(force_partial_tag)"; checkpoint_publish "$r" )
+      continue
     fi
     echo "[cgc-db] checkpoint publish after $r (PARTIAL — manifest not advanced)"
     checkpoint_publish "$r"
