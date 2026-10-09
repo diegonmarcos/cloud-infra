@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20882,
+    "files": 20889,
     "by_lang": {
       "py": 121,
       "sh": 445,
-      "kotlin": 10712,
+      "kotlin": 10719,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -25,7 +25,7 @@
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10709,
+      "kotlin": 10716,
       "python": 40,
       "rust-module": 87,
       "file": 2255,
@@ -8157,13 +8157,18 @@
         "com.diegonmarcos.superapp.battery.BatteryIconView",
         "com.diegonmarcos.superapp.battery.BatteryEstimatePopup",
         "com.diegonmarcos.superapp.network.NetworkInfoPopup",
+        "com.diegonmarcos.superapp.network.SignalLevels",
+        "com.diegonmarcos.superapp.network.TetherModel",
+        "com.diegonmarcos.superapp.network.UsbDataModel",
         "com.diegonmarcos.superapp.zoomies.PetStrengthView",
         "android.app.ActivityManager",
         "android.content.BroadcastReceiver",
         "android.content.Context",
         "android.content.Intent",
         "android.content.IntentFilter",
+        "android.database.ContentObserver",
         "android.graphics.Typeface",
+        "android.graphics.drawable.GradientDrawable",
         "android.net.ConnectivityManager",
         "android.net.Network",
         "android.net.NetworkCapabilities",
@@ -8182,16 +8187,16 @@
         "android.util.Base64",
         "androidx.core.view.ViewCompat",
         "androidx.core.view.WindowInsetsCompat",
-        "org.json.JSONObject",
-        "java.text.SimpleDateFormat",
-        "java.util.Date",
-        "java.util.Locale"
+        "org.json.JSONObject"
       ],
       "symbols": [
+        "emptyDots()",
         "run()",
         "centreTopReservePx()",
         "applyCutoutReserve()",
         "parsePetsConfig()",
+        "withDots(icon: TextView, dots: LinearLayout)",
+        "dotsRowPx()",
         "makeToolColumn(toolId: String, iconView: View)",
         "gaitForLevel(level: Int)",
         "bucketLevel(pct: Int, buckets: List<Int>)",
@@ -8200,6 +8205,7 @@
         "applyPetsPref()",
         "makeIconLabel(text: String)",
         "onReceive(c: Context, i: Intent)",
+        "onChange(selfChange: Boolean)",
         "onCapabilitiesChanged(network: Network, caps: NetworkCapabilities)",
         "onLost(network: Network)",
         "onAvailable(network: Network)",
@@ -8207,13 +8213,23 @@
         "onDetachedFromWindow()",
         "refreshTime()",
         "refreshBattery(intent: Intent)",
-        "refreshUsb(intent: Intent)",
+        "refreshUsb(intent: Intent?)",
+        "refreshTether(i: Intent)",
+        "refreshAdb()",
+        "refreshWifiLevel()",
+        "refreshWgLevel()",
+        "registerSignalListener()",
+        "onSignalStrengthsChanged(ss: android.telephony.SignalStrength?)",
+        "unregisterSignalListener()",
+        "dataSimTelephony()",
         "refreshNetworkFromConnectivity()",
         "readBluetoothEnabled()",
         "applyIconTints()",
         "refreshMetrics()",
-        "class LauncherStatusStripView",
-        "class ToolPet"
+        "onSignalStrengthsChanged(ss: android.telephony.SignalStrength)",
+        "create(ctx: Context)",
+        "set(row: LinearLayout, level: Int, tint: Int)",
+        "heightPx(ctx: Context)"
       ]
     },
     {
@@ -9945,7 +9961,10 @@
         "java.net.NetworkInterface"
       ],
       "symbols": [
-        "show(ctx: Context, anchor: View)",
+        "wgSignal(ctx: Context)",
+        "wgSignalOf(up: Boolean, stats: com.wireguard.android.backend.Statistics?)",
+        "show(ctx: Context, anchor: View, focus: String? = null)",
+        "mark(key: String, v: View)",
         "lightRow(ctx: Context, title: String, on: Boolean, onTap: ()",
         "hasTransport(ctx: Context, t: Int)",
         "wifiEnabled(ctx: Context)",
@@ -9968,23 +9987,112 @@
         "decodeWifiFreq(freq: Int)",
         "readMesh(ctx: Context)",
         "readBluetooth(ctx: Context)",
-        "readUsb(ctx: Context)",
+        "readUsbState(ctx: Context)",
+        "readUsb(ctx: Context, st: UsbDataModel.State)",
+        "usbSpeed(role: UsbDataModel.Role)",
+        "openUsbSettings(ctx: Context)",
+        "readTether(ctx: Context, usb: UsbDataModel.State)",
+        "openTetherSettings(ctx: Context)",
+        "openFirst(ctx: Context, vararg tries: Intent)",
         "usbNetStats()",
         "readNetwork(ctx: Context)",
         "readPorts()",
         "hexToIp(a: String)",
         "fmtKbps(kbps: Int)",
         "readLocalIps()",
-        "sampleTraffic()",
-        "fmtRate(rxNow: Long, txNow: Long, rxPrev: Long?, txPrev: Long?, tsNow: Long, tsPrev: Long?)",
-        "fmtBytes(b: Long)",
-        "label(ctx: Context, t: String)",
-        "valueSmall(ctx: Context, t: String)",
-        "spacer(ctx: Context, h: Int)",
-        "class up",
-        "class NetworkInfoPopup",
-        "class Sample",
-        "class Mesh"
+        "sampleTraffic()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/NetworkPopupSections.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.content.Context",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.provider.Settings",
+        "android.widget.LinearLayout",
+        "android.widget.TextView",
+        "com.diegonmarcos.superapp.adbdebug.AdbMdns",
+        "com.diegonmarcos.superapp.adbdebug.ChannelReader",
+        "com.diegonmarcos.superapp.adbdebug.ChannelState",
+        "com.diegonmarcos.superapp.adbdebug.EmbeddedAdbChannel",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannels",
+        "com.diegonmarcos.superapp.adbdebug.WirelessDebugging",
+        "com.diegonmarcos.superapp.adbdebug.title",
+        "java.net.Inet4Address",
+        "java.net.NetworkInterface"
+      ],
+      "symbols": [
+        "read(ctx: Context)",
+        "render(ctx: Context, s: Snap, into: LinearLayout, row: (Context, String)",
+        "onOff(b: Boolean)",
+        "wifiIpv4()",
+        "render(ctx: Context, st: TetherModel.State, into: LinearLayout, row: (Context, String)",
+        "dot(b: Boolean)",
+        "class AdbSection",
+        "class Snap",
+        "class HotspotSection"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/SignalLevels.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignalLevels"
+      ],
+      "imports": [],
+      "symbols": [
+        "cell(level: Int?)",
+        "wifi(rssi: Int?)",
+        "wg(up: Boolean, handshakeAgeMs: Long?, latencyMs: Long? = null)",
+        "label(level: Int)",
+        "class SignalLevels"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/TetherModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TetherModel"
+      ],
+      "imports": [],
+      "symbols": [
+        "kindOf(iface: String)",
+        "summary()",
+        "parseSoftAp(dump: String, sdk: Int)",
+        "bandOfFreq(mhz: Int)",
+        "bandLabel(raw: Int, sdk: Int)",
+        "countClients(ipNeigh: String, ifaces: Collection<String>)",
+        "class names",
+        "class TetherModel",
+        "class Kind",
+        "class State",
+        "class SoftAp"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/UsbDataModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UsbDataModel"
+      ],
+      "imports": [],
+      "symbols": [
+        "headline()",
+        "roleLabel()",
+        "state(extras: Map<String, Boolean>, plugged: Int, otgDevices: List<String> = emptyList()",
+        "udcSpeed(raw: String?)",
+        "hostSpeed(raw: String?)",
+        "class UsbDataModel",
+        "class Role",
+        "class State"
       ]
     },
     {
@@ -13874,6 +13982,21 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/SignalLevelsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignalLevelsTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class SignalLevelsTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/StoreDnsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13897,6 +14020,47 @@
       "symbols": [
         "choose(id: String)",
         "class StoreDnsTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/TetherModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TetherModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.TetherModel.Kind",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class TetherModelTest",
+        "class names",
+        "class is"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/UsbDataModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UsbDataModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.UsbDataModel.Role",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "st(vararg on: String, plugged: Int = 2, otg: List<String> = emptyList()",
+        "class UsbDataModelTest"
       ]
     },
     {
