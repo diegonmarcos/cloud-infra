@@ -539,7 +539,11 @@ exclude_submodules() {
   awk -F'=' '/^[[:space:]]*path[[:space:]]*=/ { gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); print $2 }' "$_gm" | while IFS= read -r _p; do
     [ -n "$_p" ] || continue
     grep -qxF "/$_p/" "$_ex" 2>/dev/null || printf '/%s/\n' "$_p" >> "$_ex"
-    echo "[cgc-db] $_d · exclude submodule from octocode walk: $_p"
+    if cgc_repo_is_private "$(basename "$_d")"; then
+      echo "[cgc-db] $_d · excluded a submodule from the octocode walk (path withheld: private repo)"
+    else
+      echo "[cgc-db] $_d · exclude submodule from octocode walk: $_p"
+    fi
   done
 }
 
@@ -568,7 +572,11 @@ smart_noindex() {
     [ -n "$_p" ] || continue
     grep -qxF "$_p" "$_nx" 2>/dev/null || printf '%s\n' "$_p" >> "$_nx"
   done
-  echo "[cgc-db] $_d · smart-noindex auto-excluded binary-heavy dirs: $(printf '%s' "$_hits" | tr '\n' ' ')"
+  if cgc_repo_is_private "$(basename "$_d")"; then
+    echo "[cgc-db] $_d · smart-noindex auto-excluded $(printf '%s\n' "$_hits" | grep -c .) binary-heavy dir(s) (names withheld: private repo)"
+  else
+    echo "[cgc-db] $_d · smart-noindex auto-excluded binary-heavy dirs: $(printf '%s' "$_hits" | tr '\n' ' ')"
+  fi
 }
 
 # Propagate the freshly-pushed DB to the DEPLOYED consumer: SSH to the deploy
@@ -1460,6 +1468,52 @@ octo_log_digest() { # $1 = octocode log file, $2 = max lines to print
     END { s = k - n + 1; if (s < 1) s = 1; for (i = s; i <= k; i++) print l[i]; if (prog) print "[cgc-db] last octocode progress: " prog }'
 }
 
+# PUBLIC-LOG REDACTION FOR PRIVATE REPOS. The workflow that runs this script lives in a
+# PUBLIC repository, so its Actions logs are public. octocode prints one line per file it
+# touches (paths, and in the graphrag phase exported symbols and AI descriptions), and the
+# digest above replays the last 40-60 of them. For a repo listed in
+# .runtime.octocode.private_repos that published private paths and content (run
+# 37843203892: cloud-data-my-ai-memory's backlog paths and export strings). For those repos
+# every log line that carries repo content goes through octo_log_redact instead: only
+# count-shaped summary lines survive, warnings keep their class but lose their detail, and
+# the rest is withheld with a count. Fail-safe: an unreadable build.json or a jq error
+# counts as PRIVATE. CGC_LOG_REDACT=1 forces redaction for every repo.
+cgc_repo_is_private() { # $1 = local repo name -> rc 0 = treat as private (redact)
+  [ "${CGC_LOG_REDACT:-0}" = "1" ] && return 0
+  [ -n "${1:-}" ] || return 0
+  _crp_rc=0
+  jq -e --arg r "$1" '(.runtime.octocode.private_repos // []) | index($r) != null' "$BJ" >/dev/null 2>&1 || _crp_rc=$?
+  case "$_crp_rc" in 0) return 0 ;; 1) return 1 ;; *) return 0 ;; esac
+}
+
+octo_log_redact() { # stdin = octocode log lines -> stdout = path-free, content-free summary
+  awk '
+    /^\[cgc-db\] last octocode progress: Indexing: [0-9]+(\/[0-9]+)? files( \([0-9]+%\))?$/ { print; next }
+    /^✓ Indexing complete! [0-9]+ of [0-9]+ files processed(, GraphRAG: [0-9]+ blocks)?$/ { print; next }
+    /^✅ Indexed [0-9]+ commits$/ { print; next }
+    /^📊 Loaded metadata for [0-9]+ files from database$/ { print; next }
+    /^Info: AI analyzing [0-9]+ files for architectural relationships$/ { print; next }
+    /^🔄 (Updating|Applying AI descriptions to) [0-9]+ (pending )?nodes/ { print; next }
+    /^(Warning|Error): / {
+      c = $0; sub(/^(Warning|Error): /, "", c); k = substr($0, 1, index($0, ":") - 1)
+      sub(/:.*/, "", c)
+      if (c ~ /^[A-Za-z ]+$/) print k ": " c " [detail withheld: private repo]"
+      else print k ": [withheld: private repo]"
+      next
+    }
+    NF { w++ }
+    END { if (w) print "[cgc-db] " w " octocode line(s) withheld from this public log (private repo: they name files or carry content)" }'
+}
+
+# Digest for the log of repo $3: the plain digest, redacted when $3 is private.
+octo_log_report() { # $1 = octocode log file, $2 = max lines, $3 = repo
+  if cgc_repo_is_private "$3"; then
+    octo_log_digest "$1" "$2" | octo_log_redact
+  else
+    octo_log_digest "$1" "$2"
+  fi
+}
+
 # After a graphrag-phase index, prove the LLM pass contributed. Structural extraction
 # yields imports / calls / references / sibling_module / parent_module / child_module
 # / contains; only the LLM prompt emits configures / factory_creates /
@@ -1486,7 +1540,12 @@ assert_llm_graph() { # $1 = repo dir, $2 = repo name → rc 1 when no LLM-derive
     return 0
   fi
   echo "::error::[cgc-db] $2 · graphrag phase produced NO LLM-derived relationship across ${_alg_nodes:-?} nodes (types present: ${_alg_types:-none}) — every LLM reply was discarded (empty or unparseable), the silent failure of 2026-08-24; refusing to publish a structural-only graph as a graphrag checkpoint"
-  printf '%s\n' "$_alg_ov" | tail -20
+  # The overview names nodes, so a private repo's stays out of the public log.
+  if cgc_repo_is_private "$2"; then
+    echo "[cgc-db] $2 · graphrag overview withheld (private repo)"
+  else
+    printf '%s\n' "$_alg_ov" | tail -20
+  fi
   return 1
 }
 
@@ -1819,7 +1878,7 @@ for r in $REPOS; do
     # is fine, advancing the manifest is the lie — so it takes the same treatment.
     _noop_index=0
     grep -qE 'Indexing complete!.*0 of 0 files processed' "$_log" && _noop_index=1
-    octo_log_digest "$_log" 40; rm -f "$_log"
+    octo_log_report "$_log" 40 "$r"; rm -f "$_log"
     # graphrag phase only: no LLM-derived edges = no checkpoint (see assert_llm_graph).
     if [ "$USE_LLM" = "true" ]; then assert_llm_graph "$d" "$r" || exit 1; fi
     if [ "$USE_LLM" = "true" ] && [ -n "${_proj_resolved:-}" ] && [ "${_files:-0}" -ge 30 ] && ! graph_nodes_present "$_proj_resolved"; then
@@ -1838,7 +1897,7 @@ for r in $REPOS; do
     [ -n "$CHUNK_STATUS" ] && echo "[cgc-db] $r · not converged this run: $(printf '%s' "$CHUNK_STATUS" | jq -r '"\(.done)/\(.total) done, \(.dirty) dirty, next chunk \(.chunk)"') — completed chunks are durable"
     echo "::warning::[cgc-db] $r is STALE in the ${MANIFEST_PHASE:-default} index: the slice of ${REPO_TIMEOUT_EFF}m expired mid-index, so the DB stays at ${last:-no indexed commit} while origin/main is at $cur. Partial progress is published and the next run resumes; every run until it converges repeats this warning."
     STALE_REPOS="$STALE_REPOS $r"
-    octo_log_digest "$_log" 40; rm -f "$_log"
+    octo_log_report "$_log" 40 "$r"; rm -f "$_log"
     N_TIMEOUT=$(( N_TIMEOUT + 1 ))
     # PUBLISH the partial index, but do NOT advance the manifest. Those two are separate
     # decisions and conflating them is what made the outage permanent: on timeout the
@@ -1876,7 +1935,7 @@ for r in $REPOS; do
     continue
   else
     echo "::error::octocode index FAILED for $r (rc=$_rc) — aborting BEFORE package/push so no no-op DB is published:"
-    octo_log_digest "$_log" 60; rm -f "$_log"; exit 1
+    octo_log_report "$_log" 60 "$r"; rm -f "$_log"; exit 1
   fi
 
   # Record the indexed commit in the DB home (travels via package/pull), THEN
