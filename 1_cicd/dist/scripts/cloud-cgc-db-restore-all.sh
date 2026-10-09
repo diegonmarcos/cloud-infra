@@ -532,19 +532,31 @@ lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir
     # With a bare hex set, tr shreds ".lance" into ".", "a", "ce" and the grep below
     # matches nothing, so EVERY table reads as clean: the check silently inverts
     # into a no-op. cgc-db-lance-integrity.test.sh pins this.
-    for _ldt_ref in $(tr -c '0-9a-f.ln' '\n' < "$_ldt_t/_versions/$_ldt_m" 2>/dev/null \
-                      | grep -E '[0-9a-f]{32,}\.lance$' || true); do
-      _ldt_hit=0
-      for _ldt_f in "$_ldt_t"/data/*.lance; do
-        [ -e "$_ldt_f" ] || continue   # empty data/ leaves the glob unexpanded
-        # Compare by TAIL, never by equality: the protobuf length byte in front
-        # of the name is itself a hex character, so $_ldt_ref carries one junk
-        # leading char. A suffix test is also length-agnostic, so a future lance
-        # fragment-id width cannot silently turn this check into a no-op.
-        case "$_ldt_ref" in *"${_ldt_f##*/}") _ldt_hit=1; break ;; esac
+    #
+    # ONE awk pass per table: data/ names go into a hash set ("D" lines, emitted
+    # first), then each manifest reference ("R" lines) is tested against it. The
+    # old shell loop compared every reference with every data file -- O(refs x
+    # fragments) -- and octocode writes one fragment per file batch, so
+    # cloud-u-android's file_metadata.lance (15.5k refs x 15.9k fragments) took
+    # ~57 min PER CALL on a GHA runner, three calls per run (#888).
+    # Match by TAIL, never by equality: the protobuf length byte in front of the
+    # name is itself a hex character, so a reference carries one junk leading
+    # char. Every suffix of the reference is looked up, so the test stays
+    # length-agnostic and a future lance fragment-id width cannot silently turn
+    # it into a no-op.
+    { for _ldt_f in "$_ldt_t"/data/*.lance; do
+        [ -e "$_ldt_f" ] && printf 'D %s\n' "${_ldt_f##*/}"   # empty data/ leaves the glob unexpanded
       done
-      [ "$_ldt_hit" = 1 ] || { printf '%s\n' "$_ldt_t"; break; }
-    done
+      tr -c '0-9a-f.ln' '\n' < "$_ldt_t/_versions/$_ldt_m" 2>/dev/null \
+        | grep -E '[0-9a-f]{32,}\.lance$' | sed 's/^/R /'
+    } | awk '
+      $1 == "D" { have[$2] = 1; next }
+      $1 == "R" {
+        hit = 0
+        for (i = 1; i <= length($2); i++) if ((substr($2, i)) in have) { hit = 1; break }
+        if (!hit) { torn = 1; exit }
+      }
+      END { exit torn ? 0 : 1 }' && printf '%s\n' "$_ldt_t"
   done
   :
 }

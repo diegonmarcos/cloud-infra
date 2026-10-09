@@ -397,6 +397,45 @@ else
   fi
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 14. THE SCAN MUST BE LINEAR (#888). octocode appends one tiny fragment per file
+#     batch, so a big repo's file_metadata.lance holds tens of thousands of them:
+#     cloud-u-android's image of 2026-10-09 had 15914 fragments named by a 15568-
+#     reference manifest. The old check compared every reference with every data
+#     file in a shell loop -- ~57 min PER CALL on a GHA runner (run 37929244331:
+#     15:29->16:26 after the restore, 18:26->19:23 and 19:24->20:21 before each
+#     publish), three calls per run, more than the index itself got. 1500
+#     fragments take that loop ~35s in bash; a hash-set pass takes milliseconds.
+#     Both copies run against the same table, under a hard timeout so the old
+#     shape fails here instead of hanging the job.
+SC="$WORK/scale"; ST="$SC/repo/storage/file_metadata.lance"
+mkdir -p "$ST/_versions" "$ST/data"
+awk 'BEGIN { srand(7); for (i = 1; i <= 1500; i++) { h = ""; for (j = 0; j < 24; j++) h = h sprintf("%x", int(rand() * 16)); printf "%026d%s.lance\n", i, h } }' > "$WORK/scale.names"
+( cd "$ST/data" && xargs touch < "$WORK/scale.names" )
+awk 'BEGIN { printf "LANC" } { printf "\070%s%c", $0, 0 }' "$WORK/scale.names" > "$ST/_versions/$V_NEW"
+for _sc_name in update.sh restore-all.sh; do
+  case "$_sc_name" in update.sh) _sc_fn="$FN" ;; *) _sc_fn="$FN_RA" ;; esac
+  [ -n "$_sc_fn" ] || { bad "$_sc_name: no lance_dangling_tables() to time"; continue; }
+  _sc_t0=$(date +%s)
+  _sc_out=$(timeout 15 bash -c "$FN_NEWEST
+$_sc_fn
+lance_dangling_tables \"\$1\"" _ "$SC"); _sc_rc=$?
+  _sc_dt=$(( $(date +%s) - _sc_t0 ))
+  if [ "$_sc_rc" = 124 ]; then
+    bad "$_sc_name: integrity scan of a 1500-fragment table did not finish in 15s -- it is quadratic again, and cloud-u-android's 15.9k-fragment table would cost ~57 min per call"
+  elif [ -n "$_sc_out" ]; then
+    bad "$_sc_name: flagged a healthy 1500-fragment table: [$_sc_out]"
+  else
+    ok "$_sc_name: 1500-fragment healthy table scanned clean in ${_sc_dt}s"
+  fi
+done
+# ...and the fast path still catches one missing fragment among 1500.
+rm -f "$ST/data/$(sed -n 777p "$WORK/scale.names")"
+case "$(lance_dangling_tables "$SC")" in
+  *"file_metadata.lance"*) ok "a single missing fragment among 1500 is still reported" ;;
+  *) bad "missed a single absent fragment in a 1500-fragment table" ;;
+esac
+
 echo
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ] || exit 1
