@@ -1561,7 +1561,14 @@ CHUNK_N_DEFAULT="${CGC_CHUNK_FILES:-$(jq -r --arg p "${MANIFEST_PHASE:-default}"
 CHUNK_MIN=$(jq -r '.runtime.octocode.update.chunk.min // 100' "$BJ")
 CHUNK_MAX=$(jq -r '.runtime.octocode.update.chunk.max // 20000' "$BJ")
 CHUNK_STALE_ALERT=$(jq -r '.runtime.octocode.update.chunk.stale_alert_runs // 6' "$BJ")
-CHUNK_PUBLISH_RESERVE_MIN="${CGC_PUBLISH_RESERVE_MIN:-$(jq -r '.runtime.octocode.update.chunk.publish_reserve_min // 40' "$BJ")}"
+# Reserve for the publish that follows a window, used until this run has measured one.
+# 40 was sized to the ~58-min publishes of run 37929244331, which were the quadratic
+# lance_dangling_tables scan, not the push: package + build + push of cloud-u-android's
+# 1G home measured 60s. 15 covers a several-GB home on a slow registry day (#888).
+CHUNK_PUBLISH_RESERVE_MIN="${CGC_PUBLISH_RESERVE_MIN:-$(jq -r '.runtime.octocode.update.chunk.publish_reserve_min // 15' "$BJ")}"
+# Fraction (percent) of a slice a rate-sized window may plan to use; the rest absorbs
+# per-file variance so the window completes instead of timing out (#888).
+CHUNK_FILL_PCT="${CGC_CHUNK_FILL_PCT:-$(jq -r '.runtime.octocode.update.chunk.fill_pct // 80' "$BJ")}"
 CHUNK_MODE=0
 if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && [ -n "$MANIFEST_PHASE" ] \
    && [ "${CHUNK_N_DEFAULT:-0}" -gt 0 ] 2>/dev/null && [ "${CGC_CHUNK:-1}" != "0" ]; then
@@ -1619,7 +1626,20 @@ chunk_index_repo() {
       echo "[cgc-db] $_cr_r · chunk $_cr_i: only ${_cr_slice}m usable — stopping here, the next run continues"
       _rc=124; break
     fi
-    chunk_plan "$_cr_d" "$_cr_sf_stage" "$_cr_head" "$_cr_n" "$_cr_allow" "$_cr_o"
+    # Size the window to the slice (#888). A fixed chunk that cannot finish in what is
+    # left of the budget times out, and a timed-out window keeps nothing: run 37929244331
+    # would have spent its second slice on a 3000-file window that needed 120m in 109m.
+    # Once this repo+phase has a measured rate (ms per new-work file, kept in the chunk
+    # state across runs), plan only what fits in CHUNK_FILL_PCT of the slice.
+    _cr_plan_n="$_cr_n"
+    _cr_mspf=$(chunk_state_read "$_cr_sf_stage" | jq -r '.ms_per_file // 0')
+    if [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null && [ -z "${CGC_CHUNK_FILES:-}" ]; then
+      _cr_plan_n=$(( _cr_slice * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
+      [ "$_cr_plan_n" -lt "$CHUNK_MIN" ] && _cr_plan_n="$CHUNK_MIN"
+      [ "$CHUNK_MAX" -gt 0 ] && [ "$_cr_plan_n" -gt "$CHUNK_MAX" ] && _cr_plan_n="$CHUNK_MAX"
+      echo "[cgc-db] $_cr_r · chunk $_cr_i sized to the slice: ${_cr_plan_n} files at ${_cr_mspf}ms/file in ${CHUNK_FILL_PCT}% of ${_cr_slice}m"
+    fi
+    chunk_plan "$_cr_d" "$_cr_sf_stage" "$_cr_head" "$_cr_plan_n" "$_cr_allow" "$_cr_o"
     if [ ! -s "$_cr_o/next" ]; then
       chunk_exclude_clear "$_cr_d"
       if chunk_converged "$_cr_o/state" "$_cr_o/indexable" ""; then
@@ -1641,22 +1661,36 @@ chunk_index_repo() {
       [ -d "$_cr_gm" ] && rm -rf "${_cr_gm:?}"
     done
     echo "[cgc-db] $_cr_r · chunk $_cr_i: $(wc -l < "$_cr_o/next" | tr -d ' ') new-work files in a $(wc -l < "$_cr_o/window" | tr -d ' ')-file window, slice ${_cr_slice}m"
+    _cr_nn=$(wc -l < "$_cr_o/next" | tr -d ' ')
     _cr_t0=$(date +%s); _rc=0
     ( cd "$_cr_d" && timeout "${_cr_slice}m" octocode index ) >"$_log" 2>&1 || _rc=$?
     _cr_dt=$(( $(date +%s) - _cr_t0 ))
     chunk_exclude_clear "$_cr_d"
     if [ "$_rc" = "124" ]; then
       _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_slice * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
-      jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_o/state0" > "$_cr_sf_stage"
+      # The rate was too optimistic: double it so the next sized window is half as big.
+      jq --argjson n "$_cr_n" '.chunk = $n | if (.ms_per_file // 0) > 0 then .ms_per_file *= 2 else . end' "$_cr_o/state0" > "$_cr_sf_stage"
       echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i did not finish in ${_cr_slice}m — chunk size halved to $_cr_n for the next run; this window's files stay outstanding"
       break
     fi
     [ "$_rc" = "0" ] || break
     _cr_n=$(chunk_adapt "$_cr_n" ok "$_cr_dt" $(( _cr_slice * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
     chunk_commit "$_cr_o" "$_cr_head" "$_cr_sf_stage"
-    jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_sf_stage" > "$_cr_sf_stage.tmp" && mv "$_cr_sf_stage.tmp" "$_cr_sf_stage"
-    echo "[cgc-db] $_cr_r · chunk $_cr_i done in ${_cr_dt}s; next chunk size $_cr_n"
+    _cr_mspf=$(( _cr_dt * 1000 / (_cr_nn > 0 ? _cr_nn : 1) ))
+    jq --argjson n "$_cr_n" --argjson r "$_cr_mspf" '.chunk = $n | .ms_per_file = $r' "$_cr_sf_stage" > "$_cr_sf_stage.tmp" && mv "$_cr_sf_stage.tmp" "$_cr_sf_stage"
+    echo "[cgc-db] $_cr_r · chunk $_cr_i done in ${_cr_dt}s (${_cr_nn} files, ${_cr_mspf}ms/file); next chunk size $_cr_n"
     if chunk_converged "$_cr_sf_stage" "$_cr_o/indexable" ""; then _cr_conv=1; break; fi
+    # ONE publish per stop (#888). The outer loop publishes this repo as soon as we
+    # return, carrying the final state and status. If a publish here would leave no
+    # usable slice for another window, it would be followed straight away by that outer
+    # publish of the same index -- run 37929244331 paid 58m twice for exactly that. Stop
+    # now and let the outer publish be the only one. Same arithmetic as the top of the
+    # loop: after a publish of ~_cr_pub_s, the next slice is what remains minus another.
+    _cr_next=$(( BUDGET_MIN - ( $(date +%s) - START_TS ) / 60 - 2 * _cr_pub_s / 60 ))
+    if [ "$_cr_next" -lt "${CGC_MIN_SLICE_MIN:-20}" ]; then
+      echo "[cgc-db] $_cr_r · chunk $((_cr_i + 1)) would get only ${_cr_next}m after a checkpoint — stopping here; the final publish carries chunk $_cr_i, the next run continues"
+      _rc=124; break
+    fi
     # Durable progress before the next window: resolve this repo's project dir, put the
     # state inside it and publish. A forced run publishes to its partial tag only.
     if [ -z "${_proj_resolved:-}" ]; then

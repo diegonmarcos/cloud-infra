@@ -64,14 +64,22 @@ chunk_exclude_clear() {  # $1 = repo dir
 # Indexable files, sorted (LC_ALL=C): tracked, not a gitlink, not matched by the
 # root .noindex or by any git ignore source. That is what octocode's walker can
 # reach. Run it with our window block cleared, or it would hide the remainder.
+#
+# The two ignore sources are asked SEPARATELY and unioned. octocode registers
+# .noindex as a custom ignore file (WalkBuilder::add_custom_ignore_filename), and
+# the ignore crate ranks custom ignore files above every .gitignore, so a .noindex
+# match wins even against a gitignore `!` re-include. Passed to git as one
+# --exclude-from list it ranked BELOW the .gitignore files instead: cloud-u-android's
+# root `!ab_cloud-libs-shared/libs/**` re-included 1151 files .noindex excludes
+# (png, dict, fonts), which counted as indexable work octocode never walks (#888).
 chunk_indexable() {  # $1 = repo dir → stdout: one path per line
   _ci_d="$1"
   _ci_ign=$(mktemp)
-  _ci_nx=""
-  [ -f "$_ci_d/.noindex" ] && _ci_nx="--exclude-from=$_ci_d/.noindex"
-  # shellcheck disable=SC2086
-  git -C "$_ci_d" -c core.quotepath=off ls-files -c -i --exclude-standard $_ci_nx 2>/dev/null \
-    | LC_ALL=C sort -u > "$_ci_ign"
+  {
+    git -C "$_ci_d" -c core.quotepath=off ls-files -c -i --exclude-standard 2>/dev/null
+    [ -f "$_ci_d/.noindex" ] && \
+      git -C "$_ci_d" -c core.quotepath=off ls-files -c -i --exclude-from="$_ci_d/.noindex" 2>/dev/null
+  } | LC_ALL=C sort -u > "$_ci_ign"
   git -C "$_ci_d" -c core.quotepath=off ls-files -s 2>/dev/null \
     | awk '$1 != "160000" { sub(/^[^\t]*\t/, ""); print }' \
     | LC_ALL=C sort -u | LC_ALL=C comm -23 - "$_ci_ign"

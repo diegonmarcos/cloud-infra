@@ -90,6 +90,17 @@ run_suite() {
     done
     [ "$(jq '.done|length' "$S")" = "$(wc -l < "$O/indexable")" ] || f "converged with done != indexable"
 
+    # 7 (#888): .noindex outranks a gitignore re-include, as in octocode's walker (the
+    # ignore crate ranks custom ignore files above .gitignore). cloud-u-android's root
+    # `!ab_cloud-libs-shared/libs/**` re-included 1151 .noindex'd files into the plan.
+    P="$WORK/prec$RANDOM"; mkdir -p "$P/libs/k"; git init -q "$P"
+    git -C "$P" config user.email t@t; git -C "$P" config user.name t
+    printf 'libs/**/*.png\n!libs/**\n' > "$P/.gitignore"; printf '*.png\n' > "$P/.noindex"
+    echo a > "$P/libs/k/a.kt"; echo b > "$P/libs/k/b.png"
+    git -C "$P" add -f -A && git -C "$P" commit -qm p
+    chunk_indexable "$P" | grep -qxF 'libs/k/b.png' && f ".noindex'd file counted indexable because a .gitignore re-include outranked it"
+    chunk_indexable "$P" | grep -qxF 'libs/k/a.kt' || f "re-included source file dropped"
+
     # adapt
     [ "$(chunk_adapt 2000 timeout 0 100 100 20000)" = 1000 ] || f "timeout must halve"
     [ "$(chunk_adapt 2000 ok 10 100 100 20000)" = 4000 ] || f "fast chunk must double"
@@ -118,5 +129,6 @@ mutate no-dirty-from-diff     's|LC_ALL=C sort -u "\$_cp_o/dirty0" "\$_cp_o/chan
 mutate deleted-stays-done     's|LC_ALL=C comm -12 "\$_cp_o/done0" "\$_cp_o/indexable" > "\$_cp_o/done"|cp "$_cp_o/done0" "$_cp_o/done"|'
 mutate allowlist-ignored      's|if \[ -n "\$_cp_allow" \]; then|if false; then|'
 mutate block-not-cleared      's|^  chunk_exclude_clear "\$_cp_d"$|  :|'
+mutate noindex-below-gitignore 's|ls-files -c -i --exclude-from=|ls-files -c -i --exclude-standard --exclude-from=|'
 mutate timeout-grows          's|timeout) _ca_n=\$(( _ca_n / 2 ))|timeout) _ca_n=$(( _ca_n * 2 ))|'
 echo PASS
