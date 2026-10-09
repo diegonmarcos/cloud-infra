@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20715,
+    "files": 20788,
     "by_lang": {
       "py": 118,
-      "sh": 425,
-      "kotlin": 10568,
+      "sh": 431,
+      "kotlin": 10635,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "script": 217,
-      "shell": 320,
+      "shell": 326,
       "java": 623,
       "entrypoint": 23,
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10565,
+      "kotlin": 10632,
       "python": 37,
       "rust-module": 87,
       "file": 2255,
@@ -5882,15 +5882,16 @@
         "androidx.compose.ui.text.style.TextAlign",
         "androidx.compose.ui.unit.dp",
         "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.profile.AccountData",
-        "com.diegonmarcos.superapp.profile.ProfileFragment"
+        "com.diegonmarcos.superapp.profile.AccountData"
       ],
       "symbols": [
         "installed(ctx: Context)",
         "open(ctx: Context)",
+        "openOrInstall(ctx: Context)",
         "page()",
         "onCreate(state: Bundle?)",
         "onCreateView(inflater: LayoutInflater, parent: ViewGroup?, state: Bundle?)",
+        "InstallCloudAccount()",
         "OpenCloudAccount()",
         "class AccountHandoff",
         "class Page"
@@ -5961,6 +5962,7 @@
         "pageIdOf(f: Fragment)",
         "onCreate(state: Bundle?)",
         "onCreateView(inflater: LayoutInflater, parent: ViewGroup?, state: Bundle?)",
+        "InstallCloudStore()",
         "OpenCloudStore(tab: String)",
         "class CloudStoreHandoff",
         "class Route",
@@ -8937,10 +8939,16 @@
         "collapsed(s: Snapshot)",
         "expanded(s: Snapshot)",
         "actions(s: Snapshot)",
+        "perSim(s: Snapshot)",
+        "monthEstimate(monthToDate: Long, s: Snapshot)",
+        "avg30Estimate(last30: Long, s: Snapshot)",
+        "estLine(monthToDate: Long, last30: Long, s: Snapshot)",
+        "estPair(monthToDate: Long, last30: Long, s: Snapshot)",
+        "monthPart(used: Long, s: Snapshot)",
+        "avgPart(last30: Long, s: Snapshot)",
         "simLines(s: Snapshot)",
         "simName(x: Sim)",
         "forecastBytes(used: Long, elapsedMs: Long, monthLengthMs: Long)",
-        "forecast(used: Long, s: Snapshot)",
         "split(w: Window)",
         "bytes(n: Long)",
         "class DataBadgeModel",
@@ -10040,6 +10048,7 @@
       "imports": [
         "android.content.Context",
         "com.diegonmarcos.superapp.core.FleetAlerts",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
         "org.json.JSONArray",
         "org.json.JSONObject",
         "java.util.UUID"
@@ -10051,6 +10060,7 @@
         "all(ctx: Context)",
         "save(ctx: Context, list: List<Alert>)",
         "add(ctx: Context, app: String, a: FleetAlerts.Alert, now: Long = System.currentTimeMillis()",
+        "dropStoreAlerts(ctx: Context)",
         "withdraw(ctx: Context, app: String, dedupeKey: String)",
         "remove(ctx: Context, id: String)",
         "clear(ctx: Context, app: String? = null)",
@@ -10361,7 +10371,8 @@
         "android.net.Uri",
         "android.os.Bundle",
         "android.util.Log",
-        "com.diegonmarcos.superapp.core.FleetAlerts"
+        "com.diegonmarcos.superapp.core.FleetAlerts",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate"
       ],
       "symbols": [
         "onCreate()",
@@ -10743,28 +10754,28 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/StoreBadgeNotifier.kt",
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/StoreRetirement.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "StoreBadgeNotifier"
+        "StoreRetirement"
       ],
       "imports": [
-        "android.app.NotificationChannel",
         "android.app.NotificationManager",
-        "android.app.PendingIntent",
         "android.content.Context",
         "android.content.Intent",
         "android.os.Build",
-        "androidx.core.app.NotificationCompat",
-        "com.diegonmarcos.superapp.MainActivity",
-        "com.diegonmarcos.superapp.R"
+        "android.util.Log",
+        "com.diegonmarcos.superapp.appstore.ConstellationWorker",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
+        "com.diegonmarcos.superapp.updater.BatchForeground",
+        "com.diegonmarcos.superapp.updater.BatchForegroundService",
+        "com.diegonmarcos.superapp.updater.PackageInstallerReceiver",
+        "com.diegonmarcos.superapp.updater.Updater"
       ],
       "symbols": [
-        "nm(ctx: Context)",
-        "badge()",
-        "update(ctx: Context, pending: Int)",
-        "class StoreBadgeNotifier"
+        "run(ctx: Context)",
+        "class StoreRetirement"
       ]
     },
     {
@@ -11517,9 +11528,9 @@
         "com.diegonmarcos.superapp.battery.BatterySessionWorker",
         "com.diegonmarcos.superapp.search.SearchOpener",
         "com.diegonmarcos.superapp.network.WgState",
-        "com.diegonmarcos.superapp.profile.BusinessCardFragment",
         "com.diegonmarcos.superapp.shell.SuppressVerticalSwipe",
-        "com.diegonmarcos.superapp.launcher.LauncherToolbarFx"
+        "com.diegonmarcos.superapp.launcher.LauncherToolbarFx",
+        "com.diegonmarcos.superapp.launcher.LauncherNavController"
       ],
       "symbols": [
         "onAppTabPicked(entry: com.diegonmarcos.superapp.apptabs.AppTabPrefs.Entry)",
@@ -13824,8 +13835,44 @@
         "posted()",
         "isSummary(n: Notification)",
         "collectorCalledBy(pkg: String)",
-        "storeBadge()",
         "class NotifyGroupsAlertsTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/StoreNotifyGateTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreNotifyGateTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.content.Context",
+        "androidx.core.app.NotificationCompat",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.core.FleetAlerts",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
+        "com.diegonmarcos.superapp.updater.BatchForeground",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.shadow.api.Shadow",
+        "org.robolectric.shadows.ShadowContentProvider"
+      ],
+      "symbols": [
+        "setUp()",
+        "posted()",
+        "class StoreNotifyGateTest"
       ]
     },
     {
@@ -14064,15 +14111,14 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/AccountUploadTest.kt",
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/DeviceProfileTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "AccountUploadTest"
+        "DeviceProfileTest"
       ],
       "imports": [
         "android.app.Application",
-        "com.diegonmarcos.superapp.profile.AccountUpload.Result",
         "org.json.JSONObject",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertFalse",
@@ -14083,43 +14129,16 @@
         "org.robolectric.annotation.Config"
       ],
       "symbols": [
-        "call(method: String, url: String, headers: Map<String, String>, body: String?)",
-        "class AccountUploadTest",
-        "class MockRemote"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/FleetCockpitViewTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "FleetCockpitViewTest"
-      ],
-      "imports": [
-        "android.app.Application",
-        "android.graphics.drawable.GradientDrawable",
-        "android.view.ContextThemeWrapper",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.test.core.app.ApplicationProvider",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.launcher.Sections",
-        "com.diegonmarcos.superapp.ui.StatusLight",
-        "org.json.JSONObject",
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertNotNull",
-        "org.junit.Assert.assertTrue",
-        "org.junit.Test",
-        "org.junit.runner.RunWith",
-        "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.annotation.Config"
-      ],
-      "symbols": [
-        "all(v: View)",
-        "build(layout: VaultCockpit.Layout)",
-        "class FleetCockpitViewTest"
+        "settings(password: Any?)",
+        "build_refuses_a_secret_literal_naming_the_key()",
+        "mask_replaces_the_literal_with_a_vault_reference_and_then_builds()",
+        "parse_refuses_a_secret_literal_and_a_wrong_kind()",
+        "empty_and_null_secrets_are_not_literals()",
+        "plan_carries_config_keys_only()",
+        "key_names_never_values()",
+        "class key",
+        "class keys",
+        "class DeviceProfileTest"
       ]
     },
     {
@@ -14159,6 +14178,42 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/ForgeClientTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ForgeClientTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "com.diegonmarcos.superapp.profile.ForgeClient.Auth",
+        "com.diegonmarcos.superapp.profile.ForgeClient.Forge",
+        "com.diegonmarcos.superapp.profile.ForgeClient.Result",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "call(method: String, url: String, headers: Map<String, String>, body: String?)",
+        "github_sends_bearer_and_round_trips()",
+        "gitea_sends_token_scheme_and_posts_a_new_file()",
+        "wrong_scheme_is_refused()",
+        "stale_sha_refetches_and_retries_once()",
+        "stale_twice_fails_named_after_one_retry()",
+        "token_never_in_a_url_or_a_reason()",
+        "no_repo_and_no_token_are_refused_without_a_request()",
+        "decl_parses_null_repo_and_schemes()",
+        "put_dry_shape_is_the_same_body_on_both_bases()",
+        "class ForgeClientTest",
+        "class FakeForge"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/profile/InfoMaskTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -14192,12 +14247,6 @@
       ],
       "imports": [
         "android.app.Application",
-        "android.view.ContextThemeWrapper",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.TextView",
-        "androidx.test.core.app.ApplicationProvider",
-        "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.cloudlib.auth.ProfileJourney",
         "com.diegonmarcos.cloudlib.auth.ProfileJourney.Lock",
         "com.diegonmarcos.cloudlib.auth.ProfileJourney.Phase",
@@ -14205,7 +14254,6 @@
         "com.diegonmarcos.cloudlib.auth.ProfileJourney.Step",
         "com.diegonmarcos.cloudlib.auth.SignIn",
         "com.diegonmarcos.cloudlib.auth.UserRegistry",
-        "com.diegonmarcos.superapp.ui.StatusLight",
         "org.json.JSONArray",
         "org.json.JSONObject",
         "org.junit.Assert.assertEquals",
@@ -14219,9 +14267,6 @@
       ],
       "symbols": [
         "registry()",
-        "build()",
-        "cards(root: View)",
-        "walk(v: View)",
         "class ProfileJourneyTest"
       ]
     },
@@ -16255,54 +16300,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/test/test-profile-file-import.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "ok()",
-        "bad()",
-        "codeof()",
-        "checks()",
-        "p()",
-        "x()",
-        "scratch()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "bad()",
-        "codeof()",
-        "checks()",
-        "p()",
-        "x()",
-        "scratch()"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/test/test-profile-journey.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "ok()",
-        "bad()",
-        "codeof()",
-        "waysin()",
-        "lib_dead()",
-        "t4()",
-        "wizard_gone()"
-      ],
-      "imports": [],
-      "symbols": [
-        "ok()",
-        "bad()",
-        "codeof()",
-        "waysin()",
-        "lib_dead()",
-        "t4()",
-        "wizard_gone()"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/test/test-profile-mesh-mail-apply-all.sh",
       "lang": "sh",
       "role": "shell",
@@ -17283,13 +17280,16 @@
         "setup(ctx: Context, q: Map<String, String>, m: AccountModel)",
         "handle(ctx: Context, op: String, q: Map<String, String>)",
         "importBundle(ctx: Context, text: String, q: Map<String, String>, m: AccountModel)",
+        "forge(ctx: Context, q: Map<String, String>)",
         "fleet(ctx: Context)",
         "target(m: AccountModel, q: Map<String, String>, side: AccountStore.Slot)",
         "totals(apps: JSONObject?)",
         "unmapped()",
         "done(line: String, m: AccountModel)",
         "profiles(m: AccountModel)",
-        "class AccountDebugApi"
+        "perms(ctx: Context, q: Map<String, String>)",
+        "class AccountDebugApi",
+        "class key"
       ]
     },
     {
@@ -17496,6 +17496,88 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountPages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccountPageTags",
+        "AccountDevice",
+        "AccountPlaceholderPage",
+        "AccountProfilePage",
+        "AccountConnectPage",
+        "AutoBackup",
+        "DebugApiSwitch",
+        "AccountSettingsPage"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Build",
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.input.PasswordVisualTransformation",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.SignInHost",
+        "com.diegonmarcos.cloudlib.auth.SignInResult",
+        "com.diegonmarcos.cloudlib.auth.SignInWays",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "com.diegonmarcos.superapp.settings.AccountVault",
+        "com.diegonmarcos.superapp.uikit.KitCard",
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader"
+      ],
+      "symbols": [
+        "way(kind: String)",
+        "placeholder(section: String, page: String)",
+        "id(ctx: Context)",
+        "setId(ctx: Context, id: String)",
+        "declared(ctx: Context)",
+        "jsonAt(ctx: Context, path: String)",
+        "Dense(text: String, secondary: Boolean = false, tag: String? = null)",
+        "Tile(label: String, value: String, modifier: Modifier, onClick: (()",
+        "Pill(label: String, tag: String, onClick: ()",
+        "AccountPlaceholderPage(section: String, page: String, task: String, body: (@Composable ()",
+        "AccountProfilePage(open: (section: String, page: String)",
+        "OriginPicker(tick: Int, changed: ()",
+        "AccountConnectPage()",
+        "launchWay(block: ()",
+        "onSignedIn(result: SignInResult)",
+        "mode(ctx: Context)",
+        "enabled(ctx: Context)",
+        "apply(ctx: Context)",
+        "AccountSettingsPage(version: String)",
+        "class AccountPageTags",
+        "class AccountDevice",
+        "class AutoBackup",
+        "class DebugApiSwitch"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountRuntime.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -17541,6 +17623,8 @@
         "fingerprint(v: String)",
         "push(ctx: Context, path: String, value: Any, server: JSONObject)",
         "applyAll(ctx: Context, section: VaultCockpit.Section, server: JSONObject)",
+        "applyKeyboard(ctx: Context, section: VaultCockpit.Section, server: JSONObject)",
+        "keyboardExport(server: JSONObject, lists: Map<String, String>)",
         "derivePublicKey(privateKey: String)",
         "profileField(p: ProfilePrefs, field: String)",
         "setProfileField(p: ProfilePrefs, field: String, value: String)",
@@ -17662,31 +17746,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountUpload.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AccountUpload"
-      ],
-      "imports": [
-        "org.json.JSONObject",
-        "java.net.HttpURLConnection",
-        "java.net.URL"
-      ],
-      "symbols": [
-        "call(method: String, url: String, headers: Map<String, String>, body: String?)",
-        "commit(target: Target, token: String, content: ByteArray, message: String, http: Http = UrlHttp)",
-        "reason(status: Int, body: String)",
-        "class AccountUpload",
-        "class Target",
-        "class Result",
-        "class Committed",
-        "class Failed",
-        "class Http",
-        "class UrlHttp"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountVaultTabs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -17751,85 +17810,126 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/BusinessCardFragment.kt",
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ConnectWays.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "BusinessCardFragment"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.account.R",
-        "android.graphics.Bitmap",
-        "android.graphics.BitmapFactory",
-        "android.graphics.Canvas",
-        "android.graphics.Color",
-        "android.graphics.Paint",
-        "android.graphics.Path",
-        "android.graphics.RectF",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment",
-        "com.google.zxing.BarcodeFormat",
-        "com.google.zxing.qrcode.QRCodeWriter",
-        "java.io.File"
-      ],
-      "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "loadBitmap(path: String)",
-        "circularBitmap(src: Bitmap, size: Int)",
-        "initialsBitmap(initials: String, size: Int)",
-        "showQrGallery()",
-        "qrBitmap(text: String, size: Int)",
-        "textRow(ctx: android.content.Context, text: String, styleRes: Int, alpha: Float = 1f)",
-        "keyValueRow(ctx: android.content.Context, key: String, value: String, clickUrl: String? = null)",
-        "spacer(ctx: android.content.Context, heightDp: Int)",
-        "dp(ctx: android.content.Context, v: Int)",
-        "newInstance()",
-        "class BusinessCardFragment"
-      ]
-    },
-    {
-      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/FleetCockpitView.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "FleetCockpitView"
+        "ConnectWays"
       ],
       "imports": [
         "android.content.Context",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.core.view.ViewCompat",
-        "androidx.core.view.accessibility.AccessibilityNodeInfoCompat",
+        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
+        "com.diegonmarcos.superapp.core.ConfigSyncClient",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.SignInResult",
+        "com.diegonmarcos.cloudlib.auth.UserRegistry",
+        "com.diegonmarcos.cloudlib.auth.VaultConnect",
+        "com.diegonmarcos.cloudlib.auth.VaultFile",
+        "com.diegonmarcos.superapp.account.BuildConfig",
         "com.diegonmarcos.superapp.account.R",
-        "com.diegonmarcos.superapp.ui.StatusLight"
+        "com.diegonmarcos.superapp.settings.AccountVault",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "org.json.JSONObject"
       ],
       "symbols": [
-        "hero(ctx: Context, title: String, subtitle: String, iconRes: Int)",
-        "card(ctx: Context, label: String, tag: String, iconRes: Int, toggleAction: String)",
-        "paint(light: TextView, state: StatusLight.State, rowLabel: String)",
-        "pill(ctx: Context, label: String, onClick: ()",
-        "lightView(ctx: Context)",
-        "badge(ctx: Context, iconRes: Int, sizeDp: Int, fill: Int, ink: Int)",
-        "surface(ctx: Context, fill: Int, hairline: Int)",
-        "dp(ctx: Context, v: Int)",
-        "class is",
-        "class FleetCockpitView",
-        "class Hero",
-        "class Card"
+        "handler(kind: String)",
+        "raw()",
+        "decl()",
+        "ways()",
+        "fail(line: String)",
+        "record(ctx: Context, o: Outcome)",
+        "lastFetch(ctx: Context)",
+        "land(ctx: Context, body: JSONObject, via: String)",
+        "fetchWith(ctx: Context, forgeId: String, token: String, via: String, file: Boolean)",
+        "fetchNow(ctx: Context)",
+        "ghLogin(ctx: Context, onPrompt: (code: String, page: String?)",
+        "ghPrompt(ctx: Context, code: String, page: String?)",
+        "pat(ctx: Context, token: String)",
+        "ssh(ctx: Context, keyText: String, passphrase: String)",
+        "giteaToken(ctx: Context, token: String)",
+        "importFile(ctx: Context, text: String)",
+        "signedIn(ctx: Context, result: SignInResult)",
+        "extractSshKey(text: String)",
+        "copySensitive(ctx: Context, label: String, text: String)",
+        "class ConnectWays",
+        "class Way",
+        "class Outcome",
+        "class Handler",
+        "class GhLogin",
+        "class Pat",
+        "class Ssh",
+        "class GiteaToken",
+        "class AutheliaWeb",
+        "class File",
+        "class Unwired"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/DeviceProfile.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DeviceProfile"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Build",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "secret(app: String, store: String, key: String)",
+        "vaultPath(app: String, store: String, file: String, key: String)",
+        "isLiteral(v: Any?)",
+        "walk(settings: JSONObject, f: (String, String, String, String, Any?)",
+        "secretViolations(settings: JSONObject, cls: SecretClass)",
+        "mask(settings: JSONObject, cls: SecretClass)",
+        "build(device: JSONObject, apps: JSONObject, settings: JSONObject, cls: SecretClass, perms: JSONObject = JSONObject()",
+        "parse(text: String, cls: SecretClass)",
+        "plan(profile: JSONObject, cls: SecretClass)",
+        "counts(profile: JSONObject)",
+        "manifestClass(ctx: Context)",
+        "capture(ctx: Context, deviceId: String, now: String = java.time.Instant.now()",
+        "text(profile: JSONObject)",
+        "class key",
+        "class DeviceProfile",
+        "class for",
+        "class SecretClass",
+        "class Parsed",
+        "class Ok",
+        "class Refused",
+        "class literal",
+        "class check",
+        "class keys"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/DeviceVault.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DeviceVault"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.settings.AccountVault",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "primary()",
+        "token(f: ForgeClient.Forge)",
+        "client(forgeId: String? = null)",
+        "credentials()",
+        "noForge()",
+        "fail(r: ForgeClient.Result.Failed)",
+        "devices()",
+        "backup(deviceId: String, dry: Boolean)",
+        "load(deviceId: String)",
+        "working()",
+        "setDefault(deviceId: String)",
+        "keyNames(settings: JSONObject)",
+        "class DeviceVault"
       ]
     },
     {
@@ -17912,6 +18012,51 @@
         "FleetSetupTab(model: AccountModel)",
         "go(only: Set<String>?)",
         "class FleetSetupTags"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ForgeClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ForgeClient"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL",
+        "java.net.URLEncoder"
+      ],
+      "symbols": [
+        "of(s: String)",
+        "contents(path: String)",
+        "forge(id: String?)",
+        "firstUsable()",
+        "devicePath(deviceId: String)",
+        "parse(o: JSONObject)",
+        "fromBuildConfig(b64: String)",
+        "call(method: String, url: String, headers: Map<String, String>, body: String?)",
+        "headers()",
+        "refQuery(ref: String)",
+        "get(path: String, ref: String)",
+        "list(dir: String, ref: String)",
+        "putShape(path: String, sha: String?, message: String, branch: String)",
+        "put(path: String, text: String, sha: String?, message: String, branch: String)",
+        "putOnce(path: String, text: String, sha: String?, message: String, branch: String)",
+        "exchange(method: String, url: String, body: String?)",
+        "reason(status: Int, body: String)",
+        "class ForgeClient",
+        "class Auth",
+        "class Forge",
+        "class Decl",
+        "class File",
+        "class Entry",
+        "class Result",
+        "class Ok",
+        "class Failed",
+        "class Http",
+        "class UrlHttp"
       ]
     },
     {
@@ -18016,114 +18161,122 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ProfileFragment.kt",
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/PermsPage.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "ProfileFragment"
+        "PermsPageTags",
+        "AccountPermsPage"
       ],
       "imports": [
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.EditText",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "androidx.compose.ui.platform.ComposeView",
-        "androidx.compose.ui.platform.ViewCompositionStrategy",
-        "androidx.compose.ui.viewinterop.AndroidView",
-        "androidx.fragment.app.Fragment",
-        "androidx.lifecycle.lifecycleScope",
-        "com.diegonmarcos.cloudlib.auth.AuthDeclaration",
-        "com.diegonmarcos.cloudlib.auth.ConfigArtifact",
-        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
-        "com.diegonmarcos.cloudlib.auth.SignIn",
-        "com.diegonmarcos.cloudlib.auth.SignInHost",
-        "com.diegonmarcos.cloudlib.auth.SignInResult",
-        "com.diegonmarcos.cloudlib.auth.SignInWays",
-        "com.diegonmarcos.cloudlib.auth.UserRegistry",
-        "com.diegonmarcos.cloudlib.auth.VaultConnect",
-        "com.diegonmarcos.superapp.account.R",
-        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
-        "com.diegonmarcos.superapp.ui.snack",
-        "com.diegonmarcos.superapp.uikit.kitComposeView",
-        "com.diegonmarcos.superapp.bottomnav.NavPage",
-        "com.diegonmarcos.superapp.bottomnav.PageTabsView",
+        "android.widget.Toast",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannel",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannels",
+        "com.diegonmarcos.superapp.uikit.KitCard",
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.launch",
         "kotlinx.coroutines.withContext"
       ],
       "symbols": [
-        "tabLabel(index: Int)",
-        "selectTab(id: String)",
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "hidden()",
-        "journeyState(ctx: android.content.Context)",
-        "ask(step: ProfileJourney.Step)",
-        "stepLabel(step: ProfileJourney.Step)",
-        "lockText(s: ProfileJourney.State, step: ProfileJourney.Step)",
-        "profilesText(peer: UserRegistry.Peer)",
-        "identityTag(id: UserRegistry.Identity)",
-        "summaries(s: ProfileJourney.State)",
-        "heroSummary(s: ProfileJourney.State)",
-        "paintJourney()",
-        "renderJourney(ctx: android.content.Context, into: LinearLayout)",
-        "connectDecl()",
-        "connectLines()",
-        "buildSignInStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
-        "buildWay( ctx: android.content.Context, s: ProfileJourney.State, way: Way, policy: List<String>, cell: LinearLayout, extras: LinearLayout, status: TextView, )",
-        "signInWay(ctx: android.content.Context, way: Way, providerIds: List<String>)",
-        "wayPill(ctx: android.content.Context, way: Way, onClick: ()",
-        "ghSignIn(way: Way, status: TextView)",
-        "ghPrompt(ctx: android.content.Context, status: TextView, code: String, page: String?)",
-        "lineHeld(ctx: android.content.Context, line: Line)",
-        "buildStoredBearer(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout, status: TextView)",
-        "buildWhoStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
-        "buildDeviceStep( ctx: android.content.Context, s: ProfileJourney.State, reg: UserRegistry.Registry, body: LinearLayout, )",
-        "buildGetStep(ctx: android.content.Context, s: ProfileJourney.State, body: LinearLayout)",
-        "renderRuntime(ctx: android.content.Context, into: LinearLayout)",
-        "export(name: String, text: String)",
-        "openRoute(route: String)",
-        "statusView(ctx: android.content.Context)",
-        "showMailCodeDialog()",
-        "tabStrip( ctx: android.content.Context, tabs: List<Tab>, )",
-        "show(index: Int)",
-        "fitToSection(index: Int)",
-        "mailConfirmationField(ctx: android.content.Context)",
-        "confirmMailCode()",
-        "vaultEndpoints()",
-        "vaultCredentialHeld(ctx: android.content.Context)",
-        "showVaultFetchDialog(via: String)"
+        "Mono(text: String, secondary: Boolean = false)",
+        "AccountPermsPage(go: (section: String, page: String)",
+        "work(block: suspend ()",
+        "ItemRow(item: PermsPlan.Item, busy: Boolean, channel: ShellChannel?, grant: (PermsPlan.Item)",
+        "class PermsPageTags"
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ProfileJourneyView.kt",
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/PermsPlan.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "ProfileJourneyView"
+        "PermsPlan"
       ],
       "imports": [
+        "android.accessibilityservice.AccessibilityService",
+        "android.app.AppOpsManager",
+        "android.app.admin.DeviceAdminReceiver",
+        "android.app.admin.DevicePolicyManager",
+        "android.content.ComponentName",
         "android.content.Context",
-        "android.graphics.Typeface",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "com.diegonmarcos.cloudlib.auth.ProfileJourney",
-        "com.diegonmarcos.superapp.ui.StatusLight"
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.content.pm.PermissionInfo",
+        "android.net.Uri",
+        "android.os.Build",
+        "android.os.PowerManager",
+        "android.provider.Settings",
+        "android.provider.Telephony",
+        "android.service.notification.NotificationListenerService",
+        "android.telecom.TelecomManager",
+        "com.diegonmarcos.superapp.adbdebug.PackageVerifier",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannel",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
       ],
       "symbols": [
-        "light(phase: ProfileJourney.Phase)",
-        "overall(s: ProfileJourney.State)",
-        "build( ctx: Context, heroTitle: String, heroSubtitle: String, heroIcon: Int, labels: Map<ProfileJourney.Step, String>, icons: Map<ProfileJourney.Step, Int>, toggleAction: String, )",
-        "paint( j: Journey, state: ProfileJourney.State, summaries: Map<ProfileJourney.Step, String>, heroSummary: String, )",
-        "choice(ctx: Context, text: String, selected: Boolean, onClick: ()",
-        "dp(ctx: Context, v: Int)",
-        "class ProfileJourneyView",
-        "class Journey"
+        "state()",
+        "json()",
+        "summary()",
+        "text()",
+        "strings(o: JSONObject?)",
+        "parse(perms: JSONObject?)",
+        "fromBuildConfig(b64: String)",
+        "fill(template: String, vars: Map<String, String>)",
+        "vars(item: Item)",
+        "profilePerms(profile: JSONObject?)",
+        "packages(ctx: Context, profile: JSONObject?)",
+        "installed(p: String)",
+        "services(ctx: Context, action: String, pkg: String)",
+        "receivers(ctx: Context, action: String, pkg: String)",
+        "dangerous(pm: PackageManager, perm: String)",
+        "appOpAllowed(ctx: Context, pkg: String, opStr: String?)",
+        "localRoleHolder(ctx: Context, short: String)",
+        "shell(ctx: Context, channel: ShellChannel?, key: String, item: Item)",
+        "read(ctx: Context, item: Item, channel: ShellChannel?)",
+        "plan(ctx: Context, profile: JSONObject?)",
+        "plan(ctx: Context, profile: JSONObject?, channel: ShellChannel?)",
+        "add(i: Item)",
+        "apply(ctx: Context, plan: Plan, channel: ShellChannel?)",
+        "applyOne(ctx: Context, item: Item, channel: ShellChannel?)",
+        "capture(ctx: Context, channel: ShellChannel? = null)",
+        "settingsIntent(item: Item)",
+        "class PermsPlan",
+        "class Kind",
+        "class Item",
+        "class App",
+        "class Plan",
+        "class Status",
+        "class Line",
+        "class Outcome",
+        "class Decl"
       ]
     },
     {
@@ -18176,51 +18329,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/QrGalleryDialog.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "QrGalleryDialog"
-      ],
-      "imports": [
-        "android.app.Dialog",
-        "android.content.Context",
-        "android.graphics.Bitmap",
-        "android.graphics.Color",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "android.widget.GridLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "com.google.zxing.BarcodeFormat",
-        "com.google.zxing.EncodeHintType",
-        "com.google.zxing.qrcode.QRCodeWriter",
-        "com.google.zxing.qrcode.decoder.ErrorCorrectionLevel",
-        "org.json.JSONObject",
-        "java.io.BufferedReader"
-      ],
-      "symbols": [
-        "show(ctx: Context)",
-        "loadManifest(ctx: Context)",
-        "buildGalleryRoot(ctx: Context, m: JSONObject, onClose: ()",
-        "buildQrCard(ctx: Context, spec: JSONObject, manifest: JSONObject)",
-        "showFullScreen(ctx: Context, payload: String, title: String, palette: Palette)",
-        "resolvePayload(spec: JSONObject, manifest: JSONObject)",
-        "renderVcard(contact: JSONObject, links: JSONObject?)",
-        "categoryPalette(category: String)",
-        "qrBitmap(text: String, size: Int, palette: Palette)",
-        "lerpColor(a: Int, b: Int, t: Float)",
-        "showError(ctx: Context, message: String)",
-        "dp(ctx: Context, v: Int)",
-        "class QrGalleryDialog",
-        "class Palette"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/SetupPlan.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -18246,6 +18354,60 @@
         "class AppPlan",
         "class Plan",
         "class Route"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/SetupRunbook.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SetupRunbook"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.content.Context",
+        "android.content.pm.PackageInfo",
+        "android.content.pm.PackageManager",
+        "android.os.Build",
+        "com.diegonmarcos.superapp.adbdebug.AdbPairingService",
+        "com.diegonmarcos.superapp.adbdebug.HostShell",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannel",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannels",
+        "com.diegonmarcos.superapp.adbdebug.WirelessDebugging",
+        "com.diegonmarcos.superapp.appstore.BuildConfig",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "json()",
+        "steps(allowPrompt: Boolean = false)",
+        "step(id: String, allowPrompt: Boolean = false)",
+        "dry()",
+        "run(id: String, allowPrompt: Boolean = false)",
+        "checkShell()",
+        "runShell()",
+        "selfGrant(ch: ShellChannel)",
+        "grantLine()",
+        "notificationsBlocked()",
+        "storeInfo()",
+        "checkStore()",
+        "runStore(allowPrompt: Boolean)",
+        "signingFlags()",
+        "signers(pi: PackageInfo?)",
+        "notHere()",
+        "guard(f: ()",
+        "declaredIds()",
+        "declared(uiAccountB64: String)",
+        "class SetupRunbook",
+        "class State",
+        "class Todo",
+        "class Running",
+        "class Done",
+        "class Failed",
+        "class Already",
+        "class Step"
       ]
     },
     {
@@ -18986,6 +19148,7 @@
         "androidx.work.WorkManager",
         "androidx.work.WorkerParameters",
         "com.diegonmarcos.superapp.core.FleetAlerts",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
         "androidx.work.ForegroundInfo",
         "com.diegonmarcos.superapp.updater.Advisory",
         "com.diegonmarcos.superapp.updater.BatchForeground",
@@ -19002,11 +19165,13 @@
         "getForegroundInfo()",
         "doWork()",
         "constraints()",
+        "cancelAll(context: Context)",
         "triggerData(trigger: String)",
         "kick(context: Context, trigger: String)",
         "start(context: Context)",
         "checkNow(context: Context)",
-        "class ConstellationWorker"
+        "class ConstellationWorker",
+        "class can"
       ]
     },
     {
@@ -24323,6 +24488,23 @@
         "class NotificationStore",
         "class Sev",
         "class Entry"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/core/src/main/java/com/diegonmarcos/superapp/core/StoreNotifyGate.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreNotifyGate"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "mayPost(ctx: Context)",
+        "mayPost(packageName: String)",
+        "isStoreAlert(dedupeKey: String)",
+        "class StoreNotifyGate"
       ]
     },
     {
@@ -30901,6 +31083,7 @@
         "setAiRouting( providerId: String?, apiKey: String?, modelId: String?, clearKey: Boolean, )",
         "revealAiKey(providerId: String?)",
         "clipboardLists()",
+        "importClipboardLists(json: String?)",
         "keyHint(token: String)",
         "ok(text: String)",
         "failed(reason: String)",
@@ -36484,6 +36667,7 @@
         "exportToDir(dir: File)",
         "exportJson()",
         "importFromDir(dir: File, context: Context)",
+        "importJson(export: org.json.JSONObject, context: Context)",
         "entriesToJson(entries: List<ClipboardHistoryEntry>)",
         "tabFileName(listName: String?, used: MutableSet<String>)",
         "cleanupFiles(prefs: SharedPreferences)",
@@ -50673,6 +50857,46 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/main/java/com/diegonmarcos/superapp/adbdebug/HostShell.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HostShell",
+        "HostShellWorker",
+        "HostShellBootReceiver"
+      ],
+      "imports": [
+        "android.Manifest",
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.provider.Settings",
+        "android.util.Log",
+        "androidx.work.ExistingWorkPolicy",
+        "androidx.work.OneTimeWorkRequestBuilder",
+        "androidx.work.WorkManager",
+        "androidx.work.Worker",
+        "androidx.work.WorkerParameters"
+      ],
+      "symbols": [
+        "workName(ctx: Context)",
+        "install(app: Context)",
+        "schedule(ctx: Context, replace: Boolean)",
+        "onConnected(ctx: Context)",
+        "selfGrant(ctx: Context)",
+        "canWriteSecureSettings(ctx: Context)",
+        "keepWirelessDebuggingOn(ctx: Context)",
+        "reconnect(ctx: Context, attempts: Int)",
+        "doWork()",
+        "onReceive(context: Context, intent: Intent?)",
+        "class does",
+        "class HostShell",
+        "class HostShellWorker",
+        "class HostShellBootReceiver"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/main/java/com/diegonmarcos/superapp/adbdebug/LocalHotspot.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -51517,6 +51741,7 @@
         "setAiRouting( providerId: String, apiKey: String = \"\", modelId: String = \"\", clearKey: Boolean = false, )",
         "revealAiKey(providerId: String)",
         "clipboardLists()",
+        "importClipboardLists(json: String)",
         "call(what: String, body: (ITextTools)",
         "class does",
         "class TextToolsClient"
@@ -52063,9 +52288,11 @@
         "androidx.core.app.ServiceCompat",
         "androidx.core.content.ContextCompat",
         "androidx.work.ForegroundInfo",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
         "java.util.concurrent.atomic.AtomicInteger"
       ],
       "symbols": [
+        "allowed(ctx: Context)",
         "begin(ctx: Context)",
         "end(ctx: Context)",
         "hold(ctx: Context, on: Boolean = true, body: ()",
@@ -52445,7 +52672,8 @@
         "android.util.Log",
         "android.widget.Toast",
         "com.diegonmarcos.superapp.core.FleetAlerts",
-        "com.diegonmarcos.superapp.core.NotificationStore"
+        "com.diegonmarcos.superapp.core.NotificationStore",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate"
       ],
       "symbols": [
         "reapCachedApk(context: Context, path: String?)",
@@ -52652,7 +52880,8 @@
         "android.widget.ProgressBar",
         "android.widget.TextView",
         "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.core.NotificationStore"
+        "com.diegonmarcos.superapp.core.NotificationStore",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate"
       ],
       "symbols": [
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
@@ -52730,11 +52959,13 @@
         "androidx.work.Operation",
         "androidx.work.PeriodicWorkRequestBuilder",
         "androidx.work.WorkManager",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
         "java.util.concurrent.TimeUnit"
       ],
       "symbols": [
         "start(context: Context)",
         "cancel(context: Context)",
+        "cancelAll(context: Context)",
         "cancelNow(context: Context)",
         "checkNow(context: Context)",
         "downloadNow(context: Context)",
@@ -52742,6 +52973,7 @@
         "enqueueUserInitiated(context: Context, consented: Boolean)",
         "installApk(context: Context, apkUrl: String, packageName: String, label: String)",
         "class Updater",
+        "class can",
         "class Ack"
       ]
     },
@@ -52775,6 +53007,7 @@
         "com.diegonmarcos.superapp.updater.install.UpdateInstaller",
         "com.diegonmarcos.superapp.updater.source.UpdateChecker",
         "android.content.Context",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
         "android.util.Log",
         "androidx.work.CoroutineWorker",
         "androidx.work.ForegroundInfo",
@@ -54622,6 +54855,7 @@
         "android.app.Application",
         "android.content.Intent",
         "android.util.Log",
+        "com.diegonmarcos.superapp.adbdebug.HostShell",
         "com.diegonmarcos.superapp.appstore.StoreImport",
         "com.diegonmarcos.superapp.profile.AccountDebugApi",
         "com.diegonmarcos.superapp.profile.AccountHost",
@@ -54630,9 +54864,37 @@
       ],
       "symbols": [
         "onCreate()",
+        "navJson()",
         "open(activity: Activity, route: String)",
         "class supplies",
         "class App"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/app/src/main/java/com/diegonmarcos/cloudaccount/AutoBackupWorker.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutoBackupWorker"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.work.Constraints",
+        "androidx.work.ExistingPeriodicWorkPolicy",
+        "androidx.work.NetworkType",
+        "androidx.work.PeriodicWorkRequestBuilder",
+        "androidx.work.WorkManager",
+        "androidx.work.Worker",
+        "androidx.work.WorkerParameters",
+        "com.diegonmarcos.superapp.profile.AccountDevice",
+        "com.diegonmarcos.superapp.profile.AutoBackup",
+        "com.diegonmarcos.superapp.profile.DeviceVault",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "doWork()",
+        "schedule(ctx: Context)",
+        "class AutoBackupWorker"
       ]
     },
     {
@@ -54647,16 +54909,17 @@
         "androidx.activity.compose.setContent",
         "androidx.appcompat.app.AppCompatActivity",
         "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.statusBarsPadding",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.AccountCircle",
-        "androidx.compose.material.icons.filled.CompareArrows",
-        "androidx.compose.material.icons.filled.Link",
-        "androidx.compose.material.icons.filled.Memory",
-        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material.icons.filled.Build",
+        "androidx.compose.material.icons.filled.Key",
+        "androidx.compose.material.icons.filled.PhoneAndroid",
+        "androidx.compose.material.icons.filled.Settings",
         "androidx.compose.material3.Surface",
-        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
@@ -54664,19 +54927,29 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.graphics.vector.ImageVector",
         "androidx.compose.ui.graphics.vector.rememberVectorPainter",
-        "androidx.core.os.bundleOf",
-        "androidx.fragment.compose.AndroidFragment",
+        "androidx.compose.ui.platform.LocalContext",
         "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
         "com.diegonmarcos.superapp.bottomnav.FleetChrome",
         "com.diegonmarcos.superapp.bottomnav.NavDecl",
         "com.diegonmarcos.superapp.bottomnav.PageTabs",
         "com.diegonmarcos.superapp.bottomnav.islandEntries",
-        "com.diegonmarcos.superapp.profile.ProfileFragment",
-        "com.diegonmarcos.superapp.updater.Updater"
+        "com.diegonmarcos.superapp.profile.AccountConnectPage",
+        "com.diegonmarcos.superapp.profile.AccountHost",
+        "com.diegonmarcos.superapp.profile.AccountModel",
+        "com.diegonmarcos.superapp.profile.AccountPermsPage",
+        "com.diegonmarcos.superapp.profile.AccountPlaceholderPage",
+        "com.diegonmarcos.superapp.profile.AccountProfilePage",
+        "com.diegonmarcos.superapp.profile.AccountSettingsPage",
+        "com.diegonmarcos.superapp.profile.ConnectionsTab",
+        "com.diegonmarcos.superapp.profile.DriftTab",
+        "com.diegonmarcos.superapp.profile.FleetSetupTab",
+        "com.diegonmarcos.superapp.profile.ProfilesTab",
+        "com.diegonmarcos.superapp.profile.SecretsTab"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
         "AccountShell()",
+        "Page(section: String, page: String, go: (String, String)",
         "iconFor(name: String)",
         "class MainActivity"
       ]
@@ -54907,6 +55180,34 @@
       ]
     },
     {
+      "path": "ac_cloud-account/test/test-account-perms.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/test/test-account-shell-runbook.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "mutate()"
+      ]
+    },
+    {
       "path": "ac_cloud-account/test/test-fleet-setup.sh",
       "lang": "sh",
       "role": "shell",
@@ -55110,6 +55411,87 @@
         "name",
         "buildInputs",
         "shellHook"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/agentapi/AgentApiContract.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentApiContract"
+      ],
+      "imports": [
+        "java.net.InetAddress",
+        "java.net.URI"
+      ],
+      "symbols": [
+        "openRequest(url: String?, group: String?)",
+        "fetchRequest(url: String?, maxChars: Int)",
+        "hopRefusal(url: String)",
+        "hostRefusal(host: String)",
+        "addressRefusal(a: InetAddress)",
+        "redirectTarget(base: String, location: String?)",
+        "charsetOf(contentType: String?)",
+        "unescape(s: String)",
+        "cp(n: Int)",
+        "extract(html: String, maxChars: Int)",
+        "class AgentApiContract",
+        "class OpenParsed",
+        "class Ok",
+        "class Refused",
+        "class FetchParsed",
+        "class Extracted"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/agentapi/AgentFetchProvider.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentFetchProvider"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.database.Cursor",
+        "android.net.Uri",
+        "android.os.Bundle",
+        "java.net.HttpURLConnection",
+        "java.net.InetAddress",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "onCreate()",
+        "call(method: String, arg: String?, extras: Bundle?)",
+        "fetch(first: String, maxChars: Int)",
+        "readCapped(input: java.io.InputStream, cap: Int)",
+        "fail(url: String, why: String)",
+        "query(uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?)",
+        "update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?)",
+        "class AgentFetchProvider"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/agentapi/AgentOpenActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentOpenActivity"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.Intent",
+        "android.net.Uri",
+        "android.os.Bundle",
+        "com.diegonmarcos.cloudbrowser.MainActivity",
+        "com.diegonmarcos.superapp.browser.BrowserTabPrefs"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "class AgentOpenActivity"
       ]
     },
     {
@@ -55403,6 +55785,32 @@
         "glyph(name: String)",
         "class BrowserSearchHost",
         "class SearchPageScreen"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/AgentApiContractTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentApiContractTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudbrowser.agentapi.AgentApiContract",
+        "com.diegonmarcos.cloudbrowser.agentapi.AgentApiContract.FetchParsed",
+        "com.diegonmarcos.cloudbrowser.agentapi.AgentApiContract.OpenParsed",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File",
+        "java.net.InetAddress"
+      ],
+      "symbols": [
+        "refused(url: String?, max: Int = 0)",
+        "a(vararg b: Int)",
+        "class AgentApiContractTest"
       ]
     },
     {
@@ -56046,6 +56454,36 @@
         "run(check, root)",
         "mutated(root, rel, old, new)",
         "main(name, check, mutations)"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/test/test-browser-agent-door.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "a1()",
+        "a2()",
+        "a3()",
+        "a4()",
+        "a5()",
+        "_red()",
+        "_mut()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "a1()",
+        "a2()",
+        "a3()",
+        "a4()",
+        "a5()",
+        "_red()",
+        "_mut()"
       ]
     },
     {
@@ -139775,6 +140213,59 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/agentapi/AgentMailContract.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentMailContract"
+      ],
+      "imports": [],
+      "symbols": [
+        "criteria(from: String?, subject: String?, since: String?, limit: String?)",
+        "likeEscape(s: String)",
+        "sql(c: Criteria)",
+        "body(text: String, html: String)",
+        "class AgentMailContract",
+        "class Criteria",
+        "class Parsed",
+        "class Ok",
+        "class Refused",
+        "class Body"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/agentapi/AgentMailProvider.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentMailProvider"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.database.Cursor",
+        "android.database.MatrixCursor",
+        "android.net.Uri",
+        "android.util.Log",
+        "app.sterna.SternaApplication",
+        "app.sterna.core.data.text.htmlToText",
+        "kotlinx.coroutines.runBlocking"
+      ],
+      "symbols": [
+        "onCreate()",
+        "repo()",
+        "query( uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?, )",
+        "messages(uri: Uri)",
+        "body(uri: Uri)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?)",
+        "update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?)",
+        "class AgentMailProvider",
+        "class is"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/AppLocale.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -141060,6 +141551,7 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
+        "PendingReplySuggestion",
         "AppContainer",
         "SternaApplication",
         "Application"
@@ -141106,6 +141598,7 @@
       ],
       "symbols": [
         "onCreate()",
+        "class PendingReplySuggestion",
         "class AppContainer",
         "class SternaApplication"
       ]
@@ -141847,6 +142340,7 @@
       "symbols": [
         "ComposeScreen( onDone: ()",
         "runTextTool(tool: TextTool)",
+        "applyTextTool(result: String)",
         "applySignatureChange(change: SignatureChange?)",
         "isSelectableDate(utcTimeMillis: Long)",
         "SchedulePickerDialog( onDismissRequest: ()",
@@ -143895,6 +144389,7 @@
         "MessageLoadingScaffold(onBack: ()",
         "MessageTopBar( active: ActiveMessage?, onBack: ()",
         "receivedTextToolSource(email: Email)",
+        "runReaderTool( viewModel: MessageViewModel, tool: TextTool, email: Email, plainText: Boolean, derivedNotice: String, noContent: String, )",
         "copyVerificationCodeOrSayNone(clipboard: ClipboardManager, context: Context, email: Email?)",
         "CopyCodeIcon()",
         "verificationCodeFromMessage(email: Email)",
@@ -143924,8 +144419,7 @@
         "CalendarEventCard( invite: CalendarInvite, onRespond: (String)",
         "InviteRsvp(response: InviteResponse, onRespond: (String)",
         "addToCalendar(context: Context, event: ParsedEvent)",
-        "formatEventWhen(event: ParsedEvent)",
-        "formatSize(bytes: Long)"
+        "formatEventWhen(event: ParsedEvent)"
       ]
     },
     {
@@ -144031,9 +144525,9 @@
         "unsubscribe()",
         "sendReadReceipt()",
         "declineReadReceipt()",
-        "credentials()",
-        "warmFromCache(emailId: String, accountId: String?)",
-        "load(emailId: String, accountId: String?, settled: Boolean)"
+        "cacheAccount()",
+        "onReaderOpened(fragment: String, summarySource: String)",
+        "translateNow(fragment: String, chosenSource: String? = null)"
       ]
     },
     {
@@ -144100,6 +144594,22 @@
       "symbols": [
         "foldTopLevelQuotes(html: String, label: String)",
         "hasVisibleContent(fragment: String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/ReaderAiState.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReaderTranslation",
+        "ReaderSummary"
+      ],
+      "imports": [],
+      "symbols": [
+        "toggled()",
+        "fragmentFor(current: String?)",
+        "class ReaderTranslation",
+        "class ReaderSummary"
       ]
     },
     {
@@ -144189,16 +144699,61 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
+        "ReaderSummaryUi",
+        "LocalReaderSummary",
+        "LocalReplyAllWith",
         "ResumeBox"
       ],
       "imports": [
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.ContentCopy",
+        "androidx.compose.material.icons.filled.ExpandLess",
+        "androidx.compose.material.icons.filled.ExpandMore",
         "androidx.compose.material3.LinearProgressIndicator",
         "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Surface",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.compositionLocalOf",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalClipboardManager",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.AnnotatedString",
+        "app.sterna.R",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.components.IconButton",
+        "app.sterna.ui.theme.MailMetrics"
+      ],
+      "symbols": [
+        "ResumeBox(ui: ReaderSummaryUi, emailId: String)",
+        "SuggestedReplyBlock(reply: String, onReplyAll: (String)",
+        "class ReaderSummaryUi"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/SourceLanguagePicker.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.DropdownMenu",
+        "androidx.compose.material3.DropdownMenuItem",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Surface",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
@@ -144208,16 +144763,13 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.platform.LocalClipboardManager",
         "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.text.AnnotatedString",
         "app.sterna.R",
-        "app.sterna.ui.text.TextTool",
-        "app.sterna.ui.text.TextToolRunner",
+        "app.sterna.ui.text.MailLanguages",
         "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
-        "ResumeBox(runner: TextToolRunner, emailId: String)"
+        "SourceLanguagePicker(modifier: Modifier, onPick: (String)"
       ]
     },
     {
@@ -145159,6 +145711,37 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/AnswerPredictionScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.stringResource",
+        "app.sterna.R",
+        "app.sterna.ui.text.MailTextToolsPrefs",
+        "app.sterna.ui.theme.MailMetrics"
+      ],
+      "symbols": [
+        "MailAnswerPredictionScreen(onBack: ()"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/AppLanguage.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -145323,6 +145906,38 @@
         "signatureHasOwnDelimiter(signature: String, delimiter: Boolean)",
         "class IdentityRowRef",
         "class SignatureState"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/LanguageDropdown.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.ArrowDropDown",
+        "androidx.compose.material3.DropdownMenu",
+        "androidx.compose.material3.DropdownMenuItem",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.text.MailLanguages",
+        "app.sterna.ui.theme.MailMetrics"
+      ],
+      "symbols": [
+        "languageRowTag(tag: String)",
+        "LanguageDropdown( label: String, selected: String, onSelect: (String)"
       ]
     },
     {
@@ -145714,7 +146329,6 @@
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material3.HorizontalDivider",
         "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.RadioButton",
         "androidx.compose.material3.Surface",
         "androidx.compose.material3.Text",
@@ -145730,6 +146344,7 @@
         "androidx.compose.ui.res.stringResource",
         "app.sterna.R",
         "app.sterna.ui.text.MailAiRegistry",
+        "app.sterna.ui.text.MailLanguages",
         "app.sterna.ui.text.MailTextToolsPrefs",
         "app.sterna.ui.text.textToolsClient",
         "app.sterna.ui.theme.MailMetrics",
@@ -145758,6 +146373,7 @@
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.AutoFixHigh",
         "androidx.compose.material.icons.filled.Hub",
+        "androidx.compose.material.icons.filled.QuestionAnswer",
         "androidx.compose.material.icons.filled.Summarize",
         "androidx.compose.material.icons.filled.Translate",
         "androidx.compose.ui.graphics.vector.ImageVector",
@@ -146049,6 +146665,18 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/text/AnswerPrompt.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AnswerPrompt"
+      ],
+      "imports": [],
+      "symbols": [
+        "class AnswerPrompt"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/text/MailAiRegistry.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -146080,6 +146708,23 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/text/MailLanguages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailLanguages"
+      ],
+      "imports": [
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "normalise(tag: String?)",
+        "nameOf(tag: String, inLocale: Locale = Locale.getDefault()",
+        "options(selected: String, inLocale: Locale = Locale.getDefault()",
+        "class MailLanguages"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/text/MailTextToolsPrefs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -146103,10 +146748,17 @@
         "enhanceLanguageId(context: Context)",
         "summaryStyleId(context: Context)",
         "translateTarget(context: Context)",
+        "answerPrompt(context: Context)",
+        "resetAnswerPrompt(context: Context)",
+        "autoTranslate(context: Context)",
+        "autoSummary(context: Context)",
+        "summaryLanguage(context: Context)",
+        "putBoolean(context: Context, key: String, value: Boolean)",
         "put(context: Context, key: String, value: String)",
         "putModel(context: Context, providerId: String, modelId: String)",
         "enhancePrompt(context: Context)",
         "summaryPrompt(context: Context)",
+        "summaryPrompt(context: Context, languageTag: String)",
         "summaryWantsBullets(context: Context)",
         "isSeeded(context: Context)",
         "seedFromKeyboard(context: Context, client: TextToolsClient)",
@@ -146121,12 +146773,21 @@
       "role": "kotlin",
       "exports": [
         "TextToolPanel",
-        "TextToolIconRow"
+        "TextToolIconRow",
+        "TextToolInPlaceBar",
+        "TextToolNamedItems",
+        "TextToolUndo"
       ],
       "imports": [
         "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.ColumnScope",
+        "androidx.compose.material3.DropdownMenuItem",
+        "androidx.compose.ui.text.input.TextFieldValue",
+        "app.sterna.core.data.text.RichBody",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.automirrored.filled.Undo",
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.verticalScroll",
@@ -146148,7 +146809,10 @@
       ],
       "symbols": [
         "TextToolPanel(runner: TextToolRunner, onApply: ((String)",
-        "TextToolIconRow( surface: TextToolSurface, enabled: Boolean = true, skip: (TextTool)"
+        "TextToolIconRow( surface: TextToolSurface, enabled: Boolean = true, skip: (TextTool)",
+        "TextToolInPlaceBar( surface: TextToolSurface, enabled: Boolean, running: TextTool?, canUndo: Boolean, onUndo: ()",
+        "TextToolNamedItems(surface: TextToolSurface, enabled: Boolean, onPick: (TextTool)",
+        "class TextToolUndo"
       ]
     },
     {
@@ -146164,10 +146828,13 @@
         "LocalTextToolRunner"
       ],
       "imports": [
+        "android.content.Context",
         "androidx.annotation.StringRes",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.AutoAwesome",
         "androidx.compose.material.icons.filled.AutoFixHigh",
+        "androidx.compose.material.icons.filled.QuestionAnswer",
+        "androidx.compose.material.icons.filled.Spellcheck",
         "androidx.compose.material.icons.filled.Translate",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.compositionLocalOf",
@@ -146178,6 +146845,9 @@
         "androidx.compose.ui.graphics.vector.ImageVector",
         "androidx.compose.ui.platform.LocalContext",
         "app.sterna.R",
+        "app.sterna.core.data.text.FallbackTranslator",
+        "app.sterna.core.data.text.InPlaceHtmlTranslation.TranslationFailed",
+        "app.sterna.core.data.text.ReaderTextEngine",
         "com.diegonmarcos.superapp.texttools.TextToolsClient",
         "kotlinx.coroutines.CoroutineScope",
         "kotlinx.coroutines.Dispatchers",
@@ -146188,13 +146858,20 @@
         "providerLabel()",
         "dismiss()",
         "run(scope: CoroutineScope, tool: TextTool, text: String)",
+        "onReader(translate: ()",
         "rememberTextToolRunner(surface: TextToolSurface)",
         "textToolsClient(app: android.content.Context)",
         "sharedClient(app: android.content.Context)",
+        "newRun()",
+        "translate(text: String, targetTag: String, sourceTag: String?)",
+        "summarise(text: String, languageTag: String, replyTag: String?)",
+        "answerEngine(client: TextToolsClient, thread: String, prompt: String, provider: String, model: String)",
+        "grammarEngine(client: TextToolsClient, text: String, provider: String, model: String)",
         "class TextTool",
         "class TextToolSurface",
         "class TextToolOutcome",
-        "class TextToolRunner"
+        "class TextToolRunner",
+        "class TextToolsReaderEngine"
       ]
     },
     {
@@ -146220,6 +146897,17 @@
         "splice(rich: RichBody, range: Span, replacement: String)",
         "move(s: Span)",
         "class TextToolScope"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/text/TranslatePrompt.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "llmTranslatePrompt(targetTag: String, sourceTag: String?)",
+        "summaryWithReplyPrompt(summaryPrompt: String, replyTag: String?, answerPrompt: String)"
       ]
     },
     {
@@ -146821,6 +147509,32 @@
         "palette(app: Application)",
         "background(surface: WidgetSurface)",
         "class WidgetThemeReader"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/agentapi/AgentMailContractTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentMailContractTest"
+      ],
+      "imports": [
+        "app.sterna.agentapi.AgentMailContract.Parsed",
+        "org.junit.Assert.assertArrayEquals",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "ok(from: String? = null, subject: String? = null, since: String? = null, limit: String? = null)",
+        "refused(from: String? = null, subject: String? = null, since: String? = null, limit: String? = null)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, selection: String?, selectionArgs: Array<out String>?)",
+        "update(uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?)",
+        "class AgentMailContractTest"
       ]
     },
     {
@@ -148448,6 +149162,28 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/compose/ComposeTextToolsWiringTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ComposeTextToolsWiringTest"
+      ],
+      "imports": [
+        "app.sterna.ui.settings.TEXT_TOOLS_ENTRIES",
+        "app.sterna.ui.text.TextTool",
+        "app.sterna.ui.text.TextToolSurface",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "applyTextTool(\")",
+        "class ComposeTextToolsWiringTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/compose/ComposeTitleTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -149675,6 +150411,28 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/compose/ReplyQuoteHtmlTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReplyQuoteHtmlTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.RichBody",
+        "app.sterna.core.data.text.toPlainText",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "plain(text: String)",
+        "bodiesForSend(userBody: RichBody, identity: StoredIdentity?)",
+        "class ReplyQuoteHtmlTest",
+        "class changes"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/compose/RichBodyMarkersTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -149927,6 +150685,28 @@
         "codeText(file: File)",
         "withoutTrailingComment(line: String)",
         "class StagedAttachmentSweepWiringTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/compose/SuggestedReplyReplyAllTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SuggestedReplyReplyAllTest"
+      ],
+      "imports": [
+        "app.sterna.core.jmap.model.Email",
+        "app.sterna.core.jmap.model.EmailAddress",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "prefillFailed()",
+        "source(path: String)",
+        "class SuggestedReplyReplyAllTest"
       ]
     },
     {
@@ -153362,6 +154142,30 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/ReaderInPlaceTranslationWiringTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReaderInPlaceTranslationWiringTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "load(emailId: String\")",
+        "onReaderOpened(\")",
+        "translateNow(\")",
+        "toggleTranslated()",
+        "dismissTranslationError()",
+        "source(path: String)",
+        "class ReaderInPlaceTranslationWiringTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/ReaderSpacerDocumentTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -153404,6 +154208,47 @@
         "class ReaderStateResetOnLoadTest",
         "class level",
         "class indentation"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/ReaderTranslatedDocumentTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReaderTranslatedDocumentTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.InPlaceHtmlTranslation",
+        "app.sterna.core.jmap.model.Email",
+        "app.sterna.core.jmap.model.EmailBodyPart",
+        "app.sterna.core.jmap.model.EmailBodyValue",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "fragmentOf(theme: EmailTheme)",
+        "doc(theme: EmailTheme, translated: String?)",
+        "rendered()",
+        "class ReaderTranslatedDocumentTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/ReaderTranslationStateTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReaderTranslationStateTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class ReaderTranslationStateTest"
       ]
     },
     {
@@ -155143,6 +155988,92 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/text/MailLanguagesTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailLanguagesTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "class MailLanguagesTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/text/MailTextToolsPrefsDefaultsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailTextToolsPrefsDefaultsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class MailTextToolsPrefsDefaultsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/text/ReaderAiUiTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReaderAiUiTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithContentDescription",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.onNodeWithText",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performScrollTo",
+        "app.sterna.ui.message.ReaderSummary",
+        "app.sterna.ui.message.ReaderSummaryUi",
+        "app.sterna.ui.message.ResumeBox",
+        "app.sterna.ui.settings.LANGUAGE_FIELD_TAG",
+        "app.sterna.ui.settings.LanguageDropdown",
+        "app.sterna.ui.settings.languageRowTag",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "class ReaderAiUiTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/text/TextToolScopeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -155163,6 +156094,22 @@
       "symbols": [
         "sent(body: String)",
         "class TextToolScopeTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/text/TranslatePromptTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TranslatePromptTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class TranslatePromptTest"
       ]
     },
     {
@@ -156706,6 +157653,7 @@
       "imports": [
         "android.content.Context",
         "app.sterna.core.data.account.AccountStore",
+        "app.sterna.core.data.db.MessageTextCacheDao",
         "app.sterna.core.data.db.SternaDatabase",
         "app.sterna.core.data.mail.ImapMailService",
         "app.sterna.core.data.mail.LOCAL_DRAFT_FILES_DIR",
@@ -157084,6 +158032,34 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/db/MessageTextCacheEntity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MessageTextKind",
+        "MessageTextCacheEntity",
+        "MessageTextCacheDao"
+      ],
+      "imports": [
+        "androidx.room.Dao",
+        "androidx.room.Entity",
+        "androidx.room.Insert",
+        "androidx.room.OnConflictStrategy",
+        "androidx.room.Query"
+      ],
+      "symbols": [
+        "get(accountId: String, emailId: String, kind: String, lang: String)",
+        "put(row: MessageTextCacheEntity)",
+        "translationCount(accountId: String, emailId: String)",
+        "pruneOlderThan(before: Long)",
+        "deleteForAccount(accountId: String)",
+        "deleteAll()",
+        "class MessageTextKind",
+        "class MessageTextCacheEntity",
+        "class MessageTextCacheDao"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/db/Migrations.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -157436,6 +158412,7 @@
         "purgeSnapshotDao()",
         "mailboxUidValidityDao()",
         "localDraftDao()",
+        "messageTextCacheDao()",
         "build(context: Context)",
         "class SternaDatabase"
       ]
@@ -159149,6 +160126,24 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/FallbackTranslator.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FallbackTranslator"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.InPlaceHtmlTranslation.NeedsSource",
+        "app.sterna.core.data.text.InPlaceHtmlTranslation.TranslationFailed"
+      ],
+      "symbols": [
+        "newRun()",
+        "translate(text: String, target: String, source: String?)",
+        "class FallbackTranslator",
+        "class Reply"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/HtmlText.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -159170,6 +160165,99 @@
         "bareTarget(s: String)",
         "unescapeEntities(s: String)",
         "codePointOrNull(cp: Int)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/InPlaceHtmlTranslation.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InPlaceHtmlTranslation"
+      ],
+      "imports": [],
+      "symbols": [
+        "translate(text: String)",
+        "textNodes(html: String)",
+        "flush(upTo: Int)",
+        "visibleText(html: String)",
+        "forDetection(text: String)",
+        "hasLetters(s: String)",
+        "placeholder(n: Int)",
+        "mask(line: String)",
+        "unmask(translated: String, tokens: List<String>)",
+        "translateUnits(units: List<String>, engine: TextTranslator)",
+        "translateRange(units: List<String>, from: Int, to: Int, engine: TextTranslator, out: Array<String?>)",
+        "translate(html: String, engine: TextTranslator)",
+        "class InPlaceHtmlTranslation",
+        "class TextTranslator",
+        "class TranslationFailed",
+        "class NeedsSource",
+        "class Result",
+        "class TextNode",
+        "class Masked",
+        "class Line",
+        "class Piece"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/LanguageGuess.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LanguageGuess"
+      ],
+      "imports": [],
+      "symbols": [
+        "detect(text: String)",
+        "guess(text: String)",
+        "latin(text: String)",
+        "class LanguageGuess"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/ReaderTextAi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReaderTextEngine",
+        "LanguageDetector",
+        "TranslationOutcome",
+        "SummaryOutcome",
+        "ReaderTextAi"
+      ],
+      "imports": [
+        "app.sterna.core.data.db.MessageTextCacheDao",
+        "app.sterna.core.data.db.MessageTextCacheEntity",
+        "app.sterna.core.data.db.MessageTextKind",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "translate(text: String, targetTag: String, sourceTag: String?)",
+        "newRun()",
+        "summarise(text: String, languageTag: String, replyTag: String?)",
+        "detect(text: String)",
+        "cachedTranslation(accountId: String, emailId: String, lang: String, fragment: String)",
+        "hasTranslation(accountId: String, emailId: String)",
+        "sourceLanguage(accountId: String, emailId: String, fragment: String)",
+        "translate( accountId: String, emailId: String, lang: String, fragment: String, chosenSource: String? = null, )",
+        "needsTranslation(text: String, target: String)",
+        "cachedSummaryParts(accountId: String, emailId: String, lang: String, source: String)",
+        "cachedSummary(accountId: String, emailId: String, lang: String, source: String)",
+        "summarise(accountId: String, emailId: String, lang: String, source: String)",
+        "prune(olderThanMillis: Long = KEEP_MILLIS)",
+        "norm(tag: String)",
+        "sameLanguage(a: String, b: String)",
+        "hash(s: String)",
+        "class ReaderTextEngine",
+        "class LanguageDetector",
+        "class TranslationOutcome",
+        "class Done",
+        "class Failed",
+        "class NeedsSource",
+        "class SummaryOutcome",
+        "class ReaderTextAi"
       ]
     },
     {
@@ -159255,6 +160343,8 @@
         "coversAcrossBreaks(body: RichBody, spans: List<Span>, target: Span)",
         "subtract(spans: List<Span>, cut: Span)",
         "toHtml(body: RichBody, verbatim: Pair<Span, String>? = null)",
+        "toHtml(body: RichBody, verbatims: List<Pair<Span, String>>)",
+        "inVerbatim(p: Int)",
         "listBreak(kinds: Array<BlockKind?>, line: Int)",
         "openTagOf(element: Any)",
         "closeTagOf(element: Any)",
@@ -159264,9 +160354,7 @@
         "decodeEntity(body: String)",
         "scalarOrNull(cp: Int)",
         "linkUrlFromHref(raw: String)",
-        "normalizeLinkUrl(raw: String)",
-        "linkAt(body: RichBody, selection: Span)",
-        "linkAcrossBreaks(body: RichBody, target: Span)"
+        "normalizeLinkUrl(raw: String)"
       ]
     },
     {
@@ -159279,6 +160367,22 @@
       "imports": [],
       "symbols": [
         "safeFileName(name: String?, fallback: String, maxLength: Int = 80)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/text/SuggestedReply.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SummaryParts",
+        "SuggestedReply"
+      ],
+      "imports": [],
+      "symbols": [
+        "split(raw: String)",
+        "join(parts: SummaryParts)",
+        "class SummaryParts",
+        "class SuggestedReply"
       ]
     },
     {
@@ -160166,6 +161270,22 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/account/VaultMailImportOAuthRestoreTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "VaultMailImportOAuthRestoreTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "source()",
+        "class VaultMailImportOAuthRestoreTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/autoconfig/MailAutoconfigTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -160740,6 +161860,36 @@
         "theRegisteredMigrationsCarryAPublishedInstallAllTheWayToTheLocalDraftsTable()",
         "theRegisteredMigrationsReachTheDeclaredSchemaVersion()",
         "class LocalDraftsMigrationSqlTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/db/MessageTextCacheMigrationSqlTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MessageTextCacheMigrationSqlTest"
+      ],
+      "imports": [
+        "androidx.sqlite.db.SupportSQLiteDatabase",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.lang.reflect.Proxy",
+        "java.sql.Connection",
+        "java.sql.DriverManager"
+      ],
+      "symbols": [
+        "setUp()",
+        "tearDown()",
+        "supportDb()",
+        "count(sql: String)",
+        "theStepIsRegistered()",
+        "theStepAddsTheTableAndTouchesNothingElse()",
+        "oneRowPerMessageKindAndLanguage()",
+        "put(lang: String, payload: String)",
+        "class MessageTextCacheMigrationSqlTest"
       ]
     },
     {
@@ -166605,6 +167755,45 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/DetectionSeesOnlyVisibleTextTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DetectionSeesOnlyVisibleTextTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.db.MessageTextCacheDao",
+        "app.sterna.core.data.db.MessageTextCacheEntity",
+        "app.sterna.core.data.db.MessageTextKind",
+        "app.sterna.core.data.text.InPlaceHtmlTranslation.NeedsSource",
+        "kotlinx.coroutines.runBlocking",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "fixture(name: String)",
+        "get(accountId: String, emailId: String, kind: String, lang: String)",
+        "put(row: MessageTextCacheEntity)",
+        "translationCount(accountId: String, emailId: String)",
+        "pruneOlderThan(before: Long)",
+        "deleteForAccount(accountId: String)",
+        "deleteAll()",
+        "newRun()",
+        "translate(text: String, targetTag: String, sourceTag: String?)",
+        "summarise(text: String, languageTag: String, replyTag: String?)",
+        "detect(text: String)",
+        "reply(text: String?, error: String? = null)",
+        "class DetectionSeesOnlyVisibleTextTest",
+        "class MemoryCache",
+        "class Engine",
+        "class Spy"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/DraftRichBodyTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -166658,6 +167847,82 @@
         "looksLikeHtmlOnlyOnTags()",
         "escapingIsReversedByTheDecoder()",
         "class HtmlTextTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/InPlaceHtmlTranslationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InPlaceHtmlTranslationTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.InPlaceHtmlTranslation.TextTranslator",
+        "app.sterna.core.data.text.InPlaceHtmlTranslation.TranslationFailed",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "fixture(name: String)",
+        "translate(text: String)",
+        "skeleton(html: String)",
+        "class InPlaceHtmlTranslationTest",
+        "class Upper"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/LanguageGuessTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LanguageGuessTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class LanguageGuessTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/ReaderTextAiTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReaderTextAiTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.db.MessageTextCacheDao",
+        "app.sterna.core.data.db.MessageTextCacheEntity",
+        "app.sterna.core.data.db.MessageTextKind",
+        "app.sterna.core.data.text.InPlaceHtmlTranslation.TranslationFailed",
+        "kotlinx.coroutines.runBlocking",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "get(accountId: String, emailId: String, kind: String, lang: String)",
+        "put(row: MessageTextCacheEntity)",
+        "translationCount(accountId: String, emailId: String)",
+        "pruneOlderThan(before: Long)",
+        "deleteForAccount(accountId: String)",
+        "deleteAll()",
+        "translate(text: String, targetTag: String, sourceTag: String?)",
+        "summarise(text: String, languageTag: String, replyTag: String?)",
+        "ai(detector: LanguageDetector = LanguageGuess)",
+        "saying(answer: ()",
+        "detect(text: String)",
+        "class ReaderTextAiTest",
+        "class MemoryCache",
+        "class FakeEngine"
       ]
     },
     {
@@ -166810,6 +168075,22 @@
       ],
       "symbols": [
         "class SafeFileNameTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/text/SuggestedReplyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SuggestedReplyTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class SuggestedReplyTest"
       ]
     },
     {
@@ -168473,6 +169754,21 @@
         "conversation( answer: (tag: String, line: String)",
         "page(item7: String, item9: String)",
         "class ReferencesOnTheWireTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/imap/src/test/kotlin/app/sterna/core/imap/ReplyIsMultipartAlternativeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReplyIsMultipartAlternativeTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class ReplyIsMultipartAlternativeTest"
       ]
     },
     {
@@ -170644,6 +171940,38 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/test/test-mail-agent-door.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "g1()",
+        "g2()",
+        "g3()",
+        "g4()",
+        "g5()",
+        "_red()",
+        "_mut()",
+        "g5m()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()",
+        "g1()",
+        "g2()",
+        "g3()",
+        "g4()",
+        "g5()",
+        "_red()",
+        "_mut()",
+        "g5m()"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/test/test-mail-attachment-chips.sh",
       "lang": "sh",
       "role": "shell",
@@ -170883,6 +172211,40 @@
         "bad()",
         "has()",
         "lacks()"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/test/test-mail-reader-translation.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "r1()",
+        "r2()",
+        "r3()",
+        "r4()",
+        "r5()",
+        "r6()",
+        "r7()",
+        "mirror()",
+        "run()",
+        "mut()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "r1()",
+        "r2()",
+        "r3()",
+        "r4()",
+        "r5()",
+        "r6()",
+        "r7()",
+        "mirror()",
+        "run()",
+        "mut()"
       ]
     },
     {
@@ -432542,6 +433904,111 @@
       ]
     },
     {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/AgentData.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentPrefs",
+        "JsonFile",
+        "RunStore",
+        "ReportStore",
+        "MailDoor",
+        "BrowserDoor",
+        "Launch"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.SharedPreferences",
+        "android.net.Uri",
+        "android.os.Bundle",
+        "com.diegonmarcos.cloudsearch.core.agents.AgentsConfig",
+        "com.diegonmarcos.cloudsearch.core.agents.Ipc",
+        "com.diegonmarcos.cloudsearch.core.agents.MailBody",
+        "com.diegonmarcos.cloudsearch.core.agents.MailHeader",
+        "com.diegonmarcos.cloudsearch.core.agents.MailSource",
+        "com.diegonmarcos.cloudsearch.core.agents.PageSource",
+        "com.diegonmarcos.cloudsearch.core.agents.PageText",
+        "com.diegonmarcos.cloudsearch.core.agents.Report",
+        "com.diegonmarcos.cloudsearch.core.agents.ReportBook",
+        "com.diegonmarcos.cloudsearch.core.agents.ReportSink",
+        "com.diegonmarcos.cloudsearch.core.agents.RunRecord",
+        "com.diegonmarcos.cloudsearch.core.agents.BudgetLedger",
+        "org.json.JSONArray",
+        "java.io.File",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "profile()",
+        "setProfile(id: String, value: String)",
+        "templateBody(id: String)",
+        "setTemplate(id: String, body: String)",
+        "resetTemplate(id: String)",
+        "isCustomised(id: String)",
+        "seen(agent: String)",
+        "addSeen(agent: String, ids: Set<String>)",
+        "spentToday(now: Long)",
+        "addSpend(now: Long, usd: Double)",
+        "read()",
+        "write(text: String)",
+        "all()",
+        "add(r: RunRecord)",
+        "book()",
+        "save(b: ReportBook)",
+        "publish(report: Report)",
+        "newestFirst()",
+        "get(id: String)",
+        "setItemStatus(reportId: String, itemId: String, status: String)",
+        "delete(id: String)",
+        "query(uri: String)",
+        "messages(from: String, subject: String, sinceMs: Long, limit: Int)",
+        "s(name: String)",
+        "body(accountId: String, id: String)",
+        "text(url: String, maxChars: Int)",
+        "open(url: String, group: String)",
+        "app(ctx: Context, pkg: String)",
+        "class AgentPrefs",
+        "class JsonFile",
+        "class RunStore",
+        "class ReportStore",
+        "class MailDoor",
+        "class BrowserDoor",
+        "class Launch"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/AgentService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentService"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudsearch.BuildConfig",
+        "com.diegonmarcos.cloudsearch.core.Http",
+        "com.diegonmarcos.cloudsearch.core.SearchConfig",
+        "com.diegonmarcos.cloudsearch.core.agents.AgentsConfig",
+        "com.diegonmarcos.cloudsearch.core.agents.BudgetLedger",
+        "com.diegonmarcos.cloudsearch.core.agents.Caps",
+        "com.diegonmarcos.cloudsearch.core.agents.DraftRunner",
+        "com.diegonmarcos.cloudsearch.core.agents.Llm",
+        "com.diegonmarcos.cloudsearch.core.agents.MailSource",
+        "com.diegonmarcos.cloudsearch.core.agents.OpenRouterLlm",
+        "com.diegonmarcos.cloudsearch.core.agents.PageSource",
+        "com.diegonmarcos.cloudsearch.core.agents.Pricing",
+        "com.diegonmarcos.cloudsearch.core.agents.Reports",
+        "java.io.File",
+        "java.util.UUID"
+      ],
+      "symbols": [
+        "pricing(model: String)",
+        "run(agentId: String)",
+        "from(s: Services)",
+        "class AgentService"
+      ]
+    },
+    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/Browser.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -432670,6 +434137,7 @@
         "java.io.File"
       ],
       "symbols": [
+        "installAgents(a: AgentService?)",
         "get(ctx: Context)",
         "install(s: Services?)",
         "class Services"
@@ -432703,6 +434171,7 @@
         "setLastQuery(vertical: String, q: String)",
         "put(s: Chat.Session)",
         "delete(id: String)",
+        "raw()",
         "models()",
         "class SavedStore",
         "class Prefs",
@@ -432755,6 +434224,12 @@
         "analysis(s: Services, q: Map<String, String>)",
         "feed(s: Services, q: Map<String, String>)",
         "things(s: Services, q: Map<String, String>)",
+        "noAgents()",
+        "agents(s: Services)",
+        "runs(s: Services, q: Map<String, String>)",
+        "reports(s: Services)",
+        "report(s: Services, q: Map<String, String>)",
+        "cloud(s: Services, q: Map<String, String>)",
         "class SearchDebugApi"
       ]
     },
@@ -432818,6 +434293,89 @@
       ]
     },
     {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/ui/AgentsPages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentTags",
+        "stampFull",
+        "AgentsSection",
+        "AgentsPage",
+        "DraftRow",
+        "RunsPage",
+        "NoteField",
+        "TemplatesPage",
+        "AgentSettingsPage",
+        "AgentsModel"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.text.BasicTextField",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.platform.LocalClipboardManager",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.AnnotatedString",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.input.KeyboardType",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "com.diegonmarcos.cloudsearch.R",
+        "com.diegonmarcos.cloudsearch.core.Chat",
+        "com.diegonmarcos.cloudsearch.core.agents.BudgetLedger",
+        "com.diegonmarcos.cloudsearch.core.agents.Report"
+      ],
+      "symbols": [
+        "run(agent: String)",
+        "copy(item: String)",
+        "open(item: String)",
+        "sent(item: String)",
+        "dismiss(item: String)",
+        "template(id: String)",
+        "profile(id: String)",
+        "report(id: String)",
+        "runRow(id: String)",
+        "stampFull(ms: Long)",
+        "AgentsSection(state: SearchState)",
+        "Mini(text: String, tag: String, modifier: Modifier = Modifier, style: TextStyle = Type.style(Type.small)",
+        "AgentsPage(state: SearchState)",
+        "DraftRow(state: SearchState, report: Report, item: ReportItem)",
+        "RunsPage(state: SearchState)",
+        "RunRow(label: String, r: RunRecord, expanded: Boolean, toggle: ()",
+        "NoteField(value: String, onValue: (String)",
+        "TemplatesPage(state: SearchState)",
+        "AgentSettingsPage(state: SearchState)",
+        "run(agentId: String, scope: CoroutineScope)",
+        "class AgentTags",
+        "class AgentsModel"
+      ]
+    },
+    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/ui/AssistantPages.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -432864,6 +434422,62 @@
         "phosphor(name: String)",
         "SessionsMenu(state: SearchState)",
         "bucketLabel(b: Chat.Bucket)"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/ui/CloudPages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudTags",
+        "CloudSection"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "com.diegonmarcos.cloudsearch.BuildConfig",
+        "com.diegonmarcos.cloudsearch.R",
+        "com.diegonmarcos.cloudsearch.core.CloudConfig",
+        "com.diegonmarcos.cloudsearch.core.agents.MailBody",
+        "com.diegonmarcos.cloudsearch.core.agents.MailHeader",
+        "com.diegonmarcos.cloudsearch.data.Browser",
+        "com.diegonmarcos.cloudsearch.data.Launch",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "app(id: String)",
+        "message(id: String)",
+        "CloudSection(state: SearchState)",
+        "AppsPage(state: SearchState, cloud: CloudConfig)",
+        "MessagesPage(state: SearchState, cloud: CloudConfig)",
+        "search()",
+        "CodePage(state: SearchState, cloud: CloudConfig)",
+        "class CloudTags"
       ]
     },
     {
@@ -432972,6 +434586,36 @@
       ]
     },
     {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/ui/ReportsPages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReportsSection"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontWeight",
+        "com.diegonmarcos.cloudsearch.R",
+        "com.diegonmarcos.cloudsearch.core.agents.ReportItem"
+      ],
+      "symbols": [
+        "ReportsSection(state: SearchState)"
+      ]
+    },
+    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/ui/SearchShell.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -433036,7 +434680,9 @@
         "listing(v: String)",
         "things(v: String)",
         "areaChanged()",
+        "sectionOf(verticalId: String)",
         "open(id: String)",
+        "openSection(id: String)",
         "toggle(m: Menu)",
         "toggleDark()",
         "pickCity(id: String)",
@@ -433055,6 +434701,7 @@
         "option(id: String)",
         "SearchShell(state: SearchState)",
         "TopBar(state: SearchState, v: SearchConfig.Vertical, modifier: Modifier)",
+        "WebSection(state: SearchState, v: SearchConfig.Vertical)",
         "Page(v: SearchConfig.Vertical, kind: String)",
         "Categories(state: SearchState)",
         "FiltersMenu(state: SearchState)",
@@ -433328,6 +434975,7 @@
         "offline()",
         "online()",
         "launch()",
+        "openVertical(id: String)",
         "waitFor(tag: String)",
         "everyVerticalAndSubpageIsReachableAndComposes()",
         "jobsListingShowsWhatTheSourceReturnedAndWhyTheOthersDidNot()",
@@ -433346,9 +434994,20 @@
         "thingsFallsBackToTheTypedCityAndNamesWhy()",
         "thingsSettingsKeepTheCityAndClampTheRadius()",
         "theDebugRouteAnswersTheThingsComparison()",
+        "theIslandHoldsTheFiveSectionsAndEachOpens()",
+        "messages(from: String, subject: String, sinceMs: Long, limit: Int)",
+        "body(accountId: String, id: String)",
+        "text(url: String, maxChars: Int)",
+        "installAgents()",
+        "complete(req: com.diegonmarcos.cloudsearch.core.agents.LlmRequest)",
+        "anAgentRunDraftsForReviewAndNothingIsSent()",
+        "agentsSubSectionsAreReachable()",
+        "cloudSearchSectionHasItsThreePages()",
         "class SearchShellTest",
         "class FakeHttp",
-        "class I"
+        "class I",
+        "class FakeMail",
+        "class FakePages"
       ]
     },
     {
@@ -433452,6 +435111,238 @@
       ]
     },
     {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/AgentsConfig.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentsConfig"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "agent(id: String)",
+        "template(id: String)",
+        "problems()",
+        "parse(o: JSONObject)",
+        "objects(a: JSONArray?)",
+        "strings(a: JSONArray?)",
+        "class AgentsConfig",
+        "class MailEngine",
+        "class BrowserEngine",
+        "class Defaults",
+        "class ProfileField",
+        "class Agent",
+        "class TemplateSeed"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Audit.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AuditEvent",
+        "AuditLog"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "toJson()",
+        "fromJson(o: JSONObject)",
+        "add(at: Long, kind: String, subject: String, detail: String = \"\")",
+        "events()",
+        "oneLine(n: Int)",
+        "eventsFromJson(a: JSONArray?)",
+        "class AuditEvent",
+        "class AuditLog"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Budget.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Pricing",
+        "Caps",
+        "Spend",
+        "BudgetLedger"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "java.time.Instant",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "fromCatalog(json: String, model: String)",
+        "check(estimateUsd: Double)",
+        "record(actualUsd: Double)",
+        "estimate(promptChars: Int, maxTokens: Int, price: Pricing)",
+        "actual(promptTokens: Int, completionTokens: Int, providerCostUsd: Double?, price: Pricing)",
+        "dayKey(nowMs: Long, zone: ZoneId)",
+        "usd(v: Double)",
+        "class Pricing",
+        "class Caps",
+        "class Spend",
+        "class Allowed",
+        "class Denied",
+        "class BudgetLedger"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Engines.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailHeader",
+        "MailBody",
+        "MailSource",
+        "PageText",
+        "PageSource",
+        "Ipc"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.Templates"
+      ],
+      "symbols": [
+        "messages(from: String, subject: String, sinceMs: Long, limit: Int)",
+        "body(accountId: String, id: String)",
+        "text(url: String, maxChars: Int)",
+        "messagesUri(mail: AgentsConfig.MailEngine, mailPackage: String, from: String, subject: String, sinceMs: Long, limit: Int)",
+        "bodyUri(mail: AgentsConfig.MailEngine, mailPackage: String, accountId: String, id: String)",
+        "authority(pkg: String, suffix: String)",
+        "fetchExtras(b: AgentsConfig.BrowserEngine, url: String, maxChars: Int)",
+        "openExtras(b: AgentsConfig.BrowserEngine, url: String, group: String)",
+        "missingColumn(have: List<String>, want: List<String>)",
+        "enc(s: String)",
+        "class MailHeader",
+        "class MailBody",
+        "class MailSource",
+        "class PageText",
+        "class PageSource",
+        "class Ipc"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Links.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LinkRules",
+        "ListingLink",
+        "Links"
+      ],
+      "imports": [],
+      "symbols": [
+        "extract(text: String, html: String, rules: LinkRules)",
+        "canonical(candidate: String, rules: LinkRules)",
+        "class LinkRules",
+        "class ListingLink",
+        "class Links"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Llm.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LlmRequest",
+        "LlmReply",
+        "Llm",
+        "OpenRouterLlm"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.Chat",
+        "com.diegonmarcos.cloudsearch.core.Http",
+        "com.diegonmarcos.cloudsearch.core.SearchConfig",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "complete(req: LlmRequest)",
+        "class LlmRequest",
+        "class LlmReply",
+        "class Llm",
+        "class OpenRouterLlm"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Reports.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReportItem",
+        "Report",
+        "ReportSink",
+        "ReportBook",
+        "RunRecord",
+        "Reports"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "toJson()",
+        "fromJson(o: JSONObject)",
+        "publish(report: Report)",
+        "newestFirst()",
+        "get(id: String)",
+        "publish(r: Report)",
+        "delete(id: String)",
+        "setItemStatus(reportId: String, itemId: String, status: String)",
+        "fromJson(text: String)",
+        "listFromJson(text: String)",
+        "digest(agent: AgentsConfig.Agent, out: DraftRunner.Outcome)",
+        "class ReportItem",
+        "class Report",
+        "class ReportSink",
+        "class ReportBook",
+        "class RunRecord",
+        "class Reports"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Runner.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DraftRunner",
+        "Prompt"
+      ],
+      "imports": [],
+      "symbols": [
+        "run(input: Input)",
+        "finish( runId: String, input: Input, audit: AuditLog, started: Long, status: String, summary: String, mails: Int, links: Int, pagesRead: Int, drafts: List<Draft>, llmCalls: Int, )",
+        "system(maxWords: Int)",
+        "user(about: String, title: String, listingText: String)",
+        "clean(raw: String, maxWords: Int)",
+        "class DraftRunner",
+        "class Settings",
+        "class Input",
+        "class Draft",
+        "class Outcome",
+        "class Prompt"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/agents/Template.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Template"
+      ],
+      "imports": [],
+      "symbols": [
+        "render(template: String, vars: Map<String, String>)",
+        "variables(template: String)",
+        "class Template",
+        "class Rendered"
+      ]
+    },
+    {
       "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/Analysis.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -433526,6 +435417,28 @@
         "class Session",
         "class Bucket",
         "class becomes"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/main/kotlin/com/diegonmarcos/cloudsearch/core/Cloud.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudConfig"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "apps(all: List<FleetApp>, q: String)",
+        "codeUrl(q: String)",
+        "messagesSince(nowMs: Long)",
+        "parse(o: JSONObject)",
+        "fleetApps(json: String)",
+        "enc(s: String)",
+        "class CloudConfig",
+        "class FleetApp"
       ]
     },
     {
@@ -433846,6 +435759,272 @@
       ]
     },
     {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/AgentsConfigTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentsConfigTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.CloudConfig",
+        "com.diegonmarcos.cloudsearch.core.Fixtures",
+        "com.diegonmarcos.cloudsearch.core.SearchConfig",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "agentsAfter(edit: (JSONObject)",
+        "theShippedDeclarationParses()",
+        "everyTemplateVariableIsSupplied()",
+        "anAgentThatIsNotDraftOnlyIsRefused()",
+        "danglingReferencesAreRefused()",
+        "linkRulesMustBeUsable()",
+        "budgetsAndDefaultsMustBeSane()",
+        "theEnginesMustAgreeOnThePermission()",
+        "anAppWithoutAgentsStillParses()",
+        "theCloudSection()",
+        "theCloudDeclarationIsValidated()",
+        "after(edit: (JSONObject)",
+        "class AgentsConfigTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/BudgetTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BudgetTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "estimateIsTheWorstCase()",
+        "actualCostPrefersTheProvidersFigure()",
+        "aCallThatFitsIsAllowed()",
+        "theRunCapIsEnforcedBeforeTheCall()",
+        "theDayCapCountsEarlierRunsToday()",
+        "aZeroCapMeansNoCallAtAll()",
+        "nonsenseEstimatesAreDenied()",
+        "recordingAddsToTheRunAndTellsTheStore()",
+        "dayKeyFollowsTheZone()",
+        "usdIsFourDecimals()",
+        "pricingFromTheCatalogue()",
+        "class BudgetTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/IpcTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IpcTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.Fixtures",
+        "com.diegonmarcos.cloudsearch.core.repoRoot",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "const(file: String, name: String)",
+        "strings(file: String, array: String)",
+        "theMailContractIsTheEnginesOwn()",
+        "theBrowserContractIsTheEnginesOwn()",
+        "bothDoorsAreBehindTheConstellationPermission()",
+        "theMessagesUri()",
+        "blankFiltersAreLeftOutAndTheLimitIsClamped()",
+        "theBodyUri()",
+        "theBrowserExtras()",
+        "aMissingColumnIsNamed()",
+        "theAgentsOnlyHaveReadMethods()",
+        "names(c: Class<*>)",
+        "class IpcTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/LinksTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LinksTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.Fixtures",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "listingLinksOfAnHtmlAlertAreFoundOncePerListing()",
+        "accountMessagingAndForeignLinksAreNotListings()",
+        "plainTextLinksAreFoundWithPunctuationAndBracketsStripped()",
+        "anAmpEntityInTextDoesNotBreakTheLink()",
+        "oneListingIsOneLinkAcrossPartsAndSlugs()",
+        "hostMustBeTheAllowedOneOrASubdomain()",
+        "anHttpLinkIsUpgradedToHttps()",
+        "excludedPathsIncludeLanguagePrefixes()",
+        "idMustEndThePathAndBeBounded()",
+        "nothingInNothingOut()",
+        "class LinksTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/LlmTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LlmTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.Fixtures",
+        "com.diegonmarcos.cloudsearch.core.Http",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "get(url: String, headers: Map<String, String>, timeoutMs: Int)",
+        "post(url: String, headers: Map<String, String>, body: String, timeoutMs: Int)",
+        "theRequestHasNoToolsAndCapsTheAnswer()",
+        "theTokenGoesOnlyInTheAuthorizationHeader()",
+        "noTokenNoRequest()",
+        "usageAndCostAreRead()",
+        "noCostFieldMeansNoProviderCost()",
+        "errorsNeverCarryTheToken()",
+        "anUnreadableAnswerIsAnError()",
+        "class LlmTest",
+        "class Fake"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/ReportsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReportsTest",
+        "DigestTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "report(id: String, at: Long, items: List<ReportItem> = emptyList()",
+        "newestFirstAndReplaceById()",
+        "theBookIsBounded()",
+        "deleteAndItemStatus()",
+        "jsonRoundTrip()",
+        "anUnreadableFileIsAnEmptyBook()",
+        "itemDefaultsWhenFieldsAreMissing()",
+        "runRecordsRoundTripAndTolerateGarbage()",
+        "theAuditLineIsBoundedAndOneLine()",
+        "aRunBecomesOneReportWithAnItemPerDraft()",
+        "noCostNoCostInTheSummary()",
+        "class ReportsTest",
+        "class DigestTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/RunnerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RunnerTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudsearch.core.Fixtures",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "hdr(id: String, subject: String = \"Neue Angebote\")",
+        "messages(from: String, subject: String, sinceMs: Long, limit: Int)",
+        "body(accountId: String, id: String)",
+        "text(url: String, maxChars: Int)",
+        "complete(req: LlmRequest)",
+        "page(url: String, title: String = \"Zimmer\", text: String = listing)",
+        "runner(m: MailSource = mails, p: PageSource = FakePages(allPages)",
+        "input(seen: Set<String> = emptySet()",
+        "readsMailThenPagesThenDrafts()",
+        "theSinceIsLookbackDaysBeforeTheStart()",
+        "duplicatesAcrossMailsAreDroppedAndLogged()",
+        "listingsDraftedBeforeAreSkipped()",
+        "thePerRunListingCapHolds()",
+        "theMailCapHolds()",
+        "theMessageIsTheOwnersTemplateWithTheVariablesFilled()",
+        "aPersonalParagraphIsInsertedWhenTheModelAnswers()",
+        "theModelSeesTheListingAsDataWithNoToolsAndTheCapOnTheAnswer()",
+        "anInjectedInstructionInAPageCannotReachTheDraftAsALink()",
+        "noOwnerNotesNoModelCall()",
+        "theBudgetStopsTheModelButNotTheDrafts()",
+        "aDayCapAlreadySpentMeansNoCallAtAll()",
+        "theCostIsRecordedFromTheProvidersFigure()",
+        "aModelErrorStillLeavesADraft()",
+        "aPageThatCannotBeReadStillDraftsButIsRetriedNextTime()",
+        "theTitleFallsBackToTheUrlSlug()",
+        "aMailThatCannotBeReadIsLoggedAndTheRestGoesOn()",
+        "theMailDoorBeingDownFailsTheRunInWords()",
+        "noAlertMailIsAnOkRunWithNothingToDraft()",
+        "anAgentThatDoesNotUseTheModelNeverCallsIt()",
+        "theAuditNamesWhatWasReadAndNeverTheContent()",
+        "theRecordCarriesTheRunId()",
+        "cleanKeepsOneParagraphWithinTheWordLimit()",
+        "class RunnerTest",
+        "class FakeMail",
+        "class FakePages",
+        "class FakeLlm"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/agents/TemplateTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TemplateTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "fillsEverySlot()",
+        "fallbackWhenMissingOrBlank()",
+        "emptyFallbackDropsTheSlot()",
+        "aMissingVariableStaysVisibleAndIsReported()",
+        "aValueIsNeverExpandedAgain()",
+        "valuesWithRegexAndDollarCharactersSurvive()",
+        "variablesInOrderOfFirstUse()",
+        "onlyLowerCaseSlotNamesAreSlots()",
+        "class TemplateTest"
+      ]
+    },
+    {
       "path": "ac_cloud-search/core/src/test/kotlin/com/diegonmarcos/cloudsearch/core/CalculatorsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -434028,7 +436207,8 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "Fixtures"
+        "Fixtures",
+        "repoRoot"
       ],
       "imports": [
         "org.json.JSONObject",
@@ -434267,6 +436447,18 @@
       ]
     },
     {
+      "path": "ac_cloud-search/test/test-agents-draft-only.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "mutate()"
+      ]
+    },
+    {
       "path": "ac_cloud-search/test/test-fleet-setup.sh",
       "lang": "sh",
       "role": "shell",
@@ -434494,32 +436686,18 @@
         "ShellBootReceiver"
       ],
       "imports": [
-        "android.Manifest",
-        "android.content.BroadcastReceiver",
         "android.content.Context",
-        "android.content.Intent",
-        "android.content.pm.PackageManager",
-        "android.provider.Settings",
-        "android.util.Log",
-        "androidx.work.ExistingWorkPolicy",
-        "androidx.work.OneTimeWorkRequestBuilder",
-        "androidx.work.WorkManager",
-        "androidx.work.Worker",
         "androidx.work.WorkerParameters",
-        "com.diegonmarcos.superapp.adbdebug.AdbPairingService",
-        "com.diegonmarcos.superapp.adbdebug.EmbeddedAdbChannel",
-        "com.diegonmarcos.superapp.adbdebug.RishBridge"
+        "com.diegonmarcos.superapp.adbdebug.HostShell",
+        "com.diegonmarcos.superapp.adbdebug.HostShellBootReceiver",
+        "com.diegonmarcos.superapp.adbdebug.HostShellWorker"
       ],
       "symbols": [
         "install(app: Context)",
-        "schedule(ctx: Context, replace: Boolean)",
-        "onConnected(ctx: Context)",
         "keepWirelessDebuggingOn(ctx: Context)",
-        "reconnect(ctx: Context, attempts: Int)",
-        "doWork()",
-        "onReceive(context: Context, intent: Intent?)",
-        "class does",
+        "class only",
         "class CloudStoreShell",
+        "class by",
         "class ShellChannelWorker",
         "class ShellBootReceiver"
       ]
@@ -434739,6 +436917,20 @@
         "ok()",
         "bad()",
         "body()",
+        "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/test/test-store-notify-gate.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
         "mutate()"
       ]
     },
@@ -441896,6 +444088,20 @@
     },
     {
       "path": "ac_cloud-termux/test/test-dns-bridge-owner.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/test/test-fleet-config-restart-defers.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
