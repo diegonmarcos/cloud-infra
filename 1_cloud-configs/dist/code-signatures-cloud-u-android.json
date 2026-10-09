@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20872,
+    "files": 20874,
     "by_lang": {
       "py": 121,
       "sh": 445,
-      "kotlin": 10702,
+      "kotlin": 10704,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -25,7 +25,7 @@
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10699,
+      "kotlin": 10701,
       "python": 40,
       "rust-module": 87,
       "file": 2255,
@@ -17876,6 +17876,7 @@
         "AccountPageTags",
         "AccountDevice",
         "AccountPlaceholderPage",
+        "titleChips",
         "AccountProfilePage",
         "AccountConnectPage",
         "AutoBackup",
@@ -17911,6 +17912,9 @@
         "androidx.compose.runtime.rememberCoroutineScope",
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Modifier",
+        "com.diegonmarcos.superapp.uikit.KitDates",
+        "com.diegonmarcos.superapp.uikit.KitChip",
+        "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.text.input.PasswordVisualTransformation",
@@ -17919,16 +17923,14 @@
         "com.diegonmarcos.cloudlib.auth.SignIn",
         "com.diegonmarcos.cloudlib.auth.SignInHost",
         "com.diegonmarcos.cloudlib.auth.SignInResult",
-        "com.diegonmarcos.cloudlib.auth.SignInWays",
-        "com.diegonmarcos.superapp.devtools.AppDebugServer",
-        "com.diegonmarcos.superapp.settings.AccountVault",
-        "com.diegonmarcos.superapp.settings.ConfigsPrefs"
+        "com.diegonmarcos.cloudlib.auth.SignInWays"
       ],
       "symbols": [
         "way(kind: String)",
         "placeholder(section: String, page: String)",
         "json()",
         "id(ctx: Context)",
+        "migrateAtStart(ctx: Context)",
         "resolve(ctx: Context)",
         "aliases(b64: String = com.diegonmarcos.superapp.account.BuildConfig.UI_ACCOUNT_B64)",
         "listingIds(ctx: Context)",
@@ -17939,6 +17941,8 @@
         "declared(ctx: Context)",
         "jsonAt(ctx: Context, path: String)",
         "AccountPlaceholderPage(section: String, page: String, task: String, body: (@Composable ()",
+        "titleChips(value: String)",
+        "isTitles(path: String)",
         "AboutValue(row: InfoMask.Row, full: String, shown: JSONObject?, editable: Boolean)",
         "AccountProfilePage(open: (section: String, page: String)",
         "shownAt(vararg path: String)",
@@ -18364,6 +18368,8 @@
         "devices()",
         "backup(deviceId: String, dry: Boolean, capture: Boolean = true)",
         "load(deviceId: String)",
+        "setWorking(device: String, sha: String, profile: JSONObject)",
+        "current(deviceId: String)",
         "working()",
         "setDefault(deviceId: String)",
         "delete(deviceId: String)",
@@ -18783,6 +18789,7 @@
         "androidx.compose.runtime.rememberCoroutineScope",
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Modifier",
+        "com.diegonmarcos.superapp.uikit.KitDates",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.text.style.TextOverflow",
@@ -18798,8 +18805,7 @@
         "com.diegonmarcos.superapp.uikit.KitState",
         "com.diegonmarcos.superapp.uikit.KitStatePill",
         "com.diegonmarcos.superapp.uikit.KitStatusBanner",
-        "com.diegonmarcos.superapp.uikit.KitConfirmDialog",
-        "com.diegonmarcos.superapp.uikit.KitSectionHeader"
+        "com.diegonmarcos.superapp.uikit.KitConfirmDialog"
       ],
       "symbols": [
         "load(id: String)",
@@ -18858,7 +18864,8 @@
       "exports": [
         "RunbookTags",
         "runbookGlyph",
-        "RunbookPage"
+        "RunbookPage",
+        "runbookBanner"
       ],
       "imports": [
         "androidx.compose.foundation.layout.Arrangement",
@@ -18876,6 +18883,7 @@
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
         "androidx.compose.runtime.mutableStateMapOf",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
@@ -18886,6 +18894,7 @@
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.superapp.uikit.KitAction",
+        "com.diegonmarcos.superapp.uikit.KitDates",
         "com.diegonmarcos.superapp.uikit.KitActionBar",
         "com.diegonmarcos.superapp.uikit.KitListRow",
         "com.diegonmarcos.superapp.uikit.KitState",
@@ -18905,8 +18914,9 @@
         "button(id: String)",
         "runbookGlyph(state: String)",
         "RunbookPage(open: (section: String, page: String)",
-        "refresh()",
+        "checkAll(keep: Set<String> = emptySet()",
         "runOne(id: String)",
+        "runbookBanner(states: List<String>, checking: Int, checkedAt: String = \"\")",
         "stepTitle(id: String)",
         "buttonLabel(id: String)",
         "class RunbookTags"
@@ -18975,6 +18985,7 @@
         "steps(allowPrompt: Boolean = false)",
         "step(id: String, allowPrompt: Boolean = false)",
         "dry()",
+        "check(id: String)",
         "run(id: String, allowPrompt: Boolean = false)",
         "plan()",
         "runAll(allowPrompt: Boolean = false, each: (JSONObject)",
@@ -19009,8 +19020,7 @@
         "declaredIds()",
         "appsJson(p: AppInventory.Plan)",
         "names(l: List<AppInventory.Entry>)",
-        "appsLine(p: AppInventory.Plan)",
-        "declared(uiAccountB64: String)"
+        "appsLine(p: AppInventory.Plan)"
       ]
     },
     {
@@ -19564,7 +19574,7 @@
         "launchable(ctx: Context)",
         "fleetPackages()",
         "entriesFor(ctx: Context, labels: Map<String, String>)",
-        "toJson(entries: List<Entry>)",
+        "toJson(entries: List<Entry>, integrityPlay: Set<String> = emptySet()",
         "parse(text: String)",
         "text(k: String)",
         "plan(wanted: List<Entry>, installed: Set<String>, fleet: Set<String>, sources: JSONObject)",
@@ -20007,6 +20017,24 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/IntegrityMarks.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IntegrityMarks"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "marked(ctx: Context)",
+        "mark(ctx: Context, pkg: String)",
+        "effective(ctx: Context, app: SourceResolver.External)",
+        "canReport(ctx: Context, app: SourceResolver.External)",
+        "class IntegrityMarks"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/JobBoard.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20262,6 +20290,7 @@
         "java.net.URL"
       ],
       "symbols": [
+        "of(id: String)",
         "inTab(kind: Kind)",
         "asFleetApp()",
         "kind(id: String?)",
@@ -20295,13 +20324,12 @@
         "class PlayAnon",
         "class Play",
         "class Store",
+        "class Integrity",
         "class External",
         "class Config",
         "class Note",
         "class Check",
-        "class NotInstalled",
-        "class Installed",
-        "class UpdateAvailable"
+        "class NotInstalled"
       ]
     },
     {
@@ -20823,6 +20851,7 @@
         "importText(text: String)",
         "rows(ctx: Context)",
         "render(ctx: Context, into: LinearLayout, rows: List<Row>)",
+        "integrity(ctx: Context, r: Row)",
         "redraw()",
         "row(ctx: Context, r: Row)",
         "paint(ctx: Context, tv: TextView, s: SourceResolver.Check, r: Row)",
@@ -53949,7 +53978,7 @@
         "KitSegmented( options: List<Pair<String, String>>, selected: String?, onSelect: (String)",
         "KitStepper(steps: List<KitStep>, modifier: Modifier = Modifier)",
         "KitListRow( label: String, modifier: Modifier = Modifier, secondary: String = \"\", leading: String? = null, pill: Pair<String, KitState>? = null, tag: String = label, onClick: (()",
-        "KitChip(label: String, onRemove: ()",
+        "KitChip(label: String, onRemove: (()",
         "KitSaveBar(summary: String, onSave: ()",
         "All()",
         "class KitDensity",
@@ -53960,6 +53989,28 @@
         "class KitStepState",
         "class KitStep",
         "class KitSamples"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ui-kit/src/main/kotlin/com/diegonmarcos/superapp/uikit/KitDates.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KitDates"
+      ],
+      "imports": [
+        "java.time.Instant",
+        "java.time.LocalDate",
+        "java.time.OffsetDateTime",
+        "java.time.ZoneId",
+        "java.time.ZonedDateTime",
+        "java.time.format.DateTimeFormatter",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "parse(iso: String, zone: ZoneId = ZoneId.systemDefault()",
+        "relative(iso: String, now: ZonedDateTime = ZonedDateTime.now()",
+        "class KitDates"
       ]
     },
     {
