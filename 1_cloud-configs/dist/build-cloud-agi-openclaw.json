@@ -1,7 +1,7 @@
 {
   "_warning": "DO NOT EDIT — AUTO-GENERATED FILE. Source of truth lives in a_solutions/*/build.json + config.json + b_infra/*/build.json. Edits here are overwritten on every `bash 9_others/build.sh all`.",
   "_meta": {
-    "description": "matrix-element container config (service=matrix-element, role=app)",
+    "description": "cloud-agi-openclaw container config (service=openclaw, role=app)",
     "format_version": 1,
     "generated_at": "",
     "generated_by": "1_cloud-configs/src/derive/cloud-data-config-derive.ts",
@@ -28,32 +28,27 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/container-configs",
   "container": {
-    "container_name": "matrix-element",
-    "image": "ghcr.io/diegonmarcos/matrix-element-binaries:latest",
-    "port": 8083,
-    "port_env": null,
-    "dns": "matrix-element.app",
-    "public": true,
-    "proxy": {
-      "domain": "messenger.diegonmarcos.com",
-      "auth": "two_factor"
-    },
-    "healthcheck": "/",
-    "monitoring": {
-      "tls_check": true,
-      "dns_check": true,
-      "endpoint_check": true
-    },
-    "volumes": [
-      "./configs/config.json:/app/config.json:ro"
-    ],
+    "container_name": "cloud-agi-openclaw",
+    "image": "ghcr.io/openclaw/openclaw:2026.9.9",
+    "_image_comment": "Upstream's public GHCR image, pinned (2026.9.9 = latest on 2026-10-10, arm64 digest sha256:f75083cde787fcb90cdfa91cb17ca0ea135b5f4ee989fc08ca2c2e12abe22e84). Public, so the oci-apps pull needs no GHCR login. 3.4 GB on disk.",
+    "port": 18789,
+    "port_env": "OPENCLAW_GATEWAY_PORT",
+    "dns": "openclaw.app",
+    "public": false,
+    "healthcheck": null,
+    "monitoring": null,
     "env_file": false,
     "depends_on": [],
-    "resources": null,
+    "resources": {
+      "mem_limit": "3G",
+      "mem_reservation": "1G",
+      "_comment": "Measured 2026-10-10 on oci-apps (smoke run of this exact config): 1.33 GiB resident after one agent turn. 3G is the ceiling with headroom for tool runs; the agi category default (8G) is more than this service needs."
+    },
     "read_only": false,
-    "protocol": "http"
+    "protocol": "http",
+    "_healthcheck_comment": "null on purpose, as for cloud-agi-hermes: the listener is loopback-only, so a mesh probe of openclaw.app:18789 could only ever fail. Liveness is compose.nix's container healthcheck (127.0.0.1/health) and the gateway's /health.modes[openclaw].available."
   },
-  "service": "matrix-element",
+  "service": "openclaw",
   "role": "app",
   "vm": "oci-apps",
   "services": {
@@ -1794,9 +1789,26 @@
       }
     }
   },
-  "timezone": "Europe/Madrid",
-  "upstream_image": "vectorim/element-web:latest",
-  "resources": {
-    "mem_reservation": "16M"
+  "runtime": {
+    "_comment": "THE ONE DECLARATION of what OpenClaw runs. src/openclaw-config.nix renders configs/openclaw.json from it (a pure function, evaluated by the tester too), compose.nix mounts that read-only and the container copies it into its state volume at every start, so a hand edit inside the container lasts until the next restart and never longer. `model` is the fleet's agent model (the same one goose and hermes declare); `provider` is the fleet gateway's OpenAI-compatible face on the WireGuard bind, which injects the OpenRouter key — the apiKey OpenClaw sends is a placeholder the gateway ignores (passthrough_auth false there).",
+    "model": "deepseek/deepseek-v4-flash-0731",
+    "agent_target": "openclaw/default",
+    "provider": {
+      "id": "fleet",
+      "base_url": "http://10.0.0.6:3217/v1",
+      "api": "openai-completions",
+      "api_key_placeholder": "fleet-gateway-injects-the-key",
+      "context_window": 128000,
+      "max_tokens": 8192
+    },
+    "_bind_comment": "loopback + auth none is the setup OpenClaw documents for a trusted same-host caller (docs/gateway/config-gateway.md: 'auth.mode none — use only for trusted local loopback setups'). Any other bind REQUIRES auth (non-loopback binds refuse to start without it) and would need a shared token in both this service's and my-ai-api's sops files; the tester fails if bind leaves loopback while auth stays none.",
+    "bind": "loopback",
+    "auth": "none"
+  },
+  "tests": {
+    "openclaw-service": {
+      "cmd": "node test-openclaw-service.mjs",
+      "cwd": "src"
+    }
   }
 }

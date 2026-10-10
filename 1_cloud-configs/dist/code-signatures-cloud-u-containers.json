@@ -6,24 +6,24 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2903,
+    "files": 2909,
     "by_lang": {
-      "sh": 143,
-      "nix": 159,
+      "sh": 144,
+      "nix": 162,
       "py": 860,
       "ts": 1140,
-      "js": 66,
+      "js": 68,
       "rust": 535
     },
     "by_role": {
-      "shell": 133,
-      "nix-module": 15,
+      "shell": 134,
+      "nix-module": 16,
       "python": 853,
       "module": 695,
-      "file": 312,
+      "file": 314,
       "script": 8,
-      "flake": 73,
-      "compose": 71,
+      "flake": 74,
+      "compose": 72,
       "entrypoint": 48,
       "mcp-tool": 110,
       "workflow-dag": 2,
@@ -21017,6 +21017,8 @@
         "TELEGRAM_ALLOWED_USERS",
         "OPENAI_BASE_URL",
         "OPENAI_MODEL",
+        "API_SERVER_HOST",
+        "API_SERVER_PORT",
         "volumes",
         "hermes_data"
       ]
@@ -38179,6 +38181,19 @@
       "symbols": []
     },
     {
+      "path": "user-ai_my-ai-api/src/code/test-my-ai-native-agents.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:http",
+        "node:child_process",
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": []
+    },
+    {
       "path": "user-ai_my-ai-api/src/code/test-my-ai-resume-by-name.mjs",
       "lang": "js",
       "role": "file",
@@ -54336,6 +54351,168 @@
         "apt",
         "title"
       ]
+    },
+    {
+      "path": "user-ai_openclaw/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "user-ai_openclaw/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "res",
+        "port",
+        "home",
+        "state",
+        "services",
+        "openclaw",
+        "image",
+        "container_name",
+        "restart",
+        "network_mode",
+        "env_file",
+        "entrypoint",
+        "environment",
+        "HOME",
+        "OPENCLAW_HOME",
+        "OPENCLAW_STATE_DIR",
+        "OPENCLAW_CONFIG_PATH",
+        "OPENCLAW_GATEWAY_PORT",
+        "OPENCLAW_DISABLE_BONJOUR",
+        "OPENCLAW_NO_RESPAWN",
+        "NODE_COMPILE_CACHE",
+        "TZ",
+        "volumes",
+        "cap_drop",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "openclaw_state"
+      ]
+    },
+    {
+      "path": "user-ai_openclaw/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "loopback-only",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./openclaw-config.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "openclaw-config.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "text",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
+      "path": "user-ai_openclaw/src/openclaw-config.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [
+        "buildJson"
+      ],
+      "imports": [],
+      "symbols": [
+        "rt",
+        "p",
+        "gateway",
+        "mode",
+        "port",
+        "bind",
+        "auth",
+        "tailscale",
+        "controlUi",
+        "http",
+        "models",
+        "providers",
+        "baseUrl",
+        "apiKey",
+        "api",
+        "id",
+        "name",
+        "reasoning",
+        "input",
+        "contextWindow",
+        "maxTokens",
+        "agents",
+        "defaults",
+        "model"
+      ]
+    },
+    {
+      "path": "user-ai_openclaw/src/test-openclaw-service.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
+      ],
+      "symbols": []
     },
     {
       "path": "user-ai_session-memory/build.sh",

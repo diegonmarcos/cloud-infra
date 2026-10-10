@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 312,
-    "edges": 429,
+    "nodes": 315,
+    "edges": 433,
     "by_table": {
       "vm": 4,
-      "service": 73,
-      "container": 89,
+      "service": 74,
+      "container": 90,
       "domain": 42,
       "repo": 3,
-      "module": 73,
+      "module": 74,
       "package": 28
     }
   },
@@ -1485,6 +1485,32 @@
         "image": "ghcr.io/diegonmarcos/claude-superset-api:latest",
         "role": "app",
         "port": 3117,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "openclaw",
+      "key": "service:openclaw",
+      "properties": {
+        "name": "openclaw",
+        "category": "agi",
+        "description": "OpenClaw (MIT, github.com/openclaw/openclaw) on oci-apps — the open-source personal agent gateway, as a fourth fleet agent next to hermes, goose and claude. Upstream's own image, unmodified. Its gateway listens on 127.0.0.1 only (host network, auth mode none, the documented trusted-loopback setup) with the OpenAI-compatible /v1/chat/completions enabled; the fleet reaches it ONLY through the agent gateway my-ai-api (X-Agent-Mode: openclaw). Its model calls go back through that same gateway's OpenRouter face, which holds the key, so this service has no secret at all. Never public, never on the mesh directly.",
+        "domain": null,
+        "port": 18789,
+        "vm": "oci-apps",
+        "folder": "user-ai_openclaw"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_agi_openclaw",
+      "key": "container:cloud_agi_openclaw",
+      "properties": {
+        "name": "cloud-agi-openclaw",
+        "image": "ghcr.io/openclaw/openclaw:2026.9.9",
+        "role": "app",
+        "port": 18789,
         "public": false
       }
     },
@@ -3094,6 +3120,17 @@
     },
     {
       "table": "module",
+      "id": "user_ai_openclaw",
+      "key": "module:user_ai_openclaw",
+      "properties": {
+        "name": "user-ai_openclaw",
+        "repo": "cloud",
+        "category": "agi",
+        "service": "openclaw"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_ai_session_memory",
       "key": "module:user_ai_session_memory",
       "properties": {
@@ -4538,6 +4575,22 @@
       "from": "service:my_ai_claude_api",
       "to": "container:cloud_agi_claude",
       "key": "service:my_ai_claude_api->runs_container->container:cloud_agi_claude",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:openclaw",
+      "to": "vm:oci_apps",
+      "key": "service:openclaw->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:openclaw",
+      "to": "container:cloud_agi_openclaw",
+      "key": "service:openclaw->runs_container->container:cloud_agi_openclaw",
       "properties": {
         "role": "app"
       }
@@ -6427,6 +6480,20 @@
       "from": "module:user_ai_my_ai_claude_api",
       "to": "service:my_ai_claude_api",
       "key": "module:user_ai_my_ai_claude_api->implements->service:my_ai_claude_api",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_ai_openclaw",
+      "to": "repo:cloud",
+      "key": "module:user_ai_openclaw->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_ai_openclaw",
+      "to": "service:openclaw",
+      "key": "module:user_ai_openclaw->implements->service:openclaw",
       "properties": {}
     },
     {
