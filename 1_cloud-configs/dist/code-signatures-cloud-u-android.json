@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 20893,
+    "files": 20910,
     "by_lang": {
       "py": 121,
       "sh": 445,
-      "kotlin": 10723,
+      "kotlin": 10740,
       "java": 624,
       "ts": 8413,
       "nix": 28,
@@ -25,7 +25,7 @@
       "module": 6357,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10720,
+      "kotlin": 10737,
       "python": 40,
       "rust-module": 87,
       "file": 2255,
@@ -7801,6 +7801,28 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/AppsSearch.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppsSearch"
+      ],
+      "imports": [
+        "java.text.Normalizer",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "fold(s: String)",
+        "isActive(query: String)",
+        "rank(foldedQuery: String, label: String, group: String)",
+        "filter(groups: List<Group<T>>, query: String)",
+        "class AppsSearch",
+        "class Item",
+        "class Group",
+        "class Result"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/AppUrls.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -7864,6 +7886,24 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/CloudSearchHandoff.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudSearchHandoff"
+      ],
+      "imports": [
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "com.diegonmarcos.superapp.fleetconfig.CloudSearchQuery"
+      ],
+      "symbols": [
+        "packages(app: Sections.ExternalApp?)",
+        "intent(pm: PackageManager, packages: List<String>, query: String)",
+        "class CloudSearchHandoff"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/DetailPlaceholderFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -7899,18 +7939,46 @@
         "android.widget.LinearLayout",
         "android.widget.ScrollView",
         "android.widget.TextView",
-        "androidx.fragment.app.Fragment"
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.unit.dp",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.apps.PhoneApp",
+        "com.diegonmarcos.superapp.apps.PhoneAppClassifier",
+        "com.diegonmarcos.superapp.apps.PhoneAppsFragment",
+        "com.diegonmarcos.superapp.apps.PhoneFolders",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitSearchBar",
+        "com.diegonmarcos.superapp.uikit.kitComposeView"
       ],
       "symbols": [
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "starActions()",
+        "withSearchBar(ctx: android.content.Context, scroll: ScrollView)",
+        "setQuery(q: String)",
+        "submit()",
+        "launch(target: String)",
+        "searchInCloudSearch(q: String)",
+        "hideKeyboard()",
+        "tryHandleBack()",
+        "onDestroyView()",
+        "searchIndex(ctx: android.content.Context)",
+        "resultRow(ctx: android.content.Context, entries: List<Entry>)",
+        "appCell(ctx: android.content.Context, app: PhoneApp)",
+        "cloudSearchRow(ctx: android.content.Context, q: String)",
+        "openFolder(tile: Sections.AggTile)",
         "groupHeader(ctx: android.content.Context, title: String)",
         "sectionDivider(ctx: android.content.Context)",
         "tileRow(ctx: android.content.Context, tiles: List<Sections.AggTile>)",
         "separatorCell(ctx: android.content.Context, tile: Sections.AggTile)",
-        "tileCell(ctx: android.content.Context, tile: Sections.AggTile)",
+        "tileCell(ctx: android.content.Context, tile: Sections.AggTile, fromSearch: Boolean = false)",
         "dp(v: Int)",
-        "newInstance(sectionId: String)",
-        "class GroupedTilesFragment"
+        "newInstance(sectionId: String, search: Boolean = false)",
+        "class GroupedTilesFragment",
+        "class Entry",
+        "class Tile",
+        "class App"
       ]
     },
     {
@@ -8223,7 +8291,7 @@
         "unregisterSignalListener()",
         "dataSimTelephony()",
         "refreshNetworkFromConnectivity()",
-        "readBluetoothEnabled()",
+        "refreshBluetooth(apply: Boolean = true)",
         "applyIconTints()",
         "refreshMetrics()",
         "onSignalStrengthsChanged(ss: android.telephony.SignalStrength)",
@@ -8987,6 +9055,47 @@
         "status(ctx: Context, waitMs: Long)",
         "class AccountMesh",
         "class slot"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/BtLinks.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BtLinks"
+      ],
+      "imports": [
+        "android.annotation.SuppressLint",
+        "android.bluetooth.BluetoothAdapter",
+        "android.bluetooth.BluetoothDevice",
+        "android.bluetooth.BluetoothManager",
+        "android.bluetooth.BluetoothProfile",
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.os.Build"
+      ],
+      "symbols": [
+        "batteryText(b: Battery)",
+        "ok(v: Int)",
+        "metadataLevel(bytes: ByteArray?)",
+        "dots(count: Int)",
+        "tint(adapterOn: Boolean)",
+        "merge(byProfile: List<Pair<String, Map<String, String>>>)",
+        "lines(r: Reading)",
+        "permitted(ctx: Context)",
+        "read(ctx: Context)",
+        "noteBattery(i: android.content.Intent)",
+        "batteryOf(address: String, d: BluetoothDevice?)",
+        "meta(key: Int)",
+        "nameOf(d: BluetoothDevice)",
+        "aclConnected(d: BluetoothDevice)",
+        "ensureProxies(app: Context, adapter: BluetoothAdapter)",
+        "onServiceConnected(profile: Int, proxy: BluetoothProfile)",
+        "onServiceDisconnected(profile: Int)",
+        "class BtLinks",
+        "class Link",
+        "class Battery",
+        "class Reading"
       ]
     },
     {
@@ -9899,6 +10008,7 @@
       ],
       "symbols": [
         "card(s: Snapshot)",
+        "link(s: Snapshot)",
         "title(s: Snapshot)",
         "alwaysOnLabel(s: Snapshot)",
         "toggleLabel(s: Snapshot)",
@@ -9935,8 +10045,6 @@
         "com.diegonmarcos.superapp.battery.SysfsProc",
         "com.diegonmarcos.superapp.battery.BatterySessionStats",
         "com.diegonmarcos.superapp.battery.BatteryEstimatePopup",
-        "android.bluetooth.BluetoothAdapter",
-        "android.bluetooth.BluetoothManager",
         "android.content.Context",
         "android.content.Intent",
         "android.provider.Settings",
@@ -9961,14 +10069,13 @@
         "java.net.NetworkInterface"
       ],
       "symbols": [
-        "wgSignal(ctx: Context)",
-        "wgSignalOf(up: Boolean, stats: com.wireguard.android.backend.Statistics?)",
+        "wgLink(ctx: Context, vpnTransport: Boolean = hasTransport(ctx, NetworkCapabilities.TRANSPORT_VPN)",
+        "wgLinkOf(ctx: Context, up: Boolean, stats: com.wireguard.android.backend.Statistics?, vpnTransport: Boolean)",
         "show(ctx: Context, anchor: View, focus: String? = null)",
         "mark(key: String, v: View)",
         "lightRow(ctx: Context, title: String, on: Boolean, onTap: ()",
         "hasTransport(ctx: Context, t: Int)",
         "wifiEnabled(ctx: Context)",
-        "bluetoothEnabled(ctx: Context)",
         "meshUp(ctx: Context)",
         "hubIp(allowedIps: String)",
         "meshHeaderRow(ctx: Context, meshes: List<Mesh>, onTap: ()",
@@ -9986,7 +10093,6 @@
         "readWifi(ctx: Context, now: Sample, prev: Sample?)",
         "decodeWifiFreq(freq: Int)",
         "readMesh(ctx: Context)",
-        "readBluetooth(ctx: Context)",
         "readUsbState(ctx: Context)",
         "readUsb(ctx: Context, st: UsbDataModel.State)",
         "usbSpeed(role: UsbDataModel.Role)",
@@ -10000,7 +10106,9 @@
         "hexToIp(a: String)",
         "fmtKbps(kbps: Int)",
         "readLocalIps()",
-        "sampleTraffic()"
+        "sampleTraffic()",
+        "fmtRate(rxNow: Long, txNow: Long, rxPrev: Long?, txPrev: Long?, tsNow: Long, tsPrev: Long?)",
+        "fmtBytes(b: Long)"
       ]
     },
     {
@@ -10036,6 +10144,19 @@
         "class AdbSection",
         "class Snap",
         "class HotspotSection"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/NetworkSections.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NetworkSections"
+      ],
+      "imports": [],
+      "symbols": [
+        "inOrder(byKey: Map<String, T>)",
+        "class NetworkSections"
       ]
     },
     {
@@ -10093,6 +10214,23 @@
         "class UsbDataModel",
         "class Role",
         "class State"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/WgLink.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WgLink"
+      ],
+      "imports": [],
+      "symbols": [
+        "tint(state: State)",
+        "derive( tunnelUp: Boolean, handshakesMs: List<Long>, nowMs: Long, path: String = \"\", vpnTransport: Boolean = false, )",
+        "ago(ms: Long)",
+        "class WgLink",
+        "class State",
+        "class Reading"
       ]
     },
     {
@@ -13623,6 +13761,65 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/AppsSearchTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppsSearchTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.launcher.AppsSearch.Group",
+        "com.diegonmarcos.superapp.launcher.AppsSearch.Item",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "g(title: String, vararg labels: String)",
+        "labels(r: AppsSearch.Result<String>)",
+        "class AppsSearchTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/CloudSearchHandoffTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudSearchHandoffTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.app.SearchManager",
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.IntentFilter",
+        "android.content.pm.ApplicationInfo",
+        "android.content.pm.PackageInfo",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.fleetconfig.CloudSearchQuery",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "install(pkg: String, takesQuery: Boolean)",
+        "theRowSendsTheTypedTextToCloudSearch()",
+        "theRowNamesTheCloudSearchOfTheRoster()",
+        "noCloudSearchThatTakesAQueryMeansJustOpenIt()",
+        "theFirstCandidateThatTakesTheQueryWins()",
+        "class CloudSearchHandoffTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/PlaceholderPagesComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13658,6 +13855,24 @@
         "play(gate: StarGestureGate, gesture: List<Ev>)",
         "class StarGestureGateTest",
         "class Ev"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/BtLinksTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BtLinksTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.BtLinks.Battery",
+        "com.diegonmarcos.superapp.network.BtLinks.Link",
+        "com.diegonmarcos.superapp.network.BtLinks.Reading",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class BtLinksTest"
       ]
     },
     {
@@ -13982,6 +14197,23 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/NetworkSectionsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NetworkSectionsTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class NetworkSectionsTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/SignalLevelsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -14061,6 +14293,25 @@
       "symbols": [
         "st(vararg on: String, plugged: Int = 2, otg: List<String> = emptyList()",
         "class UsbDataModelTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/WgLinkTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WgLinkTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.WgLink.State",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "assertOff(r: WgLink.Reading)",
+        "class WgLinkTest"
       ]
     },
     {
@@ -15038,6 +15289,39 @@
         "show(page: F)",
         "showKit(content: @Composable ()",
         "class KitPageHarness"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/KitSearchBarTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KitSearchBarTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.onNodeWithText",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performImeAction",
+        "androidx.compose.ui.test.performTextInput",
+        "com.diegonmarcos.superapp.uikit.KitSearchBar",
+        "com.diegonmarcos.superapp.uikit.KitSearchTags",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "bar()",
+        "class KitSearchBarTest"
       ]
     },
     {
@@ -20059,6 +20343,30 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/DeclaredEdits.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DeclaredEdits"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "load(ctx: Context)",
+        "save(ctx: Context, o: JSONObject)",
+        "added(o: JSONObject)",
+        "removed(o: JSONObject)",
+        "declare(ctx: Context, pkg: String, label: String, kinds: List<String>)",
+        "undeclare(ctx: Context, pkg: String)",
+        "addedPackages(ctx: Context)",
+        "apply(ctx: Context, cfg: SourceResolver.Config, pkg: String, ext: SourceResolver.External)",
+        "class DeclaredEdits"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/DnsLadder.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20144,6 +20452,7 @@
         "android.content.Context",
         "android.os.Build",
         "android.util.JsonReader",
+        "android.util.JsonToken",
         "com.diegonmarcos.superapp.updater.UpdateProgress",
         "com.diegonmarcos.superapp.updater.apk.VerifiedApk",
         "com.diegonmarcos.superapp.updater.cache.ApkCache",
@@ -20160,6 +20469,10 @@
         "fetch(ctx: Context, cfg: JSONObject, pkg: String)",
         "verifiedIndex(ctx: Context, url: String, entryName: String, certSha256: String)",
         "verifiedEntry(jar: File, entryName: String, certSha256: String)",
+        "search(ctx: Context, cfg: JSONObject, query: String, limit: Int = 60)",
+        "search(input: InputStream, query: String, limit: Int = 60)",
+        "packages(ctx: Context, cfg: JSONObject)",
+        "str()",
         "lookup(input: InputStream, pkg: String)",
         "appHead(r: JsonReader)",
         "versionsOf(r: JsonReader)",
@@ -20167,7 +20480,8 @@
         "class tree",
         "class FDroidIndex",
         "class Version",
-        "class Entry"
+        "class Entry",
+        "class Hit"
       ]
     },
     {
@@ -20477,6 +20791,7 @@
         "call(url: String, h: Map<String, String>, form: Map<String, String>? = null)",
         "query(m: Map<String, String>)",
         "details(ctx: Context, cfg: Config, pkg: String)",
+        "search(ctx: Context, cfg: Config, query: String)",
         "delivery(ctx: Context, cfg: Config, pkg: String)",
         "hex(b64: ByteArray)",
         "withSession(ctx: Context, cfg: Config, block: (Auth, Properties)",
@@ -20488,12 +20803,14 @@
         "get(b: ByteArray, vararg path: Int)",
         "all(b: ByteArray, no: Int)",
         "varint(b: ByteArray, no: Int)",
+        "appDocs(b: ByteArray, depth: Int = 0, out: MutableList<ByteArray> = ArrayList()",
         "class PlayAnonFetcher",
         "class TokenUnavailable",
         "class Dispenser",
         "class Config",
         "class Auth",
         "class Details",
+        "class Hit",
         "class PlayFile",
         "class Proto",
         "class Field"
@@ -21122,6 +21439,10 @@
         "importText(text: String)",
         "rows(ctx: Context)",
         "render(ctx: Context, into: LinearLayout, rows: List<Row>)",
+        "traitOk(ctx: Context, r: Row)",
+        "declOk(r: Row)",
+        "originKinds(ctx: Context, pkg: String)",
+        "stateOk(r: Row)",
         "integrity(ctx: Context, r: Row)",
         "redraw()",
         "row(ctx: Context, r: Row)",
@@ -21174,6 +21495,54 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreProgressPanel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreProgressPanel"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.view.View",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.LinearProgressIndicator",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.Updater"
+      ],
+      "symbols": [
+        "view(ctx: Context)",
+        "detach()",
+        "board()",
+        "single(state: UpdateProgress.State, p: StoreStages.Progress?)",
+        "Panel(ctx: Context)",
+        "clickableNoRipple(onClick: ()",
+        "class next",
+        "class StoreProgressPanel",
+        "class Ui"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreRowError.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -21189,6 +21558,57 @@
         "banner(app: String)",
         "class StoreRowError",
         "class Look"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreSearchPage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreSearchPage"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.view.View",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.text.KeyboardActions",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateListOf",
+        "androidx.compose.runtime.mutableStateMapOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.input.ImeAction",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "kotlin.concurrent.thread"
+      ],
+      "symbols": [
+        "view(ctx: Context, cfg: ()",
+        "search(ctx: Context, c: SourceResolver.Config, query: String, play: Boolean, fdroid: Boolean)",
+        "Pill(label: String, on: Boolean, onClick: ()",
+        "Page(ctx: Context, cfg: ()",
+        "run()",
+        "install(declare: Boolean)",
+        "class StoreSearchPage",
+        "class Result",
+        "class Licence"
       ]
     },
     {
@@ -21210,8 +21630,10 @@
       "symbols": [
         "labels(ctx: Context, kinds: List<SourceResolver.Kind>)",
         "render( ctx: Context, kinds: List<SourceResolver.Kind>, selected: SourceResolver.Kind?, onSelect: (SourceResolver.Kind?)",
+        "traits(ctx: Context, selected: Trait?, onSelect: (Trait?)",
         "pill(ctx: Context, label: String, on: Boolean, onClick: ()",
-        "class StoreSourceTabs"
+        "class StoreSourceTabs",
+        "class Trait"
       ]
     },
     {
@@ -29448,6 +29870,24 @@
         "wifiOnly_directOnWifi_blocksCell_noImplicitVpn()",
         "incomingOnly_blocksInboundAllowsOutbound()",
         "class FirewallFlowPolicyTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleetconfig-model/src/main/java/com/diegonmarcos/superapp/fleetconfig/CloudSearchQuery.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudSearchQuery"
+      ],
+      "imports": [
+        "android.app.SearchManager",
+        "android.content.Intent"
+      ],
+      "symbols": [
+        "clean(raw: CharSequence?)",
+        "from(intent: Intent?)",
+        "intent(pkg: String, query: String)",
+        "class CloudSearchQuery"
       ]
     },
     {
@@ -54456,6 +54896,50 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/ui-kit/src/commonMain/kotlin/com/diegonmarcos/superapp/uikit/KitSearchBar.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KitSearchTags",
+        "KitSearchBar"
+      ],
+      "imports": [
+        "androidx.compose.foundation.Canvas",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.text.BasicTextField",
+        "androidx.compose.foundation.text.KeyboardActions",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.graphics.drawscope.Stroke",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.input.ImeAction",
+        "androidx.compose.ui.text.style.TextOverflow"
+      ],
+      "symbols": [
+        "KitSearchBar( query: String, onQueryChange: (String)",
+        "class KitSearchTags"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/ui-kit/src/main/kotlin/com/diegonmarcos/superapp/uikit/KitDates.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -54932,6 +55416,8 @@
       "symbols": [
         "install(ctx: Context, app: Fleet.App, apk: VerifiedApk)",
         "shellInstall(ctx: Context, apk: VerifiedApk)",
+        "stageForShell(f: java.io.File, tag: String)",
+        "unstage(target: String)",
         "sessionInstall()",
         "abandon(why: String)",
         "class to",
@@ -437408,16 +437894,23 @@
         "MainActivity"
       ],
       "imports": [
+        "android.content.Intent",
         "android.os.Bundle",
         "androidx.activity.ComponentActivity",
         "androidx.activity.compose.setContent",
         "com.diegonmarcos.superapp.bottomnav.FleetChrome",
+        "com.diegonmarcos.superapp.fleetconfig.CloudSearchQuery",
         "com.diegonmarcos.cloudsearch.data.Services",
         "com.diegonmarcos.cloudsearch.ui.SearchShell",
-        "com.diegonmarcos.cloudsearch.ui.SearchState"
+        "com.diegonmarcos.cloudsearch.ui.SearchState",
+        "kotlinx.coroutines.MainScope",
+        "kotlinx.coroutines.cancel"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
+        "onNewIntent(intent: Intent)",
+        "ask(intent: Intent?)",
+        "onDestroy()",
         "class MainActivity"
       ]
     },
@@ -437792,14 +438285,14 @@
         "androidx.compose.runtime.remember",
         "androidx.compose.runtime.rememberCoroutineScope",
         "androidx.compose.runtime.setValue",
+        "androidx.compose.runtime.snapshotFlow",
         "androidx.compose.runtime.staticCompositionLocalOf",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.draw.clip",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.res.painterResource",
-        "androidx.compose.ui.res.stringResource"
+        "androidx.compose.ui.res.painterResource"
       ],
       "symbols": [
         "v()",
@@ -437812,6 +438305,7 @@
         "sectionOf(verticalId: String)",
         "open(id: String)",
         "openSection(id: String)",
+        "ask(q: String, scope: CoroutineScope)",
         "toggle(m: Menu)",
         "toggleDark()",
         "pickCity(id: String)",
@@ -438048,6 +438542,54 @@
         "SavedPage()",
         "class ListingModel",
         "class Bar"
+      ]
+    },
+    {
+      "path": "ac_cloud-search/app/src/test/java/com/diegonmarcos/cloudsearch/QueryIntentTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "QueryIntentTest"
+      ],
+      "imports": [
+        "android.app.SearchManager",
+        "android.content.Intent",
+        "android.os.Looper",
+        "com.diegonmarcos.cloudsearch.core.Http",
+        "com.diegonmarcos.cloudsearch.data.Account",
+        "com.diegonmarcos.cloudsearch.data.Services",
+        "com.diegonmarcos.superapp.fleetconfig.CloudSearchQuery",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.Robolectric",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "search(q: String?)",
+        "webSearch(q: String?)",
+        "share(text: String?, type: String = \"text/plain\")",
+        "eachActionCarriesItsQuery()",
+        "blankOrAbsentIsNoQuery()",
+        "longTextIsCutToTheLimit()",
+        "theSentIntentReadsBack()",
+        "get(url: String, headers: Map<String, String>, timeoutMs: Int)",
+        "post(url: String, headers: Map<String, String>, body: String, timeoutMs: Int)",
+        "offline()",
+        "online()",
+        "asked(n: Int)",
+        "aLaunchQueryAndALaterOneBothRunOnTheSearchPage()",
+        "aPlainLaunchAsksNothing()",
+        "class QueryIntentTest",
+        "class OfflineHttp"
       ]
     },
     {
