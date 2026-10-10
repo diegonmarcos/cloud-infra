@@ -1636,6 +1636,14 @@ CHUNK_FILL_PCT="${CGC_CHUNK_FILL_PCT:-$(jq -r '.runtime.octocode.update.chunk.fi
 # slice; a killed window halves the next one and the loop goes on in the same job.
 CHUNK_GR_WINDOW_MIN="${CGC_GRAPHRAG_WINDOW_MIN:-$(jq -r '.runtime.octocode.update.chunk.graphrag_window_min // 45' "$BJ")}"
 CHUNK_GR_TIMEOUT_MIN="${CGC_GRAPHRAG_WINDOW_TIMEOUT_MIN:-$(jq -r '.runtime.octocode.update.chunk.graphrag_window_timeout_min // 90' "$BJ")}"
+# Floor under the graphrag rate a window is planned with. A window's measured rate can be
+# far too low: run 38044529950's window 1 re-fed 1004 files of which most already had
+# nodes from the killed window of the run before (same hash, skipped, no LLM call) and
+# measured 360 ms/file; window 2 then took 2342 ms/file for 2358 files (92m). Planned at
+# 360 ms/file, a 45m window would have been 6000 files and died at its 90m cap -- and a
+# killed window's persisted nodes are skipped as unchanged forever after, so their edges
+# are never computed. 2500 ms/file is that measured real rate, rounded up.
+CHUNK_GR_MIN_MSPF="${CGC_GRAPHRAG_MIN_MS_PER_FILE:-$(jq -r '.runtime.octocode.update.chunk.graphrag_min_ms_per_file // 2500' "$BJ")}"
 # Liveness line every this many seconds while a window runs (0 = off).
 CGC_HEARTBEAT_S="${CGC_HEARTBEAT_S:-600}"
 CHUNK_MODE=0
@@ -1709,6 +1717,9 @@ chunk_index_repo() {
     fi
     _cr_plan_n="$_cr_n"
     _cr_mspf=$(chunk_state_read "$_cr_sf_stage" | jq -r '.ms_per_file // 0')
+    if [ "$MANIFEST_PHASE" = "graphrag" ] && [ "${CHUNK_GR_MIN_MSPF:-0}" -gt "${_cr_mspf:-0}" ] 2>/dev/null; then
+      _cr_mspf="$CHUNK_GR_MIN_MSPF"
+    fi
     if [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null && [ -z "${CGC_CHUNK_FILES:-}" ]; then
       _cr_plan_n=$(( _cr_wplan * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
       [ "$_cr_plan_n" -lt "$CHUNK_MIN" ] && _cr_plan_n="$CHUNK_MIN"

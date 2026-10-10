@@ -36,9 +36,16 @@ pass=0; fail=0
 ok()  { pass=$((pass + 1)); echo "  ok: $1"; }
 bad() { fail=$((fail + 1)); echo "  FAIL: $1"; }
 
-CLOCK="$W/clock"; EV="$W/events"; LLM="$W/llm.jsonl"; : > "$EV"; : > "$LLM"
+# scenario <stall|replay> → $W/<mode>.events, $W/<mode>.log
+#   stall : run 37929244331 — 1.466 s per new-work file + 0.3 s per done file, and the
+#           second octocode call hangs until it is killed.
+#   replay: run 38044529950 — window 1 re-feeds files that already have nodes (skipped,
+#           0.36 s/file), every later file costs the 2.342 s that run measured.
+scenario() {
+local MODE="$1"
+CLOCK="$W/clock"; EV="$W/$MODE.events"; LLM="$W/$MODE.llm.jsonl"; : > "$EV"; : > "$LLM"
 echo $(( 4 * 60 )) > "$CLOCK"
-rm -rf "${W:?}/home" "${W:?}/scratch"; mkdir -p "$W/home/p1" "$W/scratch"
+rm -rf "${W:?}/home" "${W:?}/scratch" "$R/.git/info/exclude"; mkdir -p "$W/home/p1" "$W/scratch"
 (
   # shellcheck disable=SC1090
   . "$LIB"
@@ -51,6 +58,11 @@ rm -rf "${W:?}/home" "${W:?}/scratch"; mkdir -p "$W/home/p1" "$W/scratch"
     local n d need now; n=$(wc -l < "$_cr_o/next" | tr -d ' '); d=$(wc -l < "$_cr_o/done" | tr -d ' ')
     now=$(cat "$CLOCK")
     echo "limit $(( LIMIT / 60 ))" >> "$EV"
+    if [ "$MODE" = replay ]; then
+      if [ "$CALLS" = "1" ]; then need=$(( n * 360 / 1000 )); else need=$(( n * 2342 / 1000 )); fi
+      if [ "$need" -gt "$LIMIT" ]; then echo $(( now + LIMIT )) > "$CLOCK"; echo "index $n timeout" >> "$EV"; return 124; fi
+      echo $(( now + need )) > "$CLOCK"; echo "index $n ok $(( need / 60 ))m" >> "$EV"; return 0
+    fi
     if [ "$CALLS" = "2" ]; then
       # The deferred paths of window 1 must be outstanding and re-planned here.
       local p; while IFS= read -r p; do
@@ -79,14 +91,17 @@ rm -rf "${W:?}/home" "${W:?}/scratch"; mkdir -p "$W/home/p1" "$W/scratch"
   START_TS=0 BUDGET_MIN=300 REPO_TIMEOUT_EFF=296
   CHUNK_N_DEFAULT=1000 CHUNK_MIN=100 CHUNK_MAX=20000 CHUNK_STALE_ALERT=99 CHUNK_FILL_PCT=80
   CHUNK_PUBLISH_RESERVE_MIN=15 GITHUB_STEP_SUMMARY=""
-  CHUNK_GR_WINDOW_MIN=45 CHUNK_GR_TIMEOUT_MIN=90 LLM_PROXY_LOG="$LLM"
+  CHUNK_GR_WINDOW_MIN=45 CHUNK_GR_TIMEOUT_MIN=90 CHUNK_GR_MIN_MSPF=2500 LLM_PROXY_LOG="$LLM"
   unset CGC_CHUNK_FILES CGC_HEARTBEAT_S
   _before_dirs="" _idx_marker="" _proj_resolved=""
-  chunk_index_repo cloud-u-containers "$R" "$HEAD_SHA" >"$W/run.log" 2>&1
+  chunk_index_repo cloud-u-containers "$R" "$HEAD_SHA" >"$W/$MODE.log" 2>&1
   checkpoint_publish
   echo "end $(( $(cat "$CLOCK") / 60 )) done $(jq '.done | length' "$W/home/p1/.cgc-chunks-graphrag.json")" >> "$EV"
 )
-echo "  events: $(tr '\n' ',' < "$EV")"
+echo "  $MODE events: $(tr '\n' ',' < "$EV")"
+}
+scenario stall
+EV="$W/stall.events"
 
 # 1. No window may run longer than the graphrag window timeout, whatever the slice.
 maxlim=$(awk '$1 == "limit" && $2 > m { m = $2 } END { print m + 0 }' "$EV")
@@ -113,13 +128,25 @@ if grep -q 'deferred-' "$EV"; then bad "deferred files were committed as done: $
 else ok "deferred files stayed outstanding and went into the next window"; fi
 
 # 5. Each window reports its LLM work.
-grep -q 'LLM [0-9]* calls ([0-9]* desc, [0-9]* rel)' "$W/run.log" \
-  && ok "per-window LLM summary: $(grep -m1 'LLM [0-9]* calls' "$W/run.log" | sed 's/^\[cgc-db\] //')" \
+grep -q 'LLM [0-9]* calls ([0-9]* desc, [0-9]* rel)' "$W/stall.log" \
+  && ok "per-window LLM summary: $(grep -m1 'LLM [0-9]* calls' "$W/stall.log" | sed 's/^\[cgc-db\] //')" \
   || bad "no per-window LLM summary line"
-grep -q '1 deferred = 2 files kept outstanding' "$W/run.log" && ok "the summary counts the deferred files" \
+grep -q '1 deferred = 2 files kept outstanding' "$W/stall.log" && ok "the summary counts the deferred files" \
   || bad "the summary does not count the deferred files"
 
-# 6. The heartbeat prints numeric progress only (private repos log here too).
+# 6. Run 38044529950: a cheap first window (its files were already graphed) must not size
+#    the next one past the cap. Planned at its 360 ms/file, window 2 would have been every
+#    remaining file and died at 90m with its relationship pass unwritten.
+scenario replay
+EV="$W/replay.events"
+if grep -qE 'timeout|stall' "$EV"; then bad "replay of run 38044529950: a window was killed at its cap: $(tr '\n' ',' < "$EV")"
+else ok "replay of run 38044529950: no window hit its cap"; fi
+over=$(awk '$1 == "index" && $3 == "ok" { m = $4; sub(/m$/, "", m); if (m + 0 > 45) print $0 }' "$EV")
+[ -z "$over" ] && ok "replay: every window used <= 45m" || bad "replay: a window ran past 45m: $over"
+read -r _ end_min _ done_n < <(tail -1 "$EV")
+[ "${done_n:-0}" = 4355 ] && ok "replay: converged in one job (ended at ${end_min}m)" || bad "replay: only ${done_n:-0} of 4355 done"
+
+# 7. The heartbeat prints numeric progress only (private repos log here too).
 HB="$W/hb.log"; printf 'Collecting for AI batch: secret/path.rs\r Indexing: 37/120 files (30%%)\n' > "$W/octo.log"
 printf '{"t":1,"kind":"rel","outcome":"ok","ms":5000}\n' > "$W/hb.jsonl"
 ( # shellcheck disable=SC1090
@@ -132,5 +159,5 @@ else
 fi
 
 echo "passed=$pass failed=$fail"
-[ "$fail" -eq 0 ] || { echo FAIL; sed -n '1,80p' "$W/run.log"; exit 1; }
+[ "$fail" -eq 0 ] || { echo FAIL; sed -n '1,80p' "$W/stall.log"; exit 1; }
 echo PASS

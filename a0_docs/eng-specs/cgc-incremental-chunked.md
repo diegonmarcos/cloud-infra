@@ -148,7 +148,7 @@ survives (relationship call: empty set; description call: 400, which octocode tu
 deferral, and the planner keeps those paths outstanding). Five spent calls in a row open a
 breaker; the window then finishes fast and the repo stops for the run. Each window prints one
 LLM line (calls, failures by kind, Retry-After waited, latency p50/p95/max, s/file) and a
-heartbeat every 10 min. A graphrag window plans at most 45 min of work at the measured rate
+heartbeat every 10 min. A graphrag window plans at most 45 min of work at the measured rate, floored at 2500 ms/file (run 38044529950: a window of already-graphed files measured 360 ms/file, the next one 2342)
 (the rate only decays halfway on a faster window) and is killed at 90 min whatever the slice;
 a killed window halves the next one and the loop continues in the same job. Tests:
 `cgc-db-llm-proxy.test.sh`, `cgc-db-graphrag-window.test.sh`.
