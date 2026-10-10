@@ -153,6 +153,13 @@ heartbeat every 10 min. A graphrag window plans at most 45 min of work at the me
 a killed window halves the next one and the loop continues in the same job. Tests:
 `cgc-db-llm-proxy.test.sh`, `cgc-db-graphrag-window.test.sh`.
 
+In both phases the measured rate may only SHRINK the adapted chunk, never grow past it:
+run 38044529950's cloud-u-android semantic window 1 did 3031 mostly-embedded files at
+230 ms/file, the rate then planned all 15387 remaining files into one 263-min window, and
+that window walked 74% of them (~1.07 s/file) before the slice ran out. `chunk_adapt` still
+doubles the chunk after a quick window, so growth is geometric (`cgc-db-chunk-budget.test.sh`
+replays it).
+
 ## 4. Publishing partial progress safely
 
 Decision: **additive partial graphs on `:latest` for normal runs; atomic swap for forced

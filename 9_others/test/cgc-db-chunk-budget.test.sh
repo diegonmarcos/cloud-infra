@@ -36,9 +36,11 @@ pass=0; fail=0
 ok()  { pass=$((pass + 1)); echo "  ok: $1"; }
 bad() { fail=$((fail + 1)); echo "  FAIL: $1"; }
 
-# scenario <name> <startup min> <publish min> <budget min> <reserve min> → writes $W/<name>.events
+# scenario <name> <startup min> <publish min> <budget min> <reserve min> [ms/file of window 1] [ms/file after]
+#   → writes $W/<name>.events. Without the two rates every file costs 24 s.
 scenario() {
-  local name="$1" startup="$2" pubm="$3" budget="$4" reserve="$5"
+  local name="$1" startup="$2" pubm="$3" budget="$4" reserve="$5" r1="${6:-24000}" r2="${7:-24000}"
+  echo 0 > "$W/calls"
   rm -rf "${W:?}/home" "${W:?}/scratch" "$R/.git/info/exclude"; mkdir -p "$W/home/p1" "$W/scratch"
   CLOCK="$W/clock"; EV="$W/$name.events"; : > "$EV"; echo $(( startup * 60 )) > "$CLOCK"
   (
@@ -48,7 +50,8 @@ scenario() {
     date() { cat "$CLOCK"; }
     timeout() { local m="${1%m}"; shift; LIMIT=$(( m * 60 )) "$@"; }
     octocode() {
-      local n need; n=$(wc -l < "$_cr_o/next" | tr -d ' '); need=$(( n * 24 ))
+      local n need c; n=$(wc -l < "$_cr_o/next" | tr -d ' '); c=$(( $(cat "$W/calls") + 1 )); echo "$c" > "$W/calls"
+      if [ "$c" = 1 ]; then need=$(( n * r1 / 1000 )); else need=$(( n * r2 / 1000 )); fi
       if [ "$need" -gt "$LIMIT" ]; then echo $(( $(cat "$CLOCK") + LIMIT )) > "$CLOCK"; echo "index $n timeout" >> "$EV"; return 124; fi
       echo $(( $(cat "$CLOCK") + need )) > "$CLOCK"; echo "index $n ok" >> "$EV"; return 0
     }
@@ -93,6 +96,21 @@ awk 'prev == "publish" && $0 == "publish" { d = 1 } { prev = $0 } END { exit !d 
   && bad "fast run double-published" || ok "fast run never double-published"
 grep -q '"ms_per_file"' "$W/home/p1/.cgc-chunks-semantic.json" && ok "the measured rate travels in the chunk state" \
   || bad "no ms_per_file in the chunk state, so the next run's first window cannot be sized"
+
+# 3. Run 38044529950, cloud-u-android semantic: window 1 was mostly files already embedded
+#    (3031 at 230 ms/file); the rate then planned all 15387 remaining files into one 263m
+#    window, which walked 74% of them at ~1.07 s/file and died. Scale 1/10: 300-file
+#    default chunk, 1538 more files, window 1 at 230 ms/file, then 10.7 s/file.
+i=2300; while [ $i -lt 3838 ]; do printf 'x%s\n' $i > "$R/src/f$i.kt"; i=$((i + 1)); done
+git -C "$R" add -A && git -C "$R" commit -qm more && HEAD_SHA=$(git -C "$R" rev-parse HEAD)
+scenario android 4 1 285 15 230 10700
+if grep -q timeout "$W/android.events"; then
+  bad "a cheap first window sized the next one past the slice (run 38044529950): $(tr '\n' ',' < "$W/android.events")"
+else
+  ok "android replay: every window completed: $(tr '\n' ',' < "$W/android.events")"
+fi
+read -r _ _ _ done_n < <(tail -1 "$W/android.events")
+[ "${done_n:-0}" -ge 1500 ] && ok "android replay: $done_n files durable in one job" || bad "android replay: only ${done_n:-0} files durable"
 
 echo "passed=$pass failed=$fail"
 [ "$fail" -eq 0 ] || { echo FAIL; exit 1; }

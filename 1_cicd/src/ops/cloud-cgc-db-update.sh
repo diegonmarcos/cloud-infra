@@ -1709,9 +1709,16 @@ chunk_index_repo() {
     fi
     if [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null && [ -z "${CGC_CHUNK_FILES:-}" ]; then
       _cr_plan_n=$(( _cr_wplan * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
+      # The rate may only SHRINK the adapted chunk, never grow past it (#888). A window
+      # of mostly already-indexed files measures a rate the next window cannot keep:
+      # run 38044529950's android semantic window 1 did 3031 files at 230 ms/file, the
+      # rate then planned all 15387 remaining files into the 263m slice, and that window
+      # died at 74% with the slice gone. chunk_adapt still doubles the chunk after a
+      # quick window, so growth is geometric instead of a jump to the whole remainder.
+      [ "$_cr_plan_n" -gt "$_cr_n" ] && _cr_plan_n="$_cr_n"
       [ "$_cr_plan_n" -lt "$CHUNK_MIN" ] && _cr_plan_n="$CHUNK_MIN"
       [ "$CHUNK_MAX" -gt 0 ] && [ "$_cr_plan_n" -gt "$CHUNK_MAX" ] && _cr_plan_n="$CHUNK_MAX"
-      echo "[cgc-db] $_cr_r · chunk $_cr_i sized to the slice: ${_cr_plan_n} files at ${_cr_mspf}ms/file in ${CHUNK_FILL_PCT}% of ${_cr_wplan}m"
+      echo "[cgc-db] $_cr_r · chunk $_cr_i sized to the slice: ${_cr_plan_n} files at ${_cr_mspf}ms/file in ${CHUNK_FILL_PCT}% of ${_cr_wplan}m (chunk cap ${_cr_n})"
     elif [ "$MANIFEST_PHASE" = "graphrag" ] && [ -z "${CGC_CHUNK_FILES:-}" ] && [ "$_cr_plan_n" -gt "$CHUNK_N_DEFAULT" ] 2>/dev/null; then
       # No measured rate yet: never grow past the first-window default on a guess.
       _cr_plan_n="$CHUNK_N_DEFAULT"
