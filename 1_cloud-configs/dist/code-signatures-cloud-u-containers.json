@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2890,
+    "files": 2896,
     "by_lang": {
       "sh": 141,
       "nix": 159,
       "py": 860,
-      "ts": 1131,
-      "js": 64,
+      "ts": 1136,
+      "js": 65,
       "rust": 535
     },
     "by_role": {
       "shell": 131,
       "nix-module": 15,
       "python": 853,
-      "module": 689,
-      "file": 310,
+      "module": 692,
+      "file": 311,
       "script": 8,
       "flake": 73,
       "compose": 71,
       "entrypoint": 48,
-      "mcp-tool": 107,
+      "mcp-tool": 109,
       "workflow-dag": 2,
       "rust-module": 530,
       "hook": 53
@@ -2179,6 +2179,7 @@
         "./ssh.js",
         "./config.js",
         "./audit.js",
+        "./shell-quote.js",
         "./validators.js",
         "zod",
         "./schemas.js"
@@ -2721,22 +2722,42 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/shell-quote.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "posixQuote",
+        "anyShellQuote",
+        "remoteShellWrap",
+        "dockerExecShell",
+        "sqliteReadonlyCmd"
+      ],
+      "imports": [],
+      "symbols": [
+        "posixQuote(v: string)",
+        "anyShellQuote(v: string)",
+        "remoteShellWrap(command: string)",
+        "dockerExecShell(container: string, command: string)",
+        "sqliteReadonlyCmd(db: string, sql: string)"
+      ]
+    },
+    {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
-        "remoteShellWrap",
         "sshExec",
         "sshExecAsync",
-        "checkVmReachable"
+        "checkVmReachable",
+        "remoteShellWrap"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
-        "./audit.js"
+        "./audit.js",
+        "./shell-quote.js"
       ],
       "symbols": [
-        "remoteShellWrap(command: string)",
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "checkVmReachable(vmNameOrAlias: string)"
@@ -4299,11 +4320,25 @@
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
         "../../shared/libs/docker.js",
-        "../../shared/libs/ssh.js"
+        "../../shared/libs/ssh.js",
+        "../../shared/libs/shell-quote.js",
+        "./mail-sql.js"
       ],
       "symbols": [
         "registerMailOpsTools(server: McpServer)"
       ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/tools/mail-sql.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "MAIL_DB",
+        "DISTRIBUTION_SQL",
+        "INGEST_SQL"
+      ],
+      "imports": [],
+      "symbols": []
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/mcp/tools/meta.ts",
@@ -5060,6 +5095,7 @@
         "./ssh.js",
         "./config.js",
         "./audit.js",
+        "./shell-quote.js",
         "./validators.js",
         "zod",
         "./schemas.js"
@@ -5602,22 +5638,42 @@
       ]
     },
     {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/shell-quote.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "posixQuote",
+        "anyShellQuote",
+        "remoteShellWrap",
+        "dockerExecShell",
+        "sqliteReadonlyCmd"
+      ],
+      "imports": [],
+      "symbols": [
+        "posixQuote(v: string)",
+        "anyShellQuote(v: string)",
+        "remoteShellWrap(command: string)",
+        "dockerExecShell(container: string, command: string)",
+        "sqliteReadonlyCmd(db: string, sql: string)"
+      ]
+    },
+    {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
-        "remoteShellWrap",
         "sshExec",
         "sshExecAsync",
-        "checkVmReachable"
+        "checkVmReachable",
+        "remoteShellWrap"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
-        "./audit.js"
+        "./audit.js",
+        "./shell-quote.js"
       ],
       "symbols": [
-        "remoteShellWrap(command: string)",
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "checkVmReachable(vmNameOrAlias: string)"
@@ -5756,6 +5812,24 @@
         "./shared/libs/gha-policy.ts"
       ],
       "symbols": []
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-shell-quote.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "./shared/libs/shell-quote.ts",
+        "./mcp/tools/mail-sql.ts"
+      ],
+      "symbols": [
+        "fishWords(s)"
+      ]
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/test-vm-files-policy.mjs",
@@ -18522,6 +18596,7 @@
         "./ssh.js",
         "./config.js",
         "./audit.js",
+        "./shell-quote.js",
         "./validators.js",
         "zod",
         "./schemas.js"
@@ -19064,22 +19139,42 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/shell-quote.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "posixQuote",
+        "anyShellQuote",
+        "remoteShellWrap",
+        "dockerExecShell",
+        "sqliteReadonlyCmd"
+      ],
+      "imports": [],
+      "symbols": [
+        "posixQuote(v: string)",
+        "anyShellQuote(v: string)",
+        "remoteShellWrap(command: string)",
+        "dockerExecShell(container: string, command: string)",
+        "sqliteReadonlyCmd(db: string, sql: string)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
-        "remoteShellWrap",
         "sshExec",
         "sshExecAsync",
-        "checkVmReachable"
+        "checkVmReachable",
+        "remoteShellWrap"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
-        "./audit.js"
+        "./audit.js",
+        "./shell-quote.js"
       ],
       "symbols": [
-        "remoteShellWrap(command: string)",
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "checkVmReachable(vmNameOrAlias: string)"
@@ -19838,6 +19933,7 @@
         "./ssh.js",
         "./config.js",
         "./audit.js",
+        "./shell-quote.js",
         "./validators.js",
         "zod",
         "./schemas.js"
@@ -20380,22 +20476,42 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/shell-quote.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "posixQuote",
+        "anyShellQuote",
+        "remoteShellWrap",
+        "dockerExecShell",
+        "sqliteReadonlyCmd"
+      ],
+      "imports": [],
+      "symbols": [
+        "posixQuote(v: string)",
+        "anyShellQuote(v: string)",
+        "remoteShellWrap(command: string)",
+        "dockerExecShell(container: string, command: string)",
+        "sqliteReadonlyCmd(db: string, sql: string)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "mcp-tool",
       "exports": [
-        "remoteShellWrap",
         "sshExec",
         "sshExecAsync",
-        "checkVmReachable"
+        "checkVmReachable",
+        "remoteShellWrap"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
-        "./audit.js"
+        "./audit.js",
+        "./shell-quote.js"
       ],
       "symbols": [
-        "remoteShellWrap(command: string)",
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "sshExecAsync(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
         "checkVmReachable(vmNameOrAlias: string)"
