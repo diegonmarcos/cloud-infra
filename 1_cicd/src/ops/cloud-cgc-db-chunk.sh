@@ -157,13 +157,75 @@ chunk_plan() {  # $1 repo dir  $2 state file  $3 head  $4 chunk size  $5 allowli
 
 # A window COMPLETED (octocode rc=0): its files are done, its dirty files are
 # clean, `seen` moves to the commit the window was planned at.
-chunk_commit() {  # $1 plan out dir  $2 head  $3 state file to write
+# $4 = optional list of files octocode DEFERRED in that window (the graphrag phase's
+# LLM proxy logs the paths of description batches whose call budget ran out; octocode
+# drops those nodes, builder.rs "Deferring N files to next run"). They are not done:
+# a new file stays in the remainder, a dirty one stays dirty (#888).
+chunk_commit() {  # $1 plan out dir  $2 head  $3 state file to write  [$4 deferred list]
   _cc_o="$1"
-  LC_ALL=C sort -u "$_cc_o/done" "$_cc_o/next" > "$_cc_o/done1"
-  jq --rawfile done "$_cc_o/done1" --arg head "$2" \
+  if [ -n "${4:-}" ] && [ -s "$4" ]; then
+    LC_ALL=C sort -u "$4" > "$_cc_o/deferred.sorted"
+    LC_ALL=C comm -23 "$_cc_o/next" "$_cc_o/deferred.sorted" > "$_cc_o/next.ok"
+    LC_ALL=C comm -12 "$_cc_o/dirty" "$_cc_o/deferred.sorted" > "$_cc_o/dirty1"
+  else
+    cp "$_cc_o/next" "$_cc_o/next.ok"; : > "$_cc_o/dirty1"
+  fi
+  LC_ALL=C sort -u "$_cc_o/done" "$_cc_o/next.ok" > "$_cc_o/done1"
+  jq --rawfile done "$_cc_o/done1" --rawfile dirty "$_cc_o/dirty1" --arg head "$2" \
      '.done = ($done | split("\n") | map(select(length > 0)))
-      | .dirty = [] | .seen = $head | .stale_runs = 0' \
+      | .dirty = ($dirty | split("\n") | map(select(length > 0)))
+      | .seen = $head | .stale_runs = 0' \
      "$_cc_o/state" > "$3.tmp" && mv "$3.tmp" "$3"
+}
+
+# Per-window LLM summary from the graphrag proxy's call log (cloud-cgc-llm-proxy.py,
+# one JSON line per logical call). Prints one line, writes $6/deferred (paths whose
+# description call was given up on) and $6/llm.json (the counters). Rc 3 when the
+# proxy's circuit breaker opened in this window: the LLM is down, stop the repo.
+chunk_llm_summary() {  # $1 call log|""  $2 lines seen before the window  $3 window s  $4 new-work files  $5 label  $6 out dir
+  : > "$6/deferred"
+  if [ -z "$1" ] || [ ! -f "$1" ]; then
+    echo "[cgc-db] $5: $3s for $4 new-work files ($(awk -v d="$3" -v f="$4" 'BEGIN{printf "%.2f", d/(f>0?f:1)}') s/file); LLM calls not instrumented"
+    return 0
+  fi
+  tail -n +"$(( $2 + 1 ))" "$1" > "$6/llm.jsonl"
+  jq -r '.deferred[]?' "$6/llm.jsonl" | LC_ALL=C sort -u > "$6/deferred"
+  jq -s -c '
+    def pct(p): (map(.ms // 0) | sort) as $s | if ($s | length) == 0 then 0 else $s[((($s | length) - 1) * p | floor)] end;
+    {calls: length,
+     desc: map(select(.kind == "desc")) | length, rel: map(select(.kind == "rel")) | length,
+     ok: map(select(.outcome == "ok")) | length,
+     degraded: map(select(.outcome == "degraded" or .outcome == "breaker")) | length,
+     deferred_calls: map(select(.outcome == "deferred")) | length,
+     errors: map(select(.outcome != "ok" and .outcome != "repeat")) | length,
+     timeouts: (map(.timeouts // 0) | add // 0), r429: (map(.r429 // 0) | add // 0),
+     r5xx: (map(.r5xx // 0) | add // 0), neterr: (map(.neterr // 0) | add // 0),
+     wait_s: (map(.wait_s // 0) | add // 0 | floor),
+     p50_s: (pct(0.5) / 1000 | floor), p95_s: (pct(0.95) / 1000 | floor),
+     max_s: ((map(.ms // 0) | max // 0) / 1000 | floor),
+     out_tokens: (map(.out_tokens // 0) | add // 0),
+     breaker: (map(select(.breaker_opened == true or .outcome == "breaker")) | length > 0)}' \
+    "$6/llm.jsonl" > "$6/llm.json"
+  jq -r --arg l "$5" --argjson d "$3" --argjson f "$4" --argjson df "$(wc -l < "$6/deferred" | tr -d ' ')" '
+    "[cgc-db] \($l): \($d)s for \($f) new-work files (\(if $f > 0 then ($d * 100 / $f | floor) / 100 else "n/a" end) s/file); LLM \(.calls) calls (\(.desc) desc, \(.rel) rel): \(.ok) ok, \(.errors) bounded failures (\(.degraded) degraded, \(.deferred_calls) deferred = \($df) files kept outstanding), \(.timeouts) timeouts, \(.r429) 429s, \(.r5xx) 5xx, \(.neterr) net errors, \(.wait_s)s Retry-After/backoff waited; latency p50 \(.p50_s)s p95 \(.p95_s)s max \(.max_s)s; \(.out_tokens) output tokens\(if .breaker then "; CIRCUIT BREAKER OPENED" else "" end)"' "$6/llm.json"
+  jq -e '.breaker' "$6/llm.json" >/dev/null 2>&1 && return 3
+  return 0
+}
+
+# Liveness while one window runs: every $5 s, the window's elapsed minutes, octocode's
+# last numeric progress (never a path -- private repos log here too) and the LLM calls
+# this window has completed. A stall used to be invisible until the slice expired.
+chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen before the window  $5 interval s
+  _hb_t0=$(date +%s)
+  while sleep "$5"; do
+    _hb_p=$(tr '\r' '\n' < "$2" 2>/dev/null | grep -oE 'Indexing: [0-9]+/[0-9]+ files|AI analyzing [0-9]+ files for architectural relationships|AI description updates complete|Processing AI batch: [0-9]+ files' | tail -n 1)
+    _hb_c=0; _hb_last=""
+    if [ -n "$3" ] && [ -f "$3" ]; then
+      _hb_c=$(( $(wc -l < "$3" | tr -d ' ') - $4 ))
+      [ "$_hb_c" -gt 0 ] && _hb_last=$(tail -n 1 "$3" | jq -r --argjson now "$(date +%s)" '", last call \(($now - .t) | floor)s ago (\(.kind) \(.outcome), \(.ms)ms)"' 2>/dev/null)
+    fi
+    echo "[cgc-db] $1 heartbeat $(( ( $(date +%s) - _hb_t0 ) / 60 ))m: ${_hb_p:-no progress line yet}; LLM calls done ${_hb_c}${_hb_last}"
+  done
 }
 
 # Nothing outstanding after this window?

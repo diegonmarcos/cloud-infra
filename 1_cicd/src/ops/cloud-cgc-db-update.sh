@@ -291,7 +291,7 @@ fi
 # run (nothing inside it needs to persist between calls); created AFTER the
 # freeze-proofing re-exec above so it belongs to the actual worker process.
 CGC_SCRATCH="$(mktemp -d)"
-trap 'rm -rf "$CGC_SCRATCH"' EXIT
+trap '[ -n "${LLM_PROXY_PID:-}" ] && kill "$LLM_PROXY_PID" 2>/dev/null; rm -rf "$CGC_SCRATCH"' EXIT
 
 # Never materialize Git-LFS content: cloud-u-android's element-x fork tracks
 # images via LFS, and the runner's smudge filter fails ('git-lfs filter-process
@@ -1323,6 +1323,46 @@ else
   echo "[cgc-db] GraphRAG structural-only (enabled=false use_llm=false forced — no LLM calls)"
 fi
 
+# 4a-ter) BOUNDED LLM CALLS (#888) — graphrag phase, openrouter: models only.
+# octocode 0.22.0 / octolib 0.34.2 send every GraphRAG request with NO per-request
+# timeout, and octocode holds the whole relationship pass in memory until its last call
+# returns: one stuck call held cloud-u-containers' second window for 3h on run
+# 37929244331 and the slice expiry threw the pass away. octolib reads OPENROUTER_API_URL
+# per request, so octocode is pointed at cloud-cgc-llm-proxy.py on 127.0.0.1, which
+# forwards to the real endpoint with a per-attempt deadline, bounded retries, a capped
+# Retry-After, a bounded outcome when a call's budget is spent, and one JSON line per
+# call (no headers, so the key never reaches the log). The chunk loop turns that log
+# into one LLM line per window. CGC_LLM_PROXY=0 goes direct.
+LLM_PROXY_LOG=""; LLM_PROXY_PID=""
+if [ "$USE_LLM" = "true" ] && [ "${CGC_LLM_PROXY:-1}" = "1" ]; then
+  case "$LLM" in
+    openrouter:*)
+      if command -v python3 >/dev/null 2>&1 && [ -f "$HERE/cloud-cgc-llm-proxy.py" ]; then
+        mkdir -p "$CGC_SCRATCH/llm-proxy"
+        LLM_PROXY_LOG="$CGC_SCRATCH/llm-proxy/calls.jsonl"; : > "$LLM_PROXY_LOG"
+        python3 "$HERE/cloud-cgc-llm-proxy.py" --upstream "$OPENROUTER_API_URL" --log "$LLM_PROXY_LOG" \
+          --port-file "$CGC_SCRATCH/llm-proxy/port" >"$CGC_SCRATCH/llm-proxy/stderr" 2>&1 &
+        LLM_PROXY_PID=$!
+        _lp_port=""; _lp_i=0
+        while [ "$_lp_i" -lt 50 ]; do
+          [ -s "$CGC_SCRATCH/llm-proxy/port" ] && { _lp_port=$(cat "$CGC_SCRATCH/llm-proxy/port"); break; }
+          _lp_i=$((_lp_i + 1)); sleep 0.2
+        done
+        if [ -n "$_lp_port" ] && curl -fsS --noproxy "*" -m 5 -o /dev/null "http://127.0.0.1:$_lp_port/health" 2>/dev/null; then
+          OPENROUTER_API_URL="http://127.0.0.1:$_lp_port/api/v1/chat/completions"; export OPENROUTER_API_URL
+          echo "[cgc-db] LLM calls bounded by cgc-llm-proxy on 127.0.0.1:$_lp_port: ${CGC_LLM_REQUEST_TIMEOUT_S:-120}s per attempt, ${CGC_LLM_MAX_ATTEMPTS:-3} attempts in ${CGC_LLM_CALL_BUDGET_S:-360}s per call, Retry-After capped at ${CGC_LLM_RETRY_AFTER_CAP_S:-60}s, breaker after ${CGC_LLM_BREAKER_FAILS:-5} spent calls"
+        else
+          kill "$LLM_PROXY_PID" 2>/dev/null || true
+          LLM_PROXY_PID=""; LLM_PROXY_LOG=""
+          echo "::warning::[cgc-db] cgc-llm-proxy did not come up ($(tail -n 3 "$CGC_SCRATCH/llm-proxy/stderr" 2>/dev/null | tr '\n' ' ')) — LLM calls go direct, with NO per-request timeout"
+        fi
+      else
+        echo "::warning::[cgc-db] python3 or cloud-cgc-llm-proxy.py missing — LLM calls go direct, with NO per-request timeout"
+      fi
+      ;;
+  esac
+fi
+
 # 4a-bis) declared file associations — after every other config.toml mutation above
 # and before any `octocode index` below, so the walk that decides which files exist
 # at all runs with build.json's extension map in force. See apply_file_associations().
@@ -1572,6 +1612,19 @@ CHUNK_PUBLISH_RESERVE_MIN="${CGC_PUBLISH_RESERVE_MIN:-$(jq -r '.runtime.octocode
 # Fraction (percent) of a slice a rate-sized window may plan to use; the rest absorbs
 # per-file variance so the window completes instead of timing out (#888).
 CHUNK_FILL_PCT="${CGC_CHUNK_FILL_PCT:-$(jq -r '.runtime.octocode.update.chunk.fill_pct // 80' "$BJ")}"
+# GRAPHRAG WINDOWS ARE TIME-CAPPED, NOT SLICE-SIZED (#888). The graphrag phase is LLM
+# bound and not linear in the window: octocode re-runs AI relationship analysis for every
+# already-done file that imports a symbol of the window, keeps every relationship in
+# memory until the last LLM call returns, and a timed-out window keeps none of them. Run
+# 37929244331: window 1 (1000 files) took 24m, window 2 (2000 files) was planned against
+# the whole 204m slice and was still in its relationship pass when that expired -- three
+# hours and the job gone. So a graphrag window PLANS for at most graphrag_window_min of
+# work at the measured rate, and is KILLED at graphrag_window_timeout_min whatever the
+# slice; a killed window halves the next one and the loop goes on in the same job.
+CHUNK_GR_WINDOW_MIN="${CGC_GRAPHRAG_WINDOW_MIN:-$(jq -r '.runtime.octocode.update.chunk.graphrag_window_min // 45' "$BJ")}"
+CHUNK_GR_TIMEOUT_MIN="${CGC_GRAPHRAG_WINDOW_TIMEOUT_MIN:-$(jq -r '.runtime.octocode.update.chunk.graphrag_window_timeout_min // 90' "$BJ")}"
+# Liveness line every this many seconds while a window runs (0 = off).
+CGC_HEARTBEAT_S="${CGC_HEARTBEAT_S:-600}"
 CHUNK_MODE=0
 if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ] && [ -n "$MANIFEST_PHASE" ] \
    && [ "${CHUNK_N_DEFAULT:-0}" -gt 0 ] 2>/dev/null && [ "${CGC_CHUNK:-1}" != "0" ]; then
@@ -1634,13 +1687,23 @@ chunk_index_repo() {
     # would have spent its second slice on a 3000-file window that needed 120m in 109m.
     # Once this repo+phase has a measured rate (ms per new-work file, kept in the chunk
     # state across runs), plan only what fits in CHUNK_FILL_PCT of the slice.
+    # graphrag (#888): plan for at most CHUNK_GR_WINDOW_MIN of work and kill the window at
+    # CHUNK_GR_TIMEOUT_MIN, so one slow window can never eat the job (see the knobs above).
+    _cr_wplan="$_cr_slice"; _cr_wto="$_cr_slice"
+    if [ "$MANIFEST_PHASE" = "graphrag" ]; then
+      [ "${CHUNK_GR_WINDOW_MIN:-0}" -gt 0 ] 2>/dev/null && [ "$_cr_wplan" -gt "$CHUNK_GR_WINDOW_MIN" ] && _cr_wplan="$CHUNK_GR_WINDOW_MIN"
+      [ "${CHUNK_GR_TIMEOUT_MIN:-0}" -gt 0 ] 2>/dev/null && [ "$_cr_wto" -gt "$CHUNK_GR_TIMEOUT_MIN" ] && _cr_wto="$CHUNK_GR_TIMEOUT_MIN"
+    fi
     _cr_plan_n="$_cr_n"
     _cr_mspf=$(chunk_state_read "$_cr_sf_stage" | jq -r '.ms_per_file // 0')
     if [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null && [ -z "${CGC_CHUNK_FILES:-}" ]; then
-      _cr_plan_n=$(( _cr_slice * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
+      _cr_plan_n=$(( _cr_wplan * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
       [ "$_cr_plan_n" -lt "$CHUNK_MIN" ] && _cr_plan_n="$CHUNK_MIN"
       [ "$CHUNK_MAX" -gt 0 ] && [ "$_cr_plan_n" -gt "$CHUNK_MAX" ] && _cr_plan_n="$CHUNK_MAX"
-      echo "[cgc-db] $_cr_r · chunk $_cr_i sized to the slice: ${_cr_plan_n} files at ${_cr_mspf}ms/file in ${CHUNK_FILL_PCT}% of ${_cr_slice}m"
+      echo "[cgc-db] $_cr_r · chunk $_cr_i sized to the slice: ${_cr_plan_n} files at ${_cr_mspf}ms/file in ${CHUNK_FILL_PCT}% of ${_cr_wplan}m"
+    elif [ "$MANIFEST_PHASE" = "graphrag" ] && [ -z "${CGC_CHUNK_FILES:-}" ] && [ "$_cr_plan_n" -gt "$CHUNK_N_DEFAULT" ] 2>/dev/null; then
+      # No measured rate yet: never grow past the first-window default on a guess.
+      _cr_plan_n="$CHUNK_N_DEFAULT"
     fi
     chunk_plan "$_cr_d" "$_cr_sf_stage" "$_cr_head" "$_cr_plan_n" "$_cr_allow" "$_cr_o"
     if [ ! -s "$_cr_o/next" ]; then
@@ -1663,26 +1726,49 @@ chunk_index_repo() {
     for _cr_gm in "${OCTO_HOME:?}"/*/storage/git_metadata.lance; do
       [ -d "$_cr_gm" ] && rm -rf "${_cr_gm:?}"
     done
-    echo "[cgc-db] $_cr_r · chunk $_cr_i: $(wc -l < "$_cr_o/next" | tr -d ' ') new-work files in a $(wc -l < "$_cr_o/window" | tr -d ' ')-file window, slice ${_cr_slice}m"
+    echo "[cgc-db] $_cr_r · chunk $_cr_i: $(wc -l < "$_cr_o/next" | tr -d ' ') new-work files in a $(wc -l < "$_cr_o/window" | tr -d ' ')-file window, slice ${_cr_slice}m, window timeout ${_cr_wto}m"
     _cr_nn=$(wc -l < "$_cr_o/next" | tr -d ' ')
+    _cr_l0=0; [ -n "${LLM_PROXY_LOG:-}" ] && [ -f "$LLM_PROXY_LOG" ] && _cr_l0=$(wc -l < "$LLM_PROXY_LOG" | tr -d ' ')
+    _cr_hb=""
+    if [ "${CGC_HEARTBEAT_S:-0}" -gt 0 ] 2>/dev/null; then
+      : > "$_log"
+      chunk_heartbeat "$_cr_r · chunk $_cr_i" "$_log" "${LLM_PROXY_LOG:-}" "$_cr_l0" "$CGC_HEARTBEAT_S" &
+      _cr_hb=$!
+    fi
     _cr_t0=$(date +%s); _rc=0
-    ( cd "$_cr_d" && timeout "${_cr_slice}m" octocode index ) >"$_log" 2>&1 || _rc=$?
+    ( cd "$_cr_d" && timeout "${_cr_wto}m" octocode index ) >"$_log" 2>&1 || _rc=$?
     _cr_dt=$(( $(date +%s) - _cr_t0 ))
+    if [ -n "$_cr_hb" ]; then kill "$_cr_hb" 2>/dev/null || true; wait "$_cr_hb" 2>/dev/null || true; fi
     chunk_exclude_clear "$_cr_d"
+    _cr_llm=0
+    chunk_llm_summary "${LLM_PROXY_LOG:-}" "$_cr_l0" "$_cr_dt" "$_cr_nn" "$_cr_r · chunk $_cr_i (rc=$_rc)" "$_cr_o" || _cr_llm=$?
     if [ "$_rc" = "124" ]; then
-      _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_slice * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+      _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
       # The rate was too optimistic: double it so the next sized window is half as big.
       jq --argjson n "$_cr_n" '.chunk = $n | if (.ms_per_file // 0) > 0 then .ms_per_file *= 2 else . end' "$_cr_o/state0" > "$_cr_sf_stage"
-      echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i did not finish in ${_cr_slice}m — chunk size halved to $_cr_n for the next run; this window's files stay outstanding"
+      echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i did not finish in ${_cr_wto}m — chunk size halved to $_cr_n; this window's files stay outstanding"
+      # A window killed at its own cap (graphrag) leaves the rest of the slice: go on in
+      # this job with the halved window. The top of the loop stops when too little is left.
+      [ "$_cr_wto" -lt "$_cr_slice" ] && [ "$_cr_llm" != "3" ] && continue
       break
     fi
     [ "$_rc" = "0" ] || break
-    _cr_n=$(chunk_adapt "$_cr_n" ok "$_cr_dt" $(( _cr_slice * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
-    chunk_commit "$_cr_o" "$_cr_head" "$_cr_sf_stage"
+    _cr_n=$(chunk_adapt "$_cr_n" ok "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+    chunk_commit "$_cr_o" "$_cr_head" "$_cr_sf_stage" "$_cr_o/deferred"
+    _cr_prev=$(chunk_state_read "$_cr_sf_stage" | jq -r '.ms_per_file // 0')
     _cr_mspf=$(( _cr_dt * 1000 / (_cr_nn > 0 ? _cr_nn : 1) ))
+    # graphrag gets slower as the done set grows (more importers re-analysed per window):
+    # a faster window only pulls the rate halfway down, a slower one sets it outright.
+    if [ "$MANIFEST_PHASE" = "graphrag" ] && [ "${_cr_prev:-0}" -gt "$_cr_mspf" ] 2>/dev/null; then
+      _cr_mspf=$(( (_cr_prev + _cr_mspf) / 2 ))
+    fi
     jq --argjson n "$_cr_n" --argjson r "$_cr_mspf" '.chunk = $n | .ms_per_file = $r' "$_cr_sf_stage" > "$_cr_sf_stage.tmp" && mv "$_cr_sf_stage.tmp" "$_cr_sf_stage"
     echo "[cgc-db] $_cr_r · chunk $_cr_i done in ${_cr_dt}s (${_cr_nn} files, ${_cr_mspf}ms/file); next chunk size $_cr_n"
     if chunk_converged "$_cr_sf_stage" "$_cr_o/indexable" ""; then _cr_conv=1; break; fi
+    if [ "$_cr_llm" = "3" ]; then
+      echo "::warning::[cgc-db] $_cr_r · the LLM circuit breaker opened in chunk $_cr_i (consecutive calls ran out of budget) — stopping this repo for this run; the window completed with bounded fallbacks, see the LLM line above"
+      _rc=124; break
+    fi
     # ONE publish per stop (#888). The outer loop publishes this repo as soon as we
     # return, carrying the final state and status. If a publish here would leave no
     # usable slice for another window, it would be followed straight away by that outer

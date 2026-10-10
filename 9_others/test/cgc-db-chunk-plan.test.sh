@@ -126,7 +126,7 @@ mutate() { # $1 name  $2 sed expression
   echo "  ok: mutation $1 caught"
 }
 mutate window-in-root-noindex 's|_cx="\$_cp_d/.git/info/exclude"$|_cx="$_cp_d/.noindex"|'
-mutate commit-drops-done      's|sort -u "\$_cc_o/done" "\$_cc_o/next" > "\$_cc_o/done1"|sort -u "$_cc_o/next" > "$_cc_o/done1"|'
+mutate commit-drops-done      's|sort -u "\$_cc_o/done" "\$_cc_o/next.ok" > "\$_cc_o/done1"|sort -u "$_cc_o/next.ok" > "$_cc_o/done1"|'
 mutate no-dirty-from-diff     's|LC_ALL=C sort -u "\$_cp_o/dirty0" "\$_cp_o/changed"|LC_ALL=C sort -u "$_cp_o/dirty0"|'
 mutate deleted-stays-done     's|LC_ALL=C comm -12 "\$_cp_o/done0" "\$_cp_o/indexable" > "\$_cp_o/done"|cp "$_cp_o/done0" "$_cp_o/done"|'
 mutate allowlist-ignored      's|if \[ -n "\$_cp_allow" \]; then|if false; then|'

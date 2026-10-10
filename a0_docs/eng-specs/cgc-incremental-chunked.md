@@ -125,6 +125,34 @@ sub-graphs miss cross-chunk edges. Parallelism stays at the repo level (the exis
   leaves margin; dirty files are always included on top, and in steady state they are the
   whole cost.
 
+### 3.1 Bounded LLM calls and time-capped graphrag windows (run 37929244331)
+
+Window 1 of cloud-u-containers (1000 files) took 24 min; the chunk doubled to 2000 and
+window 2 ran under `timeout <whole 204-min slice>`. It finished the description pass,
+entered "AI analyzing 1681 files for architectural relationships" (211 sequential calls,
+<= 7 s/call in window 1) and was still there when the slice expired; the loop then broke and
+the job was gone. Three properties of octocode 0.22.0 / octolib 0.34.2 make that possible:
+
+* no per-request timeout (`ChatCompletionParams::new` sets `request_timeout: None`), and
+  OpenRouter keeps a slow non-streaming request open by dripping whitespace;
+* relationships live in memory until the last relationship call returns: a killed window
+  keeps its nodes and descriptions (persisted per batch) but **none** of its edges, and the
+  next run skips those nodes as same-hash, so their edges are never computed;
+* graphrag cost is not linear in the window: every already-done file that imports a symbol
+  of the window is re-analysed, so windows get slower as `done` grows.
+
+So: octocode's `OPENROUTER_API_URL` points at `cloud-cgc-llm-proxy.py` on 127.0.0.1, which
+gives each attempt a hard wall-clock deadline (120 s), at most 3 attempts in 360 s per call,
+honours Retry-After capped at 60 s, and answers a spent call with an outcome octocode
+survives (relationship call: empty set; description call: 400, which octocode turns into a
+deferral, and the planner keeps those paths outstanding). Five spent calls in a row open a
+breaker; the window then finishes fast and the repo stops for the run. Each window prints one
+LLM line (calls, failures by kind, Retry-After waited, latency p50/p95/max, s/file) and a
+heartbeat every 10 min. A graphrag window plans at most 45 min of work at the measured rate
+(the rate only decays halfway on a faster window) and is killed at 90 min whatever the slice;
+a killed window halves the next one and the loop continues in the same job. Tests:
+`cgc-db-llm-proxy.test.sh`, `cgc-db-graphrag-window.test.sh`.
+
 ## 4. Publishing partial progress safely
 
 Decision: **additive partial graphs on `:latest` for normal runs; atomic swap for forced
