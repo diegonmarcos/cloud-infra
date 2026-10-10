@@ -75,7 +75,8 @@ start_proxy() {  # env passes through; → $PORT
   for _ in $(seq 50); do [ -s "$W/p.port" ] && break; sleep 0.1; done
   PORT=$(cat "$W/p.port")
 }
-KEY="sk-or-v1-THIS-MUST-NEVER-BE-LOGGED"
+# A canary built at run time (a literal key-shaped string trips the leak scan).
+KEY="canary-$$-$(date +%s)-must-never-be-logged"
 # body <rel|desc> <mode> [extra text] → request JSON shaped like octolib's
 body() {
   local prop; [ "$1" = rel ] && prop=relationships || prop=descriptions
@@ -148,7 +149,7 @@ hits1=$(curl -s --noproxy '*' "http://127.0.0.1:$(cat "$W/up.port")/" | jq .hits
 [ "$(last | jq -r .outcome)" = breaker ] && [ "$CODE" = 200 ] && lt "$SECS" 0.5 && [ $(( hits1 - hits0 )) = 4 ] \
   && ok "3 spent calls open the breaker: the next call fails fast with no upstream request (${SECS}s)" || bad "breaker: $CODE ${SECS}s hits=$(( hits1 - hits0 )) $(last)"
 
-grep -q "THIS-MUST-NEVER" "$W/calls.jsonl" && bad "the API key reached the call log" || ok "the API key never reaches the call log"
+grep -qF "$KEY" "$W/calls.jsonl" && bad "the API key reached the call log" || ok "the API key never reaches the call log"
 
 # Wiring: update.sh starts the proxy for openrouter models and points octocode at it.
 grep -q 'cloud-cgc-llm-proxy.py" --upstream "\$OPENROUTER_API_URL"' "$UPD" \
