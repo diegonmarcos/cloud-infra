@@ -29,70 +29,122 @@ step_compose() {
         fi
     fi
 
-    # Repair: /root/.docker/config.json may exist as a DIRECTORY due to a
-    # historical `docker run -v /root/.docker/config.json:...` bind-mount
-    # where the host path was missing — docker auto-creates such paths as
-    # directories. Subsequent `sudo docker compose pull` then fails with
-    # auth/manifest errors because /root/.docker/config.json can't be read
-    # as a JSON file. Idempotent: no-op when the path is a regular file or
-    # missing. Same fix applied to RUNNER_HOST in step_docker (line ~458).
-    # Re-login follows so private GHCR pulls work.
+    # ── GHCR credentials on the VM ─────────────────────────────────────────
+    # Repair first: /root/.docker/config.json may exist as a DIRECTORY due to a
+    # historical `docker run -v /root/.docker/config.json:...` bind-mount where
+    # the host path was missing — docker auto-creates such paths as
+    # directories, and every `sudo docker compose pull` then fails with
+    # auth/manifest errors. Idempotent: no-op when it is a file or missing.
+    # Use bash -c explicitly: target VMs may use fish/zsh as login shell.
+    ssh_with_retry "$DEPLOY_HOST" 'bash -c '"'"'
+        if sudo test -d /root/.docker/config.json; then
+            echo "[deploy-compose] /root/.docker/config.json is a DIRECTORY — repairing"
+            sudo rm -rf /root/.docker/config.json
+        fi
+        sudo mkdir -p /root/.docker
+    '"'" 2>&1 | while IFS= read -r line; do log "$line"; done
+
+    # Which token logs the VM in. Only a LONG-LIVED token may be written into a
+    # VM's docker config: whatever lands there is what every later pull on that
+    # box (this ship's compose, vm-images-pull-up.sh, a manual `docker pull`)
+    # authenticates with.
+    #
+    #   1. GHCR_PULL_TOKEN  — env, a dedicated read:packages PAT. Preferred.
+    #   2. the vault token file, but ONLY if it actually holds a token.
+    #
+    # Deliberately NOT GITHUB_TOKEN. It is an Actions installation token
+    # (ghs_...): it expires when the job ends and ghcr.io refuses it for the
+    # private packages linked to their own source repos (kg-store-binaries,
+    # session-memory-binaries — see cloud-ship-registry-digest.sh). Writing it
+    # into the VM's config would REPLACE a working credential with one that
+    # cannot pull those images now and cannot pull anything an hour later.
+    #
+    # Why the shape check (2026-10-10, runs 38066044682 / 38073435379): the
+    # vault's b0-github/api-key_opaque/token was scrubbed from history and now
+    # holds the 14-byte placeholder `***REMOVED***`. The old `[ -f ]` test took
+    # that as a token, `docker login` failed on every service of every deploy,
+    # the failure was a warning, and the deploy user (ubuntu on oci-apps) was
+    # left with NO ghcr.io credential — so the first private image that was not
+    # already cached locally (kg-store-binaries, after a prune) failed
+    # `unauthorized` and the deploy died. The value is never printed: only its
+    # shape is tested.
+    _ghcr_token_usable() {
+        case "$1" in
+            *[!A-Za-z0-9_]*|'') return 1 ;;          # placeholder (`*`), whitespace, empty
+            ghp_*|github_pat_*|gho_*|ghu_*) [ "${#1}" -ge 36 ] ;;
+            *) return 1 ;;                          # ghs_ (ephemeral) and anything else
+        esac
+    }
+    GHCR_TOKEN_VAL=""; _ghcr_src=""
     GHCR_TOKEN_FILE="${HOME}/git/cloud-vault/A_A0-Providers/B_SERVICES-CLOUD/b0-github/api-key_opaque/token"
-    if [ -f "$GHCR_TOKEN_FILE" ]; then
-        GHCR_TOKEN_VAL="$(cat "$GHCR_TOKEN_FILE")"
-    elif [ -n "${GITHUB_TOKEN:-}" ]; then
-        # ponytail: GHA context — vault not mounted, fall back to Actions token
-        GHCR_TOKEN_VAL="$GITHUB_TOKEN"
+    if _ghcr_token_usable "${GHCR_PULL_TOKEN:-}"; then
+        GHCR_TOKEN_VAL="$GHCR_PULL_TOKEN"; _ghcr_src="GHCR_PULL_TOKEN"
+    elif [ -n "${GHCR_PULL_TOKEN:-}" ]; then
+        log_warn "GHCR_PULL_TOKEN is set but is not a PAT (ghp_/github_pat_) — ignoring it"
     fi
-    if [ -n "${GHCR_TOKEN_VAL:-}" ]; then
-        # Use bash -c explicitly: target VMs may use fish/zsh as login shell
-        # (e.g. oci-apps's diego user runs fish), and fish does not support
-        # bash if/then/fi syntax; this wrapper guarantees POSIX semantics.
-        ssh_with_retry "$DEPLOY_HOST" 'bash -c '"'"'
-            if sudo test -d /root/.docker/config.json; then
-                echo "[deploy-compose] /root/.docker/config.json is a DIRECTORY — repairing"
-                sudo rm -rf /root/.docker/config.json
-            fi
-            sudo mkdir -p /root/.docker
-        '"'" 2>&1 | while IFS= read -r line; do log "$line"; done
+    if [ -z "$GHCR_TOKEN_VAL" ] && [ -f "$GHCR_TOKEN_FILE" ]; then
+        _ghcr_file_tok="$(tr -d '[:space:]' < "$GHCR_TOKEN_FILE")"
+        if _ghcr_token_usable "$_ghcr_file_tok"; then
+            GHCR_TOKEN_VAL="$_ghcr_file_tok"; _ghcr_src="vault token file"
+        else
+            log_warn "vault GHCR token file holds no usable token (scrubbed placeholder?) — not logging $DEPLOY_HOST in with it"
+        fi
+        unset _ghcr_file_tok
+    fi
+
+    if [ -n "$GHCR_TOKEN_VAL" ]; then
         # Login as root AND as the deploy user. Docker reads registry auth from
         # the CALLING user's ~/.docker/config.json, not the daemon's — and
-        # step_compose runs `docker compose pull` WITHOUT sudo. So a root-only
-        # login left compose pulling anonymously: public images worked, every
-        # private one failed `unauthorized` (session-memory,
-        # matrix-mautrix-whatsapp, kg-store, gha-runner). The deploy-user login
-        # also refreshes the stale credential the old unconditional
-        # `docker logout` was there to clear.
+        # step_compose runs `docker compose pull` WITHOUT sudo.
         #
         # Detached, not ssh_with_retry: `docker login` does a network round-trip
-        # to ghcr.io from the VM and takes ~60s on a loaded/distant host. Held
-        # over one ssh session it dropped with 255 on all 3 attempts
-        # (chat-mattermost → oci-apps, runs 30756461937 / 30757890274), the
-        # failure was swallowed as "non-fatal", and every subsequent private
-        # image pull then failed with the far less obvious `denied: denied`.
-        #
-        # The token goes over stdin into a umask-077 file rather than into the
-        # uploaded payload — ssh_run_detached leaves that script on /tmp while
-        # it runs, and a secret has no business sitting there.
+        # to ghcr.io from the VM and takes ~60s on a loaded/distant host; held
+        # over one ssh session it dropped with 255 (runs 30756461937 /
+        # 30757890274). The token goes over stdin into a umask-077 file rather
+        # than into the uploaded payload, which sits on /tmp while it runs.
         _ghcr_tok="/tmp/.ghcr-tok-$$"
         printf '%s\n' "$GHCR_TOKEN_VAL" \
             | ssh $SSH_OPTS "$DEPLOY_HOST" "umask 077; cat > $_ghcr_tok" || true
         if ssh_run_detached "$DEPLOY_HOST" \
                "sudo docker login ghcr.io -u diegonmarcos --password-stdin < $_ghcr_tok >/dev/null 2>&1; _rc=\$?; docker login ghcr.io -u diegonmarcos --password-stdin < $_ghcr_tok >/dev/null 2>&1 || _rc=1; rm -f $_ghcr_tok; exit \$_rc" \
                "ghcr-login-$(basename "$DEPLOY_PATH")"; then
-            log "GHCR login OK on $DEPLOY_HOST"
+            log "GHCR login OK on $DEPLOY_HOST (token: $_ghcr_src)"
         else
-            log_warn "GHCR login on $DEPLOY_HOST failed — pulls of PRIVATE ghcr.io images will fail with 'denied' below; public images still work"
+            log_warn "GHCR login on $DEPLOY_HOST with $_ghcr_src failed — falling back to the VM's existing credential"
             ssh $SSH_OPTS "$DEPLOY_HOST" "rm -f $_ghcr_tok" >/dev/null 2>&1 || true
         fi
     else
-        # No token available at all — clear stale non-root credentials so public
-        # GHCR images still pull anonymously instead of failing on an expired
-        # ubuntu-user token. Only safe in this branch: when a token IS available
-        # the block above logs the deploy user back in, and logging out here
-        # would re-break every private image pull.
-        ssh_with_retry "$DEPLOY_HOST" "docker logout ghcr.io >/dev/null 2>&1 || true"
+        log_warn "no long-lived GHCR pull token (set GHCR_PULL_TOKEN: a classic PAT with read:packages only) — using the VM's existing ghcr.io credential"
     fi
+    unset GHCR_TOKEN_VAL
+
+    # Make sure the DEPLOY USER can pull, whatever happened above. Its
+    # ~/.docker/config.json is the one `docker compose pull` reads. When it has
+    # no working ghcr.io entry but root's does, mirror root's entry into it. All
+    # VM-local: the credential is read and written on the VM, never crosses the
+    # wire, never reaches a log. The deploy user already runs passwordless sudo
+    # (every step here uses it), so this widens nobody's access. Validity is
+    # tested against api.github.com (200 = live PAT), never printed.
+    _ghcr_ensure_payload='set -u
+umask 077
+_live() { [ -n "$1" ] && [ "$(curl -s -m 20 -o /dev/null -w "%{http_code}" -H "Authorization: Basic $1" https://api.github.com/user)" = 200 ]; }
+command -v jq >/dev/null 2>&1 || { echo "[ghcr] jq missing on VM — cannot check the deploy user credential"; exit 0; }
+_me=$(id -un)
+_u=$(jq -r ".auths[\"ghcr.io\"].auth // empty" "$HOME/.docker/config.json" 2>/dev/null || true)
+if _live "$_u"; then echo "[ghcr] $_me: ghcr.io credential OK"; exit 0; fi
+_r=$(sudo jq -r ".auths[\"ghcr.io\"].auth // empty" /root/.docker/config.json 2>/dev/null || true)
+if ! _live "$_r"; then echo "[ghcr] $_me: NO working ghcr.io credential on this VM (neither $_me nor root) — private images will not pull"; exit 1; fi
+mkdir -p "$HOME/.docker"
+[ -s "$HOME/.docker/config.json" ] || echo "{}" > "$HOME/.docker/config.json"
+jq --arg a "$_r" ".auths[\"ghcr.io\"] = {auth: \$a}" "$HOME/.docker/config.json" > "$HOME/.docker/config.json.tmp" \
+  && mv "$HOME/.docker/config.json.tmp" "$HOME/.docker/config.json" && chmod 600 "$HOME/.docker/config.json"
+echo "[ghcr] $_me: had no working ghcr.io credential — mirrored root'"'"'s (VM-local)"'
+    if ssh_run_detached "$DEPLOY_HOST" "$_ghcr_ensure_payload" "ghcr-ensure-$(basename "$DEPLOY_PATH")"; then
+        :
+    else
+        log_warn "GHCR: $DEPLOY_HOST has no working ghcr.io credential — pulls of PRIVATE ghcr.io images will fail with 'unauthorized' below; public images still work"
+    fi
+    unset _ghcr_ensure_payload
 
     # Pre-hook (runs on VM before containers start)
     if [ -n "$COMPOSE_PRE_HOOK" ]; then

@@ -822,6 +822,10 @@ jobs:
           SSH_ALIAS: ${{ matrix.vm }}
           SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Long-lived read:packages PAT the deploy logs each VM into ghcr.io
+          # with (step_compose). Optional: unset, the VM keeps its existing
+          # credential. Never GITHUB_TOKEN for that — see deploy-compose.sh.
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_ACTIONS: true
           GITHUB_EVENT_NAME: ${{ github.event_name }}
@@ -902,6 +906,7 @@ jobs:
             -e CARGO_HOME=/root/.cargo \
             -e CARGO_TARGET_DIR=/cargo-target \
             -e GITHUB_TOKEN \
+            -e GHCR_PULL_TOKEN \
             -e GITHUB_ACTOR \
             -e SHIP_MODE \
             -e SHIP_DEADLINE_EPOCH \
@@ -1123,6 +1128,10 @@ jobs:
           # share the host's network namespace risks conflicting with it.
           WG_PRIVATE_KEY: ${{ matrix.runner_label == '' && secrets.WG_PRIVATE_KEY || '' }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Long-lived read:packages PAT the deploy logs each VM into ghcr.io
+          # with (step_compose). Optional: unset, the VM keeps its existing
+          # credential. Never GITHUB_TOKEN for that — see deploy-compose.sh.
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_ACTIONS: true
           GITHUB_EVENT_NAME: ${{ github.event_name }}
@@ -1175,6 +1184,7 @@ jobs:
             -e TRACE_DIR=/traces \
             -v "$TRACE_DIR:/traces" \
             -e GITHUB_TOKEN \
+            -e GHCR_PULL_TOKEN \
             -e GITHUB_ACTOR \
             -e SHIP_MODE \
             -e SHIP_DEADLINE_EPOCH \
