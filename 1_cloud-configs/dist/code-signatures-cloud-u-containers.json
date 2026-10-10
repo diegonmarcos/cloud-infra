@@ -6,9 +6,9 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2901,
+    "files": 2903,
     "by_lang": {
-      "sh": 141,
+      "sh": 143,
       "nix": 159,
       "py": 860,
       "ts": 1140,
@@ -16,7 +16,7 @@
       "rust": 535
     },
     "by_role": {
-      "shell": 131,
+      "shell": 133,
       "nix-module": 15,
       "python": 853,
       "module": 695,
@@ -20745,6 +20745,9 @@
         "perRepoBaseImage",
         "ntfyUrl",
         "escapeDollars",
+        "kgRotatedPass",
+        "KG_STORE_PASS",
+        "KG_STORE_PASS_PUB",
         "oct",
         "fileAssociations",
         "pvtName",
@@ -20770,10 +20773,7 @@
         "OCTOCODE_REPOS_ROOT",
         "OCTOCODE_PULL",
         "OCTOCODE_FILE_ASSOCIATIONS",
-        "SYNC_EXCLUDE",
-        "KG_STORE_URL",
-        "KG_STORE_NS",
-        "KG_STORE_DB"
+        "SYNC_EXCLUDE"
       ]
     },
     {
@@ -21110,6 +21110,18 @@
       ]
     },
     {
+      "path": "user-ai_kg-store-pub/src/assets/kg-root-pass-reconcile.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "sql()"
+      ],
+      "imports": [],
+      "symbols": [
+        "sql()"
+      ]
+    },
+    {
       "path": "user-ai_kg-store-pub/src/compose.nix",
       "lang": "nix",
       "role": "compose",
@@ -21192,6 +21204,7 @@
         "EMBEDDER_DIM",
         "EMBEDDER_ENABLED",
         "VECTOR_INDEXES_DDL",
+        "extraAssets",
         "composeSpec",
         "title"
       ]
@@ -21248,6 +21261,18 @@
         "log()",
         "surreal_query()",
         "_field()"
+      ]
+    },
+    {
+      "path": "user-ai_kg-store/src/assets/kg-root-pass-reconcile.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "sql()"
+      ],
+      "imports": [],
+      "symbols": [
+        "sql()"
       ]
     },
     {
@@ -21333,6 +21358,7 @@
         "EMBEDDER_DIM",
         "EMBEDDER_ENABLED",
         "VECTOR_INDEXES_DDL",
+        "extraAssets",
         "composeSpec",
         "title"
       ]
@@ -74874,11 +74900,22 @@
         "appImage",
         "dbImage",
         "rcloneImage",
+        "mntHost",
+        "mntRclone",
+        "mntApp",
+        "originalsDir",
+        "rcloneMountArgs",
+        "rcloneSupervisor",
+        "M",
+        "pid",
+        "fails",
+        "mountReady",
         "services",
         "mariadb",
         "image",
         "container_name",
         "network_mode",
+        "restart",
         "env_file",
         "environment",
         "MARIADB_AUTO_UPGRADE",
@@ -74895,19 +74932,8 @@
         "retries",
         "limits",
         "reservations",
-        "command",
-        "RCLONE_CONFIG_OCI_TYPE",
-        "RCLONE_CONFIG_OCI_PROVIDER",
-        "RCLONE_CONFIG_OCI_ACCESS_KEY_ID",
-        "RCLONE_CONFIG_OCI_SECRET_ACCESS_KEY",
-        "RCLONE_CONFIG_OCI_ENDPOINT",
-        "RCLONE_CONFIG_OCI_REGION",
-        "RCLONE_CONFIG_OCI_ACL",
-        "start_period",
-        "cap_add",
-        "devices",
-        "security_opt",
-        "photoprism"
+        "entrypoint",
+        "command"
       ]
     },
     {

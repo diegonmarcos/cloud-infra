@@ -865,6 +865,8 @@
         "app_code(root, app)",
         "check_variants(root, apps, uis, spec, exempt, bad)",
         "check_app(root, app, ui, spec, bad)",
+        "declared_backgrounds(nodes, where=\"\")",
+        "check_backgrounds(app, sections, spec, code, rel, bad)",
         "main(argv)"
       ],
       "imports": [
@@ -882,6 +884,8 @@
         "app_code(root, app)",
         "check_variants(root, apps, uis, spec, exempt, bad)",
         "check_app(root, app, ui, spec, bad)",
+        "declared_backgrounds(nodes, where=\"\")",
+        "check_backgrounds(app, sections, spec, code, rel, bad)",
         "main(argv)"
       ]
     },
@@ -2849,6 +2853,8 @@
         "app_code(root, app)",
         "check_variants(root, apps, uis, spec, exempt, bad)",
         "check_app(root, app, ui, spec, bad)",
+        "declared_backgrounds(nodes, where=\"\")",
+        "check_backgrounds(app, sections, spec, code, rel, bad)",
         "main(argv)"
       ],
       "imports": [
@@ -2866,6 +2872,8 @@
         "app_code(root, app)",
         "check_variants(root, apps, uis, spec, exempt, bad)",
         "check_app(root, app, ui, spec, bad)",
+        "declared_backgrounds(nodes, where=\"\")",
+        "check_backgrounds(app, sections, spec, code, rel, bad)",
         "main(argv)"
       ]
     },
@@ -4557,6 +4565,8 @@
         "stage()",
         "mutate()",
         "J()",
+        "green()",
+        "BAR()",
         "variant_fleet()",
         "n8()"
       ],
@@ -4567,6 +4577,8 @@
         "stage()",
         "mutate()",
         "J()",
+        "green()",
+        "BAR()",
         "variant_fleet()",
         "n8()"
       ]
@@ -23735,6 +23747,9 @@
       "role": "kotlin",
       "exports": [
         "MAX_BOTTOM",
+        "MIN_BOTTOM",
+        "EQUAL_CELLS_BOTTOM",
+        "PageBackground",
         "NavStyle",
         "NavPage",
         "NavSection",
@@ -23747,13 +23762,17 @@
         "kotlin.io.encoding.ExperimentalEncodingApi"
       ],
       "symbols": [
+        "surface(darkTheme: Boolean)",
         "of(text: String?)",
         "leaf()",
+        "stripSurface(darkTheme: Boolean, pageId: String? = null)",
         "path(id: String?)",
         "page(id: String?)",
         "allPages()",
         "section(id: String?)",
         "bottomSections()",
+        "stripSurface(sectionId: String?, darkTheme: Boolean, pageId: String? = null)",
+        "problems()",
         "default()",
         "viewItems(icon: (String)",
         "fromBuildConfig( uiSectionsB64: String, uiBottomNav: String = \"\", uiDefaultSection: String = \"\", uiStyle: String = \"\", )",
@@ -23764,6 +23783,7 @@
         "pathTo(pages: List<NavPage>, id: String?)",
         "flatten(pages: List<NavPage>)",
         "islandEntries( icon: @androidx.compose.runtime.Composable (String)",
+        "class PageBackground",
         "class NavStyle",
         "class NavPage",
         "class NavSection",
@@ -23791,6 +23811,7 @@
       "role": "kotlin",
       "exports": [
         "NavTokens",
+        "TabColors",
         "LocalNavTokens",
         "LocalReduceMotion",
         "NavHaptics",
@@ -23807,11 +23828,13 @@
         "androidx.compose.ui.unit.sp"
       ],
       "symbols": [
+        "tabColors(surface: TabSurface)",
         "sectionChange()",
         "navTokens()",
         "rememberBarMotion(key: Any?)",
         "navHaptics()",
         "class NavTokens",
+        "class TabColors",
         "class NavHaptics"
       ]
     },
@@ -23821,6 +23844,7 @@
       "role": "kotlin",
       "exports": [
         "PageTabs",
+        "TabSurface",
         "PageTabsTags"
       ],
       "imports": [
@@ -23870,11 +23894,12 @@
         "PageTabsImpl( pages: List<NavPage>, selectedId: String?, onSelect: (NavPage)",
         "PageTabsContent( pages: List<NavPage>, selectedId: String?, onSelect: (NavPage)",
         "styleAt(px: Float, color: Color = Color.Unspecified)",
-        "Pill( page: NavPage, label: String, index: Int, on: Boolean, plan: PillPlan, marginPx: Float, padHPx: Float, tokens: NavTokens, style: (Float, Color)",
+        "Pill( page: NavPage, label: String, index: Int, on: Boolean, plan: PillPlan, marginPx: Float, padHPx: Float, tokens: NavTokens, colors: TabColors, style: (Float, Color)",
         "pillStyle(density: Density, px: Float, spacing: Float, color: Color)",
         "planPills( availPx: Float, count: Int, longest: Int, padPx: Float, marginPx: Float, startPx: Float, minPx: Float, stepPx: Float, minChars: Int, charWidth: (Float)",
         "tab(id: String)",
         "label(id: String)",
+        "class TabSurface",
         "class PillPlan",
         "class PageTabsTags"
       ]
@@ -24327,6 +24352,7 @@
         "showPageTabs(strip: List<NavPage>, select: String?)",
         "ratio(a: Color, b: Color)",
         "assertIslandContrast(name: String, t: NavTokens)",
+        "assertLightStripContrast(name: String, t: NavTokens)",
         "class NavAccessibilityTest"
       ]
     },
@@ -24364,6 +24390,7 @@
         "android.util.Base64",
         "android.view.View",
         "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.background",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -24396,8 +24423,7 @@
         "org.junit.runner.RunWith",
         "org.junit.runners.model.Statement",
         "org.robolectric.Robolectric",
-        "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.RuntimeEnvironment"
+        "org.robolectric.RobolectricTestRunner"
       ],
       "symbols": [
         "evaluate()",
@@ -24408,9 +24434,10 @@
         "bounds(tag: String)",
         "pixels(tag: String)",
         "near(msg: String, expected: Float, actual: Float)",
-        "plan(avail: Float, longest: Int)",
+        "barOf(n: Int)",
         "centre(id: String)",
         "flat(c: Color)",
+        "plan(avail: Float, longest: Int)",
         "isClose(a: Color, b: Color)",
         "close(msg: String, expected: Color, actual: Color)",
         "class PageTabsTest"
@@ -152836,6 +152863,7 @@
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.runtime.SideEffect",
+        "androidx.compose.runtime.staticCompositionLocalOf",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.LocalView",
         "androidx.core.view.WindowCompat",

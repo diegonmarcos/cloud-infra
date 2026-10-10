@@ -5501,7 +5501,7 @@
           },
           "volumes": [
             "photoprism_storage:/photoprism/storage",
-            "/opt/containers/photoprism/originals:/photoprism/originals:ro",
+            "/opt/containers/photoprism/rclone-mnt:/photoprism/mnt:ro,rslave",
             "photoprism_import:/photoprism/import"
           ],
           "env_file": true,
@@ -5509,7 +5509,11 @@
             "db",
             "rclone"
           ],
-          "resources": null,
+          "resources": {
+            "mem_limit": "2G",
+            "cpus": "2.0",
+            "_comment": "Set in src/compose.nix; recorded here for inventory. PHOTOPRISM_WORKERS=2."
+          },
           "read_only": false,
           "protocol": "http"
         },
@@ -5545,7 +5549,7 @@
           "healthcheck": "cmd",
           "monitoring": null,
           "volumes": [
-            "/opt/containers/photoprism/originals:/data:shared"
+            "/opt/containers/photoprism/rclone-mnt:/mnt:rshared"
           ],
           "env_file": true,
           "depends_on": [],
