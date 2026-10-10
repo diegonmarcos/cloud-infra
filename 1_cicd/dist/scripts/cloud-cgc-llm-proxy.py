@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_cicd/src/ops/cloud-cgc-llm-proxy.py
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 """cloud-cgc-llm-proxy.py -- bounded LLM calls for the cgc graphrag phase (#888).
 
 octocode 0.22.0 builds every GraphRAG request through octolib 0.34.2, which sends it
