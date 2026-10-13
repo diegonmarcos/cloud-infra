@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21018,
+    "files": 21021,
     "by_lang": {
       "py": 122,
       "sh": 452,
-      "kotlin": 10820,
+      "kotlin": 10823,
       "java": 635,
       "ts": 8413,
       "nix": 28,
@@ -25,7 +25,7 @@
       "module": 6365,
       "compose": 1,
       "flake": 24,
-      "kotlin": 10817,
+      "kotlin": 10820,
       "python": 41,
       "rust-module": 87,
       "file": 2256,
@@ -51126,6 +51126,28 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/model-catalogue/src/main/kotlin/com/diegonmarcos/superapp/modelcatalogue/AgentCatalogue.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentCatalogue"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "byId(id: String)",
+        "parse(text: String)",
+        "modelFor(agent: Agent, picked: String)",
+        "subtitle(agent: Agent)",
+        "class AgentCatalogue",
+        "class Capabilities",
+        "class Agent",
+        "class Gateway",
+        "class Catalogue"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/model-catalogue/src/main/kotlin/com/diegonmarcos/superapp/modelcatalogue/CatalogueIo.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -51338,6 +51360,29 @@
         "class ModelTags",
         "class CatalogueTheme",
         "class CatalogueWords"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/model-catalogue/src/test/kotlin/com/diegonmarcos/superapp/modelcatalogue/AgentCatalogueTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentCatalogueTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "deepSeekHarnessIsDeclaredWithItsCapabilities()",
+        "theGatewayAgentsKeepTheirOrderAndGateway()",
+        "deepSeekOnlyEverRunsADeepSeekModel()",
+        "class AgentCatalogueTest"
       ]
     },
     {
@@ -54007,6 +54052,7 @@
         "Bubble(msg: SpMsg, max: Dp, theme: SearchPageTheme)",
         "AiAvatar(theme: SearchPageTheme)",
         "Thinking(label: String, theme: SearchPageTheme)",
+        "AgentSelect(chat: SearchChatState, theme: SearchPageTheme)",
         "ModelSelect(chat: SearchChatState, theme: SearchPageTheme, onModel: (()",
         "ChatBar(text: String, onText: (String)",
         "class SearchPageColors",
@@ -54025,6 +54071,7 @@
         "SpMsg",
         "SpSession",
         "SpModel",
+        "SpAgent",
         "SpEngine",
         "SpOutcome",
         "SearchPageHost",
@@ -54041,6 +54088,10 @@
         "models()",
         "send(session: SpSession, text: String, model: String, web: Boolean, now: Long)",
         "openUrl(url: String)",
+        "agents()",
+        "agent()",
+        "pickAgent(id: String)",
+        "chooseAgent(id: String)",
         "pick(id: String)",
         "toggleWeb()",
         "fresh()",
@@ -54048,10 +54099,12 @@
         "begin(ask: String)",
         "finish(out: SpOutcome)",
         "host()",
+        "agent(id: String)",
         "engine(id: String)",
         "class SpMsg",
         "class SpSession",
         "class SpModel",
+        "class SpAgent",
         "class SpEngine",
         "class SpOutcome",
         "class SearchPageHost",
@@ -440472,6 +440525,25 @@
       ]
     },
     {
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/AgentRoute.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentRoute"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.modelcatalogue.AgentCatalogue",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "catalogue(ctx: Context)",
+        "request(cat: AgentCatalogue.Catalogue, gatewayUrl: String, agentId: String, openAiBody: String)",
+        "class AgentRoute",
+        "class Request"
+      ]
+    },
+    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/AgentService.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -440537,6 +440609,7 @@
       "symbols": [
         "newSession(model: String, now: Long)",
         "send(ctx: Context, s: Services, session: Chat.Session, text: String, model: String, web: Boolean, now: Long)",
+        "answer(s: Services, asked: Chat.Session, res: Result<com.diegonmarcos.cloudsearch.core.Http.Response>, via: String?)",
         "class ChatFlow",
         "class Outcome"
       ]
@@ -440597,7 +440670,9 @@
       ],
       "imports": [
         "com.diegonmarcos.cloudsearch.core.Chat",
+        "com.diegonmarcos.superapp.modelcatalogue.AgentCatalogue",
         "com.diegonmarcos.superapp.searchpage.SearchPageHost",
+        "com.diegonmarcos.superapp.searchpage.SpAgent",
         "com.diegonmarcos.superapp.searchpage.SpModel",
         "com.diegonmarcos.superapp.searchpage.SpMsg",
         "com.diegonmarcos.superapp.searchpage.SpOutcome",
@@ -440608,6 +440683,9 @@
         "models()",
         "send(session: SpSession, text: String, model: String, web: Boolean, now: Long)",
         "openUrl(url: String)",
+        "agents()",
+        "agent()",
+        "pickAgent(id: String)",
         "sp()",
         "chat()",
         "class SearchHost"
@@ -441667,6 +441745,7 @@
         "jobsListingShowsWhatTheSourceReturnedAndWhyTheOthersDidNot()",
         "payslipComputesOnScreen()",
         "chatWithoutATokenSaysWhyAndSendsNothing()",
+        "deepSeekHarnessIsPickedFromTheSharedDescriptorAndRoutesThroughTheGateway()",
         "theMockupBottomNavRendersAndItsLabelsFit()",
         "theFiveDestinationsRouteAndKeepTheirTopTabs()",
         "themeToggleFlipsAndIsRemembered()",
@@ -441693,8 +441772,7 @@
         "installAgents()",
         "complete(req: com.diegonmarcos.cloudsearch.core.agents.LlmRequest)",
         "anAgentRunDraftsForReviewAndNothingIsSent()",
-        "agentsSubSectionsAreReachable()",
-        "theFleetSearchesAreReachableOnChatsStrip()"
+        "agentsSubSectionsAreReachable()"
       ]
     },
     {
