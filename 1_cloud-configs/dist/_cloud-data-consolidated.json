@@ -13431,7 +13431,13 @@
           ],
           "mem_psi_warn": 30,
           "mem_psi_crit": 50,
-          "mem_psi_page": 65
+          "mem_psi_page": 65,
+          "obsolete_systemd_units": [
+            {
+              "unit": "smtp-proxy.service",
+              "_why": "Retired 2026-05: the Python SMTP proxy for Cloudflare Email Routing became the Rust container http-to-smtp-proxy-api, relocated to gcp-proxy (cloud-u-containers infra-api_tools-http-to-smtp-proxy-api; its purge-orphan-smtp-proxy.sh removes the old container). /opt/smtp-proxy/smtp_proxy.py was deleted but this hand-made unit (Restart=always, RestartSec=5) stayed enabled: 610,381 restarts by 2026-10-13. Was listed here once (d28e03ff) and dropped by accident in edc03c3b."
+            }
+          ]
         }
       },
       "oci-analytics": {
