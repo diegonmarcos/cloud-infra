@@ -32,6 +32,8 @@
     "image": "ghcr.io/diegonmarcos/stalwart-sorter-binaries:latest",
     "_doc_image": "Was python:3-alpine running a bind-mounted jmap-sorter.py. Now a compiled binary: the rules schema is parsed and validated once at startup, so a malformed or unknown predicate stops the container instead of silently producing an empty filter folder.",
     "resources": {
+      "_doc_mem_limit": "Measured 2026-10-13: cgroup peak 10MiB, anon ~1MiB. 64M is 6x that.",
+      "mem_limit": "64M",
       "mem_reservation": "16M"
     }
   },
@@ -1812,6 +1814,9 @@
   "tests": {
     "mail-rules": {
       "cmd": "bash ../_shared/lib/mail-rules.tests/run-tests.sh"
+    },
+    "mail-stack-limits": {
+      "cmd": "node ../_shared/test-mail-stack-limits.mjs"
     }
   },
   "secret_env_vars": [

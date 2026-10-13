@@ -7886,6 +7886,8 @@
           "env_file": true,
           "depends_on": [],
           "resources": {
+            "_doc_mem_limit": "Measured on oci-mail 2026-10-13: cgroup peak 13MiB, anon ~0. 64M is ~5x that; it replaces the 2G category default, which on a 954MiB VM capped nothing. Gate: _shared/test-mail-stack-limits.mjs.",
+            "mem_limit": "64M",
             "reservations": {
               "memory": "16M"
             }
@@ -8298,6 +8300,8 @@
           "env_file": true,
           "depends_on": [],
           "resources": {
+            "_doc_mem_limit": "Measured on oci-mail 2026-10-13: anon <=30MiB (6MiB resident + 24MiB swapped), cgroup peak 171MiB of which nearly all was reclaimable page cache over imapsql.db. 128M bounds the cache without touching the working set; it replaces the 2G category default, which on a 954MiB VM capped nothing. Gate: _shared/test-mail-stack-limits.mjs.",
+            "mem_limit": "128M",
             "reservations": {
               "memory": "32M"
             }
@@ -8507,6 +8511,9 @@
           "env_file": true,
           "depends_on": [],
           "resources": {
+            "_doc_limits": "oci-mail is a VM.Standard.E2.1.Micro (1 OCPU, 954MiB). 2026-10-13 it ran load 6-10, io PSI ~78%, cpu PSI ~74%, with stalwart at 110-160% CPU and 105GB read in 21h, every mail container capped only by the 2G category default (i.e. by nothing on a 954MiB box). cpus 0.7 leaves 0.3 OCPU for maddy (the MX leg) whatever stalwart does. mem_limit is NOT the 256M first proposed: measured on the box the same day stalwart's anon commit was ~306MiB 30 min after a restart (130MiB resident + 176MiB swapped) and ~345MiB after 21h, and the fleet already learned that 256M on stalwart is a thrash wall (_shared/docker.nix: 2909 memory.max breach events on oci-apps). restart is \"no\" fleet-wide, so an OOM kill here is not a blip -- it is webmail/IMAP down until someone notices. 384M sits above the measured peak with docker's default 2x memswap behind it. Gate: _shared/test-mail-stack-limits.mjs.",
+            "mem_limit": "384M",
+            "cpus": "0.7",
             "reservations": {
               "memory": "32M"
             }
@@ -8526,6 +8533,8 @@
           "image": "ghcr.io/diegonmarcos/stalwart-sorter-binaries:latest",
           "_doc_image": "Was python:3-alpine running a bind-mounted jmap-sorter.py. Now a compiled binary: the rules schema is parsed and validated once at startup, so a malformed or unknown predicate stops the container instead of silently producing an empty filter folder.",
           "resources": {
+            "_doc_mem_limit": "Measured 2026-10-13: cgroup peak 10MiB, anon ~1MiB. 64M is 6x that.",
+            "mem_limit": "64M",
             "mem_reservation": "16M"
           }
         }
@@ -8686,6 +8695,9 @@
       "tests": {
         "mail-rules": {
           "cmd": "bash ../_shared/lib/mail-rules.tests/run-tests.sh"
+        },
+        "mail-stack-limits": {
+          "cmd": "node ../_shared/test-mail-stack-limits.mjs"
         }
       },
       "api": {
