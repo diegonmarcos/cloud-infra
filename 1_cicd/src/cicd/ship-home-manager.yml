@@ -35,6 +35,11 @@ on:
         required: false
         default: "false"
         type: boolean
+      include_opt_in_vms:
+        description: "Also ship the OPT-IN VMs (HM_OPT_IN_VMS: oci-mail) on an all-VM dispatch. Targeting one with `vm` ships it too. Off by default: a ~2GB image activation takes 36-64 min on that 1GB VM."
+        required: false
+        default: false
+        type: boolean
 
 # 2026-09-06: joined the fleet-wide WG group — see ship.yml deploy.concurrency.
 concurrency:
@@ -117,6 +122,17 @@ jobs:
       # inline in the gate step) so every invocation of the authorization
       # script reads the same value and it can be audited in one place.
       B_INFRA_DEPLOY_MARKER: "[deploy-fleet]"
+      # OPT-IN VMs: shipped only when explicitly requested (dispatch `vm` names
+      # it, or include_opt_in_vms=true) or when the commit touches THAT VM's
+      # own home-manager config (b_infra/nixhm-sudo-<vm>/ or its own
+      # build-vm-<vm>.json). Shared inputs — the consolidated artifact that
+      # every gen-configs refresh rewrites — no longer wake them. oci-mail is a
+      # 1 OCPU / 954MiB E2.1.Micro running the mail stack: on 2026-10-13 it
+      # took 6 HM runs in 3h, each pulling a ~2GB image and activating for
+      # 36-64 min, on top of load 6-10 and io PSI ~78%. Every other VM's
+      # behaviour is unchanged. Logic: cloud-ship-hm-vm-optin.sh; test:
+      # 9_others/test/test_hm_ship_vm_optin.sh.
+      HM_OPT_IN_VMS: "oci-mail"
     steps:
       # Checkout FIRST so the gate's `git diff` has history.
       # ref = upstream SHA (workflow_run) so we examine the commit that
@@ -147,6 +163,36 @@ jobs:
             echo "::notice::skip — other VM targeted ($TARGET ≠ $VM)"
             exit 0
           fi
+          # 1b. Opt-in VMs (HM_OPT_IN_VMS, job env above). Decided before the
+          #     authorization gate on purpose: a run that was never going to
+          #     touch this VM must not go red on its behalf. Non-opt-in VMs get
+          #     "deploy not-opt-in" and fall through to the unchanged gates.
+          OPTIN=".github/workflows/scripts/cloud-ship-hm-vm-optin.sh"
+          if [ ! -f "$OPTIN" ]; then
+            echo "::error::opt-in gate is missing ($OPTIN). Refusing to decide for $VM without it."
+            exit 1
+          fi
+          case "${{ github.event_name }}" in
+            push)
+              # Every path any commit of the push added/modified/removed.
+              OPT_PATHS=$(jq -r '(.commits // [])[] | ((.added // []) + (.modified // []) + (.removed // []))[]' "$GITHUB_EVENT_PATH" | sort -u) ;;
+            workflow_run)
+              # Same commit the path-relevance block below diffs. A failed
+              # diff yields no paths, so an opt-in VM stays skipped (its
+              # default) and says so; non-opt-in VMs are unaffected.
+              OPT_PATHS=$(git diff --name-only HEAD^ HEAD 2>/dev/null || true) ;;
+            *) OPT_PATHS="" ;;
+          esac
+          OPT=$(printf '%s\n' "$OPT_PATHS" | HM_OPT_IN_VMS="$HM_OPT_IN_VMS" bash "$OPTIN" "$VM" "${{ github.event_name }}" "$TARGET" "${{ inputs.include_opt_in_vms }}")
+          if [ "${OPT%% *}" = "skip" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::skip — ${VM}: ${OPT#skip }"
+            echo "### ⏭️ ${VM}: NO DEPLOY PERFORMED (opt-in VM)" >> "$GITHUB_STEP_SUMMARY"
+            echo "${VM} is in HM_OPT_IN_VMS: ${OPT#skip }. Ship it with workflow_dispatch vm=${VM} (or include_opt_in_vms=true), or by changing b_infra/nixhm-sudo-${VM}/." >> "$GITHUB_STEP_SUMMARY"
+            echo "This run being green does **not** mean the VM was updated." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "::notice::${VM}: ${OPT}"
           # 2. Deploy-authorization — FAIL CLOSED. A b_infra deploy to the
           #    fleet used to be unconditional (#414): ANY commit touching
           #    b_infra/** shipped home-manager to all four VMs, recreating the
