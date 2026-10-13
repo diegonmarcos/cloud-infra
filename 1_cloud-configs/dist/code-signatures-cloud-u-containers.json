@@ -6,21 +6,21 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2909,
+    "files": 2911,
     "by_lang": {
       "sh": 144,
       "nix": 162,
       "py": 860,
-      "ts": 1140,
-      "js": 68,
+      "ts": 1141,
+      "js": 69,
       "rust": 535
     },
     "by_role": {
       "shell": 134,
       "nix-module": 16,
       "python": 853,
-      "module": 695,
-      "file": 314,
+      "module": 696,
+      "file": 315,
       "script": 8,
       "flake": 74,
       "compose": 72,
@@ -19365,6 +19365,61 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/surface.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "currentSurface",
+        "deniedRepos",
+        "isRepoAllowed",
+        "isRepoDenied",
+        "filterRepoMap",
+        "refusal",
+        "isInside",
+        "resolveInsideRepo",
+        "HARD_DENY",
+        "Surface"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "currentSurface(env: NodeJS.ProcessEnv = process.env)",
+        "readDecl()",
+        "deniedRepos(env: NodeJS.ProcessEnv = process.env)",
+        "isRepoAllowed(name: string, env: NodeJS.ProcessEnv = process.env)",
+        "isRepoDenied(name: string, env: NodeJS.ProcessEnv = process.env)",
+        "refusal(name: string)",
+        "isInside(base: string, child: string)",
+        "resolveInsideRepo(repoBase: string, path: string)"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/test-pub-surface-isolation.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "resolve",
+        "z",
+        "McpServer",
+        "default"
+      ],
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url",
+        "node:module"
+      ],
+      "symbols": [
+        "resolve(spec, ctx, next)",
+        "class McpServer",
+        "class Database"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/a-knowledge/configs.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -19423,7 +19478,8 @@
         "../../shared/libs/exec.js",
         "../../shared/libs/discovery.js",
         "../../shared/libs/http.js",
-        "../../shared/libs/files.js"
+        "../../shared/libs/files.js",
+        "../../surface.js"
       ],
       "symbols": [
         "jsonText(label: string, data: unknown)",
@@ -19481,7 +19537,8 @@
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
         "node:fs",
-        "node:path"
+        "node:path",
+        "../../surface.js"
       ],
       "symbols": [
         "listJson(dir: string, prefix: string)",
@@ -19523,7 +19580,8 @@
         "zod",
         "node:child_process",
         "node:util",
-        "../../shared/libs/paths.js"
+        "../../shared/libs/paths.js",
+        "../../surface.js"
       ],
       "symbols": [
         "runOctocode(args: string[], cwd?: string)",
@@ -20745,6 +20803,15 @@
         "KG_STORE_PASS_PUB",
         "oct",
         "fileAssociations",
+        "denyRepos",
+        "pubRepos",
+        "pubReposMounts",
+        "type",
+        "source",
+        "target",
+        "read_only",
+        "volume",
+        "fullReposMounts",
         "pvtName",
         "pvtPort",
         "pvtDbVolume",
@@ -20759,16 +20826,7 @@
         "OCTOCODE_HOME",
         "XDG_CACHE_HOME",
         "OPENAI_API_URL",
-        "OPENAI_API_KEY",
-        "OLLAMA_API_URL",
-        "OLLAMA_API_KEY",
-        "OCTOCODE_LLM_MODELS",
-        "BRIDGE_HEALTH_URL",
-        "OCTOCODE_REPOS",
-        "OCTOCODE_REPOS_ROOT",
-        "OCTOCODE_PULL",
-        "OCTOCODE_FILE_ASSOCIATIONS",
-        "SYNC_EXCLUDE"
+        "OPENAI_API_KEY"
       ]
     },
     {
