@@ -324,9 +324,17 @@ mkdir -p "$STAGING_PARENT" 2>/dev/null || true
 }
 STAGING=$(mktemp -d "$STAGING_PARENT/cgc-db-staging.XXXXXX")
 CURRENT_CID=""
+# The transport image being staged right now. Each image is rmi'd right after its
+# stage, but a stage that FAILS exits through this trap instead, and the image used
+# to stay behind: run 38466635519 died of ENOSPC staging cgc-db-cloud-u-containers
+# and left that 4.4G image on a box with 6G free, so every retry started out even
+# shorter of disk than the run that failed (#988).
+CURRENT_IMG=""
 cleanup() {
   [ -n "$CURRENT_CID" ] && docker rm -f "$CURRENT_CID" >/dev/null 2>&1
   CURRENT_CID=""
+  [ -n "$CURRENT_IMG" ] && docker rmi "$CURRENT_IMG" >/dev/null 2>&1
+  CURRENT_IMG=""
   [ -n "${STAGING:-}" ] && [ -d "$STAGING" ] && rm -rf "$STAGING" 2>/dev/null
   return 0
 }
@@ -374,6 +382,53 @@ lance_prune_old_versions() { # $1 = octocode home (or staging tree), $2 = keep c
   :
 }
 
+# Delete lance DATA fragments that no remaining manifest names (run it AFTER
+# lance_prune_old_versions, so "remaining" means the newest N kept above).
+# lance_prune_old_versions drops old manifests but leaves every fragment only they
+# named, and octocode rewrites whole tables on compaction: measured 2026-10-14 on
+# oci-apps, one repo's code_blocks.lance held 1094 data files (1.6G) of which
+# the two kept manifests name ONE (161M). Across both cgc volumes 9.6G of 13.3G of
+# lance data was unreferenced, the per-repo images carried it too (cgc-db-
+# cloud-u-containers was 4.4G), and the restore died of ENOSPC staging it (#988).
+# Safety: references are read from EVERY kept manifest with the integrity gate's
+# own parser, unanchored (grep -o), so the set kept here is a superset of what
+# lance_dangling_tables checks -- cross-checked against pylance's own
+# fragment.data_files() on three real tables: identical. Fail closed per table:
+# when no reference parses, or none of them is on disk, the parse is suspect and
+# the table is left alone. lance_dangling_tables still runs after this.
+lance_gc_unreferenced_data() { # $1 = octocode home (or staging tree)
+  _lgc_n=0; _lgc_kb=0
+  for _lgc_t in "$1"/*/storage/*.lance; do
+    [ -d "$_lgc_t/_versions" ] && [ -d "$_lgc_t/data" ] || continue
+    _lgc_drop=$(
+      { for _lgc_f in "$_lgc_t"/data/*.lance; do
+          [ -e "$_lgc_f" ] && printf 'D %s\n' "${_lgc_f##*/}"
+        done
+        for _lgc_m in "$_lgc_t"/_versions/*.manifest; do
+          [ -f "$_lgc_m" ] || continue
+          tr -c '0-9a-f.ln' '\n' < "$_lgc_m" | grep -oE '[0-9a-f]{32,}\.lance' | sed 's/^/R /'
+        done
+      } | awk '
+        $1 == "D" { d[++nd] = $2; next }
+        $1 == "R" { nr++; s = $2; for (i = 1; i <= length(s); i++) ref[substr(s, i)] = 1 }
+        END {
+          if (nr == 0) exit 1
+          k = 0; for (j = 1; j <= nd; j++) if (d[j] in ref) k++
+          if (k == 0) exit 1
+          for (j = 1; j <= nd; j++) if (!(d[j] in ref)) print d[j]
+        }') || continue
+    [ -n "$_lgc_drop" ] || continue
+    _lgc_b=$(du -sk "$_lgc_t/data" 2>/dev/null | cut -f1)
+    for _lgc_f in $_lgc_drop; do
+      rm -f "$_lgc_t/data/$_lgc_f" && _lgc_n=$((_lgc_n + 1))
+    done
+    _lgc_a=$(du -sk "$_lgc_t/data" 2>/dev/null | cut -f1)
+    _lgc_kb=$((_lgc_kb + ${_lgc_b:-0} - ${_lgc_a:-0}))
+  done
+  [ "$_lgc_n" -gt 0 ] && echo "[cgc-db] removed $_lgc_n unreferenced lance data fragment(s) under $1 ($((_lgc_kb / 1024)) MB)"
+  :
+}
+
 stage_image() { # $1 = image ref
   CURRENT_CID=$(docker create "$1")
   docker cp "$CURRENT_CID:/octocode-db/." "$STAGING/"
@@ -418,10 +473,13 @@ _base_err=$(docker manifest inspect "$BASE_IMAGE" 2>&1 >/dev/null) || {
   echo "::error::[cgc-db-restore-all] otherwise seed it once from an existing octocode home's root state: sh $HERE/cloud-cgc-db-package.sh <octocode-home-dir> $BASE_IMAGE latest"
   exit 1
 }
+CURRENT_IMG="$BASE_IMAGE"
 docker pull -q "$BASE_IMAGE" >/dev/null
 stage_image "$BASE_IMAGE"
 docker rmi "$BASE_IMAGE" >/dev/null 2>&1 || true
+CURRENT_IMG=""
 lance_prune_old_versions "$STAGING"
+lance_gc_unreferenced_data "$STAGING"
 echo "[cgc-db-restore-all] base staged"
 
 # The base image's config.toml is whatever the phase that seeded it happened to
@@ -464,6 +522,7 @@ for r in "$@"; do
     MISSING="$MISSING $r"
     continue
   fi
+  CURRENT_IMG="$img"
   docker pull -q "$img" >/dev/null
   # Name the exact bytes staged. The integrity gate below has refused trees whose
   # every image passes the identical check on GHCR's own layer bytes, and a tag
@@ -476,7 +535,9 @@ for r in "$@"; do
   # wired to this script reads it.
   rm -f "$STAGING"/.cgc-manifest-*.json "$STAGING"/.cgc-index-manifest.json 2>/dev/null || true
   docker rmi "$img" >/dev/null 2>&1 || true
+  CURRENT_IMG=""
   lance_prune_old_versions "$STAGING"
+  lance_gc_unreferenced_data "$STAGING"
   echo "[cgc-db-restore-all] after $r: staging $(du -sh "$STAGING" 2>/dev/null | cut -f1), free $(df -h "$STAGING_PARENT" 2>/dev/null | awk 'NR==2{print $4}')"
   FOUND=$((FOUND + 1))
   STAGED_REPOS="$STAGED_REPOS $r"

@@ -746,6 +746,53 @@ lance_prune_old_versions() { # $1 = octocode home (or staging tree), $2 = keep c
   :
 }
 
+# Delete lance DATA fragments that no remaining manifest names (run it AFTER
+# lance_prune_old_versions, so "remaining" means the newest N kept above).
+# lance_prune_old_versions drops old manifests but leaves every fragment only they
+# named, and octocode rewrites whole tables on compaction: measured 2026-10-14 on
+# oci-apps, one repo's code_blocks.lance held 1094 data files (1.6G) of which
+# the two kept manifests name ONE (161M). Across both cgc volumes 9.6G of 13.3G of
+# lance data was unreferenced, the per-repo images carried it too (cgc-db-
+# cloud-u-containers was 4.4G), and the restore died of ENOSPC staging it (#988).
+# Safety: references are read from EVERY kept manifest with the integrity gate's
+# own parser, unanchored (grep -o), so the set kept here is a superset of what
+# lance_dangling_tables checks -- cross-checked against pylance's own
+# fragment.data_files() on three real tables: identical. Fail closed per table:
+# when no reference parses, or none of them is on disk, the parse is suspect and
+# the table is left alone. lance_dangling_tables still runs after this.
+lance_gc_unreferenced_data() { # $1 = octocode home (or staging tree)
+  _lgc_n=0; _lgc_kb=0
+  for _lgc_t in "$1"/*/storage/*.lance; do
+    [ -d "$_lgc_t/_versions" ] && [ -d "$_lgc_t/data" ] || continue
+    _lgc_drop=$(
+      { for _lgc_f in "$_lgc_t"/data/*.lance; do
+          [ -e "$_lgc_f" ] && printf 'D %s\n' "${_lgc_f##*/}"
+        done
+        for _lgc_m in "$_lgc_t"/_versions/*.manifest; do
+          [ -f "$_lgc_m" ] || continue
+          tr -c '0-9a-f.ln' '\n' < "$_lgc_m" | grep -oE '[0-9a-f]{32,}\.lance' | sed 's/^/R /'
+        done
+      } | awk '
+        $1 == "D" { d[++nd] = $2; next }
+        $1 == "R" { nr++; s = $2; for (i = 1; i <= length(s); i++) ref[substr(s, i)] = 1 }
+        END {
+          if (nr == 0) exit 1
+          k = 0; for (j = 1; j <= nd; j++) if (d[j] in ref) k++
+          if (k == 0) exit 1
+          for (j = 1; j <= nd; j++) if (!(d[j] in ref)) print d[j]
+        }') || continue
+    [ -n "$_lgc_drop" ] || continue
+    _lgc_b=$(du -sk "$_lgc_t/data" 2>/dev/null | cut -f1)
+    for _lgc_f in $_lgc_drop; do
+      rm -f "$_lgc_t/data/$_lgc_f" && _lgc_n=$((_lgc_n + 1))
+    done
+    _lgc_a=$(du -sk "$_lgc_t/data" 2>/dev/null | cut -f1)
+    _lgc_kb=$((_lgc_kb + ${_lgc_b:-0} - ${_lgc_a:-0}))
+  done
+  [ "$_lgc_n" -gt 0 ] && echo "[cgc-db] removed $_lgc_n unreferenced lance data fragment(s) under $1 ($((_lgc_kb / 1024)) MB)"
+  :
+}
+
 lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir per line
   _ldt_home="$1"
   for _ldt_t in "$_ldt_home"/*/storage/*.lance; do
@@ -816,6 +863,7 @@ checkpoint_publish() {  # $1 = repo local name
     # rewrites it, and the run goes green while every consumer query dies. Refuse.
     # set -eu + a bare call site means this return FAILS the job, which is the point.
     lance_prune_old_versions "$OCTO_HOME"
+    lance_gc_unreferenced_data "$OCTO_HOME"
     _cp_torn=$(lance_dangling_tables "$OCTO_HOME")
     if [ -n "$_cp_torn" ]; then
       echo "::error::[cgc-db] refusing to publish $1 — dangling lance manifest(s) in this home:"
@@ -1107,6 +1155,7 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
   # set, so the only full-corpus path this octocode has is starting from the shared
   # base. Treat a torn checkpoint as NO checkpoint.
   lance_prune_old_versions "$OCTO_HOME"
+  lance_gc_unreferenced_data "$OCTO_HOME"
   _torn=$(lance_dangling_tables "$OCTO_HOME")
   if [ -n "$_torn" ]; then
     echo "::warning::[cgc-db] torn checkpoint restored from GHCR — dangling lance manifest(s):"
