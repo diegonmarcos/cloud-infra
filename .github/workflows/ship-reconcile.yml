@@ -96,6 +96,7 @@ on:
     paths:
       - "1_cicd/src/scripts/cloud-ship-reconcile.sh"
       - "1_cicd/src/scripts/cloud-ship-reconcile-reship.sh"
+      - "1_cicd/src/scripts/cloud-ship-reconcile-absent-redeploy.sh"
       - "1_cicd/src/cicd/ship-reconcile.yml"
       - "9_others/ship-reconcile.json"
       - ".github/workflows/ship-reconcile.yml"
@@ -104,6 +105,7 @@ on:
       # the symlinked spelling matches nothing git ever reports as changed.
       - "1_cicd/dist/scripts/cloud-ship-reconcile.sh"
       - "1_cicd/dist/scripts/cloud-ship-reconcile-reship.sh"
+      - "1_cicd/dist/scripts/cloud-ship-reconcile-absent-redeploy.sh"
 
 permissions:
   contents: read
@@ -382,6 +384,37 @@ jobs:
           [ -n "$held" ] || exit 0
           echo "::warning::reconcile found state it does not auto-repair (see 9_others/ship-reconcile.json for why):"
           printf '%s\n' "$held" | sed 's/^/  /'
+
+      # backlog #986: `absent` used to be report-only, and matomo-hybrid sat
+      # absent for three days after another deploy evicted it, while its
+      # compose file, image and secrets were all still on oci-apps. This brings
+      # back AT MOST ONE absent service per run with
+      #   docker compose up -d --no-recreate --no-build --pull never
+      # on the project the last Ship left on its VM — no rsync, pull, down or
+      # eviction. Never while a cgc-db restore runs or is queued; skipped and
+      # alerted (annotation + ntfy) on a port clash, an uncached image or a
+      # project the engine never deployed. Bounds and exclusions:
+      # 9_others/ship-reconcile.json absent_redeploy. Tested by
+      # 9_others/test/test_ship_reconcile_absent_redeploy.sh.
+      #
+      # Last, and `always()`, so it neither blocks nor is blocked by the drift
+      # re-ship above; it does need a reconcile that read the whole fleet. A
+      # `push` run, or apply=false, is a dry run that only says what it would do.
+      - name: Redeploy one absent service (compose up, at most one per run)
+        if: always() && steps.reconcile.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLY: ${{ github.event_name != 'push' && (github.event.inputs.apply || 'true') == 'true' }}
+        run: |
+          set -uo pipefail
+          mode=--dry-run
+          [ "$APPLY" = "true" ] && mode=--apply
+          rc=0
+          result="$(bash 1_cicd/src/scripts/cloud-ship-reconcile-absent-redeploy.sh "$mode" < findings.tsv)" || rc=$?
+          echo "absent redeploy ($mode): ${result:-none}"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Absent redeploy (\`$mode\`): \`${result:-none}\`" >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
 
   # #840 — the reconcile's OWN eviction must not be silent either.
   # The reconcile job sits on ship-wg-runner, so during a push burst the next

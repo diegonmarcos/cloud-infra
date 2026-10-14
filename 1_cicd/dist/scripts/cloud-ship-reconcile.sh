@@ -61,7 +61,8 @@
 #   argv      : zero or more VM aliases; default = every VM in build-gha.json
 #   stdout    : one TSV line per finding — <vm> <service_dir> <class> <detail>
 #               class `drift`  = running digest != registry digest → RE-SHIP
-#               class `absent` = declared, no running container    → REPORT ONLY
+#               class `absent` = declared, no running container    → NOT RE-SHIPPED
+#                 (cloud-ship-reconcile-absent-redeploy.sh may `compose up` ONE per run)
 #               class `undecidable` = registry would not answer    → REPORT ONLY
 #               class `unpublished` = running an unpushed image    → REPORT ONLY
 #               class `unreachable` = VM would not answer          → REPORT ONLY
@@ -83,6 +84,14 @@
 # playlist-syncer) for reasons that are not #354 — retired, on-demand, or run
 # outside compose. Auto-shipping them would hold the WG runner for an hour to
 # fix nothing, which is the #179 failure mode wearing a different hat.
+#
+# What absent DOES get since backlog #986 (matomo-hybrid, evicted 2026-10-10,
+# reported absent for three days with everything needed to start it still on
+# the VM): cloud-ship-reconcile-absent-redeploy.sh, run by the reconcile job,
+# re-runs `docker compose up -d --no-recreate` for at most ONE absent service
+# per run — not a Ship, no lock-hour — never during a cgc-db restore, and never
+# into a port clash. The by-design absent services above are excluded in
+# 9_others/ship-reconcile.json absent_redeploy.exclude.
 #
 # A MATCHING DIGEST IS NOT A LIVE SERVICE (#560)
 #
