@@ -161,6 +161,8 @@ do_apply() {
     "$TF_DIR/terraform.tfstate.enc" "$TF_DIR/.terraform.lock.hcl" "${SECRETS_OUT[@]}"
   [ "$APPLY_RC" -eq 0 ] || { echo "apply FAILED (state recorded)"; return 1; }
   echo "apply OK"
+  probe_one "tunnels after apply" "/accounts/$ACCT/cfd_tunnel?is_deleted=false" '[.result[] | {id, name, status, conns: (.connections|length)}]'
+  echo "tunnel token exported: $([ -n "$ZT_TUNNEL_TOKEN" ] && echo yes || echo no); service token exported: $([ -n "$ZT_SVC_ID" ] && echo yes || echo no)"
 }
 
 do_verify() {
