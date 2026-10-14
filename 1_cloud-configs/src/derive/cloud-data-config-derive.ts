@@ -491,6 +491,23 @@ function deriveCaddy(c: any): DerivedFile[] {
   // tracking beacons) or to internal :80 catalog / .app synthesis routes.
   const wgOnly = (proxy: any): boolean => (proxy?.wg_only ?? true);
 
+  // ── Public landing fallback (a0_docs/eng-specs/url-scheme.md) ──
+  // Source of truth: caddy build.json caddy_config.public_landing (base_url,
+  // default_path, login_path, session_cookie, auth_portal) + each service's
+  // proxy.primary.landing or public_landing.landings[domain] ("c_<category>/<app>", a folder of
+  // diegonmarcos.github.io/c__Cloud). Every authed subdomain route gets a
+  // `landing` URL; caddyfile.nix redirects credential-less requests there
+  // instead of showing the Authelia wall. auth:"none" routes are untouched.
+  const publicLanding: any = (services["caddy"] as any)?.caddy_config?.public_landing ?? null;
+  const landingFor = (proxy: any): string | undefined => {
+    if (!publicLanding?.base_url) return undefined;
+    // Only Authelia-gated routes: never auth:none (federation, vault), never
+    // auth:bypass (Authelia itself), never bespoke tiers (ntfy-3tier).
+    if (proxy?.auth !== "two_factor" && proxy?.auth !== "one_factor") return undefined;
+    const path: string = proxy?.landing ?? publicLanding.landings?.[proxy?.domain] ?? publicLanding.default_path ?? "";
+    return `${publicLanding.base_url}${path}${path ? "/" : ""}`;
+  };
+
   // ── Domain routes: services with domain-level proxy ──
   const routes: any[] = [];
   for (const [, svc] of Object.entries(services)) {
@@ -502,6 +519,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       domain: proxy.domain,
       ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
       ...(proxy.landing_page ? { landing_page: proxy.landing_page } : {}),
+      ...(landingFor(proxy) ? { landing: landingFor(proxy) } : {}),
       ...(proxy.tls_skip_verify ? { tls_skip_verify: true } : {}),
       ...(proxy.auth === "none" ? { auth: "none" } : {}),
       // wg_only: when set, caddyfile.nix gates the whole route behind a
@@ -1014,6 +1032,44 @@ function deriveCaddy(c: any): DerivedFile[] {
     }
   }
 
+  // ── private_mesh_routes: cloud.<name>.app (a0_docs/eng-specs/url-scheme.md) ──
+  // The private scheme. One mesh-only name per service (from its .app dns key)
+  // and per HTTP container (first canonical port), deduplicated. The legacy
+  // <name>.app / <container>-<proto>-<port>.app names above stay as aliases
+  // for one release. Hickory's `*.app` wildcard already resolves every
+  // cloud.<name>.app to Caddy on the mesh; caddyfile.nix gates each site to
+  // mesh/docker/loopback sources. Never emitted into routes/path_routes, the
+  // public edge allowlist, or public DNS (test-url-scheme.sh enforces it).
+  const privateMeshRoutes: any[] = [];
+  const seenPrivate = new Set<string>();
+  // Hostname-safe: container names like photoprism_app carry `_`, which is
+  // illegal in a TLS SAN and in a DNS host label.
+  const privateNameOf = (key: string) => `cloud.${key.toLowerCase().replace(/_/g, "-")}.app`;
+  for (const r of internalRoutes) {
+    if (typeof r.service !== "string" || !r.service.endsWith(".app")) continue;
+    const key = r.service.slice(0, -4);
+    if (key.startsWith("cloud.") || key.includes(".")) continue;
+    const name = privateNameOf(key);
+    if (seenPrivate.has(name)) continue;
+    seenPrivate.add(name);
+    r.private_name = name;
+    privateMeshRoutes.push({ service: name, upstream: r.upstream, alias_of: r.service, source: "internal_routes" });
+  }
+  const firstHttpPerContainer = new Map<string, any>();
+  for (const e of allAppUrls) {
+    if (e.kind !== "canonical" || (e.protocol !== "http" && e.protocol !== "https")) continue;
+    if (!firstHttpPerContainer.has(e.container)) firstHttpPerContainer.set(e.container, e);
+  }
+  for (const [container, e] of firstHttpPerContainer) {
+    // https upstreams carry their own (usually self-signed) cert; their legacy
+    // canonical alias keeps serving them until a per-container TLS policy is declared.
+    if (e.protocol === "https") continue;
+    const name = privateNameOf(container);
+    if (seenPrivate.has(name)) continue;
+    seenPrivate.add(name);
+    privateMeshRoutes.push({ service: name, upstream: e.upstream, alias_of: e.service, source: "all_app_urls" });
+  }
+
   // ── all_db_urls: {container}-{engine}-{port}.db catalog ─────────────────────
   // 100% data-driven — reads only fields DECLARED in build.json:
   //   - containers.<x>.db_engine   → container IS a DB engine
@@ -1227,6 +1283,8 @@ function deriveCaddy(c: any): DerivedFile[] {
       ...(oidcPublic ? { oidc_public: oidcPublic } : {}),
       special,
       internal_routes:  internalRoutes,
+      private_mesh_routes: privateMeshRoutes,
+      public_landing:   publicLanding ?? {},
       s3_routes:        s3Routes,
       auth_upstreams:   authUpstreams,
       all_app_urls:     allAppUrls,
