@@ -2622,13 +2622,13 @@
       "folder": "infra-net_wireguard-mesh",
       "description": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch.",
       "domain": "mesh.diegonmarcos.com",
-      "port": 8080,
+      "port": 8084,
       "dns": "wireguard-mesh.app",
-      "upstream": "10.0.0.6:8080",
+      "upstream": "10.0.0.6:8084",
       "containers": {
         "app": {
           "container_name": "wireguard-mesh",
-          "port": 8080,
+          "port": 8084,
           "port_format": "colon",
           "protocol": "http",
           "public": true,
@@ -2660,7 +2660,7 @@
         "wireguard-mesh"
       ],
       "all_ports": [
-        "8080"
+        "8084"
       ],
       "all_dns": [],
       "compose": {
@@ -2676,7 +2676,7 @@
         }
       },
       "declared_ports": {
-        "app": 8080
+        "app": 8084
       },
       "health": {
         "path": "/"

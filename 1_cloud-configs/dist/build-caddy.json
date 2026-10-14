@@ -252,7 +252,7 @@
     },
     {
       "domain": "mesh.diegonmarcos.com",
-      "upstream": "10.0.0.6:8080",
+      "upstream": "10.0.0.6:8084",
       "wg_only": true,
       "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
     },
@@ -752,7 +752,7 @@
     },
     {
       "service": "wireguard-mesh.app",
-      "upstream": "10.0.0.6:8080"
+      "upstream": "10.0.0.6:8084"
     },
     {
       "service": "c3-spec.app",
@@ -1221,7 +1221,7 @@
     {
       "kind": "redirect",
       "service": "wireguard-mesh.app",
-      "redirect_to": "https://wireguard-mesh-http-8080.app",
+      "redirect_to": "https://wireguard-mesh-http-8084.app",
       "container": "wireguard-mesh",
       "container_key": "app",
       "svc": "wireguard-mesh",
@@ -1229,14 +1229,14 @@
     },
     {
       "kind": "canonical",
-      "service": "wireguard-mesh-http-8080.app",
+      "service": "wireguard-mesh-http-8084.app",
       "container": "wireguard-mesh",
       "container_key": "app",
       "svc": "wireguard-mesh",
       "vm": "oci-A1-f_0",
-      "port": 8080,
+      "port": 8084,
       "protocol": "http",
-      "upstream": "10.0.0.6:8080",
+      "upstream": "10.0.0.6:8084",
       "source": "containers.app.port"
     },
     {
@@ -2374,7 +2374,7 @@
     {
       "host": "mesh.diegonmarcos.com",
       "path": null,
-      "upstream": "10.0.0.6:8080",
+      "upstream": "10.0.0.6:8084",
       "kind": "reverse_proxy",
       "tls": "public",
       "zone": "com",
@@ -2816,7 +2816,7 @@
     {
       "host": "wireguard-mesh.app",
       "path": null,
-      "upstream": "10.0.0.6:8080",
+      "upstream": "10.0.0.6:8084",
       "kind": "reverse_proxy",
       "tls": "internal",
       "zone": "com",
@@ -3296,9 +3296,9 @@
       "notes": null
     },
     {
-      "host": "wireguard-mesh-http-8080.app",
+      "host": "wireguard-mesh-http-8084.app",
       "path": null,
-      "upstream": "10.0.0.6:8080",
+      "upstream": "10.0.0.6:8084",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",
