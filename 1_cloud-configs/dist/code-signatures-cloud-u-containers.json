@@ -6,13 +6,13 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2917,
+    "files": 2920,
     "by_lang": {
       "sh": 146,
       "nix": 164,
       "py": 861,
-      "ts": 1141,
-      "js": 70,
+      "ts": 1143,
+      "js": 71,
       "rust": 535
     },
     "by_role": {
@@ -20,12 +20,12 @@
       "nix-module": 16,
       "python": 853,
       "module": 696,
-      "file": 316,
+      "file": 317,
       "script": 8,
       "flake": 75,
       "compose": 73,
       "entrypoint": 48,
-      "mcp-tool": 110,
+      "mcp-tool": 112,
       "workflow-dag": 3,
       "rust-module": 530,
       "hook": 53
@@ -4155,6 +4155,7 @@
         "./tools/observability.js",
         "./tools/workflows.js",
         "./tools/vps-ops.js",
+        "./tools/cloudflare.js",
         "./tools/delivery.js",
         "./tools/operations.js",
         "./tools/vm-files.js",
@@ -4203,6 +4204,94 @@
       ],
       "symbols": [
         "registerResources(server: McpServer)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/tools/cf-policy.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "isGlobalApiKey",
+        "cfAuthFromEnv",
+        "cfSecretValues",
+        "writeScopeFor",
+        "validateApiPath",
+        "gateWrite",
+        "fillPresetPath",
+        "tokenizeArgs",
+        "classifyCloudflared",
+        "classifyWrangler",
+        "redactCfString",
+        "redactCfJson",
+        "project",
+        "explainCfError",
+        "CfAuth",
+        "CfPreset",
+        "CF_READ_PRESETS",
+        "READ_METHODS",
+        "WRITE_METHODS",
+        "PathCheck",
+        "CliClass",
+        "CF_REDACTED"
+      ],
+      "imports": [],
+      "symbols": [
+        "isGlobalApiKey(v: string)",
+        "cfAuthFromEnv(env: Record<string, string | undefined>)",
+        "cfSecretValues(env: Record<string, string | undefined>)",
+        "writeScopeFor(path: string)",
+        "validateApiPath(rawPath: string, method: string)",
+        "gateWrite(method: string, confirm: unknown)",
+        "fillPresetPath(tpl: string, vars: { account?: string; zone?: string; id?: string })",
+        "tokenizeArgs(command: string)",
+        "verbs(argv: string[])",
+        "classifyCloudflared(argv: string[])",
+        "classifyWrangler(argv: string[])",
+        "redactCfString(s: string, secrets: string[] = [])",
+        "redactCfJson(v: unknown, secrets: string[] = [], depth = 0)",
+        "pick(o: any, path: string)",
+        "project(result: unknown, fields?: string[])",
+        "explainCfError(status: number, errors: Array<{ code?: number; message?: string }> | undefined, scope: string)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/tools/cloudflare.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "scrub",
+        "cfFetch",
+        "cfRead",
+        "cliRead",
+        "registerCloudflareTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../../shared/libs/exec.js",
+        "../../shared/libs/audit.js",
+        "../../shared/libs/redact-argv.js",
+        "./cf-policy.js"
+      ],
+      "symbols": [
+        "safeRun(fn: ()",
+        "scrub(s: string)",
+        "cfFetch(method: string, path: string, body?: unknown)",
+        "cfGetAll(path: string)",
+        "accountId()",
+        "zoneId(nameOrId?: string)",
+        "zoneForHostname(host: string)",
+        "render(title: string, r: CfResp, scope: string, fields?: string[], full?: boolean)",
+        "cfReadRaw(opts: { preset?: string; id?: string; zone?: string; path?: string; full?: boolean })",
+        "scopeReport()",
+        "cfRead(opts: { preset?: string; id?: string; zone?: string; path?: string; full?: boolean })",
+        "cfWrite(tool: string, method: string, rawPath: string, body: unknown, confirm: boolean | undefined)",
+        "prepareCliEnv()",
+        "runCfCli(bin: \"cloudflared\" | \"wrangler\", argv: string[], timeout = 60_000)",
+        "cliReadRaw(bin: \"cloudflared\" | \"wrangler\", command: string)",
+        "cliRead(bin: \"cloudflared\" | \"wrangler\", command: string)",
+        "cliWrite(bin: \"cloudflared\" | \"wrangler\", command: string, confirm: boolean | undefined)",
+        "registerCloudflareTools(server: McpServer)"
       ]
     },
     {
@@ -4602,12 +4691,12 @@
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
         "../../shared/libs/exec.js",
+        "./cloudflare.js",
         "os"
       ],
       "symbols": [
         "safeRun(fn: ()",
         "runCli(cmd: string, args: string[], timeout = 30_000)",
-        "runCloudflareApi(path: string, jqFilter?: string)",
         "tokenizeShellLike(command: string)",
         "gpuQuotaReport()",
         "handleVpsCommand(provider: string, command: string)",
@@ -5851,6 +5940,18 @@
         "envLine(e: string)",
         "shq(v: string)"
       ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-cf-bridge.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "./mcp/tools/cf-policy.ts",
+        "./shared/libs/redact-argv.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/test-gha-policy.mjs",
