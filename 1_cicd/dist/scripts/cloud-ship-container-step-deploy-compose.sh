@@ -286,53 +286,52 @@ echo "[ghcr] $_me: had no working ghcr.io credential — mirrored root'"'"'s (VM
     _hostbinds="$(grep -oE '"[0-9][0-9.]*:[0-9]+:[0-9]+"' "$COMPOSE_FILE" 2>/dev/null \
         | tr -d '"' | sed 's/:[0-9]*$//' | sort -u | tr '\n' ' ' || true)"
 
+    [ -n "$_hostbinds" ] && EVICT_PORTS="for hp in $_hostbinds; do for c in \$(docker ps --format '{{.Names}} {{.Ports}}' | grep -F \"\$hp->\" | cut -d' ' -f1); do case \" $_cnames \" in *\" \$c \"*) ;; *) echo \"[compose] evicting \$c — it holds \$hp, which this service declares\"; docker rm -f \"\$c\" >/dev/null 2>&1 || true ;; esac; done; done"
+
     # ...and the blind spot in the above: it reads bindings off the RENDERED
     # compose, so a service on network_mode:host declares none and _hostbinds
     # comes back empty — even though the app still binds its port on the VM.
-    # That is precisely the case this eviction exists for, and precisely the
-    # case it missed. c3-services-mcp -> cloud-services-mcp switched to
-    # network_mode:host in the same change as the rename, so the predecessor
-    # kept 10.0.0.6:3101, the new container died on bind, and health saw an
-    # empty `docker compose ps` for 46h. The fix already in the tree could not
-    # have fired: there was nothing in the compose file to grep.
+    # c3-services-mcp -> cloud-services-mcp switched to network_mode:host in
+    # the same change as the rename, so the predecessor kept 10.0.0.6:3101, the
+    # new container died on bind, and health saw an empty `docker compose ps`
+    # for 46h. c3-infra-mcp -> cloud-infra-mcp was the second shape: both sides
+    # host-networked, the old container holding 10.0.0.6:3100 while
+    # `docker ps` showed no ports at all.
     #
-    # So for host-network composes, take the port from build.json instead and
-    # match it port-only (":3101->" against docker's HOSTIP:HOSTPORT->CPORT).
+    # So for a host-network compose, the VM-side payload asks the kernel who
+    # holds .ports.app (ss -> pid -> /proc/<pid>/cgroup -> container), plus
+    # `docker ps` for a bridged holder whose socket belongs to docker-proxy.
     # ONLY .ports.app, deliberately: the other keys are container-internal
-    # (chat-mattermost declares db:5432, api:8080) and a port-only match on
-    # those would reap an unrelated service that legitimately publishes them.
-    # .ports.app is the one the fleet allocates uniquely per service, so
-    # anything else holding it is by definition a stale predecessor.
-    if grep -q '"network_mode":"host"' "$COMPOSE_FILE" 2>/dev/null; then
-        _appport="$(jq -r '.ports.app // empty' "$SERVICE_DIR/build.json" 2>/dev/null)"
-        case "$_appport" in
-            ''|*[!0-9]*) ;;
-            *) _hostbinds="$(printf '%s :%s' "$_hostbinds" "$_appport" | tr ' ' '\n' \
-                   | grep -v '^$' | sort -u | tr '\n' ' ')" ;;
-        esac
-    fi
-    [ -n "$_hostbinds" ] && EVICT_PORTS="for hp in $_hostbinds; do for c in \$(docker ps --format '{{.Names}} {{.Ports}}' | grep -F \"\$hp->\" | cut -d' ' -f1); do case \" $_cnames \" in *\" \$c \"*) ;; *) echo \"[compose] evicting \$c — it holds \$hp, which this service declares\"; docker rm -f \"\$c\" >/dev/null 2>&1 || true ;; esac; done; done"
-
-    # EVICT_PORTS reads `docker ps --format '{{.Ports}}'`, which is EMPTY for a
-    # container on network_mode:host — it publishes nothing. So it catches a
-    # BRIDGED predecessor (c3-services-mcp published 10.0.0.6:3101->3101, and
-    # that is the one it was written for) but is blind to a host-networked one.
-    # c3-infra-mcp -> cloud-infra-mcp is exactly that second shape: both sides
-    # host-networked, the old container holding 10.0.0.6:3100 while showing no
-    # ports at all. Same 46h outage, invisible to every docker-level check.
+    # (chat-mattermost declares db:5432, api:8080).
     #
-    # When docker cannot say who holds the port, ask the kernel: ss gives the
-    # listening pid, /proc/<pid>/cgroup names the owning container. That works
-    # regardless of the predecessor's network mode.
+    # AND IT COMPARES THE LISTEN ADDRESS, NOT JUST THE PORT. Two sockets on
+    # one port only collide when their addresses overlap: the same address, or
+    # either side on a wildcard (0.0.0.0, ::, *). 127.0.0.1:8081 and
+    # 10.0.0.6:8081 coexist on Linux. Matching the port alone is how the
+    # c3-infra-api deploy on 2026-10-10 21:51 logged
+    #   evicting matomo-hybrid — it holds :8081, which this service binds
+    # for matomo's internal 127.0.0.1:8081 listener against its own
+    # 10.0.0.6:8081, and matomo stayed gone for three days.
     #
-    # sudo is required (the listener belongs to root inside the container) and
-    # is already assumed by the rsync step's `sudo mkdir -p $DEPLOY_PATH`.
+    # The deploying service's own address is not declared anywhere (each app
+    # reads it from its own env var: HOST, MCP_HTTP_HOST, LISTEN_HOST, ...), so
+    # it is OBSERVED: before `down`, the payload records which addresses our
+    # own declared containers listen on for .ports.app. Not running (first
+    # deploy, an absent service, a rename) means unknown, and unknown is
+    # treated as 0.0.0.0 — overlaps everything, which is exactly the old
+    # port-only behaviour, so the rename cases above are still evicted.
+    #
+    # The VM-side logic lives in evict_socket_lib (below step_compose) so
+    # 9_others/test/test_compose_evict_socket_address.sh runs the very text the
+    # payload carries against stubbed ss/docker.
+    EVICT_SOCKET_PRE=""
     EVICT_SOCKET=""
     if grep -q '"network_mode":"host"' "$COMPOSE_FILE" 2>/dev/null; then
         _appport="$(jq -r '.ports.app // empty' "$SERVICE_DIR/build.json" 2>/dev/null)"
         case "$_appport" in
             ''|*[!0-9]*) ;;
-            *) EVICT_SOCKET="for p in \$(sudo ss -lntpH \"sport = :$_appport\" 2>/dev/null | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u); do cid=\$(sudo sed -nE 's#.*[-/]([0-9a-f]{64})(\\.scope)?\$#\\1#p' /proc/\$p/cgroup 2>/dev/null | head -1); [ -n \"\$cid\" ] || continue; cn=\$(docker inspect --format '{{.Name}}' \"\$cid\" 2>/dev/null | sed 's#^/##'); [ -n \"\$cn\" ] || continue; case \" $_cnames \" in *\" \$cn \"*) ;; *) echo \"[compose] evicting \$cn — it holds :$_appport, which this service binds\"; docker rm -f \"\$cid\" >/dev/null 2>&1 || true ;; esac; done" ;;
+            *) EVICT_SOCKET_PRE="$(evict_socket_pre "$_appport" "$_cnames")"
+               EVICT_SOCKET="$(evict_socket_run "$_appport")" ;;
         esac
     fi
 
@@ -390,6 +389,8 @@ if ! docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG pull; then
 fi
 PULL_GATE
             fi
+            # Before `down`: record which addresses our own containers listen on.
+            [ -n "$EVICT_SOCKET_PRE" ] && printf '%s\n' "$EVICT_SOCKET_PRE"
             echo 'docker compose $COMPOSE_FILE_FLAG $ENV_FILE_FLAG down --remove-orphans 2>/dev/null || true'
             [ -n "$EVICT_NAMED" ] && echo "$EVICT_NAMED"
             [ -n "$EVICT_PORTS" ] && echo "$EVICT_PORTS"
@@ -440,9 +441,9 @@ PULL_GATE
             # doesn't re-hit the failing pull.
             _STD_UP_FLAGS="${COMPOSE_UP_FLAGS/--pull always/--pull missing}"
             PULL_GATE="docker compose $CF \$ENV_FILE_FLAG pull || { for _img in \$(docker compose $CF \$ENV_FILE_FLAG config --images 2>/dev/null); do docker image inspect \"\$_img\" >/dev/null 2>&1 || { echo \"ERROR: \$_img neither pullable nor cached — refusing teardown\" >&2; exit 1; }; done; }"
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }$PULL_GATE; docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }${EVICT_SOCKET:+$EVICT_SOCKET; }docker compose $CF \$ENV_FILE_FLAG up -d $_STD_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }$PULL_GATE; ${EVICT_SOCKET_PRE:+$EVICT_SOCKET_PRE; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }${EVICT_SOCKET:+$EVICT_SOCKET; }docker compose $CF \$ENV_FILE_FLAG up -d $_STD_UP_FLAGS"
         else
-            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }${EVICT_SOCKET:+$EVICT_SOCKET; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
+            PAYLOAD="cd \"$DEPLOY_PATH\" && $ENV_FILE_PROBE; ${LEGACY_COMPOSE_CLEANUP:+$LEGACY_COMPOSE_CLEANUP; }${EVICT_SOCKET_PRE:+$EVICT_SOCKET_PRE; }docker compose $CF \$ENV_FILE_FLAG down --remove-orphans 2>/dev/null; ${EVICT_NAMED:+$EVICT_NAMED; }${EVICT_PORTS:+$EVICT_PORTS; }${EVICT_SOCKET:+$EVICT_SOCKET; }docker compose $CF \$ENV_FILE_FLAG up -d $COMPOSE_UP_FLAGS"
         fi
         # Detached + poll, NOT one long-held ssh: the pull/extract can run for
         # minutes with an almost-idle ssh channel, which is exactly when the
@@ -502,4 +503,46 @@ PULL_GATE
     sleep 3
     assert_declared_containers_live || return 1
     log "Done."
+}
+
+# ── Address-aware socket eviction: the VM-side text ─────────────────────────
+# Emitted into the compose payload by step_compose for a network_mode:host
+# service. POSIX sh on purpose: the custom-compose path runs it under `sh`
+# with `set -e`, the standard path under bash. Every loop ends in `:` and every
+# call site carries `|| true`, so a "no match" can never abort the deploy.
+#
+#   evict_socket_pre <port> <declared container names>
+#       defines the helpers, then records in $_es_own the addresses OUR
+#       declared containers listen on for <port>. Runs BEFORE `down`.
+#   evict_socket_run <port>
+#       evicts every other container whose listener on <port> overlaps an
+#       address in $_es_own (unknown = 0.0.0.0, which overlaps everything).
+#
+# Overlap: the same address, or either side a wildcard (0.0.0.0, ::, *).
+# 127.0.0.1, ::1 and 10.0.0.6 are distinct and never collide with each other.
+# A v4-mapped v6 address (::ffff:10.0.0.6) is compared as its v4 form.
+evict_socket_lib() {
+    cat <<'EVICT_SOCKET_LIB'
+_es_norm() { _es_a=${1%:*}; _es_a=${_es_a#\[}; _es_a=${_es_a%\]}; _es_a=${_es_a%%\%*}; _es_a=${_es_a#::ffff:}; [ "$_es_a" = "*" ] && _es_a=0.0.0.0; printf '%s\n' "$_es_a"; }
+_es_wild() { case "$1" in 0.0.0.0|::|'') return 0 ;; esac; return 1; }
+_es_overlap() { [ "$1" = "$2" ] && return 0; _es_wild "$1" && return 0; _es_wild "$2"; }
+_es_mine() { case " $_es_cnames " in *" $1 "*) return 0 ;; esac; return 1; }
+_es_cid() { sudo sed -nE 's#.*[-/]([0-9a-f]{64})(\.scope)?$#\1#p' "/proc/$1/cgroup" 2>/dev/null | head -1; }
+_es_name() { docker inspect --format '{{.Name}}' "$1" 2>/dev/null | sed 's#^/##'; }
+_es_listeners() { sudo ss -lntpH "sport = :$1" 2>/dev/null | while read -r _es_st _es_rq _es_sq _es_loc _es_peer _es_proc; do _es_addr=$(_es_norm "$_es_loc"); for _es_p in $(printf '%s\n' "$_es_proc" | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u); do printf '%s %s\n' "$_es_addr" "$_es_p"; done; :; done; }
+_es_own_binds() { _es_listeners "$1" | while read -r _es_addr _es_p; do _es_c=$(_es_cid "$_es_p"); [ -n "$_es_c" ] || continue; _es_n=$(_es_name "$_es_c"); [ -n "$_es_n" ] || continue; if _es_mine "$_es_n"; then printf '%s\n' "$_es_addr"; fi; :; done | sort -u | tr '\n' ' '; }
+_es_decide() { for _es_b in $5; do if _es_overlap "$_es_b" "$3"; then echo "[compose] evicting $1 — it holds $3:$4, which overlaps this service's bind $_es_b:$4"; docker rm -f "$2" >/dev/null 2>&1 || true; return 0; fi; done; echo "[compose] keeping $1 — it holds $3:$4, which does not overlap this service's bind ($5) on :$4"; }
+_es_evict() { _es_bind=${2:-0.0.0.0}; _es_listeners "$1" | while read -r _es_addr _es_p; do _es_c=$(_es_cid "$_es_p"); [ -n "$_es_c" ] || continue; _es_n=$(_es_name "$_es_c"); [ -n "$_es_n" ] || continue; if ! _es_mine "$_es_n"; then _es_decide "$_es_n" "$_es_c" "$_es_addr" "$1" "$_es_bind"; fi; :; done; docker ps --format '{{.Names}} {{.Ports}}' 2>/dev/null | while read -r _es_n _es_ports; do if ! _es_mine "$_es_n"; then for _es_pp in $(printf '%s\n' "$_es_ports" | tr ',' ' '); do case "$_es_pp" in *":$1->"*) _es_decide "$_es_n" "$_es_n" "$(_es_norm "${_es_pp%%->*}")" "$1" "$_es_bind"; break ;; esac; done; fi; :; done; }
+EVICT_SOCKET_LIB
+}
+
+evict_socket_pre() {
+    evict_socket_lib
+    printf '_es_cnames="%s"\n' "$2"
+    printf '_es_own=$(_es_own_binds %s) || _es_own=""\n' "$1"
+    printf 'echo "[compose] :%s is bound by this service on: ${_es_own:-nothing running — treated as 0.0.0.0}"\n' "$1"
+}
+
+evict_socket_run() {
+    printf '_es_evict %s "$_es_own" || true\n' "$1"
 }
