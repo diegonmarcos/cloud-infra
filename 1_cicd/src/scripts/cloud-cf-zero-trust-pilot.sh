@@ -65,7 +65,7 @@ do_probe() {
   probe_one "access apps"          "/accounts/$ACCT/access/apps"                  '[.result[] | {name, domain, type}]'
   probe_one "access policies"      "/accounts/$ACCT/access/policies"              '[.result[] | {name, decision}]'
   probe_one "access service tokens" "/accounts/$ACCT/access/service_tokens"      '[.result[] | {name, expires_at}]'
-  probe_one "tunnels (cfd)"        "/accounts/$ACCT/cfd_tunnel?is_deleted=false"  '[.result[] | {id, name, status, conns: (.connections|length)}]'
+  probe_one "tunnels (cfd)"        "/accounts/$ACCT/cfd_tunnel?is_deleted=false"  '[.result[] | {id, name, status, conns: (.connections|length), colos: ([.connections[]?.colo_name] | unique), client_versions: ([.connections[]?.client_version] | unique)}]'
   probe_one "teamnet routes"       "/accounts/$ACCT/teamnet/routes"               '[.result[] | {network, tunnel_name}]'
   probe_one "virtual networks"     "/accounts/$ACCT/teamnet/virtual_networks"     '[.result[] | {name, is_default_network}]'
   probe_one "gateway account"      "/accounts/$ACCT/gateway"                      '{gateway_tag_set: (.result.gateway_tag != null), provider: .result.provider_name}'
