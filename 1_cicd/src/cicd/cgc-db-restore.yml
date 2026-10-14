@@ -1,9 +1,14 @@
 # ┌──────────────────────────────────────────────────────────────┐
 # │  cgc-db RESTORE — one surface onto oci-apps.                 │
 # │                                                              │
-# │  Dispatched by the two cgc orchestrators after they index:   │
-# │    surfaces=pub  diegonmarcos/cloud-u-containers_cgc (public) │
-# │    surfaces=pvt  diegonmarcos/cloud-me_cgc (private)          │
+# │  pub: dispatched by diegonmarcos/cloud-u-containers_cgc      │
+# │       (public) after it indexes.                             │
+# │  pvt: PULLED (#951) — no cross-repo token. Hourly, the       │
+# │       `check` job compares the private cgc-db-<repo>         │
+# │       packages (diegonmarcos/cloud-me_cgc pushes them) with  │
+# │       the start of the last successful pvt restore and runs  │
+# │       one when a package is newer. Inert while the legacy    │
+# │       cgc-db.yml here is still enabled (it restores itself). │
 # │  The box pulls base + per-repo images from GHCR into the     │
 # │  surface's volume (pub: octocode_db, public repos only; pvt: │
 # │  octocode_db_pvt, every repo), swaps it under the MCP        │
@@ -18,7 +23,10 @@
 # └──────────────────────────────────────────────────────────────┘
 
 name: "cgc-db restore (one surface → oci-apps)"
-run-name: "cgc-db restore · surfaces=${{ inputs.surfaces }} · cgc_ref=${{ inputs.cgc_ref }} · source=${{ inputs.source || 'manual' }}"
+run-name: >-
+  ${{ github.event_name == 'schedule'
+      && 'cgc-db restore · surfaces=pvt · pull check (schedule)'
+      || format('cgc-db restore · surfaces={0} · cgc_ref={1} · source={2}', inputs.surfaces, inputs.cgc_ref, inputs.source || 'manual') }}
 
 on:
   workflow_dispatch:
@@ -39,6 +47,9 @@ on:
         required: false
         default: ""
         type: string
+  # pvt PULL (#951): the private orchestrator (cloud-me_cgc) no longer dispatches this.
+  schedule:
+    - cron: "23 * * * *"
 
 env:
   CGC_GHCR_PAT: ${{ secrets.CGC_GHCR_PAT }}
@@ -48,8 +59,85 @@ env:
   OCI_SSH_KEY: ${{ secrets.OCI_SSH_KEY }}
 
 jobs:
+  # Decides WHAT to restore. A dispatch passes its inputs straight through. A scheduled
+  # run is the pvt PULL: restore only when a private package is newer than the start of
+  # the last successful pvt restore. That start time is read from the newest
+  # `cgc-db-pvt-restored` artifact, which only a successful pvt restore uploads (below),
+  # so a failed restore is simply retried on the next hour. No mesh, no deploy lock here.
+  check:
+    name: "cgc-db · what to restore"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      go: ${{ steps.c.outputs.go }}
+      surfaces: ${{ steps.c.outputs.surfaces }}
+      cgc_ref: ${{ steps.c.outputs.cgc_ref }}
+    steps:
+      - name: Dispatch passthrough, or pvt pull check
+        id: c
+        env:
+          EVENT: ${{ github.event_name }}
+          IN_SURFACES: ${{ inputs.surfaces }}
+          IN_REF: ${{ inputs.cgc_ref }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -eu
+          # Outputs are written ONCE, on exit (a failed check leaves go=false).
+          GO=false; SURF=pvt; REF=""
+          trap 'printf "go=%s\nsurfaces=%s\ncgc_ref=%s\n" "$GO" "$SURF" "$REF" >> "$GITHUB_OUTPUT"' EXIT
+          if [ "$EVENT" != schedule ]; then
+            GO=true; SURF="$IN_SURFACES"; REF="$IN_REF"; exit 0
+          fi
+          # Pre-cutover the legacy cgc-db.yml here still indexes AND restores both surfaces:
+          # two restorers would race the same volume. The pull starts the moment that
+          # workflow is disabled or deleted (the cutover).
+          LEGACY=$(gh api "repos/$REPO/actions/workflows/cgc-db.yml" --jq .state 2>/dev/null || echo absent)
+          if [ "$LEGACY" = active ]; then
+            echo "::notice::legacy cgc-db.yml is still active (it restores the pvt surface itself) — pull is inert until the cutover"; exit 0
+          fi
+          # One restore at a time: a run of this workflow still queued or running (other
+          # than this one) will pick up whatever is new; the next hour re-checks.
+          BUSY=$(gh api "repos/$REPO/actions/workflows/cgc-db-restore.yml/runs?per_page=30" \
+            --jq "[.workflow_runs[] | select(.status != \"completed\" and .id != $RUN_ID) | .id] | join(\" \")")
+          if [ -n "$BUSY" ]; then echo "[cgc-db] restore run(s) still live: $BUSY — not starting another"; exit 0; fi
+          # Baseline: start of the last successful pvt restore (0 = never / artifact expired).
+          LAST_RUN=$(gh api "repos/$REPO/actions/artifacts?name=cgc-db-pvt-restored&per_page=1" --jq '.artifacts[0].workflow_run.id // empty')
+          BASE=0
+          if [ -n "$LAST_RUN" ]; then
+            BASE=$(gh api "repos/$REPO/actions/runs/$LAST_RUN" --jq '.run_started_at | fromdateiso8601')
+          fi
+          echo "[cgc-db] last successful pvt restore: run ${LAST_RUN:-none}, started $(date -u -d "@$BASE" +%FT%TZ)"
+          # The private packages: build.json's private_repos under per_repo_publish's prefix.
+          # Their versions are read with this repo's CGC_GHCR_PAT (classic, read:packages —
+          # the credential the box already pulls them with); the job token cannot see them.
+          [ -n "${CGC_GHCR_PAT:-}" ] || { echo "::error::CGC_GHCR_PAT is empty — cannot read the private packages' versions"; exit 1; }
+          BJ=$(curl -sSfL https://raw.githubusercontent.com/diegonmarcos/cloud-u-containers/main/user-ai_cloud-cgc-pub-mcp/build.json)
+          PREFIX=$(printf '%s' "$BJ" | jq -r '.per_repo_publish.image_prefix')
+          NEWER=""
+          for r in $(printf '%s' "$BJ" | jq -r '.runtime.octocode.private_repos // [] | .[]'); do
+            pkg="${PREFIX##*/}$r"
+            t=$(GH_TOKEN="$CGC_GHCR_PAT" gh api "/user/packages/container/$pkg/versions?per_page=1" --jq '.[0].updated_at // empty' 2>/dev/null || true)
+            if [ -z "$t" ]; then echo "::warning::cannot read $pkg's versions — skipping it"; continue; fi
+            ts=$(date -u -d "$t" +%s)
+            echo "[cgc-db] $pkg: newest version $t"
+            if [ "$ts" -gt "$BASE" ]; then NEWER="$NEWER $pkg"; fi
+          done
+          if [ -z "$NEWER" ]; then echo "[cgc-db] nothing newer than the last pvt restore — done"; exit 0; fi
+          # The restore script runs from cloud-u-containers_cgc main (the restore step only
+          # accepts commits on main); the private caller's pin is not readable from here.
+          REF=$(gh api repos/diegonmarcos/cloud-u-containers_cgc/commits/main --jq .sha)
+          echo "::notice::pvt pull: newer than the last restore:$NEWER — restoring the pvt surface with cloud-u-containers_cgc@$REF"
+          GO=true
+
   restore-all:
-    name: "cgc-db · restore-all ${{ inputs.surfaces }} → oci-apps"
+    name: "cgc-db · restore-all ${{ needs.check.outputs.surfaces }} → oci-apps"
+    needs: check
+    if: ${{ needs.check.outputs.go == 'true' }}
     runs-on: ubuntu-latest
     # The only cgc job that holds the mesh, so the only one in the fleet's deploy lock.
     concurrency:
@@ -91,7 +179,7 @@ jobs:
         # to make this job, which holds the mesh key and the box's SSH key, run code from
         # an unreviewed branch.
         env:
-          REF: ${{ inputs.cgc_ref }}
+          REF: ${{ needs.check.outputs.cgc_ref }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
@@ -139,7 +227,7 @@ jobs:
       # dropped link costs one poll instead of the whole restore.
       - name: restore-all on oci-apps (box pulls per-repo images from GHCR)
         env:
-          CGC_SURFACES: ${{ inputs.surfaces }}
+          CGC_SURFACES: ${{ needs.check.outputs.surfaces }}
           CGC_SSH_OPTS: "-i /home/runner/.ssh/cgc_deploy -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15 -o ServerAliveInterval=15"
         run: |
           set -eu
@@ -460,3 +548,17 @@ jobs:
             echo "[cgc-db] $SURFACE restore-all OK — $CTR now serving volume $VOL"
           done
           echo "[cgc-db] restore-all OK — $HOST serving surface(s) $SURFACE_LIST from the freshly pulled multi-image DB"
+      # The pull's state (#951): a successful pvt restore leaves this marker; the `check`
+      # job reads the newest one's run start as "restored up to here". Nothing secret.
+      - name: Record the pvt restore for the pull check
+        if: ${{ success() && needs.check.outputs.surfaces == 'pvt' }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/cgc-mark"
+          printf 'surfaces=pvt\ncgc_ref=%s\nrun=%s\n' "${{ needs.check.outputs.cgc_ref }}" "${{ github.run_id }}" > "$RUNNER_TEMP/cgc-mark/restored.txt"
+      - name: Upload the pvt restore marker
+        if: ${{ success() && needs.check.outputs.surfaces == 'pvt' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgc-db-pvt-restored
+          path: ${{ runner.temp }}/cgc-mark/restored.txt
+          retention-days: 90
