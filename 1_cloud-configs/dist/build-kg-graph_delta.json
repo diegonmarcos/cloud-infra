@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 315,
-    "edges": 433,
+    "nodes": 318,
+    "edges": 437,
     "by_table": {
       "vm": 4,
-      "service": 74,
-      "container": 90,
+      "service": 75,
+      "container": 91,
       "domain": 42,
       "repo": 3,
-      "module": 74,
+      "module": 75,
       "package": 28
     }
   },
@@ -687,6 +687,32 @@
         "image": "redis:8.10.2-alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0",
         "role": "app",
         "port": 6379,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloudflared",
+      "key": "service:cloudflared",
+      "properties": {
+        "name": "cloudflared",
+        "category": "infra-net",
+        "description": "Cloudflare Tunnel connector (remotely-managed tunnel 'fleet-edge') — the network half of the Cloudflare One (Zero Trust) edge. Outbound-only: no inbound port is opened anywhere. Hostnames, Access apps and ingress rules are declared in cloud-infra c_vps/ba-clo_cloudflare (terraform.json .zero_trust + zero-trust.tf); this container only carries the connector. Origins are reached over the WireGuard mesh (10.0.0.0/24), so one tunnel can front any VM. Design: cloud-infra a0_docs/eng-specs/cloudflare-zero-trust.md. Caddy + Authelia on gcp-proxy stay the fallback path and do not depend on this.",
+        "domain": null,
+        "port": null,
+        "vm": "oci-apps",
+        "folder": "infra-net_cloudflared"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloudflared",
+      "key": "container:cloudflared",
+      "properties": {
+        "name": "cloudflared",
+        "image": "cloudflare/cloudflared:2026.9.3",
+        "role": "app",
+        "port": null,
         "public": false
       }
     },
@@ -2823,6 +2849,17 @@
     },
     {
       "table": "module",
+      "id": "infra_net_cloudflared",
+      "key": "module:infra_net_cloudflared",
+      "properties": {
+        "name": "infra-net_cloudflared",
+        "repo": "cloud",
+        "category": "infra-net",
+        "service": "cloudflared"
+      }
+    },
+    {
+      "table": "module",
       "id": "infra_net_hickory_dns",
       "key": "module:infra_net_hickory_dns",
       "properties": {
@@ -4074,6 +4111,22 @@
       "from": "service:redis",
       "to": "container:redis",
       "key": "service:redis->runs_container->container:redis",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloudflared",
+      "to": "vm:oci_apps",
+      "key": "service:cloudflared->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloudflared",
+      "to": "container:cloudflared",
+      "key": "service:cloudflared->runs_container->container:cloudflared",
       "properties": {
         "role": "app"
       }
@@ -6102,6 +6155,20 @@
       "from": "module:infra_db_redis",
       "to": "service:redis",
       "key": "module:infra_db_redis->implements->service:redis",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_net_cloudflared",
+      "to": "repo:cloud",
+      "key": "module:infra_net_cloudflared->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_net_cloudflared",
+      "to": "service:cloudflared",
+      "key": "module:infra_net_cloudflared->implements->service:cloudflared",
       "properties": {}
     },
     {

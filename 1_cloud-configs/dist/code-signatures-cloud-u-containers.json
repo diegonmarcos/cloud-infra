@@ -6,24 +6,24 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2914,
+    "files": 2917,
     "by_lang": {
-      "sh": 145,
-      "nix": 162,
+      "sh": 146,
+      "nix": 164,
       "py": 861,
       "ts": 1141,
       "js": 70,
       "rust": 535
     },
     "by_role": {
-      "shell": 135,
+      "shell": 136,
       "nix-module": 16,
       "python": 853,
       "module": 696,
       "file": 316,
       "script": 8,
-      "flake": 74,
-      "compose": 72,
+      "flake": 75,
+      "compose": 73,
       "entrypoint": 48,
       "mcp-tool": 110,
       "workflow-dag": 3,
@@ -11991,6 +11991,104 @@
       "exports": [
         "description",
         "wrap",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
+      "path": "infra-net_cloudflared/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "infra-net_cloudflared/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "services",
+        "cloudflared",
+        "image",
+        "container_name",
+        "command",
+        "network_mode",
+        "read_only",
+        "env_file",
+        "environment",
+        "TZ",
+        "cap_drop",
+        "restart",
+        "deploy",
+        "resources",
+        "logging",
+        "driver",
+        "options",
+        "max-size",
+        "max-file"
+      ]
+    },
+    {
+      "path": "infra-net_cloudflared/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
         "nixpkgs"
       ],
       "imports": [
