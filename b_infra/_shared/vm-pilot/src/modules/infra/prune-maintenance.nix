@@ -20,8 +20,13 @@
 #   journalctl --vacuum-time=<floor>d               age out journals older than
 #                                                   native.protection.journal_retention_floor_days
 #                                                   (#413 — never --vacuum-size, it ignores age)
-#   nix-collect-garbage --delete-older-than 7d      drop hm gens >7d
+#   nix-env --delete-generations +3 (every profile) keep the 3 newest generations
+#   nix-collect-garbage                             then collect what they freed
 #   nix-store --optimise                            retroactive hardlink dedup
+#   apt-get autoclean + clean                       drop the apt package cache
+#   logrotate (hourly, own timer)                   syslog: daily + maxsize 100M + gzip
+# (journald is capped in protection/resource-bouncer.nix: SystemMaxUse=500M.
+#  fluent-bit noise is cut at the source in agents/log-shipper.nix + its conf.)
 #
 # WHAT IT DOES NOT RUN (intentionally — guardrail-banned in protection/guardrails.nix)
 #   docker volume prune              — may contain databases
@@ -103,11 +108,24 @@ in
         journalctl --vacuum-time=${toString journalFloorDays}d 2>&1 | sed "s/^/$LOG_PREFIX journal-time: /" | tail -3
       fi
 
-      # ── Nix gc + retroactive optimise ────────────────────────────────
+      # ── Nix: keep 3 generations, then collect ────────────────────────
+      # systemd gives this unit a bare PATH; nix lives in the default profile.
+      export PATH="/nix/var/nix/profiles/default/bin:$PATH"
       if command -v nix-collect-garbage >/dev/null 2>&1; then
-        # --delete-older-than = drop generations >7d, NOT live current state
-        nix-collect-garbage --delete-older-than 7d 2>&1 \
-          | sed "s/^/$LOG_PREFIX nix-gc: /" | tail -5
+        # Every profile that accumulates generations: HM + profile of each user,
+        # root's, and the default one. `+3` = keep the newest three, drop the rest.
+        for prof in /nix/var/nix/profiles/default \
+                    /nix/var/nix/profiles/per-user/*/profile \
+                    /nix/var/nix/profiles/per-user/*/home-manager \
+                    /home/*/.local/state/nix/profiles/home-manager \
+                    /home/*/.local/state/nix/profiles/profile \
+                    /root/.local/state/nix/profiles/home-manager \
+                    /root/.local/state/nix/profiles/profile; do
+          [ -e "$prof" ] || continue
+          nix-env --profile "$prof" --delete-generations +3 2>&1 \
+            | sed "s|^|$LOG_PREFIX nix-gens $prof: |" | tail -2 || true
+        done
+        nix-collect-garbage 2>&1 | sed "s/^/$LOG_PREFIX nix-gc: /" | tail -5
       fi
       if command -v nix-store >/dev/null 2>&1; then
         # Retroactive hardlink dedup. Cheap if auto-optimise-store=true,
@@ -115,6 +133,12 @@ in
         # full-pass optimise that ever runs.
         nix-store --optimise 2>&1 \
           | sed "s/^/$LOG_PREFIX nix-optimise: /" | tail -3 || true
+      fi
+
+      # ── apt cache ────────────────────────────────────────────────────
+      if command -v apt-get >/dev/null 2>&1; then
+        apt-get -y autoclean 2>&1 | sed "s/^/$LOG_PREFIX apt-autoclean: /" | tail -2 || true
+        apt-get -y clean 2>&1 | sed "s/^/$LOG_PREFIX apt-clean: /" | tail -2 || true
       fi
 
       # ── Disk after ───────────────────────────────────────────────────
@@ -155,6 +179,62 @@ in
     WantedBy=timers.target
   '';
 
+
+  # ── syslog: daily + maxsize + gzip ────────────────────────────────────
+  # Ubuntu's stock /etc/logrotate.d/rsyslog rotates WEEKLY with no size cap, so a
+  # chatty shipper turned /var/log/syslog into 500M+ (fluent-bit retry spam,
+  # ~170M/day, 2026-10-14). Daily + maxsize 100M + gzip bounds a file at roughly
+  # 100M live + 7 x gz. The hourly timer below makes maxsize bite within the
+  # hour instead of waiting for logrotate.timer's once-a-day run.
+  home.file.".local/share/system-protection/logrotate-rsyslog".text = ''
+    /var/log/syslog
+    /var/log/mail.log
+    /var/log/kern.log
+    /var/log/auth.log
+    /var/log/user.log
+    /var/log/cron.log
+    {
+    	rotate 7
+    	daily
+    	maxsize 100M
+    	maxage 14
+    	missingok
+    	notifempty
+    	compress
+    	sharedscripts
+    	postrotate
+    		/usr/lib/rsyslog/rsyslog-rotate
+    	endscript
+    }
+  '';
+
+  # fluent-bit already lands in the journal; copying its retry/parse chatter into
+  # /var/log/syslog as well is what filled the disk. Errors stay in the journal.
+  home.file.".local/share/system-protection/rsyslog-no-fluent-bit.conf".text = ''
+    :programname, isequal, "fluent-bit" stop
+  '';
+
+  home.file.".local/share/system-protection/logrotate-hourly.service".text = ''
+    [Unit]
+    Description=Hourly logrotate pass for syslog (daily + maxsize)
+    [Service]
+    Type=oneshot
+    ExecStart=/usr/sbin/logrotate /etc/logrotate.d/rsyslog
+    Nice=19
+    IOSchedulingClass=idle
+  '';
+
+  home.file.".local/share/system-protection/logrotate-hourly.timer".text = ''
+    [Unit]
+    Description=Hourly logrotate pass for syslog
+    [Timer]
+    OnCalendar=hourly
+    RandomizedDelaySec=5min
+    Persistent=true
+    [Install]
+    WantedBy=timers.target
+  '';
+
   # ── Activation: copy to /opt + /etc/systemd/system, enable, start ───
   home.activation.installPruneMaintenance = lib.hm.dag.entryAfter ["linkGeneration"] ''
     (
@@ -173,11 +253,25 @@ in
     $SUDO cp -f "$SRC/infra-prune-maintenance.service" /etc/systemd/system/infra-prune-maintenance.service
     $SUDO cp -f "$SRC/infra-prune-maintenance.timer"   /etc/systemd/system/infra-prune-maintenance.timer
 
+    if [ -d /etc/logrotate.d ] && [ -x /usr/sbin/logrotate ]; then
+      $SUDO cp -f "$SRC/logrotate-rsyslog"             /etc/logrotate.d/rsyslog
+      $SUDO cp -f "$SRC/logrotate-hourly.service"      /etc/systemd/system/logrotate-hourly.service
+      $SUDO cp -f "$SRC/logrotate-hourly.timer"        /etc/systemd/system/logrotate-hourly.timer
+    fi
+    if [ -d /etc/rsyslog.d ]; then
+      if ! $SUDO cmp -s "$SRC/rsyslog-no-fluent-bit.conf" /etc/rsyslog.d/05-no-fluent-bit.conf 2>/dev/null; then
+        $SUDO cp -f "$SRC/rsyslog-no-fluent-bit.conf" /etc/rsyslog.d/05-no-fluent-bit.conf
+        $SUDO systemctl restart rsyslog 2>/dev/null || true
+      fi
+    fi
+
     $SUDO systemctl daemon-reload
     $SUDO systemctl enable  infra-prune-maintenance.timer 2>/dev/null || true
     $SUDO systemctl restart infra-prune-maintenance.timer 2>/dev/null || true
+    $SUDO systemctl enable  logrotate-hourly.timer 2>/dev/null || true
+    $SUDO systemctl restart logrotate-hourly.timer 2>/dev/null || true
 
-    echo "[prune-maint-install] deployed: daily 03:30, conservative prune (no volume/--all)"
+    echo "[prune-maint-install] deployed: daily 03:30 prune (docker, nix keep-3, apt, journal) + hourly syslog logrotate"
     ) || echo "[prune-maint-install] FAILED — activation continues"
   '';
 }

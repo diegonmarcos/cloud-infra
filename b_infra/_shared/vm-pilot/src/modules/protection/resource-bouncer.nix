@@ -114,6 +114,10 @@ in {
     [Journal]
     Storage=volatile
     RuntimeMaxUse=${if safeRamMB <= 2048 then "40M" else "128M"}
+    # Hard disk cap, independent of Storage=: if a VM is ever flipped back to
+    # persistent (or a stray /var/log/journal reappears) it can never take more
+    # than 500M of the root disk.
+    SystemMaxUse=500M
     Compress=no
     ForwardToSyslog=no
   '';

@@ -199,6 +199,41 @@ in {
 
       record "run" "start usage=''${USAGE}% swap=''${SWAP_SIZE_MB}MB"
 
+      # ── >=85%: disk-janitor in aggressive mode + ntfy alert ──────────────
+      # The janitor (infra-ops_disk-janitor, a container on oci-apps) owns the
+      # policy: dangling images, unused build cache, images beyond in-use + 1
+      # previous, idle GitHub runner leftovers, Gradle cache, cgc lance fragments.
+      # `--aggressive` drops its age gates; its keep rules and never-list are
+      # unchanged, so this cannot reach a volume. Cooldowns (30 min janitor,
+      # 60 min alert) keep a stuck-high disk from re-running a docker-wide walk
+      # every 5 minutes and from spamming ntfy. VMs without the container skip
+      # the janitor and still alert.
+      STAMP_DIR=''${STAMP_DIR:-/var/tmp}
+      _now=$(date +%s)
+      _age() { _m=$(stat -c %Y "$1" 2>/dev/null || echo 0); echo $(( _now - _m )); }
+      _used_before=$USAGE
+      _free_before=$(df -P / | awk 'NR==2{print $4}')
+      _ran_janitor=no
+      if command -v docker >/dev/null 2>&1 \
+         && timeout 15 docker ps --format '{{.Names}}' 2>/dev/null | grep -qx disk-janitor \
+         && [ "$(_age "$STAMP_DIR/disk-watchdog-janitor.stamp")" -gt 1800 ]; then
+        touch "$STAMP_DIR/disk-watchdog-janitor.stamp"
+        _jout=$(timeout 1200 docker exec -e RUN_ONCE=true disk-janitor /usr/local/bin/entrypoint.sh --aggressive 2>&1 | tail -2 || true)
+        _ran_janitor=yes
+        _free_now=$(df -P / | awk 'NR==2{print $4}')
+        record "janitor" "aggressive pass at ''${USAGE}%" "$(( (_free_now - _free_before) * 1024 ))B"
+        USAGE=$(df -P / | awk 'NR==2 {gsub("%","",$5); print $5}')
+      fi
+      if [ "$(_age "$STAMP_DIR/disk-watchdog-ntfy.stamp")" -gt 3600 ]; then
+        touch "$STAMP_DIR/disk-watchdog-ntfy.stamp"
+        _freeGB=$(( $(df -P / | awk 'NR==2{print $4}') / 1048576 ))
+        curl -fsS -m 10 -H "Title: $(hostname -s): root disk ''${_used_before}% used" \
+          -H "Priority: high" -H "Tags: floppy_disk,warning" \
+          -d "root ''${_used_before}% -> ''${USAGE}% after cleanup (''${_freeGB} GB free). janitor aggressive: $_ran_janitor. Tiers: WARN 85, CRIT 90, EMERG 95." \
+          "${ntfyBase}/${ntfyTopic}" >/dev/null 2>&1 || record "ntfy" "alert publish failed"
+        record "ntfy" "alert sent usage=''${_used_before}%->''${USAGE}%"
+      fi
+
       DOCKER_SIZE="N/A"
       if command -v docker >/dev/null 2>&1 && timeout 15 docker version --format '{{.Server.Version}}' >/dev/null 2>&1; then
         DOCKER_SIZE=$(timeout 60 docker system df --format '{{.Size}}' 2>/dev/null | paste -sd+ | bc 2>/dev/null || timeout 60 docker system df 2>/dev/null | awk 'NR>1{print $4}' | head -1 || echo "?")
