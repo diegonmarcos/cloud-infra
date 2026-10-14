@@ -109,19 +109,49 @@ commit_back() { # commit_back <msg> <paths...>
   git add -- "$@"
   if git diff --cached --quiet; then echo "nothing to commit"; return 0; fi
   git commit -q -m "$msg [skip ci]"
+  git pull -q --rebase origin "${GITHUB_REF_NAME}" || true
   git push -q origin "HEAD:${GITHUB_REF_NAME}"
   echo "committed: $msg"
 }
 
 sops_write() { # sops_write <dest> <KEY=ENVVAR>...  — values read from env, never printed
-  local dest="$1"; shift; local tmp; tmp="$(mktemp)"
-  local kv k v
+  # --filename-override: encrypt under the repo .sops.yaml creation rule that
+  # matches <dest> (secrets.<name>.yaml → public age recipient). A bare temp
+  # path matches no rule and sops refuses ("no matching creation rules").
+  local dest="$1"; shift; local tmp kv k v; tmp="$(mktemp)"
   for kv in "$@"; do k="${kv%%=*}"; v="${kv#*=}"; printf '%s: "%s"\n' "$k" "${!v}" >> "$tmp"; done
-  sops -e --age "$AGE_RECIPIENT" --input-type yaml --output-type yaml "$tmp" > "$dest"
-  rm -f "$tmp"
+  if ! sops -e --input-type yaml --output-type yaml --filename-override "$dest" "$tmp" > "$dest.tmp"; then
+    rm -f "$tmp" "$dest.tmp"; echo "sops encryption FAILED for $(basename "$dest")"; return 1
+  fi
+  rm -f "$tmp"; mv "$dest.tmp" "$dest"
+}
+
+reconcile_orphan_tunnel() {
+  # A run that died between apply and the state commit leaves a tunnel in
+  # Cloudflare that terraform does not know (2026-10-14, first apply). Delete
+  # ONLY a tunnel that (a) has this pilot's tunnel name, (b) is absent from
+  # state, (c) has zero connectors — i.e. provably unused — so the next apply
+  # recreates it cleanly instead of duplicating it.
+  local name in_state ids id conns
+  name="$(jq -r .zero_trust.tunnel.name "$CFG")"
+  in_state="$(jq -r '.resources[]? | select(.type=="cloudflare_zero_trust_tunnel_cloudflared" and .name=="zt_fleet") | .instances[0].attributes.id' terraform.tfstate 2>/dev/null || true)"
+  ids="$(cf "/accounts/$ACCT/cfd_tunnel?is_deleted=false&name=$name" | jq -r '.result[]? | "\(.id) \(.connections|length)"')"
+  while read -r id conns; do
+    [ -n "$id" ] || continue
+    [ "$id" = "$in_state" ] && continue
+    if [ "$conns" = "0" ]; then
+      echo "deleting orphan tunnel $name ($id): not in state, 0 connectors"
+      curl -sS -X DELETE -H "X-Auth-Email: $CLOUDFLARE_EMAIL" -H "X-Auth-Key: $CLOUDFLARE_API_KEY" \
+        "$API/accounts/$ACCT/cfd_tunnel/$id" | jq -c '{success, errors}'
+    else
+      echo "REFUSING: tunnel $name ($id) is not in state but has $conns connectors — import it by hand"; return 1
+    fi
+  done <<<"$ids"
 }
 
 do_apply() {
+  tf_prepare
+  reconcile_orphan_tunnel
   do_plan
   cd "$TF_DIR"
   mapfile -t TARGETS < <(jq -r '.resource_changes[] | select(.change.actions != ["no-op"]) | .address' tfplan.json | grep -E "$ZT_ADDR_RE" || true)
@@ -137,9 +167,13 @@ do_apply() {
   APPLY_RC=0; terraform apply -input=false -no-color -auto-approve tfplan > apply.txt 2>&1 || APPLY_RC=$?
   grep -E ': Creation complete|^Apply complete|Error' apply.txt | sed -E 's/\[id=[^]]*\]//' || true
   [ "$APPLY_RC" -eq 0 ] || grep -A6 'Error' apply.txt | grep -viE 'secret|token' | head -40
-  # State is re-encrypted UNCONDITIONALLY (partial applies must be recorded).
+  # State is re-encrypted and COMMITTED FIRST and UNCONDITIONALLY: a partial
+  # apply must be recorded before anything else can fail.
   cp terraform.tfstate terraform.tfstate.enc
   sops -e -i --input-type json --output-type json terraform.tfstate.enc
+  commit_back "cloudflare: zero-trust state after pilot apply (rc=$APPLY_RC)" \
+    "$TF_DIR/terraform.tfstate.enc" "$TF_DIR/.terraform.lock.hcl"
+  cd "$TF_DIR"
   # Secrets out of state → sops (public age recipient only).
   set +e
   ZT_TUNNEL_TOKEN="$(terraform output -raw zt_tunnel_token 2>/dev/null)"
@@ -150,15 +184,14 @@ do_apply() {
   export TUNNEL_TOKEN="$ZT_TUNNEL_TOKEN" CF_ACCESS_CLIENT_ID="$ZT_SVC_ID" CF_ACCESS_CLIENT_SECRET="$ZT_SVC_SECRET"
   SECRETS_OUT=()
   if [ -n "$ZT_TUNNEL_TOKEN" ]; then
-    sops_write "$TF_DIR/secrets.zt-tunnel.yaml" TUNNEL_TOKEN=TUNNEL_TOKEN; SECRETS_OUT+=("$TF_DIR/secrets.zt-tunnel.yaml")
+    sops_write "$TF_DIR/secrets.zt-tunnel.yaml" TUNNEL_TOKEN=TUNNEL_TOKEN && SECRETS_OUT+=("$TF_DIR/secrets.zt-tunnel.yaml")
   fi
   if [ -n "$ZT_SVC_ID" ] && [ -n "$ZT_SVC_SECRET" ]; then
-    sops_write "$TF_DIR/secrets.zt-service-token.yaml" CF_ACCESS_CLIENT_ID=CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET=CF_ACCESS_CLIENT_SECRET
-    SECRETS_OUT+=("$TF_DIR/secrets.zt-service-token.yaml")
+    sops_write "$TF_DIR/secrets.zt-service-token.yaml" CF_ACCESS_CLIENT_ID=CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET=CF_ACCESS_CLIENT_SECRET \
+      && SECRETS_OUT+=("$TF_DIR/secrets.zt-service-token.yaml")
   fi
   tf_cleanup
-  commit_back "cloudflare: zero-trust phase 1 state + sops-encrypted tunnel/service-token secrets" \
-    "$TF_DIR/terraform.tfstate.enc" "$TF_DIR/.terraform.lock.hcl" "${SECRETS_OUT[@]}"
+  [ "${#SECRETS_OUT[@]}" -eq 0 ] || commit_back "cloudflare: zero-trust secrets (sops, public age recipient)" "${SECRETS_OUT[@]}"
   [ "$APPLY_RC" -eq 0 ] || { echo "apply FAILED (state recorded)"; return 1; }
   echo "apply OK"
   probe_one "tunnels after apply" "/accounts/$ACCT/cfd_tunnel?is_deleted=false" '[.result[] | {id, name, status, conns: (.connections|length)}]'
