@@ -696,6 +696,15 @@ jobs:
           # repo's own config (workflows, hooks, git dotfiles), 1_cloud-configs
           # derives every build-*.json the services consume. This step needs
           # the latter; the former is already committed by ship-gen-configs.
+          # URL scheme: the derive reads cloud-u-android's generated
+          # 2_configs/apk-manifest.json from the sibling checkout
+          # (a0_docs/eng-specs/url-scheme.md). Sparse + blobless: only that file.
+          if [ ! -f "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android/2_configs/apk-manifest.json" ]; then
+            rm -rf "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android"
+            GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --filter=blob:none --sparse \
+              https://github.com/diegonmarcos/cloud-u-android.git "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android"
+            git -C "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android" sparse-checkout set 2_configs
+          fi
           bash 1_cloud-configs/build.sh all
 
       # Vault clone — provides ~/git/cloud-vault/vault-keys-docker.envfile that
@@ -1036,6 +1045,15 @@ jobs:
       # nix evaluation; no docker/network involved).
       - name: Regenerate dist/ from build.json sources
         run: |
+          # URL scheme: the derive reads cloud-u-android's generated
+          # 2_configs/apk-manifest.json from the sibling checkout
+          # (a0_docs/eng-specs/url-scheme.md). Sparse + blobless: only that file.
+          if [ ! -f "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android/2_configs/apk-manifest.json" ]; then
+            rm -rf "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android"
+            GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 --filter=blob:none --sparse \
+              https://github.com/diegonmarcos/cloud-u-android.git "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android"
+            git -C "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android" sparse-checkout set 2_configs
+          fi
           bash 1_cloud-configs/build.sh all
 
       # Vault clone — provides ~/git/cloud-vault/vault-keys-docker.envfile that
