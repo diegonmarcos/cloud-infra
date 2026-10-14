@@ -27,6 +27,7 @@ name: "Cloudflare → zero-trust pilot"
 #   [zt:plan]   probe + terraform plan (addresses only)
 #   [zt:apply]  plan + targeted apply of pure-create zero-trust addresses
 #   [zt:verify] Access / service-token / Gateway DoH checks
+#   [zt:export] re-write the sops secret files from current state
 # or by the `mode` input on workflow_dispatch.
 #
 # Logs are PUBLIC (public repo): the runner prints names, counts and HTTP
@@ -42,7 +43,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe | plan | apply | verify"
+        description: "probe | plan | apply | verify | export"
         required: true
         default: "plan"
         type: string
@@ -75,7 +76,7 @@ jobs:
           set -eu
           MODE="${INPUT_MODE:-}"
           if [ -z "$MODE" ]; then
-            MODE=$(printf '%s' "${MSG:-}" | grep -oE '\[zt:(probe|plan|apply|verify)\]' | head -1 | sed -E 's/\[zt:(.*)\]/\1/' || true)
+            MODE=$(printf '%s' "${MSG:-}" | grep -oE '\[zt:(probe|plan|apply|verify|export)\]' | head -1 | sed -E 's/\[zt:(.*)\]/\1/' || true)
           fi
           echo "mode=${MODE:-probe}" >> "$GITHUB_OUTPUT"
           echo "mode: ${MODE:-probe}"

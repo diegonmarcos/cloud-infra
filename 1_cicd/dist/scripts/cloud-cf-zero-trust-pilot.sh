@@ -16,6 +16,7 @@
 # ║           Re-encrypts state, exports tunnel token + service      ║
 # ║           token to sops files encrypted to the public age key.   ║
 # ║   verify  Access gate / service-token bearer / Gateway DoH tests ║
+# ║   export  re-write the sops secret files from current state      ║
 # ╚══════════════════════════════════════════════════════════════════╝
 set -euo pipefail
 
@@ -114,16 +115,54 @@ commit_back() { # commit_back <msg> <paths...>
   echo "committed: $msg"
 }
 
-sops_write() { # sops_write <dest> <KEY=ENVVAR>...  — values read from env, never printed
+sops_write() { # sops_write <dest> <cred-name> <cred-type> <url> <note> <KEY=ENVVAR>...
+  # Values are read from the env and never printed. The file follows
+  # cloud-u-containers/_shared/secrets-schema.md: app-consumed top-level keys
+  # plus a _credentials.<cred-name> record that references each value.
   # --filename-override: encrypt under the repo .sops.yaml creation rule that
   # matches <dest> (secrets.<name>.yaml → public age recipient). A bare temp
   # path matches no rule and sops refuses ("no matching creation rules").
-  local dest="$1"; shift; local tmp kv k v; tmp="$(mktemp)"
+  local dest="$1" cname="$2" ctype="$3" curl_="$4" cnote="$5"; shift 5
+  local tmp kv k v; tmp="$(mktemp)"
   for kv in "$@"; do k="${kv%%=*}"; v="${kv#*=}"; printf '%s: "%s"\n' "$k" "${!v}" >> "$tmp"; done
+  printf '_credentials:\n  %s:\n    type: %s\n    url: "%s"\n    note: "%s"\n' "$cname" "$ctype" "$curl_" "$cnote" >> "$tmp"
+  for kv in "$@"; do k="${kv%%=*}"; v="${kv#*=}"; printf '    %s: "%s"\n' "$(tr 'A-Z' 'a-z' <<<"$k")" "${!v}" >> "$tmp"; done
   if ! sops -e --input-type yaml --output-type yaml --filename-override "$dest" "$tmp" > "$dest.tmp"; then
     rm -f "$tmp" "$dest.tmp"; echo "sops encryption FAILED for $(basename "$dest")"; return 1
   fi
   rm -f "$tmp"; mv "$dest.tmp" "$dest"
+}
+
+export_secrets() { # run in $TF_DIR with decrypted state + initialised .terraform
+  set +e
+  ZT_TUNNEL_TOKEN="$(terraform output -raw zt_tunnel_token 2>/dev/null)"
+  ZT_SVC_ID="$(terraform output -raw zt_service_token_client_id 2>/dev/null)"
+  ZT_SVC_SECRET="$(terraform output -raw zt_service_token_client_secret 2>/dev/null)"
+  set -e
+  for v in "$ZT_TUNNEL_TOKEN" "$ZT_SVC_ID" "$ZT_SVC_SECRET"; do [ -n "$v" ] && echo "::add-mask::$v"; done
+  export TUNNEL_TOKEN="$ZT_TUNNEL_TOKEN" CF_ACCESS_CLIENT_ID="$ZT_SVC_ID" CF_ACCESS_CLIENT_SECRET="$ZT_SVC_SECRET"
+  SECRETS_OUT=()
+  if [ -n "$ZT_TUNNEL_TOKEN" ]; then
+    sops_write "$TF_DIR/secrets.zt-tunnel.yaml" tunnel token \
+      "https://one.dash.cloudflare.com/ -> Networks -> Tunnels -> $(jq -r .zero_trust.tunnel.name "$CFG")" \
+      "Remotely-managed tunnel token (terraform output zt_tunnel_token). Consumed by a_solutions/infra-net_cloudflared as src/secrets.yaml." \
+      TUNNEL_TOKEN=TUNNEL_TOKEN && SECRETS_OUT+=("$TF_DIR/secrets.zt-tunnel.yaml")
+  fi
+  if [ -n "$ZT_SVC_ID" ] && [ -n "$ZT_SVC_SECRET" ]; then
+    sops_write "$TF_DIR/secrets.zt-service-token.yaml" service_token token \
+      "https://one.dash.cloudflare.com/ -> Access -> Service auth -> zt-pilot-machine" \
+      "Send as headers CF-Access-Client-Id / CF-Access-Client-Secret. Expiry: terraform.json .zero_trust.service_tokens[].duration." \
+      CF_ACCESS_CLIENT_ID=CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET=CF_ACCESS_CLIENT_SECRET \
+      && SECRETS_OUT+=("$TF_DIR/secrets.zt-service-token.yaml")
+  fi
+  echo "tunnel token exported: $([ -n "$ZT_TUNNEL_TOKEN" ] && echo yes || echo no); service token exported: $([ -n "$ZT_SVC_ID" ] && echo yes || echo no)"
+}
+
+do_export() {
+  tf_prepare
+  export_secrets
+  tf_cleanup
+  [ "${#SECRETS_OUT[@]}" -eq 0 ] || commit_back "cloudflare: zero-trust secrets re-exported (sops, public age recipient)" "${SECRETS_OUT[@]}"
 }
 
 reconcile_orphan_tunnel() {
@@ -175,27 +214,12 @@ do_apply() {
     "$TF_DIR/terraform.tfstate.enc" "$TF_DIR/.terraform.lock.hcl"
   cd "$TF_DIR"
   # Secrets out of state → sops (public age recipient only).
-  set +e
-  ZT_TUNNEL_TOKEN="$(terraform output -raw zt_tunnel_token 2>/dev/null)"
-  ZT_SVC_ID="$(terraform output -raw zt_service_token_client_id 2>/dev/null)"
-  ZT_SVC_SECRET="$(terraform output -raw zt_service_token_client_secret 2>/dev/null)"
-  set -e
-  for v in "$ZT_TUNNEL_TOKEN" "$ZT_SVC_ID" "$ZT_SVC_SECRET"; do [ -n "$v" ] && echo "::add-mask::$v"; done
-  export TUNNEL_TOKEN="$ZT_TUNNEL_TOKEN" CF_ACCESS_CLIENT_ID="$ZT_SVC_ID" CF_ACCESS_CLIENT_SECRET="$ZT_SVC_SECRET"
-  SECRETS_OUT=()
-  if [ -n "$ZT_TUNNEL_TOKEN" ]; then
-    sops_write "$TF_DIR/secrets.zt-tunnel.yaml" TUNNEL_TOKEN=TUNNEL_TOKEN && SECRETS_OUT+=("$TF_DIR/secrets.zt-tunnel.yaml")
-  fi
-  if [ -n "$ZT_SVC_ID" ] && [ -n "$ZT_SVC_SECRET" ]; then
-    sops_write "$TF_DIR/secrets.zt-service-token.yaml" CF_ACCESS_CLIENT_ID=CF_ACCESS_CLIENT_ID CF_ACCESS_CLIENT_SECRET=CF_ACCESS_CLIENT_SECRET \
-      && SECRETS_OUT+=("$TF_DIR/secrets.zt-service-token.yaml")
-  fi
+  export_secrets
   tf_cleanup
   [ "${#SECRETS_OUT[@]}" -eq 0 ] || commit_back "cloudflare: zero-trust secrets (sops, public age recipient)" "${SECRETS_OUT[@]}"
   [ "$APPLY_RC" -eq 0 ] || { echo "apply FAILED (state recorded)"; return 1; }
   echo "apply OK"
   probe_one "tunnels after apply" "/accounts/$ACCT/cfd_tunnel?is_deleted=false" '[.result[] | {id, name, status, conns: (.connections|length)}]'
-  echo "tunnel token exported: $([ -n "$ZT_TUNNEL_TOKEN" ] && echo yes || echo no); service token exported: $([ -n "$ZT_SVC_ID" ] && echo yes || echo no)"
 }
 
 do_verify() {
@@ -225,6 +249,7 @@ case "$MODE" in
   probe)  do_probe ;;
   plan)   do_probe; do_plan; tf_cleanup ;;
   apply)  do_apply ;;
-  verify) do_verify ;;
-  *) echo "usage: $0 probe|plan|apply|verify" >&2; exit 2 ;;
+  verify) do_probe; do_verify ;;
+  export) do_export ;;
+  *) echo "usage: $0 probe|plan|apply|verify|export" >&2; exit 2 ;;
 esac
