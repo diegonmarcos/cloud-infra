@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21159,
+    "files": 21162,
     "by_lang": {
-      "py": 127,
+      "py": 128,
       "sh": 472,
-      "kotlin": 10929,
+      "kotlin": 10931,
       "java": 635,
       "ts": 8414,
       "nix": 30,
@@ -25,8 +25,8 @@
       "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10926,
-      "python": 42,
+      "kotlin": 10928,
+      "python": 43,
       "rust-module": 89,
       "file": 2256,
       "hook": 150,
@@ -7478,7 +7478,6 @@
         "com.diegonmarcos.superapp.onehand.ArcMenu",
         "com.diegonmarcos.superapp.onehand.CircularMenu",
         "com.diegonmarcos.superapp.onehand.GestureAction",
-        "com.diegonmarcos.superapp.onehand.OneHandAction",
         "com.diegonmarcos.superapp.onehand.OneHandConfig",
         "com.diegonmarcos.superapp.onehand.OneHandController",
         "com.diegonmarcos.superapp.onehand.OneHandPrefs",
@@ -7512,7 +7511,6 @@
         "onNothingSelected(p: AdapterView<*>?)",
         "onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long)",
         "addHomeSwipePicker( col: LinearLayout, ctx: Context, label: String, get: ()",
-        "prettify(name: String)",
         "onResume()",
         "newInstance()",
         "class OneHandFragment",
@@ -8211,7 +8209,7 @@
         "android.content.Context",
         "android.provider.Settings",
         "com.diegonmarcos.superapp.devtools.AppDebugServer",
-        "com.diegonmarcos.superapp.onehand.OneHandAccessibilityService",
+        "com.diegonmarcos.superapp.onehand.OneHandOverlayService",
         "com.diegonmarcos.superapp.onehand.OneHandPrefs",
         "org.json.JSONArray",
         "org.json.JSONObject"
@@ -49710,18 +49708,16 @@
         "GestureAction"
       ],
       "imports": [
-        "android.accessibilityservice.AccessibilityService",
         "android.content.Context"
       ],
       "symbols": [
         "serialize()",
-        "perform(svc: AccessibilityService, label: String? = null)",
+        "perform(ctx: Context, label: String? = null)",
         "parse(s: String?)",
         "openInHost(ctx: Context, target: String)",
         "say(ctx: Context, message: String)",
         "launch(ctx: Context, pkg: String, label: String?)",
         "class GestureAction",
-        "class Global",
         "class OpenApp",
         "class AppTarget"
       ]
@@ -49759,77 +49755,20 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/OneHandAccessibilityService.kt",
+      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/OneHandBootReceiver.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "OneHandAccessibilityService"
+        "OneHandBootReceiver"
       ],
       "imports": [
-        "android.accessibilityservice.AccessibilityService",
-        "android.accessibilityservice.AccessibilityServiceInfo",
-        "android.graphics.Color",
-        "android.os.Handler",
-        "android.os.Looper",
-        "android.graphics.PixelFormat",
-        "android.util.Log",
-        "android.util.TypedValue",
-        "android.view.Gravity",
-        "android.view.MotionEvent",
-        "android.view.View",
-        "android.view.WindowManager",
-        "android.view.HapticFeedbackConstants",
-        "android.view.accessibility.AccessibilityEvent",
-        "kotlin.math.hypot"
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent"
       ],
       "symbols": [
-        "onServiceConnected()",
-        "cancelRadialPending()",
-        "openRadial(c: OneHandConfig)",
-        "fireRadial(c: OneHandConfig)",
-        "closeRadial()",
-        "onDestroy()",
-        "onAccessibilityEvent(event: AccessibilityEvent?)",
-        "onInterrupt()",
-        "showHandles()",
-        "testActivate(ms: Long)",
-        "hideHandles()",
-        "addPreviewLayer()",
-        "addHandle(h: OneHandConfig.Handle)",
-        "onHandleTouch(h: OneHandConfig.Handle, view: View, e: MotionEvent)",
-        "replayTap(view: View, x: Float, y: Float)",
-        "onCompleted(g: android.accessibilityservice.GestureDescription?)",
-        "onCancelled(g: android.accessibilityservice.GestureDescription?)",
-        "activate(h: OneHandConfig.Handle)",
-        "endPreview()",
-        "updatePreview(h: OneHandConfig.Handle, x: Float, y: Float)",
-        "buildOptions(h: OneHandConfig.Handle)",
-        "appIcon(pkg: String)",
-        "catalogueFor(action: GestureAction.AppTarget)",
-        "labelForAction(action: GestureAction)",
-        "iconForAction(action: GestureAction)",
-        "declaredIcon(target: String)",
-        "drawableIcon(name: String)",
-        "isGestureNav()",
-        "handleBackground(transparency: Int)",
-        "dp(v: Int)",
-        "class OneHandAccessibilityService"
-      ]
-    },
-    {
-      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/OneHandAction.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "OneHandAction"
-      ],
-      "imports": [
-        "android.accessibilityservice.AccessibilityService",
-        "android.os.Build"
-      ],
-      "symbols": [
-        "from(id: String?)",
-        "class OneHandAction"
+        "onReceive(ctx: Context, intent: Intent)",
+        "class OneHandBootReceiver"
       ]
     },
     {
@@ -49868,18 +49807,77 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.content.Intent",
         "android.provider.Settings"
       ],
       "symbols": [
         "canDrawOverlay(ctx: Context)",
-        "accessibilityEnabled()",
         "ready(ctx: Context)",
         "isOn(ctx: Context)",
         "enable(ctx: Context)",
         "disable(ctx: Context)",
         "refresh(ctx: Context)",
+        "startIfEnabled(ctx: Context)",
         "testActivate(ctx: Context, ms: Long = 30_000L)",
+        "start( ctx: Context, i: Intent = Intent(ctx, OneHandOverlayService::class.java)",
         "class OneHandController"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/OneHandOverlayService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OneHandOverlayService"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.ServiceInfo",
+        "android.os.IBinder",
+        "android.provider.Settings",
+        "android.graphics.Color",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.graphics.PixelFormat",
+        "android.util.Log",
+        "android.util.TypedValue",
+        "android.view.Gravity",
+        "android.view.MotionEvent",
+        "android.view.View",
+        "android.view.WindowManager",
+        "android.view.HapticFeedbackConstants",
+        "kotlin.math.hypot"
+      ],
+      "symbols": [
+        "onBind(intent: Intent?)",
+        "onCreate()",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "startForegroundCompat()",
+        "onDestroy()",
+        "showHandles()",
+        "hideHandles()",
+        "addPreviewLayer()",
+        "addHandle(h: OneHandConfig.Handle)",
+        "onHandleTouch(h: OneHandConfig.Handle, view: View, e: MotionEvent)",
+        "activate(h: OneHandConfig.Handle)",
+        "endPreview()",
+        "updatePreview(h: OneHandConfig.Handle, x: Float, y: Float)",
+        "buildOptions(h: OneHandConfig.Handle)",
+        "appIcon(pkg: String)",
+        "catalogueFor(action: GestureAction.AppTarget)",
+        "labelForAction(action: GestureAction)",
+        "iconForAction(action: GestureAction)",
+        "declaredIcon(target: String)",
+        "drawableIcon(name: String)",
+        "isGestureNav()",
+        "handleBackground(transparency: Int)",
+        "dp(v: Int)",
+        "class OneHandOverlayService"
       ]
     },
     {
@@ -63726,6 +63724,37 @@
       ]
     },
     {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/AppsCatalog.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AppsCatalog"
+      ],
+      "imports": [
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.contentOrNull",
+        "kotlinx.serialization.json.intOrNull"
+      ],
+      "symbols": [
+        "tool(id: String)",
+        "service(id: String)",
+        "usedBy(toolId: String)",
+        "objs()",
+        "strs()",
+        "parse(text: String)",
+        "hosts()",
+        "view(slice: JsonObject, id: String)",
+        "toolBlocks(slice: JsonObject, id: String)",
+        "class AppsCatalog",
+        "class Tool",
+        "class Service",
+        "class Block",
+        "class Decl"
+      ]
+    },
+    {
       "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/C3BottomNav.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -64424,11 +64453,11 @@
       ]
     },
     {
-      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/AppsFragment.kt",
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/AgentsFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "AppsFragment"
+        "AgentsFragment"
       ],
       "imports": [
         "android.content.Context",
@@ -64456,7 +64485,45 @@
         "px(v: Int)",
         "isInstalled(ctx: Context, pkg: String)",
         "launch(ctx: Context, pkg: String, label: String)",
-        "class AppsFragment"
+        "class AgentsFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/CatalogFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CatalogFragment"
+      ],
+      "imports": [
+        "android.graphics.drawable.GradientDrawable",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.LinearLayout",
+        "android.widget.ScrollView",
+        "android.widget.TextView",
+        "androidx.core.content.ContextCompat",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.cloudc3.AppsCatalog",
+        "com.diegonmarcos.cloudc3.Declarations",
+        "com.diegonmarcos.cloudc3.R"
+      ],
+      "symbols": [
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?)",
+        "onSaveInstanceState(outState: Bundle)",
+        "open(k: String?, id: String?)",
+        "paint()",
+        "dp(v: Int)",
+        "title(t: String)",
+        "section(t: String)",
+        "card()",
+        "text(t: String, secondary: Boolean)",
+        "row(name: String, detail: String, onTap: ()",
+        "block(b: AppsCatalog.Block)",
+        "newInstance(kind: String)",
+        "class CatalogFragment"
       ]
     },
     {
@@ -64540,6 +64607,7 @@
       "exports": [
         "TopologyFragment",
         "ObservFragment",
+        "AppsFragment",
         "ConfigsFragment",
         "UndeclaredPageFragment"
       ],
@@ -64567,6 +64635,7 @@
         "newInstance(pageId: String)",
         "class TopologyFragment",
         "class ObservFragment",
+        "class AppsFragment",
         "class ConfigsFragment",
         "class is",
         "class UndeclaredPageFragment"
@@ -64704,6 +64773,24 @@
       ]
     },
     {
+      "path": "ac_cloud-c3/data/gen_infra_slice.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "proxy_of(sv)",
+        "tool(path)",
+        "mesh(m)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "proxy_of(sv)",
+        "tool(path)",
+        "mesh(m)"
+      ]
+    },
+    {
       "path": "ac_cloud-c3/flake.nix",
       "lang": "nix",
       "role": "flake",
@@ -64816,6 +64903,7 @@
         "t6()",
         "t7()",
         "t8()",
+        "t9()",
         "mutate()",
         "c_t1()",
         "c_t2()",
@@ -64834,8 +64922,7 @@
         "m_bad_icon()",
         "m_dead_drawable()",
         "m_wrong_pkg()",
-        "m_add_label()",
-        "m_drop_query()"
+        "m_add_label()"
       ],
       "imports": [],
       "symbols": [
@@ -64849,6 +64936,7 @@
         "t6()",
         "t7()",
         "t8()",
+        "t9()",
         "mutate()",
         "c_t1()",
         "c_t2()",
@@ -64877,8 +64965,7 @@
         "m_escape_flag()",
         "m_empty_tab()",
         "m_compose_screen()",
-        "m_consume_insets()",
-        "m_drop_cutout()"
+        "m_consume_insets()"
       ]
     },
     {
