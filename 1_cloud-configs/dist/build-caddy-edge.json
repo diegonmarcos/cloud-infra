@@ -149,7 +149,9 @@
   },
   "catch_all": {
     "domain": "*.diegonmarcos.com",
-    "page": "/srv/error.html"
+    "page": "/srv/error.html",
+    "redirect_to": "https://diegonmarcos.github.io/c__Cloud/",
+    "_redirect_doc": "Unknown subdomains 302 to the landing hub instead of the 404 error page (caddyfile.nix catchAllBlock). page stays as the edge's fallback file."
   },
   "messages": {
     "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
@@ -178,7 +180,6 @@
     "nexus.diegonmarcos.com",
     "suite.diegonmarcos.com",
     "maps.diegonmarcos.com",
-    "vpn.diegonmarcos.com",
     "matrix.diegonmarcos.com",
     "mcp.diegonmarcos.com",
     "auth.diegonmarcos.com"
@@ -202,16 +203,293 @@
       "comment": "Self-hosted Git service"
     },
     {
-      "domain": "vpn.diegonmarcos.com",
-      "upstream": "10.0.0.1:8080",
-      "auth": "none",
-      "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
+      "domain": "auth.diegonmarcos.com",
+      "upstream": "172.18.0.3:9091",
+      "bypass_paths": [
+        "/.well-known/openid-configuration",
+        "/api/oidc/token",
+        "/jwks.json"
+      ],
+      "comment": "SSO and 2FA authentication portal"
     },
     {
       "domain": "matrix.diegonmarcos.com",
       "upstream": "10.0.0.6:8008",
       "auth": "none",
       "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
+    },
+    {
+      "domain": "cloud-account.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-account",
+      "comment": "APK cloud-account: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-browser.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-browser",
+      "comment": "APK cloud-browser: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_configs/cloud-c3/",
+      "apk": "cloud-c3",
+      "comment": "APK cloud-c3: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3-morpheus.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-c3-morpheus",
+      "comment": "APK cloud-c3-morpheus: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3-watchdog.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-c3-watchdog",
+      "comment": "APK cloud-c3-watchdog: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3-watchtower.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-c3-watchtower",
+      "comment": "APK cloud-c3-watchtower: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-calc.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-calc",
+      "comment": "APK cloud-calc: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-camera.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-camera",
+      "comment": "APK cloud-camera: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-chat.diegonmarcos.com",
+      "upstream": "10.0.0.6:8065",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-chat/",
+      "apk": "cloud-chat",
+      "web": {
+        "kind": "container",
+        "target": "mattermost"
+      },
+      "comment": "APK cloud-chat: web target container mattermost"
+    },
+    {
+      "domain": "cloud-code.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-code",
+      "comment": "APK cloud-code: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-contacts.diegonmarcos.com",
+      "upstream": "10.0.0.6:5233",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-contacts/",
+      "apk": "cloud-contacts",
+      "web": {
+        "kind": "container",
+        "target": "contacts-radicale"
+      },
+      "comment": "APK cloud-contacts: web target container contacts-radicale"
+    },
+    {
+      "domain": "cloud-dialer.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-dialer",
+      "comment": "APK cloud-dialer: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-drive.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-drive",
+      "comment": "APK cloud-drive: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-gallery.diegonmarcos.com",
+      "upstream": "10.0.0.6:3013",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-gallery/",
+      "apk": "cloud-gallery",
+      "web": {
+        "kind": "container",
+        "target": "photoprism_app"
+      },
+      "comment": "APK cloud-gallery: web target container photoprism_app"
+    },
+    {
+      "domain": "cloud-keyboard.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-keyboard",
+      "comment": "APK cloud-keyboard: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-mail.diegonmarcos.com",
+      "upstream": "10.0.0.6:3000",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-mail/",
+      "apk": "cloud-mail",
+      "web": {
+        "kind": "container",
+        "target": "cloud-webmail"
+      },
+      "comment": "APK cloud-mail: web target container cloud-webmail"
+    },
+    {
+      "domain": "cloud-matrix.diegonmarcos.com",
+      "upstream": "10.0.0.6:8083",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-matrix/",
+      "apk": "cloud-matrix",
+      "web": {
+        "kind": "container",
+        "target": "matrix-element"
+      },
+      "comment": "APK cloud-matrix: web target container matrix-element"
+    },
+    {
+      "domain": "cloud-me.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-me",
+      "comment": "APK cloud-me: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-media-center.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-media-center",
+      "comment": "APK cloud-media-center: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-myterminal.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_agi/cloud-myterminal/",
+      "apk": "cloud-myterminal",
+      "comment": "APK cloud-myterminal: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-nav.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-nav",
+      "comment": "APK cloud-nav: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-news.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-news",
+      "comment": "APK cloud-news: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-notes.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-notes",
+      "comment": "APK cloud-notes: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-office.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-office",
+      "comment": "APK cloud-office: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-search.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-search",
+      "comment": "APK cloud-search: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-store.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-store",
+      "web": {
+        "_doc": "#876 the store as a Kotlin/Wasm page (web/ is its own gradle root; the shared libs' pure-Compose sources arrive through the ab_cloud-libs-shared/web composite). Rendered into 1_cicd/src/cicd/ship-cloud-store-wasm.yml by the workflow generator: `./gradlew wasmJsBrowserDistribution` in `dir`, tested by test/test-store-web.sh, `build/dist/wasmJs/productionExecutable` zipped to `artifact` and attached to the rolling release as `gh_asset`, then diegonmarcos.github.io is told (repository_dispatch cloud-web-refresh). portal_slug is the tile's apps/<slug>/ folder on the cloud-web portal; entry is the page inside it. The APK's own ship ignores this directory.",
+        "dir": "web",
+        "host": "ubuntu-latest",
+        "artifact": "Cloud-Store.wasm.zip",
+        "gh_asset": "Cloud-Store.wasm.zip",
+        "portal_slug": "cloud-store",
+        "entry": "index.html",
+        "tester": "test-store-web.sh",
+        "size_budget_mb": 20
+      },
+      "comment": "APK cloud-store: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-superapp.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-superapp",
+      "comment": "APK cloud-superapp: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-tasks.diegonmarcos.com",
+      "upstream": "10.0.0.6:5232",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-tasks/",
+      "apk": "cloud-tasks",
+      "web": {
+        "kind": "container",
+        "target": "calendar-radicale"
+      },
+      "comment": "APK cloud-tasks: web target container calendar-radicale"
+    },
+    {
+      "domain": "cloud-terminal-nix.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-terminal-nix",
+      "comment": "APK cloud-terminal-nix: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-terminal-termux.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-terminal-termux",
+      "comment": "APK cloud-terminal-termux: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-tools-small-llms.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-tools-small-llms",
+      "comment": "APK cloud-tools-small-llms: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-vault.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-vault",
+      "comment": "APK cloud-vault: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-wallet.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-wallet",
+      "comment": "APK cloud-wallet: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-writer.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-writer",
+      "comment": "APK cloud-writer: no web target, landing redirect"
     }
   ],
   "public_path_routes": [
@@ -301,18 +579,73 @@
       "parent_domain": "mcp.diegonmarcos.com",
       "endpoints": [
         {
+          "base_path": "/cloud-drive-mcp",
+          "upstream": "10.0.0.6:3109",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
           "base_path": "/c3-infra-mcp",
           "upstream": "10.0.0.6:3100",
           "wg_only": true,
           "bearer_auth": true
         },
         {
+          "base_path": "/mail-mcp",
+          "upstream": "10.0.0.6:3103",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/mattermost-mcp",
+          "upstream": "10.0.0.6:3102",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/c3-services-mcp",
+          "upstream": "10.0.0.6:3101",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/cloud-superapp-mcp",
+          "upstream": "10.0.0.6:3110",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/cloud-vault-mcp",
+          "upstream": "10.0.0.6:3111",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/g-personal",
+          "upstream": "10.0.0.6:3106",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/g-workspace",
+          "upstream": "10.0.0.6:3104",
+          "wg_only": true,
+          "bearer_auth": true
+        },
+        {
           "base_path": "/cloud-cgc-pub-mcp",
-          "upstream": "10.0.0.6:3105"
+          "upstream": "10.0.0.6:3105",
+          "bearer_auth": true
+        },
+        {
+          "base_path": "/cloud-cgc-pvt-mcp",
+          "upstream": "10.0.0.6:3107",
+          "wg_only": true,
+          "bearer_auth": true
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
-      "fallback_message": "MCP Hub -- use /c3-infra-mcp/mcp, /cloud-cgc-pub-mcp/mcp"
+      "fallback_message": "MCP Hub -- use /cloud-drive-mcp/mcp, /c3-infra-mcp/mcp, /mail-mcp/mcp, /mattermost-mcp/mcp, /c3-services-mcp/mcp, /cloud-superapp-mcp/mcp, /cloud-vault-mcp/mcp, /g-personal/mcp, /g-workspace/mcp, /cloud-cgc-pub-mcp/mcp, /cloud-cgc-pvt-mcp/mcp"
     }
   ],
   "oidc_public": {
@@ -363,6 +696,27 @@
       "upstream": "10.0.0.3:2443",
       "tls_skip_verify": true,
       "comment": "JMAP session/api/download/upload/eventsource follow-through on jmap vhost"
+    },
+    {
+      "path": "/.well-known/jmap",
+      "target_domain": "mails.diegonmarcos.com",
+      "upstream": "10.0.0.3:2443",
+      "tls_skip_verify": true,
+      "rewrite_to": "/jmap/session",
+      "comment": "JMAP discovery on the mails vhost"
+    },
+    {
+      "path": "/jmap/*",
+      "target_domain": "mails.diegonmarcos.com",
+      "upstream": "10.0.0.3:2443",
+      "tls_skip_verify": true,
+      "comment": "JMAP session/api follow-through on the mails vhost"
+    },
+    {
+      "path": "/",
+      "target_domain": "mails.diegonmarcos.com",
+      "redirect_to": "/.well-known/jmap",
+      "comment": "Bare mails host -> JMAP discovery URL (308)"
     },
     {
       "path": "/.well-known/jmap",

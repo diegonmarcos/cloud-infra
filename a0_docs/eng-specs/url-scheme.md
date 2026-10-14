@@ -1,10 +1,104 @@
 # Fleet URL scheme: public vs private names
 
-Status: implemented 2026-10-14. Source of truth: service `build.json` in
-cloud-u-containers plus the derive engine in `1_cloud-configs/src/derive/`.
-Guard: `1_cloud-configs/src/test/test-url-scheme.sh`.
+Status: v2 implemented 2026-10-14 (v1, the landing fallback and `cloud.{name}.app`
+names, shipped earlier the same day and is kept; see "Legacy"). Sources of truth:
+service `build.json` in cloud-u-containers, the generated manifests below, and the
+derive engine in `1_cloud-configs/src/derive/`. Guard:
+`1_cloud-configs/src/test/test-url-scheme.sh`.
 
-## The two names
+## Scheme v2
+
+| Kind | Public (internet DNS, wildcard `*.diegonmarcos.com`) | Private (Hickory `app` zone, mesh only) |
+|---|---|---|
+| APK | `cloud-{name}.diegonmarcos.com`: open to the internet, **never wg_only**; Authelia bearer / WebAuthn; anonymous request 302s to the app's landing page | `cloud-{name}.app` (only for an APK that declares a container web target) |
+| Container | `c3-{container}.diegonmarcos.com`: **wg_only** (403 off-mesh), no Authelia (the mesh is the trust boundary) | `c3-{container}.app` |
+| MCP | `mcp.diegonmarcos.com/{mcp}`: public with **token** auth (WG peers pass, off-mesh needs an Authelia bearer), not mesh-only | n/a |
+
+Names: `{name}` for an APK is its full module name, always `cloud-` prefixed
+(`cloud-mail`, `cloud-c3-watchdog`). `{container}` is the container name made
+hostname-safe (`_` becomes `-`); a name already starting `c3-` is not doubled
+(`c3-infra-api`, not `c3-c3-infra-api`). A container is listed if it has an HTTP
+(not HTTPS) port; HTTPS-upstream containers wait for a per-container TLS policy,
+as with the legacy private names.
+
+### Generation (no hand-maintained lists)
+
+```
+cloud-u-android  ac_*/build.json, aa_cloud-superapp/build.json
+   1_cicd/src/scripts/cloud-android-apk-manifest.sh  ->  2_configs/apk-manifest.json
+cloud-u-containers  infra-api_*-mcp, user-ai_cloud-cgc-pub-mcp build.json (streaming proxy)
+   _shared/gen-mcp-manifest.sh                       ->  _shared/mcp-manifest.json
+cloud-infra  1_cloud-configs/build.sh all  (consolidate + derive)
+   cloud-data-config-derive.ts reads both manifests + container ports
+                                                    ->  dist/build-caddy.json
+cloud-u-containers  infra-sec_caddy/src/caddyfile.nix renders dist/build-caddy.json
+```
+
+- Adding an APK = add a module with a `build.json` and re-run the APK generator
+  (`--check` fails on drift). `"apk": false` opts a module out (a server such as
+  `cloud-c3-webserver`).
+- Adding an MCP = declare its streaming proxy in its `build.json` and re-run
+  `gen-mcp-manifest.sh`.
+- Containers come from the existing derive data (each container's first HTTP
+  port); nothing lists them.
+- The derive **fails loudly** if a manifest is missing (it will not derive the
+  scheme from nothing). cloud-infra expects cloud-u-android as a sibling checkout
+  (`../cloud-u-android`, which gen-configs CI mounts) and cloud-u-containers at
+  `a_solutions/`. Paths are declared in caddy `build.json`
+  `caddy_config.url_scheme.manifests`.
+
+### APK web target
+
+An APK's own `build.json` declares what a signed-in request to its public host loads:
+
+```json
+"web": {"kind": "container", "target": "cloud-webmail"}
+```
+
+| kind | Behaviour |
+|---|---|
+| `container` | Authelia (bearer or session) gates a reverse proxy to that container's HTTP port. Anonymous 302 to the landing page. Also gives the APK `cloud-{name}.app`. |
+| `wasm`, `webapp` | Declared in the manifest, not rendered yet: treated as "no web target". |
+| absent | `landing_only`: every request, signed in or not, 302s to the landing page. `/login` still hands off to Authelia. |
+
+Seeded now: cloud-mail to `cloud-webmail`, cloud-chat to `mattermost`, cloud-matrix to
+`matrix-element`, cloud-gallery to `photoprism_app`, cloud-contacts to
+`contacts-radicale`, cloud-tasks to `calendar-radicale`. Deliberately NOT mapped
+(public exposure of a mesh-only secret store or a remote shell, even behind 2FA, is
+the owner's call): cloud-vault to `vaultwarden`, cloud-myterminal to `code-server`.
+
+### Special address groups
+
+Declared in caddy `build.json` `caddy_config.url_scheme.groups` and asserted by the guard.
+
+| Group | Hosts | Posture |
+|---|---|---|
+| SPECIAL | `auth.` (Authelia), `diegonmarcos.com` + `www.` (GitHub Pages), `linktree.`, `nexus.`, `suite.`, `maps.` | open. `auth.` was `wg_only` and is now open (`proxy.primary.wg_only: false` in infra-sec_authelia) |
+| MAIL | `mail.`, `mails.` (new: JMAP config URLs, `/.well-known/jmap`, `/jmap/*` on Stalwart; rest of the vhost mesh-only like `jmap.`), `imap.`, `smtps.`, port 25 L4, `mta-sts.`, `/.well-known/jmap` | open as before |
+| NETWORK | `vpn.` | **wg_only** (was open with auth none). Note: this is the WireGuard-over-TCP/443 fallback for networks that block UDP, so a client off the mesh can no longer reach it. |
+
+### Replaced and kept names
+
+All existing hostnames keep working; v2 only adds names alongside (nothing removed).
+
+- `git.` is replaced in the scheme by `c3-gitea.diegonmarcos.com` (container) and, for
+  the Cloud Drive app, `cloud-drive.diegonmarcos.com`. `git.` stays.
+- `matrix.` is replaced by `c3-continuwuity.diegonmarcos.com` (wg_only). **Federation
+  stays on `matrix.`** (auth none, public): the `c3-` name is mesh-only, so federation
+  endpoints must not move there.
+- `analytics.` is replaced by `c3-umami.` and `c3-matomo-hybrid.` (wg_only). The public
+  tracking scripts and collectors (`/matomo/matomo.js`, `piwik.php`, `/umami/script.js`,
+  `/umami/api/send`, ...) **stay on `analytics.`**, open.
+- `api.`: the future form is a suffix (`c3-x.diegonmarcos.com/api/...`). `api.` and its
+  path routes stay; the suffix form is not implemented yet.
+- Unknown subdomains: the `*.diegonmarcos.com` catch-all now 302s to the landing hub
+  (`catch_all.redirect_to`) instead of serving the 404 error page. The old
+  `X-Edge-Fallback` 404 probe signal is gone for unrouted hosts; the 302 and the
+  `X-Edge-Route: catch-all` header remain.
+
+## Legacy (v1, kept)
+
+### The two names (v1)
 
 | Kind | Form | Reachable from | Declared in |
 |---|---|---|---|
@@ -70,35 +164,46 @@ fleet for `[a-z0-9-]+\.app`).
 
 ### Android APK fleet
 
-The APKs reach the fleet through the public names (bearer or session) and
-talk to each other through the IPC mesh, not DNS. No APK serves a `.app`
-name today. The reserved form for an APK that exposes a mesh endpoint is
-`cloud.{apk-id}.app`, pointing at the device's WireGuard IP from
-`superapp-wireguard-profiles.json`. Implementation waits until the in-flight
-IPC migration in cloud-u-android lands, so it doesn't collide with it.
+Superseded by "Scheme v2": APKs have `cloud-{name}.diegonmarcos.com` and, with a
+container web target, `cloud-{name}.app`. They still talk to each other through the
+IPC mesh, not DNS.
 
 ## Guards (`test-url-scheme.sh`)
 
-1. Every private name matches `^cloud\.[a-z0-9-]+\.app$` and is unique.
-2. Every routable `<name>.app` service has exactly one `cloud.<name>.app`.
+1. Private names are well-formed and unique: `c3-<container>.app`, `cloud-<apk>.app`
+   or legacy `cloud.<name>.app`.
+2. Every routable `<name>.app` service has exactly one `cloud.<name>.app` (legacy).
 3. Every service's public domain is a single `{app}.diegonmarcos.com`.
-4. No `cloud.*.app` appears in public vhosts, path routes, gh-pages proxies,
-   redirects, the public-edge allowlist (`build-caddy-public.json`) or the
-   Cloudflare sources (public DNS).
+4. No private `.app` name appears in public vhosts, path routes, gh-pages proxies,
+   redirects, the public-edge allowlist or the Cloudflare sources.
 5. Every gated vhost carries a landing under `public_landing.base_url`.
+6. APK hosts equal the apk manifest exactly, are `cloud-<name>.diegonmarcos.com`,
+   **none is wg_only**, each has a route and a landing.
+7. **All `c3-*` public hosts are wg_only**, match the declared container hosts, and
+   each has a served private name.
+8. **`auth.` is open; `vpn.` is wg_only**; every SPECIAL/MAIL group host is served and
+   open (a wg_only group host is allowed only while its well-known grafts stay public:
+   `mails.`); port 25 L4 and `mails.` `/.well-known/jmap` present.
+9. Every MCP in the manifest has token auth (`bearer_auth`).
+10. The catch-all redirects to the landing hub.
+11. Legacy shared hosts (`api.`, `app.`, `analytics.`, `cloud.`, `mcp.`) and
+    `git.`/`matrix.`/`messenger.`/`webmail.`/`chat.` are still routed.
 
 ## Owner actions
 
-- No Cloudflare DNS change is needed: public names are unchanged, and private
-  names never go to Cloudflare.
-- Zero Trust / Cloudflare Access (cloud-infra PR #36) stays untouched. When it
-  is enabled, an Access policy in front of these vhosts would replace the
-  landing fallback with its own login, so set Access to bypass for bearer
-  clients first.
-- Per service: whether to set `wg_only: false` so bearer/session clients can
-  reach it from off-mesh.
+- No DNS change is needed. Public names fall under the existing Cloudflare wildcard
+  `*` A record (public edge, oci-analytics), whose wildcard certificate also covers
+  them; private names fall under Hickory's `app` zone wildcard. The edge forwards any
+  non-allowlisted host to the hub, so c3- hosts 403 off-mesh and APK hosts are gated
+  there. Nothing goes to Cloudflare.
+- Zero Trust / Cloudflare Access (cloud-infra PR #36) stays untouched. When it is
+  enabled, an Access policy in front of these vhosts would replace the landing
+  fallback with its own login, so set Access to bypass for bearer clients first.
+- `mcp.` endpoints are now token-gated, including `cloud-vault-mcp` and
+  `cloud-cgc-pub-mcp`, which were mesh-only / fully public.
+- Decide whether `cloud-vault` and `cloud-myterminal` get web targets (see above).
 
-## Mapping: public names
+## Mapping: public names (v1, still current)
 
 | Public name | Unauthenticated → | Gate |
 |---|---|---|
@@ -138,7 +243,7 @@ IPC migration in cloud-u-android lands, so it doesn't collide with it.
 | `app.diegonmarcos.com/filebrowser` | path route, unchanged (shared host) | mesh-only |
 | `app.diegonmarcos.com/hedgedoc` | path route, unchanged (shared host) | mesh-only |
 
-## Mapping: private names (old → new)
+## Mapping: legacy private names (old → new)
 
 | Old (alias, one release) | New | Upstream |
 |---|---|---|

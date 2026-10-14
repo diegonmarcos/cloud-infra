@@ -2797,7 +2797,7 @@
       },
       "proxy": {
         "primary": {
-          "wg_only": false,
+          "wg_only": true,
           "domain": "vpn.diegonmarcos.com",
           "auth": "none",
           "_doc": "auth=none required: wstunnel client cannot do 2FA cookies. Scanner defence is enforced by the wstunnel server itself via --http-upgrade-path-prefix ${WSTUNNEL_PATH_PREFIX} — Caddy passes WebSocket upgrades through natively (Caddy v2 reverse_proxy handles WS by default)."
@@ -3758,6 +3758,7 @@
         "app_hub": false,
         "primary": {
           "domain": "auth.diegonmarcos.com",
+          "wg_only": false,
           "auth": "bypass",
           "oidc_public_paths": [
             "/.well-known/openid-configuration",
@@ -3878,6 +3879,27 @@
             "upstream": "10.0.0.3:2443",
             "tls_skip_verify": true,
             "comment": "JMAP session/api/download/upload/eventsource follow-through on jmap vhost"
+          },
+          {
+            "path": "/.well-known/jmap",
+            "target_domain": "mails.diegonmarcos.com",
+            "upstream": "10.0.0.3:2443",
+            "tls_skip_verify": true,
+            "rewrite_to": "/jmap/session",
+            "comment": "JMAP discovery on the mails vhost"
+          },
+          {
+            "path": "/jmap/*",
+            "target_domain": "mails.diegonmarcos.com",
+            "upstream": "10.0.0.3:2443",
+            "tls_skip_verify": true,
+            "comment": "JMAP session/api follow-through on the mails vhost"
+          },
+          {
+            "path": "/",
+            "target_domain": "mails.diegonmarcos.com",
+            "redirect_to": "/.well-known/jmap",
+            "comment": "Bare mails host -> JMAP discovery URL (308)"
           }
         ],
         "proxy_dashboard": {

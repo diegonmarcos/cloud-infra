@@ -193,7 +193,9 @@
   },
   "catch_all": {
     "domain": "*.diegonmarcos.com",
-    "page": "/srv/error.html"
+    "page": "/srv/error.html",
+    "redirect_to": "https://diegonmarcos.github.io/c__Cloud/",
+    "_redirect_doc": "Unknown subdomains 302 to the landing hub instead of the 404 error page (caddyfile.nix catchAllBlock). page stays as the edge's fallback file."
   },
   "messages": {
     "portless_placeholder": "Portless worker/sidecar — no HTTP endpoint",
@@ -262,6 +264,7 @@
       "domain": "vpn.diegonmarcos.com",
       "upstream": "10.0.0.1:8080",
       "auth": "none",
+      "wg_only": true,
       "comment": "WireGuard-over-TCP/443 fallback for hostile networks (airport / hotel / corporate guest Wi-Fi blocking UDP). Sibling to bb-net_wireguard-mesh (the panel) — this folder owns the wstunnel-server that terminates WSS on gcp-proxy and forwards UDP to the kernel WG listener at 127.0.0.1:51820. UDP/51820 remains the primary transport; this kicks in only when clients can't reach UDP."
     },
     {
@@ -281,7 +284,6 @@
     {
       "domain": "auth.diegonmarcos.com",
       "upstream": "172.18.0.3:9091",
-      "wg_only": true,
       "bypass_paths": [
         "/.well-known/openid-configuration",
         "/api/oidc/token",
@@ -396,6 +398,631 @@
       "auth": "none",
       "wg_only": true,
       "comment": "Bitwarden password manager"
+    },
+    {
+      "domain": "c3-infra-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:8081",
+      "auth": "none",
+      "wg_only": true,
+      "container": "c3-infra-api",
+      "comment": "c3 container c3-infra-api (mesh-only; c3-infra-api-http-8081.app)"
+    },
+    {
+      "domain": "c3-public-api.diegonmarcos.com",
+      "upstream": "10.0.0.4:8087",
+      "auth": "none",
+      "wg_only": true,
+      "container": "c3-public-api",
+      "comment": "c3 container c3-public-api (mesh-only; c3-public-api-http-8087.app)"
+    },
+    {
+      "domain": "c3-services-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:8082",
+      "auth": "none",
+      "wg_only": true,
+      "container": "c3-services-api",
+      "comment": "c3 container c3-services-api (mesh-only; c3-services-api-http-8082.app)"
+    },
+    {
+      "domain": "c3-cloud-drive-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3109",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-drive-mcp",
+      "comment": "c3 container cloud-drive-mcp (mesh-only; cloud-drive-mcp-http-3109.app)"
+    },
+    {
+      "domain": "c3-cloud-infra-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3100",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-infra-mcp",
+      "comment": "c3 container cloud-infra-mcp (mesh-only; cloud-infra-mcp-http-3100.app)"
+    },
+    {
+      "domain": "c3-cloud-mail-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3103",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-mail-mcp",
+      "comment": "c3 container cloud-mail-mcp (mesh-only; cloud-mail-mcp-http-3103.app)"
+    },
+    {
+      "domain": "c3-cloud-mattermost-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3102",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-mattermost-mcp",
+      "comment": "c3 container cloud-mattermost-mcp (mesh-only; cloud-mattermost-mcp-http-3102.app)"
+    },
+    {
+      "domain": "c3-cloud-services-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3101",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-services-mcp",
+      "comment": "c3 container cloud-services-mcp (mesh-only; cloud-services-mcp-http-3101.app)"
+    },
+    {
+      "domain": "c3-cloud-superapp-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3110",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-superapp-mcp",
+      "comment": "c3 container cloud-superapp-mcp (mesh-only; cloud-superapp-mcp-http-3110.app)"
+    },
+    {
+      "domain": "c3-git-proxy-api.diegonmarcos.com",
+      "upstream": "10.0.0.4:8123",
+      "auth": "none",
+      "wg_only": true,
+      "container": "git-proxy-api",
+      "comment": "c3 container git-proxy-api (mesh-only; git-proxy-api-http-8123.app)"
+    },
+    {
+      "domain": "c3-google-personal-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3106",
+      "auth": "none",
+      "wg_only": true,
+      "container": "google-personal-mcp",
+      "comment": "c3 container google-personal-mcp (mesh-only; google-personal-mcp-http-3106.app)"
+    },
+    {
+      "domain": "c3-google-workspace-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3104",
+      "auth": "none",
+      "wg_only": true,
+      "container": "google-workspace-mcp",
+      "comment": "c3 container google-workspace-mcp (mesh-only; google-workspace-mcp-http-3104.app)"
+    },
+    {
+      "domain": "c3-gitea.diegonmarcos.com",
+      "upstream": "10.0.0.6:3002",
+      "auth": "none",
+      "wg_only": true,
+      "container": "gitea",
+      "comment": "c3 container gitea (mesh-only; gitea-http-3002.app)"
+    },
+    {
+      "domain": "c3-wireguard-mesh.diegonmarcos.com",
+      "upstream": "10.0.0.6:8084",
+      "auth": "none",
+      "wg_only": true,
+      "container": "wireguard-mesh",
+      "comment": "c3 container wireguard-mesh (mesh-only; wireguard-mesh-http-8084.app)"
+    },
+    {
+      "domain": "c3-cloud-spec.diegonmarcos.com",
+      "upstream": "10.0.0.6:3080",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-spec",
+      "comment": "c3 container cloud-spec (mesh-only; cloud-spec-http-3080.app)"
+    },
+    {
+      "domain": "c3-dagu.diegonmarcos.com",
+      "upstream": "10.0.0.6:8070",
+      "auth": "none",
+      "wg_only": true,
+      "container": "dagu",
+      "comment": "c3 container dagu (mesh-only; dagu-http-8070.app)"
+    },
+    {
+      "domain": "c3-dbgate.diegonmarcos.com",
+      "upstream": "10.0.0.6:8086",
+      "auth": "none",
+      "wg_only": true,
+      "container": "dbgate",
+      "comment": "c3 container dbgate (mesh-only; dbgate-http-8086.app)"
+    },
+    {
+      "domain": "c3-matomo-hybrid.diegonmarcos.com",
+      "upstream": "10.0.0.6:8080",
+      "auth": "none",
+      "wg_only": true,
+      "container": "matomo-hybrid",
+      "comment": "c3 container matomo-hybrid (mesh-only; matomo-hybrid-http-8080.app)"
+    },
+    {
+      "domain": "c3-ntfy.diegonmarcos.com",
+      "upstream": "10.0.0.6:8090",
+      "auth": "none",
+      "wg_only": true,
+      "container": "ntfy",
+      "comment": "c3 container ntfy (mesh-only; ntfy-http-8090.app)"
+    },
+    {
+      "domain": "c3-openobserve.diegonmarcos.com",
+      "upstream": "10.0.0.6:5080",
+      "auth": "none",
+      "wg_only": true,
+      "container": "openobserve",
+      "comment": "c3 container openobserve (mesh-only; openobserve-http-5080.app)"
+    },
+    {
+      "domain": "c3-umami.diegonmarcos.com",
+      "upstream": "10.0.0.6:3006",
+      "auth": "none",
+      "wg_only": true,
+      "container": "umami",
+      "comment": "c3 container umami (mesh-only; umami-http-3006.app)"
+    },
+    {
+      "domain": "c3-authelia.diegonmarcos.com",
+      "upstream": "172.18.0.3:9091",
+      "auth": "none",
+      "wg_only": true,
+      "container": "authelia",
+      "comment": "c3 container authelia (mesh-only; authelia-http-9091.app)"
+    },
+    {
+      "domain": "c3-crowdsec.diegonmarcos.com",
+      "upstream": "10.0.0.6:8088",
+      "auth": "none",
+      "wg_only": true,
+      "container": "crowdsec",
+      "comment": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
+    },
+    {
+      "domain": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
+      "upstream": "10.0.0.6:3105",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-cgc-pub-mcp",
+      "comment": "c3 container cloud-cgc-pub-mcp (mesh-only; cloud-cgc-pub-mcp-http-3105.app)"
+    },
+    {
+      "domain": "c3-kg-store.diegonmarcos.com",
+      "upstream": "10.0.0.6:8001",
+      "auth": "none",
+      "wg_only": true,
+      "container": "kg-store",
+      "comment": "c3 container kg-store (mesh-only; kg-store-http-8001.app)"
+    },
+    {
+      "domain": "c3-kg-store-pub.diegonmarcos.com",
+      "upstream": "10.0.0.6:8002",
+      "auth": "none",
+      "wg_only": true,
+      "container": "kg-store-pub",
+      "comment": "c3 container kg-store-pub (mesh-only; kg-store-pub-http-8002.app)"
+    },
+    {
+      "domain": "c3-mattermost.diegonmarcos.com",
+      "upstream": "10.0.0.6:8065",
+      "auth": "none",
+      "wg_only": true,
+      "container": "mattermost",
+      "comment": "c3 container mattermost (mesh-only; mattermost-http-8065.app)"
+    },
+    {
+      "domain": "c3-cloud-webmail.diegonmarcos.com",
+      "upstream": "10.0.0.6:3000",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-webmail",
+      "comment": "c3 container cloud-webmail (mesh-only; cloud-webmail-http-3000.app)"
+    },
+    {
+      "domain": "c3-continuwuity.diegonmarcos.com",
+      "upstream": "10.0.0.6:8008",
+      "auth": "none",
+      "wg_only": true,
+      "container": "continuwuity",
+      "comment": "c3 container continuwuity (mesh-only; continuwuity-http-8008.app)"
+    },
+    {
+      "domain": "c3-matrix-element.diegonmarcos.com",
+      "upstream": "10.0.0.6:8083",
+      "auth": "none",
+      "wg_only": true,
+      "container": "matrix-element",
+      "comment": "c3 container matrix-element (mesh-only; matrix-element-http-8083.app)"
+    },
+    {
+      "domain": "c3-scrappers-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:3020",
+      "auth": "none",
+      "wg_only": true,
+      "container": "scrappers-api",
+      "comment": "c3 container scrappers-api (mesh-only; scrappers-api-http-3020.app)"
+    },
+    {
+      "domain": "c3-fin-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:8340",
+      "auth": "none",
+      "wg_only": true,
+      "container": "fin-api",
+      "comment": "c3 container fin-api (mesh-only; fin-api-http-8340.app)"
+    },
+    {
+      "domain": "c3-photoprism-app.diegonmarcos.com",
+      "upstream": "10.0.0.6:3013",
+      "auth": "none",
+      "wg_only": true,
+      "container": "photoprism_app",
+      "comment": "c3 container photoprism_app (mesh-only; photoprism_app-http-3013.app)"
+    },
+    {
+      "domain": "c3-playlist-syncer.diegonmarcos.com",
+      "upstream": "10.0.0.6:8090",
+      "auth": "none",
+      "wg_only": true,
+      "container": "playlist-syncer",
+      "comment": "c3 container playlist-syncer (mesh-only; playlist-syncer-http-8090.app)"
+    },
+    {
+      "domain": "c3-news-gdelt.diegonmarcos.com",
+      "upstream": "10.0.0.6:3019",
+      "auth": "none",
+      "wg_only": true,
+      "container": "news-gdelt",
+      "comment": "c3 container news-gdelt (mesh-only; news-gdelt-http-3019.app)"
+    },
+    {
+      "domain": "c3-calendar-radicale.diegonmarcos.com",
+      "upstream": "10.0.0.6:5232",
+      "auth": "none",
+      "wg_only": true,
+      "container": "calendar-radicale",
+      "comment": "c3 container calendar-radicale (mesh-only; calendar-radicale-http-5232.app)"
+    },
+    {
+      "domain": "c3-contacts-radicale.diegonmarcos.com",
+      "upstream": "10.0.0.6:5233",
+      "auth": "none",
+      "wg_only": true,
+      "container": "contacts-radicale",
+      "comment": "c3 container contacts-radicale (mesh-only; contacts-radicale-http-5233.app)"
+    },
+    {
+      "domain": "c3-etherpad-app.diegonmarcos.com",
+      "upstream": "10.0.0.6:3012",
+      "auth": "none",
+      "wg_only": true,
+      "container": "etherpad_app",
+      "comment": "c3 container etherpad_app (mesh-only; etherpad_app-http-3012.app)"
+    },
+    {
+      "domain": "c3-filebrowser-app.diegonmarcos.com",
+      "upstream": "10.0.0.6:3015",
+      "auth": "none",
+      "wg_only": true,
+      "container": "filebrowser_app",
+      "comment": "c3 container filebrowser_app (mesh-only; filebrowser_app-http-3015.app)"
+    },
+    {
+      "domain": "c3-grist-app.diegonmarcos.com",
+      "upstream": "10.0.0.6:3011",
+      "auth": "none",
+      "wg_only": true,
+      "container": "grist_app",
+      "comment": "c3 container grist_app (mesh-only; grist_app-http-3011.app)"
+    },
+    {
+      "domain": "c3-hedgedoc-app.diegonmarcos.com",
+      "upstream": "10.0.0.6:3018",
+      "auth": "none",
+      "wg_only": true,
+      "container": "hedgedoc_app",
+      "comment": "c3 container hedgedoc_app (mesh-only; hedgedoc_app-http-3018.app)"
+    },
+    {
+      "domain": "c3-send-app.diegonmarcos.com",
+      "upstream": "10.0.0.6:3016",
+      "auth": "none",
+      "wg_only": true,
+      "container": "send_app",
+      "comment": "c3 container send_app (mesh-only; send_app-http-3016.app)"
+    },
+    {
+      "domain": "c3-vaultwarden.diegonmarcos.com",
+      "upstream": "10.0.0.6:8880",
+      "auth": "none",
+      "wg_only": true,
+      "container": "vaultwarden",
+      "comment": "c3 container vaultwarden (mesh-only; vaultwarden-http-8880.app)"
+    },
+    {
+      "domain": "cloud-account.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-account",
+      "comment": "APK cloud-account: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-browser.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-browser",
+      "comment": "APK cloud-browser: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_configs/cloud-c3/",
+      "apk": "cloud-c3",
+      "comment": "APK cloud-c3: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3-morpheus.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-c3-morpheus",
+      "comment": "APK cloud-c3-morpheus: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3-watchdog.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-c3-watchdog",
+      "comment": "APK cloud-c3-watchdog: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-c3-watchtower.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-c3-watchtower",
+      "comment": "APK cloud-c3-watchtower: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-calc.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-calc",
+      "comment": "APK cloud-calc: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-camera.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-camera",
+      "comment": "APK cloud-camera: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-chat.diegonmarcos.com",
+      "upstream": "10.0.0.6:8065",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-chat/",
+      "apk": "cloud-chat",
+      "web": {
+        "kind": "container",
+        "target": "mattermost"
+      },
+      "comment": "APK cloud-chat: web target container mattermost"
+    },
+    {
+      "domain": "cloud-code.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-code",
+      "comment": "APK cloud-code: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-contacts.diegonmarcos.com",
+      "upstream": "10.0.0.6:5233",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-contacts/",
+      "apk": "cloud-contacts",
+      "web": {
+        "kind": "container",
+        "target": "contacts-radicale"
+      },
+      "comment": "APK cloud-contacts: web target container contacts-radicale"
+    },
+    {
+      "domain": "cloud-dialer.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-dialer",
+      "comment": "APK cloud-dialer: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-drive.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-drive",
+      "comment": "APK cloud-drive: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-gallery.diegonmarcos.com",
+      "upstream": "10.0.0.6:3013",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-gallery/",
+      "apk": "cloud-gallery",
+      "web": {
+        "kind": "container",
+        "target": "photoprism_app"
+      },
+      "comment": "APK cloud-gallery: web target container photoprism_app"
+    },
+    {
+      "domain": "cloud-keyboard.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-keyboard",
+      "comment": "APK cloud-keyboard: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-mail.diegonmarcos.com",
+      "upstream": "10.0.0.6:3000",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-mail/",
+      "apk": "cloud-mail",
+      "web": {
+        "kind": "container",
+        "target": "cloud-webmail"
+      },
+      "comment": "APK cloud-mail: web target container cloud-webmail"
+    },
+    {
+      "domain": "cloud-matrix.diegonmarcos.com",
+      "upstream": "10.0.0.6:8083",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-matrix/",
+      "apk": "cloud-matrix",
+      "web": {
+        "kind": "container",
+        "target": "matrix-element"
+      },
+      "comment": "APK cloud-matrix: web target container matrix-element"
+    },
+    {
+      "domain": "cloud-me.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-me",
+      "comment": "APK cloud-me: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-media-center.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-media-center",
+      "comment": "APK cloud-media-center: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-myterminal.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_agi/cloud-myterminal/",
+      "apk": "cloud-myterminal",
+      "comment": "APK cloud-myterminal: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-nav.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-nav",
+      "comment": "APK cloud-nav: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-news.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-news",
+      "comment": "APK cloud-news: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-notes.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-notes",
+      "comment": "APK cloud-notes: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-office.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-office",
+      "comment": "APK cloud-office: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-search.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-search",
+      "comment": "APK cloud-search: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-store.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-store",
+      "web": {
+        "_doc": "#876 the store as a Kotlin/Wasm page (web/ is its own gradle root; the shared libs' pure-Compose sources arrive through the ab_cloud-libs-shared/web composite). Rendered into 1_cicd/src/cicd/ship-cloud-store-wasm.yml by the workflow generator: `./gradlew wasmJsBrowserDistribution` in `dir`, tested by test/test-store-web.sh, `build/dist/wasmJs/productionExecutable` zipped to `artifact` and attached to the rolling release as `gh_asset`, then diegonmarcos.github.io is told (repository_dispatch cloud-web-refresh). portal_slug is the tile's apps/<slug>/ folder on the cloud-web portal; entry is the page inside it. The APK's own ship ignores this directory.",
+        "dir": "web",
+        "host": "ubuntu-latest",
+        "artifact": "Cloud-Store.wasm.zip",
+        "gh_asset": "Cloud-Store.wasm.zip",
+        "portal_slug": "cloud-store",
+        "entry": "index.html",
+        "tester": "test-store-web.sh",
+        "size_budget_mb": 20
+      },
+      "comment": "APK cloud-store: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-superapp.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-superapp",
+      "comment": "APK cloud-superapp: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-tasks.diegonmarcos.com",
+      "upstream": "10.0.0.6:5232",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-tasks/",
+      "apk": "cloud-tasks",
+      "web": {
+        "kind": "container",
+        "target": "calendar-radicale"
+      },
+      "comment": "APK cloud-tasks: web target container calendar-radicale"
+    },
+    {
+      "domain": "cloud-terminal-nix.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-terminal-nix",
+      "comment": "APK cloud-terminal-nix: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-terminal-termux.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-terminal-termux",
+      "comment": "APK cloud-terminal-termux: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-tools-small-llms.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-tools-small-llms",
+      "comment": "APK cloud-tools-small-llms: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-vault.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-vault",
+      "comment": "APK cloud-vault: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-wallet.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-wallet",
+      "comment": "APK cloud-wallet: no web target, landing redirect"
+    },
+    {
+      "domain": "cloud-writer.diegonmarcos.com",
+      "landing_only": true,
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "apk": "cloud-writer",
+      "comment": "APK cloud-writer: no web target, landing redirect"
+    },
+    {
+      "domain": "mails.diegonmarcos.com",
+      "upstream": "10.0.0.3:2443",
+      "tls_skip_verify": true,
+      "auth": "none",
+      "wg_only": true,
+      "comment": "JMAP config URLs (well-known grafts public; rest of the vhost mesh-only)"
     }
   ],
   "path_routes": [
@@ -554,6 +1181,27 @@
     },
     {
       "path": "/.well-known/jmap",
+      "target_domain": "mails.diegonmarcos.com",
+      "upstream": "10.0.0.3:2443",
+      "tls_skip_verify": true,
+      "rewrite_to": "/jmap/session",
+      "comment": "JMAP discovery on the mails vhost"
+    },
+    {
+      "path": "/jmap/*",
+      "target_domain": "mails.diegonmarcos.com",
+      "upstream": "10.0.0.3:2443",
+      "tls_skip_verify": true,
+      "comment": "JMAP session/api follow-through on the mails vhost"
+    },
+    {
+      "path": "/",
+      "target_domain": "mails.diegonmarcos.com",
+      "redirect_to": "/.well-known/jmap",
+      "comment": "Bare mails host -> JMAP discovery URL (308)"
+    },
+    {
+      "path": "/.well-known/jmap",
       "target_domain": "diegonmarcos.com",
       "upstream": "10.0.0.3:2443",
       "tls_skip_verify": true,
@@ -605,7 +1253,8 @@
         {
           "base_path": "/cloud-drive-mcp",
           "upstream": "10.0.0.6:3109",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/c3-infra-mcp",
@@ -616,46 +1265,55 @@
         {
           "base_path": "/mail-mcp",
           "upstream": "10.0.0.6:3103",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/mattermost-mcp",
           "upstream": "10.0.0.6:3102",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/c3-services-mcp",
           "upstream": "10.0.0.6:3101",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/cloud-superapp-mcp",
           "upstream": "10.0.0.6:3110",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/cloud-vault-mcp",
           "upstream": "10.0.0.6:3111",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/g-personal",
           "upstream": "10.0.0.6:3106",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/g-workspace",
           "upstream": "10.0.0.6:3104",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         },
         {
           "base_path": "/cloud-cgc-pub-mcp",
-          "upstream": "10.0.0.6:3105"
+          "upstream": "10.0.0.6:3105",
+          "bearer_auth": true
         },
         {
           "base_path": "/cloud-cgc-pvt-mcp",
           "upstream": "10.0.0.6:3107",
-          "wg_only": true
+          "wg_only": true,
+          "bearer_auth": true
         }
       ],
       "comment": "MCP -- Streamable HTTP endpoints for Claude Code MCP clients",
@@ -1356,8 +2014,803 @@
       "upstream": "10.0.0.6:3016",
       "alias_of": "send_app-http-3016.app",
       "source": "all_app_urls"
+    },
+    {
+      "service": "c3-cloud-drive-mcp.app",
+      "upstream": "10.0.0.6:3109",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-infra-mcp.app",
+      "upstream": "10.0.0.6:3100",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-mail-mcp.app",
+      "upstream": "10.0.0.6:3103",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-services-mcp.app",
+      "upstream": "10.0.0.6:3101",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-superapp-mcp.app",
+      "upstream": "10.0.0.6:3110",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-git-proxy-api.app",
+      "upstream": "10.0.0.4:8123",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-google-personal-mcp.app",
+      "upstream": "10.0.0.6:3106",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-google-workspace-mcp.app",
+      "upstream": "10.0.0.6:3104",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-gitea.app",
+      "upstream": "10.0.0.6:3002",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-wireguard-mesh.app",
+      "upstream": "10.0.0.6:8084",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-spec.app",
+      "upstream": "10.0.0.6:3080",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-dagu.app",
+      "upstream": "10.0.0.6:8070",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-dbgate.app",
+      "upstream": "10.0.0.6:8086",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-matomo-hybrid.app",
+      "upstream": "10.0.0.6:8080",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-ntfy.app",
+      "upstream": "10.0.0.6:8090",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-openobserve.app",
+      "upstream": "10.0.0.6:5080",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-umami.app",
+      "upstream": "10.0.0.6:3006",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-authelia.app",
+      "upstream": "172.18.0.3:9091",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-crowdsec.app",
+      "upstream": "10.0.0.6:8088",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-cgc-pub-mcp.app",
+      "upstream": "10.0.0.6:3105",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-kg-store.app",
+      "upstream": "10.0.0.6:8001",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-kg-store-pub.app",
+      "upstream": "10.0.0.6:8002",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-mattermost.app",
+      "upstream": "10.0.0.6:8065",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-webmail.app",
+      "upstream": "10.0.0.6:3000",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-matrix-element.app",
+      "upstream": "10.0.0.6:8083",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-scrappers-api.app",
+      "upstream": "10.0.0.6:3020",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-fin-api.app",
+      "upstream": "10.0.0.6:8340",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-photoprism-app.app",
+      "upstream": "10.0.0.6:3013",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-playlist-syncer.app",
+      "upstream": "10.0.0.6:8090",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-news-gdelt.app",
+      "upstream": "10.0.0.6:3019",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-calendar-radicale.app",
+      "upstream": "10.0.0.6:5232",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-contacts-radicale.app",
+      "upstream": "10.0.0.6:5233",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-etherpad-app.app",
+      "upstream": "10.0.0.6:3012",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-filebrowser-app.app",
+      "upstream": "10.0.0.6:3015",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-grist-app.app",
+      "upstream": "10.0.0.6:3011",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-hedgedoc-app.app",
+      "upstream": "10.0.0.6:3018",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-send-app.app",
+      "upstream": "10.0.0.6:3016",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-vaultwarden.app",
+      "upstream": "10.0.0.6:8880",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "cloud-chat.app",
+      "upstream": "10.0.0.6:8065",
+      "scheme": "apk",
+      "source": "url_scheme"
+    },
+    {
+      "service": "cloud-contacts.app",
+      "upstream": "10.0.0.6:5233",
+      "scheme": "apk",
+      "source": "url_scheme"
+    },
+    {
+      "service": "cloud-gallery.app",
+      "upstream": "10.0.0.6:3013",
+      "scheme": "apk",
+      "source": "url_scheme"
+    },
+    {
+      "service": "cloud-mail.app",
+      "upstream": "10.0.0.6:3000",
+      "scheme": "apk",
+      "source": "url_scheme"
+    },
+    {
+      "service": "cloud-matrix.app",
+      "upstream": "10.0.0.6:8083",
+      "scheme": "apk",
+      "source": "url_scheme"
+    },
+    {
+      "service": "cloud-tasks.app",
+      "upstream": "10.0.0.6:5232",
+      "scheme": "apk",
+      "source": "url_scheme"
     }
   ],
+  "url_scheme": {
+    "doc": "a0_docs/eng-specs/url-scheme.md",
+    "groups": {
+      "SPECIAL": {
+        "open": [
+          "auth.diegonmarcos.com",
+          "diegonmarcos.com",
+          "www.diegonmarcos.com",
+          "linktree.diegonmarcos.com",
+          "nexus.diegonmarcos.com",
+          "suite.diegonmarcos.com",
+          "maps.diegonmarcos.com"
+        ],
+        "comment": "Authelia must be open (wg_only:false); the rest are GitHub Pages."
+      },
+      "MAIL": {
+        "open": [
+          "mail.diegonmarcos.com",
+          "mails.diegonmarcos.com",
+          "imap.diegonmarcos.com",
+          "smtps.diegonmarcos.com",
+          "mta-sts.diegonmarcos.com"
+        ],
+        "l4_ports": [
+          25
+        ],
+        "well_known": [
+          "/.well-known/jmap"
+        ],
+        "comment": "All open as before; mails. is the new JMAP config-URL host."
+      },
+      "NETWORK": {
+        "wg_only": [
+          "vpn.diegonmarcos.com"
+        ],
+        "comment": "vpn. is mesh-only."
+      }
+    },
+    "container_hosts": [
+      {
+        "host": "c3-infra-api.diegonmarcos.com",
+        "container": "c3-infra-api",
+        "private": "c3-infra-api.app"
+      },
+      {
+        "host": "c3-public-api.diegonmarcos.com",
+        "container": "c3-public-api",
+        "private": "c3-public-api.app"
+      },
+      {
+        "host": "c3-services-api.diegonmarcos.com",
+        "container": "c3-services-api",
+        "private": "c3-services-api.app"
+      },
+      {
+        "host": "c3-cloud-drive-mcp.diegonmarcos.com",
+        "container": "cloud-drive-mcp",
+        "private": "c3-cloud-drive-mcp.app"
+      },
+      {
+        "host": "c3-cloud-infra-mcp.diegonmarcos.com",
+        "container": "cloud-infra-mcp",
+        "private": "c3-cloud-infra-mcp.app"
+      },
+      {
+        "host": "c3-cloud-mail-mcp.diegonmarcos.com",
+        "container": "cloud-mail-mcp",
+        "private": "c3-cloud-mail-mcp.app"
+      },
+      {
+        "host": "c3-cloud-mattermost-mcp.diegonmarcos.com",
+        "container": "cloud-mattermost-mcp",
+        "private": "c3-cloud-mattermost-mcp.app"
+      },
+      {
+        "host": "c3-cloud-services-mcp.diegonmarcos.com",
+        "container": "cloud-services-mcp",
+        "private": "c3-cloud-services-mcp.app"
+      },
+      {
+        "host": "c3-cloud-superapp-mcp.diegonmarcos.com",
+        "container": "cloud-superapp-mcp",
+        "private": "c3-cloud-superapp-mcp.app"
+      },
+      {
+        "host": "c3-git-proxy-api.diegonmarcos.com",
+        "container": "git-proxy-api",
+        "private": "c3-git-proxy-api.app"
+      },
+      {
+        "host": "c3-google-personal-mcp.diegonmarcos.com",
+        "container": "google-personal-mcp",
+        "private": "c3-google-personal-mcp.app"
+      },
+      {
+        "host": "c3-google-workspace-mcp.diegonmarcos.com",
+        "container": "google-workspace-mcp",
+        "private": "c3-google-workspace-mcp.app"
+      },
+      {
+        "host": "c3-gitea.diegonmarcos.com",
+        "container": "gitea",
+        "private": "c3-gitea.app"
+      },
+      {
+        "host": "c3-wireguard-mesh.diegonmarcos.com",
+        "container": "wireguard-mesh",
+        "private": "c3-wireguard-mesh.app"
+      },
+      {
+        "host": "c3-cloud-spec.diegonmarcos.com",
+        "container": "cloud-spec",
+        "private": "c3-cloud-spec.app"
+      },
+      {
+        "host": "c3-dagu.diegonmarcos.com",
+        "container": "dagu",
+        "private": "c3-dagu.app"
+      },
+      {
+        "host": "c3-dbgate.diegonmarcos.com",
+        "container": "dbgate",
+        "private": "c3-dbgate.app"
+      },
+      {
+        "host": "c3-matomo-hybrid.diegonmarcos.com",
+        "container": "matomo-hybrid",
+        "private": "c3-matomo-hybrid.app"
+      },
+      {
+        "host": "c3-ntfy.diegonmarcos.com",
+        "container": "ntfy",
+        "private": "c3-ntfy.app"
+      },
+      {
+        "host": "c3-openobserve.diegonmarcos.com",
+        "container": "openobserve",
+        "private": "c3-openobserve.app"
+      },
+      {
+        "host": "c3-umami.diegonmarcos.com",
+        "container": "umami",
+        "private": "c3-umami.app"
+      },
+      {
+        "host": "c3-authelia.diegonmarcos.com",
+        "container": "authelia",
+        "private": "c3-authelia.app"
+      },
+      {
+        "host": "c3-crowdsec.diegonmarcos.com",
+        "container": "crowdsec",
+        "private": "c3-crowdsec.app"
+      },
+      {
+        "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
+        "container": "cloud-cgc-pub-mcp",
+        "private": "c3-cloud-cgc-pub-mcp.app"
+      },
+      {
+        "host": "c3-kg-store.diegonmarcos.com",
+        "container": "kg-store",
+        "private": "c3-kg-store.app"
+      },
+      {
+        "host": "c3-kg-store-pub.diegonmarcos.com",
+        "container": "kg-store-pub",
+        "private": "c3-kg-store-pub.app"
+      },
+      {
+        "host": "c3-mattermost.diegonmarcos.com",
+        "container": "mattermost",
+        "private": "c3-mattermost.app"
+      },
+      {
+        "host": "c3-cloud-webmail.diegonmarcos.com",
+        "container": "cloud-webmail",
+        "private": "c3-cloud-webmail.app"
+      },
+      {
+        "host": "c3-continuwuity.diegonmarcos.com",
+        "container": "continuwuity",
+        "private": "c3-continuwuity.app"
+      },
+      {
+        "host": "c3-matrix-element.diegonmarcos.com",
+        "container": "matrix-element",
+        "private": "c3-matrix-element.app"
+      },
+      {
+        "host": "c3-scrappers-api.diegonmarcos.com",
+        "container": "scrappers-api",
+        "private": "c3-scrappers-api.app"
+      },
+      {
+        "host": "c3-fin-api.diegonmarcos.com",
+        "container": "fin-api",
+        "private": "c3-fin-api.app"
+      },
+      {
+        "host": "c3-photoprism-app.diegonmarcos.com",
+        "container": "photoprism_app",
+        "private": "c3-photoprism-app.app"
+      },
+      {
+        "host": "c3-playlist-syncer.diegonmarcos.com",
+        "container": "playlist-syncer",
+        "private": "c3-playlist-syncer.app"
+      },
+      {
+        "host": "c3-news-gdelt.diegonmarcos.com",
+        "container": "news-gdelt",
+        "private": "c3-news-gdelt.app"
+      },
+      {
+        "host": "c3-calendar-radicale.diegonmarcos.com",
+        "container": "calendar-radicale",
+        "private": "c3-calendar-radicale.app"
+      },
+      {
+        "host": "c3-contacts-radicale.diegonmarcos.com",
+        "container": "contacts-radicale",
+        "private": "c3-contacts-radicale.app"
+      },
+      {
+        "host": "c3-etherpad-app.diegonmarcos.com",
+        "container": "etherpad_app",
+        "private": "c3-etherpad-app.app"
+      },
+      {
+        "host": "c3-filebrowser-app.diegonmarcos.com",
+        "container": "filebrowser_app",
+        "private": "c3-filebrowser-app.app"
+      },
+      {
+        "host": "c3-grist-app.diegonmarcos.com",
+        "container": "grist_app",
+        "private": "c3-grist-app.app"
+      },
+      {
+        "host": "c3-hedgedoc-app.diegonmarcos.com",
+        "container": "hedgedoc_app",
+        "private": "c3-hedgedoc-app.app"
+      },
+      {
+        "host": "c3-send-app.diegonmarcos.com",
+        "container": "send_app",
+        "private": "c3-send-app.app"
+      },
+      {
+        "host": "c3-vaultwarden.diegonmarcos.com",
+        "container": "vaultwarden",
+        "private": "c3-vaultwarden.app"
+      }
+    ],
+    "apk_hosts": [
+      {
+        "host": "cloud-account.diegonmarcos.com",
+        "apk": "cloud-account",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-browser.diegonmarcos.com",
+        "apk": "cloud-browser",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-c3.diegonmarcos.com",
+        "apk": "cloud-c3",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-c3-morpheus.diegonmarcos.com",
+        "apk": "cloud-c3-morpheus",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-c3-watchdog.diegonmarcos.com",
+        "apk": "cloud-c3-watchdog",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-c3-watchtower.diegonmarcos.com",
+        "apk": "cloud-c3-watchtower",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-calc.diegonmarcos.com",
+        "apk": "cloud-calc",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-camera.diegonmarcos.com",
+        "apk": "cloud-camera",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-chat.diegonmarcos.com",
+        "apk": "cloud-chat",
+        "web_kind": "container",
+        "private": "cloud-chat.app"
+      },
+      {
+        "host": "cloud-code.diegonmarcos.com",
+        "apk": "cloud-code",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-contacts.diegonmarcos.com",
+        "apk": "cloud-contacts",
+        "web_kind": "container",
+        "private": "cloud-contacts.app"
+      },
+      {
+        "host": "cloud-dialer.diegonmarcos.com",
+        "apk": "cloud-dialer",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-drive.diegonmarcos.com",
+        "apk": "cloud-drive",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-gallery.diegonmarcos.com",
+        "apk": "cloud-gallery",
+        "web_kind": "container",
+        "private": "cloud-gallery.app"
+      },
+      {
+        "host": "cloud-keyboard.diegonmarcos.com",
+        "apk": "cloud-keyboard",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-mail.diegonmarcos.com",
+        "apk": "cloud-mail",
+        "web_kind": "container",
+        "private": "cloud-mail.app"
+      },
+      {
+        "host": "cloud-matrix.diegonmarcos.com",
+        "apk": "cloud-matrix",
+        "web_kind": "container",
+        "private": "cloud-matrix.app"
+      },
+      {
+        "host": "cloud-me.diegonmarcos.com",
+        "apk": "cloud-me",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-media-center.diegonmarcos.com",
+        "apk": "cloud-media-center",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-myterminal.diegonmarcos.com",
+        "apk": "cloud-myterminal",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-nav.diegonmarcos.com",
+        "apk": "cloud-nav",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-news.diegonmarcos.com",
+        "apk": "cloud-news",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-notes.diegonmarcos.com",
+        "apk": "cloud-notes",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-office.diegonmarcos.com",
+        "apk": "cloud-office",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-search.diegonmarcos.com",
+        "apk": "cloud-search",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-store.diegonmarcos.com",
+        "apk": "cloud-store",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-superapp.diegonmarcos.com",
+        "apk": "cloud-superapp",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-tasks.diegonmarcos.com",
+        "apk": "cloud-tasks",
+        "web_kind": "container",
+        "private": "cloud-tasks.app"
+      },
+      {
+        "host": "cloud-terminal-nix.diegonmarcos.com",
+        "apk": "cloud-terminal-nix",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-terminal-termux.diegonmarcos.com",
+        "apk": "cloud-terminal-termux",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-tools-small-llms.diegonmarcos.com",
+        "apk": "cloud-tools-small-llms",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-vault.diegonmarcos.com",
+        "apk": "cloud-vault",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-wallet.diegonmarcos.com",
+        "apk": "cloud-wallet",
+        "web_kind": null,
+        "private": null
+      },
+      {
+        "host": "cloud-writer.diegonmarcos.com",
+        "apk": "cloud-writer",
+        "web_kind": null,
+        "private": null
+      }
+    ],
+    "mcp": [
+      {
+        "name": "cloud-infra-mcp",
+        "base_path": "/c3-infra-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-services-mcp",
+        "base_path": "/c3-services-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-cgc-pub-mcp",
+        "base_path": "/cloud-cgc-pub-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-cgc-pub-mcp-pvt",
+        "base_path": "/cloud-cgc-pvt-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-drive-mcp",
+        "base_path": "/cloud-drive-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-superapp-mcp",
+        "base_path": "/cloud-superapp-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-vault-mcp",
+        "base_path": "/cloud-vault-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "google-personal-mcp",
+        "base_path": "/g-personal",
+        "auth": "token"
+      },
+      {
+        "name": "google-workspace-mcp",
+        "base_path": "/g-workspace",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-mail-mcp",
+        "base_path": "/mail-mcp",
+        "auth": "token"
+      },
+      {
+        "name": "cloud-mattermost-mcp",
+        "base_path": "/mattermost-mcp",
+        "auth": "token"
+      }
+    ]
+  },
   "public_landing": {
     "_doc": "Public scheme {app}.diegonmarcos.com (cloud-infra a0_docs/eng-specs/url-scheme.md). A request to an Authelia-gated vhost with NO credential (no Authorization header, no session cookie) is redirected to base_url + the service's proxy.primary.landing (or default_path) instead of the Authelia wall. Bearer / Basic / cookie requests are untouched. Interactive sign-in: <vhost><login_path> redirects to auth_portal with rd back to the vhost.",
     "base_url": "https://diegonmarcos.github.io/c__Cloud/",
@@ -3055,6 +4508,786 @@
       "zone": "com",
       "service": null,
       "notes": "Bitwarden password manager"
+    },
+    {
+      "host": "c3-infra-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8081",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container c3-infra-api (mesh-only; c3-infra-api-http-8081.app)"
+    },
+    {
+      "host": "c3-public-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.4:8087",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container c3-public-api (mesh-only; c3-public-api-http-8087.app)"
+    },
+    {
+      "host": "c3-services-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8082",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container c3-services-api (mesh-only; c3-services-api-http-8082.app)"
+    },
+    {
+      "host": "c3-cloud-drive-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3109",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-drive-mcp (mesh-only; cloud-drive-mcp-http-3109.app)"
+    },
+    {
+      "host": "c3-cloud-infra-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3100",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-infra-mcp (mesh-only; cloud-infra-mcp-http-3100.app)"
+    },
+    {
+      "host": "c3-cloud-mail-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-mail-mcp (mesh-only; cloud-mail-mcp-http-3103.app)"
+    },
+    {
+      "host": "c3-cloud-mattermost-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-mattermost-mcp (mesh-only; cloud-mattermost-mcp-http-3102.app)"
+    },
+    {
+      "host": "c3-cloud-services-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3101",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-services-mcp (mesh-only; cloud-services-mcp-http-3101.app)"
+    },
+    {
+      "host": "c3-cloud-superapp-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3110",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-superapp-mcp (mesh-only; cloud-superapp-mcp-http-3110.app)"
+    },
+    {
+      "host": "c3-git-proxy-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.4:8123",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container git-proxy-api (mesh-only; git-proxy-api-http-8123.app)"
+    },
+    {
+      "host": "c3-google-personal-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3106",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container google-personal-mcp (mesh-only; google-personal-mcp-http-3106.app)"
+    },
+    {
+      "host": "c3-google-workspace-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3104",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container google-workspace-mcp (mesh-only; google-workspace-mcp-http-3104.app)"
+    },
+    {
+      "host": "c3-gitea.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3002",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container gitea (mesh-only; gitea-http-3002.app)"
+    },
+    {
+      "host": "c3-wireguard-mesh.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8084",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container wireguard-mesh (mesh-only; wireguard-mesh-http-8084.app)"
+    },
+    {
+      "host": "c3-cloud-spec.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-spec (mesh-only; cloud-spec-http-3080.app)"
+    },
+    {
+      "host": "c3-dagu.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8070",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container dagu (mesh-only; dagu-http-8070.app)"
+    },
+    {
+      "host": "c3-dbgate.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8086",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container dbgate (mesh-only; dbgate-http-8086.app)"
+    },
+    {
+      "host": "c3-matomo-hybrid.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container matomo-hybrid (mesh-only; matomo-hybrid-http-8080.app)"
+    },
+    {
+      "host": "c3-ntfy.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8090",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container ntfy (mesh-only; ntfy-http-8090.app)"
+    },
+    {
+      "host": "c3-openobserve.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5080",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container openobserve (mesh-only; openobserve-http-5080.app)"
+    },
+    {
+      "host": "c3-umami.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3006",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container umami (mesh-only; umami-http-3006.app)"
+    },
+    {
+      "host": "c3-authelia.diegonmarcos.com",
+      "path": null,
+      "upstream": "172.18.0.3:9091",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container authelia (mesh-only; authelia-http-9091.app)"
+    },
+    {
+      "host": "c3-crowdsec.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8088",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
+    },
+    {
+      "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3105",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-cgc-pub-mcp (mesh-only; cloud-cgc-pub-mcp-http-3105.app)"
+    },
+    {
+      "host": "c3-kg-store.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8001",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container kg-store (mesh-only; kg-store-http-8001.app)"
+    },
+    {
+      "host": "c3-kg-store-pub.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8002",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container kg-store-pub (mesh-only; kg-store-pub-http-8002.app)"
+    },
+    {
+      "host": "c3-mattermost.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container mattermost (mesh-only; mattermost-http-8065.app)"
+    },
+    {
+      "host": "c3-cloud-webmail.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3000",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-webmail (mesh-only; cloud-webmail-http-3000.app)"
+    },
+    {
+      "host": "c3-continuwuity.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8008",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container continuwuity (mesh-only; continuwuity-http-8008.app)"
+    },
+    {
+      "host": "c3-matrix-element.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8083",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container matrix-element (mesh-only; matrix-element-http-8083.app)"
+    },
+    {
+      "host": "c3-scrappers-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3020",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container scrappers-api (mesh-only; scrappers-api-http-3020.app)"
+    },
+    {
+      "host": "c3-fin-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8340",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container fin-api (mesh-only; fin-api-http-8340.app)"
+    },
+    {
+      "host": "c3-photoprism-app.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3013",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container photoprism_app (mesh-only; photoprism_app-http-3013.app)"
+    },
+    {
+      "host": "c3-playlist-syncer.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8090",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container playlist-syncer (mesh-only; playlist-syncer-http-8090.app)"
+    },
+    {
+      "host": "c3-news-gdelt.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3019",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container news-gdelt (mesh-only; news-gdelt-http-3019.app)"
+    },
+    {
+      "host": "c3-calendar-radicale.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container calendar-radicale (mesh-only; calendar-radicale-http-5232.app)"
+    },
+    {
+      "host": "c3-contacts-radicale.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container contacts-radicale (mesh-only; contacts-radicale-http-5233.app)"
+    },
+    {
+      "host": "c3-etherpad-app.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3012",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container etherpad_app (mesh-only; etherpad_app-http-3012.app)"
+    },
+    {
+      "host": "c3-filebrowser-app.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3015",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container filebrowser_app (mesh-only; filebrowser_app-http-3015.app)"
+    },
+    {
+      "host": "c3-grist-app.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3011",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container grist_app (mesh-only; grist_app-http-3011.app)"
+    },
+    {
+      "host": "c3-hedgedoc-app.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3018",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container hedgedoc_app (mesh-only; hedgedoc_app-http-3018.app)"
+    },
+    {
+      "host": "c3-send-app.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3016",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container send_app (mesh-only; send_app-http-3016.app)"
+    },
+    {
+      "host": "c3-vaultwarden.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8880",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container vaultwarden (mesh-only; vaultwarden-http-8880.app)"
+    },
+    {
+      "host": "cloud-account.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-account: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-browser.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-browser: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-c3.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-c3: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-c3-morpheus.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-c3-morpheus: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-c3-watchdog.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-c3-watchdog: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-c3-watchtower.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-c3-watchtower: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-calc.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-calc: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-camera.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-camera: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-chat.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-chat: web target container mattermost"
+    },
+    {
+      "host": "cloud-code.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-code: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-contacts.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-contacts: web target container contacts-radicale"
+    },
+    {
+      "host": "cloud-dialer.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-dialer: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-drive.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-drive: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-gallery.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3013",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-gallery: web target container photoprism_app"
+    },
+    {
+      "host": "cloud-keyboard.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-keyboard: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-mail.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:3000",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-mail: web target container cloud-webmail"
+    },
+    {
+      "host": "cloud-matrix.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8083",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-matrix: web target container matrix-element"
+    },
+    {
+      "host": "cloud-me.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-me: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-media-center.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-media-center: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-myterminal.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-myterminal: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-nav.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-nav: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-news.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-news: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-notes.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-notes: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-office.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-office: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-search.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-search: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-store.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-store: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-superapp.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-superapp: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-tasks.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-tasks: web target container calendar-radicale"
+    },
+    {
+      "host": "cloud-terminal-nix.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-terminal-nix: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-terminal-termux.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-terminal-termux: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-tools-small-llms.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-tools-small-llms: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-vault.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-vault: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-wallet.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-wallet: no web target, landing redirect"
+    },
+    {
+      "host": "cloud-writer.diegonmarcos.com",
+      "path": null,
+      "upstream": "?",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "APK cloud-writer: no web target, landing redirect"
+    },
+    {
+      "host": "mails.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.3:2443",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "JMAP config URLs (well-known grafts public; rest of the vhost mesh-only)"
     },
     {
       "host": "cloud.diegonmarcos.com",
