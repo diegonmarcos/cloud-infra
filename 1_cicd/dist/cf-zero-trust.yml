@@ -1,0 +1,96 @@
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_cicd/src/cicd/cf-zero-trust.yml
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
+name: "Cloudflare → zero-trust pilot"
+
+# Phase-1 runner for the Cloudflare One (Zero Trust) rollout.
+# Design: a0_docs/eng-specs/cloudflare-zero-trust.md
+#
+# WHY a separate workflow and not ship-terraform.yml: ship-terraform plans and
+# applies in one step and applies EVERY pending change of the cloudflare root.
+# The pilot must (a) be planned and reviewed before anything is applied and
+# (b) apply ONLY the additive zero-trust resources (-target, pure creates),
+# never unrelated drift. Once phase 1 is merged, the resources are ordinary
+# members of the cloudflare root and ship-terraform owns them like the rest.
+#
+# Mode is chosen per push by a tag in the head commit message:
+#   [zt:probe]  read-only CF API inventory      (default)
+#   [zt:plan]   probe + terraform plan (addresses only)
+#   [zt:apply]  plan + targeted apply of pure-create zero-trust addresses
+#   [zt:verify] Access / service-token / Gateway DoH checks
+# or by the `mode` input on workflow_dispatch.
+#
+# Logs are PUBLIC (public repo): the runner prints names, counts and HTTP
+# codes only; credentials are masked and leave the job only sops-encrypted
+# to the public age recipient in .sops.yaml.
+on:
+  push:
+    branches: [cf-zero-trust-phase1]
+    paths:
+      - "c_vps/ba-clo_cloudflare/src/**"
+      - "1_cicd/src/scripts/cloud-cf-zero-trust-pilot.sh"
+      - ".github/workflows/cf-zero-trust.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "probe | plan | apply | verify"
+        required: true
+        default: "plan"
+        type: string
+
+concurrency:
+  # Same group as ship-terraform: never two writers of terraform.tfstate.enc.
+  group: terraform
+  cancel-in-progress: false
+
+jobs:
+  zero-trust:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+      CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
+      CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Resolve mode
+        id: mode
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+          INPUT_MODE: ${{ inputs.mode }}
+        run: |
+          set -eu
+          MODE="${INPUT_MODE:-}"
+          if [ -z "$MODE" ]; then
+            MODE=$(printf '%s' "${MSG:-}" | grep -oE '\[zt:(probe|plan|apply|verify)\]' | head -1 | sed -E 's/\[zt:(.*)\]/\1/' || true)
+          fi
+          echo "mode=${MODE:-probe}" >> "$GITHUB_OUTPUT"
+          echo "mode: ${MODE:-probe}"
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+          terraform_wrapper: false
+
+      - name: Install sops
+        run: |
+          set -eu
+          curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.9.4/sops-v3.9.4.linux.amd64
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+          sops --version
+
+      - name: Zero-trust ${{ steps.mode.outputs.mode }}
+        run: bash 1_cicd/src/scripts/cloud-cf-zero-trust-pilot.sh "${{ steps.mode.outputs.mode }}"
