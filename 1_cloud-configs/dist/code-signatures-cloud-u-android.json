@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21140,
+    "files": 21152,
     "by_lang": {
-      "py": 125,
-      "sh": 468,
-      "kotlin": 10916,
+      "py": 126,
+      "sh": 471,
+      "kotlin": 10924,
       "java": 635,
       "ts": 8414,
       "nix": 30,
@@ -18,14 +18,14 @@
       "rust": 89
     },
     "by_role": {
-      "script": 220,
-      "shell": 362,
+      "script": 222,
+      "shell": 364,
       "java": 634,
       "entrypoint": 23,
       "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10913,
+      "kotlin": 10921,
       "python": 42,
       "rust-module": 89,
       "file": 2256,
@@ -2663,6 +2663,73 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-ipc-mesh.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "label(path)",
+        "read(p)",
+        "walk(top, exts)",
+        "strip_comments(s)",
+        "roster(root)",
+        "libs_of(root, m, edges, libs)",
+        "own_tree(m)",
+        "manifests(root, top)",
+        "lib_manifest(root, lib)",
+        "permissions_declared(root, files)",
+        "components(root, path, pkg)",
+        "fleet_facing(c, levels)",
+        "universal_ops(root)",
+        "resolve(expr, app_dir, root, consts)",
+        "consts_in(files)",
+        "routes_in(root, files, app_dir, const_files=()",
+        "aidl_index(root)",
+        "ops_called(corpus, top, known)",
+        "endpoint(c, pkg, levels, corpus, tops, aidl)",
+        "generate(root)",
+        "dump(d)",
+        "http_hits(root)",
+        "check_http(root)",
+        "check_door(root)",
+        "main(argv)",
+        "class Corpus"
+      ],
+      "imports": [
+        "cloud_android_lib_closure",
+        "glob",
+        "xml.etree.ElementTree"
+      ],
+      "symbols": [
+        "label(path)",
+        "read(p)",
+        "walk(top, exts)",
+        "strip_comments(s)",
+        "roster(root)",
+        "libs_of(root, m, edges, libs)",
+        "own_tree(m)",
+        "manifests(root, top)",
+        "lib_manifest(root, lib)",
+        "permissions_declared(root, files)",
+        "components(root, path, pkg)",
+        "fleet_facing(c, levels)",
+        "universal_ops(root)",
+        "resolve(expr, app_dir, root, consts)",
+        "consts_in(files)",
+        "routes_in(root, files, app_dir, const_files=()",
+        "aidl_index(root)",
+        "ops_called(corpus, top, known)",
+        "endpoint(c, pkg, levels, corpus, tops, aidl)",
+        "generate(root)",
+        "_stub_of(corpus, tops, short, aidl)",
+        "dump(d)",
+        "http_hits(root)",
+        "check_http(root)",
+        "check_door(root)",
+        "main(argv)",
+        "class Corpus"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-lib-apks-engines.py",
       "lang": "py",
       "role": "script",
@@ -4476,6 +4543,28 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/ipc-mesh-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "bad()",
+        "run_http()",
+        "plant()",
+        "run_door()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "run_http()",
+        "plant()",
+        "run_door()",
+        "mutate()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/lib-classes.test.sh",
       "lang": "sh",
       "role": "script",
@@ -5999,6 +6088,7 @@
         "android.net.Uri",
         "androidx.work.WorkInfo",
         "androidx.work.WorkManager",
+        "kotlinx.coroutines.flow.first",
         "com.diegonmarcos.superapp.uikit.KitState",
         "java.text.DateFormat",
         "java.util.Date"
@@ -7432,6 +7522,26 @@
         "openNotificationListenerSettings()",
         "openWriteSettings()",
         "openHealthConnectPerms()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/devcontrol/AdbBridgeApi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbBridgeApi"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.adbdebug.LocalShellChannel",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannels",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "register(ctx: Context)",
+        "exec(ctx: Context, cmd: String)",
+        "class AdbBridgeApi"
       ]
     },
     {
@@ -9635,8 +9745,8 @@
         "com.diegonmarcos.cloudlib.sysdns.FleetDnsBridge",
         "com.diegonmarcos.superapp.appstore.StoreMesh",
         "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "com.diegonmarcos.superapp.devtools.FleetIpc",
         "com.diegonmarcos.superapp.devtools.FleetPeers",
-        "com.diegonmarcos.superapp.devtools.FleetToken",
         "org.json.JSONArray",
         "org.json.JSONObject",
         "java.net.InetSocketAddress",
@@ -9655,7 +9765,7 @@
         "networkDns(ctx: Context)",
         "members(ctx: Context)",
         "label(pkg: String)",
-        "json(port: Int, path: String)",
+        "json(pkg: String, port: Int, op: String)",
         "collect(ctx: Context)",
         "nul(x: Any?)",
         "pathsText(o: JSONObject)",
@@ -13800,6 +13910,37 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/IpcMeshPageTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IpcMeshPageTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "com.diegonmarcos.superapp.appstore.IpcMesh",
+        "com.diegonmarcos.superapp.appstore.IpcMeshFragment",
+        "com.diegonmarcos.superapp.appstore.IpcMeshPage",
+        "com.diegonmarcos.superapp.launcher.SectionPages",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "java.io.File",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "declared()",
+        "take(arr: org.json.JSONArray)",
+        "class IpcMeshPageTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/RecentAppsComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -14667,6 +14808,39 @@
         "stateRow(texts: List<String>, b: BadgeDeclaration.Badge, state: Int)",
         "post(b: BadgeDeclaration.Badge)",
         "class BadgePanesLiveBadgeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/devcontrol/FleetIpcTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetIpcTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.os.Process",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "com.diegonmarcos.superapp.devtools.FleetIpc",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire.Via",
+        "com.diegonmarcos.superapp.devtools.FleetTokenProvider",
+        "java.net.InetAddress",
+        "java.net.ServerSocket",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.Robolectric",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.shadows.ShadowBinder"
+      ],
+      "symbols": [
+        "reset()",
+        "class FleetIpcTest"
       ]
     },
     {
@@ -17864,6 +18038,18 @@
         "code()",
         "hasnt_code()",
         "has_code()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-ipc-mesh-page.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()"
       ]
     },
     {
@@ -21948,6 +22134,109 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/IpcMesh.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IpcMesh"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.net.Uri",
+        "android.util.Base64",
+        "com.diegonmarcos.superapp.devtools.FleetIpc",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "baked()",
+        "parse(json: String)",
+        "endpoint(e: JSONObject, pkg: String, method: String)",
+        "key(m: Member, e: Endpoint)",
+        "probe(ctx: Context, reg: Registry, doors: Map<String, Door> = emptyMap()",
+        "resolves(ctx: Context, m: Member, e: Endpoint)",
+        "i(a: String)",
+        "ping(ctx: Context, m: Member)",
+        "matches(filter: String, m: Member, live: Live?)",
+        "rows(reg: Registry, live: Live?, filter: String, expanded: Set<String>, expandAll: Boolean = false, order: List<String> = emptyList()",
+        "summary(reg: Registry, live: Live?)",
+        "line(e: Endpoint, resolves: Boolean?)",
+        "report(reg: Registry, live: Live?)",
+        "order()",
+        "class IpcMesh",
+        "class Aidl",
+        "class Endpoint",
+        "class Member",
+        "class Registry",
+        "class Live",
+        "class Door",
+        "class Row"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/IpcMeshPage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IpcMeshPage",
+        "IpcMeshFragment"
+      ],
+      "imports": [
+        "android.content.ClipData",
+        "android.content.ClipboardManager",
+        "android.content.Context",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.Toast",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "androidx.fragment.app.Fragment",
+        "java.util.concurrent.Callable"
+      ],
+      "symbols": [
+        "IpcMeshPage(expandAll: Boolean = false, registry: IpcMesh.Registry? = null)",
+        "pingAll()",
+        "MemberHead(m: IpcMesh.Member, live: IpcMesh.Live?, open: Boolean, tag: String, onToggle: ()",
+        "StoreAction(style: StoreControls.Style, text: String, modifier: Modifier, active: Boolean = false, onClick: ()",
+        "label(f: String)",
+        "copy(ctx: Context, text: String)",
+        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "class IpcMeshFragment"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/JobBoard.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -22670,6 +22959,8 @@
         "android.widget.LinearLayout",
         "android.widget.TextView",
         "com.diegonmarcos.superapp.devtools.AppDebugServer",
+        "com.diegonmarcos.superapp.devtools.FleetIpc",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire",
         "com.diegonmarcos.superapp.devtools.FleetPeers",
         "com.diegonmarcos.superapp.devtools.FleetToken",
         "com.diegonmarcos.superapp.updater.Fleet",
@@ -22698,10 +22989,10 @@
         "found(id: String, port: Int)",
         "onAssigned(pkg: String)",
         "eachOn(ids: Collection<String>, work: (String)",
-        "docs(ctx: Context, port: Int, self: Boolean)",
-        "docsOf(ctx: Context, reachable: Map<String, Int>, selfId: String?)",
+        "docs(ctx: Context, pkg: String, port: Int)",
+        "ask(ctx: Context, pkg: String, port: Int, op: String, query: Map<String, String> = emptyMap()",
+        "docsOf(ctx: Context, fleet: List<Fleet.App>, reachable: Map<String, Int>)",
         "awaitWoken( first: Map<String, Int>, asleep: Set<String>, timeoutMs: Long, pollMs: Long, sweep: ()",
-        "get(port: Int, path: String, token: String)",
         "contractOf(pm: PackageManager, action: String, pkg: String)",
         "guarded(pm: PackageManager, pkg: String)",
         "locate(expected: Collection<String>)",
@@ -30413,6 +30704,9 @@
         "tryBind(p: Int)",
         "runServer(ctx: Context, sock: ServerSocket)",
         "handle(ctx: Context, s: Socket)",
+        "dispatch(ctx: Context, op: String, query: Map<String, String>)",
+        "ok(body: String, type: String = \"text/plain\")",
+        "statusLine(code: Int)",
         "contentLengthOf(header: String)",
         "readBody(reader: java.io.Reader, bytes: Int)",
         "bodyLimit(op: String)",
@@ -30539,6 +30833,67 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/devtools/src/main/java/com/diegonmarcos/superapp/devtools/FleetIpc.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetIpc"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.os.Binder",
+        "android.os.Bundle",
+        "android.os.ParcelFileDescriptor",
+        "android.os.Process",
+        "android.util.Log",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire.Reply",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire.Via"
+      ],
+      "symbols": [
+        "authority(pkg: String)",
+        "serve(ctx: Context, method: String, op: String?, extras: Bundle?)",
+        "call( ctx: Context, pkg: String, op: String, query: Map<String, String> = emptyMap()",
+        "hasDoor(ctx: Context, pkg: String)",
+        "ping(ctx: Context, pkg: String, timeoutMs: Long = FleetIpcWire.DEFAULT_TIMEOUT_MS)",
+        "info(ctx: Context, pkg: String)",
+        "docs(ctx: Context, pkg: String)",
+        "peers(ctx: Context, pkg: String)",
+        "dns(ctx: Context, pkg: String)",
+        "crashes(ctx: Context, pkg: String)",
+        "ask(ctx: Context, pkg: String, op: String, query: Map<String, String>)",
+        "queryOf(extras: Bundle?)",
+        "pack(r: Reply)",
+        "unpack(b: Bundle)",
+        "class FleetIpc"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/devtools/src/main/java/com/diegonmarcos/superapp/devtools/FleetIpcWire.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetIpcWire"
+      ],
+      "imports": [
+        "java.net.InetSocketAddress",
+        "java.net.Socket",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.TimeUnit",
+        "java.util.concurrent.TimeoutException"
+      ],
+      "symbols": [
+        "gate(granted: Boolean)",
+        "ladder(ipc: ()",
+        "within(timeoutMs: Long, work: ()",
+        "path(op: String, query: Map<String, String>)",
+        "httpGet(port: Int, path: String, token: String?, readMs: Int = 3000)",
+        "class FleetIpcWire",
+        "class Via",
+        "class Reply"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/devtools/src/main/java/com/diegonmarcos/superapp/devtools/FleetMemberReceiver.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -30607,11 +30962,13 @@
         "android.content.ContentValues",
         "android.database.Cursor",
         "android.database.MatrixCursor",
-        "android.net.Uri"
+        "android.net.Uri",
+        "android.os.Bundle"
       ],
       "symbols": [
         "onCreate()",
         "query( uri: Uri, projection: Array<out String>?, selection: String?, selectionArgs: Array<out String>?, sortOrder: String?, )",
+        "call(method: String, arg: String?, extras: Bundle?)",
         "getType(uri: Uri)",
         "insert(uri: Uri, values: ContentValues?)",
         "update( uri: Uri, values: ContentValues?, selection: String?, selectionArgs: Array<out String>?, )",
@@ -30731,6 +31088,36 @@
         "buildRecord_isJsonArray_withEscapedFields()",
         "buildRecord_includesPrefixedExtras()",
         "class DiagnosticsPushTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/devtools/src/test/java/com/diegonmarcos/superapp/devtools/FleetIpcWireTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetIpcWireTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire.Reply",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire.Via",
+        "java.net.InetAddress",
+        "java.net.ServerSocket",
+        "java.util.concurrent.TimeoutException",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "ipcAnswerIsTheAnswer_httpNeverAsked()",
+        "nonFleetCallerIsRefused()",
+        "refusalIsFinal_noHttpRetry()",
+        "timeoutIs504_noHttpRetry()",
+        "withinThrowsPastItsDeadline()",
+        "noDoor_fallsBackToTheHttpPort_overARealSocket()",
+        "noDoorAndNoHttp_isUnreachable()",
+        "class FleetIpcWireTest"
       ]
     },
     {
@@ -55903,18 +56290,22 @@
       ],
       "imports": [
         "android.content.Context",
+        "com.diegonmarcos.superapp.devtools.FleetIpc",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire",
         "com.diegonmarcos.superapp.devtools.FleetToken",
+        "org.json.JSONObject",
         "java.io.OutputStream",
         "java.net.HttpURLConnection",
         "java.net.URL",
         "java.net.URLEncoder"
       ],
       "symbols": [
-        "enabled()",
+        "enabled(ctx: Context)",
         "name()",
         "isReady(ctx: Context)",
         "probeOpen()",
         "exec(ctx: Context, command: String)",
+        "legacyExec(ctx: Context, command: String)",
         "status(ctx: Context)",
         "class SuperappBridgeChannel"
       ]
@@ -445783,6 +446174,7 @@
       "exports": [
         "AccessPage",
         "PAGE_MESH",
+        "PAGE_IPC",
         "PAGE_ANDROID",
         "PAGE_CLOUD"
       ],
@@ -446236,6 +446628,24 @@
         "ok()",
         "bad()",
         "check()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/test/test-store-ipc-page.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "ok()",
+        "bad()",
+        "mirror()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "ok()",
+        "bad()",
+        "mirror()"
       ]
     },
     {

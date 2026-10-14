@@ -237,6 +237,7 @@
     {
       "domain": "git.diegonmarcos.com",
       "upstream": "10.0.0.6:3002",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-drive/",
       "strip_authorization": true,
       "identity": {
         "header": "X-WEBAUTH-USER",
@@ -253,6 +254,7 @@
     {
       "domain": "mesh.diegonmarcos.com",
       "upstream": "10.0.0.6:8084",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_configs/cloud-c3/",
       "wg_only": true,
       "comment": "Read-only data-driven control panel for the WireGuard mesh + wstunnel TCP/443 fallback. Mimics Headscale's UI shape but holds zero state and exposes zero mutations — pure observability over the existing declarative VPN data (cloud-data-topology.json + bb-net_vpn/build.json + terraform.json). Snapshot is frozen at deploy time; the page hydrates from PORTAL_DATA, no runtime fetch."
     },
@@ -265,12 +267,14 @@
     {
       "domain": "workflows.diegonmarcos.com",
       "upstream": "10.0.0.6:8070",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_configs/cloud-c3/",
       "wg_only": true,
       "comment": "Dagu - Lightweight DAG-based workflow scheduler"
     },
     {
       "domain": "db.diegonmarcos.com",
       "upstream": "10.0.0.6:8086",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_configs/cloud-c3/",
       "wg_only": true,
       "comment": "DBGate - Universal database manager for all cloud databases"
     },
@@ -288,12 +292,14 @@
     {
       "domain": "crowdsec.diegonmarcos.com",
       "upstream": "10.0.0.6:8088",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_configs/cloud-c3/",
       "wg_only": true,
       "comment": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
     },
     {
       "domain": "chat.diegonmarcos.com",
       "upstream": "10.0.0.6:8065",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-chat/",
       "wg_only": true,
       "bypass_paths": [
         "/api/v4/*"
@@ -303,6 +309,7 @@
     {
       "domain": "webmail.diegonmarcos.com",
       "upstream": "10.0.0.6:3000",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-mail/",
       "wg_only": true,
       "comment": "Cloud Webmail — Stalwart-native JMAP webmail with multi-account/multi-server (webmail.diegonmarcos.com); OUR build of bulwarkmail/webmail 1.9.2. Replaces SnappyMail."
     },
@@ -315,6 +322,7 @@
     {
       "domain": "messenger.diegonmarcos.com",
       "upstream": "10.0.0.6:8083",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-matrix/",
       "wg_only": true,
       "comment": "Element Web — browser Matrix client for the Continuwuity homeserver. Served at messenger.diegonmarcos.com behind Authelia 2FA."
     },
@@ -332,12 +340,14 @@
       "domain": "photos.diegonmarcos.com",
       "upstream": "10.0.0.6:3013",
       "landing_page": "myphotos",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-gallery/",
       "wg_only": true,
       "comment": "PhotoPrism AI-powered photo management (oci-flex-1)"
     },
     {
       "domain": "playlist.diegonmarcos.com",
       "upstream": "10.0.0.6:8090",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-media/",
       "wg_only": true,
       "bypass_paths": [
         "/api/auth/spotify/callback",
@@ -348,18 +358,21 @@
     {
       "domain": "cal.diegonmarcos.com",
       "upstream": "10.0.0.6:5232",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-tasks/",
       "wg_only": true,
       "comment": "Radicale CalDAV server (calendars only) — cal.diegonmarcos.com"
     },
     {
       "domain": "ide.diegonmarcos.com",
       "upstream": "10.0.0.6:8443",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_agi/cloud-myterminal/",
       "wg_only": true,
       "comment": "VS Code IDE (ide.diegonmarcos.com)"
     },
     {
       "domain": "contacts.diegonmarcos.com",
       "upstream": "10.0.0.6:5233",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/c_data-apps/cloud-contacts/",
       "wg_only": true,
       "comment": "Radicale CardDAV server (contacts / address books) — contacts.diegonmarcos.com"
     },
@@ -696,197 +709,680 @@
   "internal_routes": [
     {
       "service": "c3-infra-api.app",
-      "upstream": "10.0.0.6:8081"
+      "upstream": "10.0.0.6:8081",
+      "private_name": "cloud.c3-infra-api.app"
     },
     {
       "service": "c3-public-api.app",
-      "upstream": "10.0.0.4:8087"
+      "upstream": "10.0.0.4:8087",
+      "private_name": "cloud.c3-public-api.app"
     },
     {
       "service": "c3-services-api.app",
-      "upstream": "10.0.0.6:8082"
+      "upstream": "10.0.0.6:8082",
+      "private_name": "cloud.c3-services-api.app"
     },
     {
       "service": "drive-mcp.app",
-      "upstream": "10.0.0.6:3109"
+      "upstream": "10.0.0.6:3109",
+      "private_name": "cloud.drive-mcp.app"
     },
     {
       "service": "c3-infra-mcp.app",
-      "upstream": "10.0.0.6:3100"
+      "upstream": "10.0.0.6:3100",
+      "private_name": "cloud.c3-infra-mcp.app"
     },
     {
       "service": "mail-mcp.app",
-      "upstream": "10.0.0.6:3103"
+      "upstream": "10.0.0.6:3103",
+      "private_name": "cloud.mail-mcp.app"
     },
     {
       "service": "mattermost-mcp.app",
-      "upstream": "10.0.0.6:3102"
+      "upstream": "10.0.0.6:3102",
+      "private_name": "cloud.mattermost-mcp.app"
     },
     {
       "service": "c3-services-mcp.app",
-      "upstream": "10.0.0.6:3101"
+      "upstream": "10.0.0.6:3101",
+      "private_name": "cloud.c3-services-mcp.app"
     },
     {
       "service": "superapp-mcp.app",
-      "upstream": "10.0.0.6:3110"
+      "upstream": "10.0.0.6:3110",
+      "private_name": "cloud.superapp-mcp.app"
     },
     {
       "service": "git-proxy-api.app",
-      "upstream": "10.0.0.4:8123"
+      "upstream": "10.0.0.4:8123",
+      "private_name": "cloud.git-proxy-api.app"
     },
     {
       "service": "g-personal-mcp.app",
-      "upstream": "10.0.0.6:3106"
+      "upstream": "10.0.0.6:3106",
+      "private_name": "cloud.g-personal-mcp.app"
     },
     {
       "service": "g-workspace-mcp.app",
-      "upstream": "10.0.0.6:3104"
+      "upstream": "10.0.0.6:3104",
+      "private_name": "cloud.g-workspace-mcp.app"
     },
     {
       "service": "gitea.app",
-      "upstream": "10.0.0.6:3002"
+      "upstream": "10.0.0.6:3002",
+      "private_name": "cloud.gitea.app"
     },
     {
       "service": "unbound-dns64.app",
-      "upstream": "10.0.0.4:53"
+      "upstream": "10.0.0.4:53",
+      "private_name": "cloud.unbound-dns64.app"
     },
     {
       "service": "wireguard-mesh.app",
-      "upstream": "10.0.0.6:8084"
+      "upstream": "10.0.0.6:8084",
+      "private_name": "cloud.wireguard-mesh.app"
     },
     {
       "service": "c3-spec.app",
-      "upstream": "10.0.0.6:3080"
+      "upstream": "10.0.0.6:3080",
+      "private_name": "cloud.c3-spec.app"
     },
     {
       "service": "dagu.app",
-      "upstream": "10.0.0.6:8070"
+      "upstream": "10.0.0.6:8070",
+      "private_name": "cloud.dagu.app"
     },
     {
       "service": "dbgate.app",
-      "upstream": "10.0.0.6:8086"
+      "upstream": "10.0.0.6:8086",
+      "private_name": "cloud.dbgate.app"
     },
     {
       "service": "matomo.app",
-      "upstream": "10.0.0.6:8080"
+      "upstream": "10.0.0.6:8080",
+      "private_name": "cloud.matomo.app"
     },
     {
       "service": "ntfy.app",
-      "upstream": "10.0.0.6:8090"
+      "upstream": "10.0.0.6:8090",
+      "private_name": "cloud.ntfy.app"
     },
     {
       "service": "openobserve.app",
-      "upstream": "10.0.0.6:5080"
+      "upstream": "10.0.0.6:5080",
+      "private_name": "cloud.openobserve.app"
     },
     {
       "service": "umami.app",
-      "upstream": "10.0.0.6:3006"
+      "upstream": "10.0.0.6:3006",
+      "private_name": "cloud.umami.app"
     },
     {
       "service": "authelia.app",
-      "upstream": "172.18.0.3:9091"
+      "upstream": "172.18.0.3:9091",
+      "private_name": "cloud.authelia.app"
     },
     {
       "service": "caddy.app",
-      "upstream": "10.0.0.1:443"
+      "upstream": "10.0.0.1:443",
+      "private_name": "cloud.caddy.app"
     },
     {
       "service": "caddy-public.app",
-      "upstream": "10.0.0.4:443"
+      "upstream": "10.0.0.4:443",
+      "private_name": "cloud.caddy-public.app"
     },
     {
       "service": "crowdsec.app",
-      "upstream": "10.0.0.6:8088"
+      "upstream": "10.0.0.6:8088",
+      "private_name": "cloud.crowdsec.app"
     },
     {
       "service": "cloud-cgc-pub-mcp.app",
-      "upstream": "10.0.0.6:3105"
+      "upstream": "10.0.0.6:3105",
+      "private_name": "cloud.cloud-cgc-pub-mcp.app"
     },
     {
       "service": "kg-store.app",
-      "upstream": "10.0.0.6:8001"
+      "upstream": "10.0.0.6:8001",
+      "private_name": "cloud.kg-store.app"
     },
     {
       "service": "kg-store-pub.app",
-      "upstream": "10.0.0.6:8002"
+      "upstream": "10.0.0.6:8002",
+      "private_name": "cloud.kg-store-pub.app"
     },
     {
       "service": "mattermost.app",
-      "upstream": "10.0.0.6:8065"
+      "upstream": "10.0.0.6:8065",
+      "private_name": "cloud.mattermost.app"
     },
     {
       "service": "webmail.app",
-      "upstream": "10.0.0.6:3000"
+      "upstream": "10.0.0.6:3000",
+      "private_name": "cloud.webmail.app"
     },
     {
       "service": "matrix-continuwuity.app",
-      "upstream": "10.0.0.6:8008"
+      "upstream": "10.0.0.6:8008",
+      "private_name": "cloud.matrix-continuwuity.app"
     },
     {
       "service": "matrix-element.app",
-      "upstream": "10.0.0.6:8083"
+      "upstream": "10.0.0.6:8083",
+      "private_name": "cloud.matrix-element.app"
     },
     {
       "service": "stalwart.app",
-      "upstream": "10.0.0.3:2443"
+      "upstream": "10.0.0.3:2443",
+      "private_name": "cloud.stalwart.app"
     },
     {
       "service": "scrappers-api.app",
-      "upstream": "10.0.0.6:3020"
+      "upstream": "10.0.0.6:3020",
+      "private_name": "cloud.scrappers-api.app"
     },
     {
       "service": "fin-api.app",
-      "upstream": "10.0.0.6:8340"
+      "upstream": "10.0.0.6:8340",
+      "private_name": "cloud.fin-api.app"
     },
     {
       "service": "photoprism.app",
-      "upstream": "10.0.0.6:3013"
+      "upstream": "10.0.0.6:3013",
+      "private_name": "cloud.photoprism.app"
     },
     {
       "service": "playlist-syncer.app",
-      "upstream": "10.0.0.6:8090"
+      "upstream": "10.0.0.6:8090",
+      "private_name": "cloud.playlist-syncer.app"
     },
     {
       "service": "news-gdelt.app",
-      "upstream": "10.0.0.6:3019"
+      "upstream": "10.0.0.6:3019",
+      "private_name": "cloud.news-gdelt.app"
     },
     {
       "service": "calendar.app",
-      "upstream": "10.0.0.6:5232"
+      "upstream": "10.0.0.6:5232",
+      "private_name": "cloud.calendar.app"
     },
     {
       "service": "code-server.app",
-      "upstream": "10.0.0.6:8443"
+      "upstream": "10.0.0.6:8443",
+      "private_name": "cloud.code-server.app"
     },
     {
       "service": "contacts.app",
-      "upstream": "10.0.0.6:5233"
+      "upstream": "10.0.0.6:5233",
+      "private_name": "cloud.contacts.app"
     },
     {
       "service": "etherpad.app",
-      "upstream": "10.0.0.6:3012"
+      "upstream": "10.0.0.6:3012",
+      "private_name": "cloud.etherpad.app"
     },
     {
       "service": "filebrowser.app",
-      "upstream": "10.0.0.6:3015"
+      "upstream": "10.0.0.6:3015",
+      "private_name": "cloud.filebrowser.app"
     },
     {
       "service": "grist.app",
-      "upstream": "10.0.0.6:3011"
+      "upstream": "10.0.0.6:3011",
+      "private_name": "cloud.grist.app"
     },
     {
       "service": "hedgedoc.app",
-      "upstream": "10.0.0.6:3018"
+      "upstream": "10.0.0.6:3018",
+      "private_name": "cloud.hedgedoc.app"
     },
     {
       "service": "send.app",
-      "upstream": "10.0.0.6:3016"
+      "upstream": "10.0.0.6:3016",
+      "private_name": "cloud.send.app"
     },
     {
       "service": "vaultwarden.app",
-      "upstream": "10.0.0.6:8880"
+      "upstream": "10.0.0.6:8880",
+      "private_name": "cloud.vaultwarden.app"
     }
   ],
+  "private_mesh_routes": [
+    {
+      "service": "cloud.c3-infra-api.app",
+      "upstream": "10.0.0.6:8081",
+      "alias_of": "c3-infra-api.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.c3-public-api.app",
+      "upstream": "10.0.0.4:8087",
+      "alias_of": "c3-public-api.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.c3-services-api.app",
+      "upstream": "10.0.0.6:8082",
+      "alias_of": "c3-services-api.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.drive-mcp.app",
+      "upstream": "10.0.0.6:3109",
+      "alias_of": "drive-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.c3-infra-mcp.app",
+      "upstream": "10.0.0.6:3100",
+      "alias_of": "c3-infra-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.mail-mcp.app",
+      "upstream": "10.0.0.6:3103",
+      "alias_of": "mail-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102",
+      "alias_of": "mattermost-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.c3-services-mcp.app",
+      "upstream": "10.0.0.6:3101",
+      "alias_of": "c3-services-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.superapp-mcp.app",
+      "upstream": "10.0.0.6:3110",
+      "alias_of": "superapp-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.git-proxy-api.app",
+      "upstream": "10.0.0.4:8123",
+      "alias_of": "git-proxy-api.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.g-personal-mcp.app",
+      "upstream": "10.0.0.6:3106",
+      "alias_of": "g-personal-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.g-workspace-mcp.app",
+      "upstream": "10.0.0.6:3104",
+      "alias_of": "g-workspace-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.gitea.app",
+      "upstream": "10.0.0.6:3002",
+      "alias_of": "gitea.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.unbound-dns64.app",
+      "upstream": "10.0.0.4:53",
+      "alias_of": "unbound-dns64.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.wireguard-mesh.app",
+      "upstream": "10.0.0.6:8084",
+      "alias_of": "wireguard-mesh.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.c3-spec.app",
+      "upstream": "10.0.0.6:3080",
+      "alias_of": "c3-spec.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.dagu.app",
+      "upstream": "10.0.0.6:8070",
+      "alias_of": "dagu.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.dbgate.app",
+      "upstream": "10.0.0.6:8086",
+      "alias_of": "dbgate.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.matomo.app",
+      "upstream": "10.0.0.6:8080",
+      "alias_of": "matomo.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.ntfy.app",
+      "upstream": "10.0.0.6:8090",
+      "alias_of": "ntfy.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.openobserve.app",
+      "upstream": "10.0.0.6:5080",
+      "alias_of": "openobserve.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.umami.app",
+      "upstream": "10.0.0.6:3006",
+      "alias_of": "umami.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.authelia.app",
+      "upstream": "172.18.0.3:9091",
+      "alias_of": "authelia.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.caddy.app",
+      "upstream": "10.0.0.1:443",
+      "alias_of": "caddy.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.caddy-public.app",
+      "upstream": "10.0.0.4:443",
+      "alias_of": "caddy-public.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.crowdsec.app",
+      "upstream": "10.0.0.6:8088",
+      "alias_of": "crowdsec.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-cgc-pub-mcp.app",
+      "upstream": "10.0.0.6:3105",
+      "alias_of": "cloud-cgc-pub-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.kg-store.app",
+      "upstream": "10.0.0.6:8001",
+      "alias_of": "kg-store.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.kg-store-pub.app",
+      "upstream": "10.0.0.6:8002",
+      "alias_of": "kg-store-pub.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.mattermost.app",
+      "upstream": "10.0.0.6:8065",
+      "alias_of": "mattermost.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.webmail.app",
+      "upstream": "10.0.0.6:3000",
+      "alias_of": "webmail.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.matrix-continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "alias_of": "matrix-continuwuity.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.matrix-element.app",
+      "upstream": "10.0.0.6:8083",
+      "alias_of": "matrix-element.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.stalwart.app",
+      "upstream": "10.0.0.3:2443",
+      "alias_of": "stalwart.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.scrappers-api.app",
+      "upstream": "10.0.0.6:3020",
+      "alias_of": "scrappers-api.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.fin-api.app",
+      "upstream": "10.0.0.6:8340",
+      "alias_of": "fin-api.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.photoprism.app",
+      "upstream": "10.0.0.6:3013",
+      "alias_of": "photoprism.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.playlist-syncer.app",
+      "upstream": "10.0.0.6:8090",
+      "alias_of": "playlist-syncer.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.news-gdelt.app",
+      "upstream": "10.0.0.6:3019",
+      "alias_of": "news-gdelt.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.calendar.app",
+      "upstream": "10.0.0.6:5232",
+      "alias_of": "calendar.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.code-server.app",
+      "upstream": "10.0.0.6:8443",
+      "alias_of": "code-server.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.contacts.app",
+      "upstream": "10.0.0.6:5233",
+      "alias_of": "contacts.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.etherpad.app",
+      "upstream": "10.0.0.6:3012",
+      "alias_of": "etherpad.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.filebrowser.app",
+      "upstream": "10.0.0.6:3015",
+      "alias_of": "filebrowser.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.grist.app",
+      "upstream": "10.0.0.6:3011",
+      "alias_of": "grist.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.hedgedoc.app",
+      "upstream": "10.0.0.6:3018",
+      "alias_of": "hedgedoc.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.send.app",
+      "upstream": "10.0.0.6:3016",
+      "alias_of": "send.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.vaultwarden.app",
+      "upstream": "10.0.0.6:8880",
+      "alias_of": "vaultwarden.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-drive-mcp.app",
+      "upstream": "10.0.0.6:3109",
+      "alias_of": "cloud-drive-mcp-http-3109.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.cloud-infra-mcp.app",
+      "upstream": "10.0.0.6:3100",
+      "alias_of": "cloud-infra-mcp-http-3100.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.cloud-mail-mcp.app",
+      "upstream": "10.0.0.6:3103",
+      "alias_of": "cloud-mail-mcp-http-3103.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.cloud-mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102",
+      "alias_of": "cloud-mattermost-mcp-http-3102.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.cloud-services-mcp.app",
+      "upstream": "10.0.0.6:3101",
+      "alias_of": "cloud-services-mcp-http-3101.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.cloud-superapp-mcp.app",
+      "upstream": "10.0.0.6:3110",
+      "alias_of": "cloud-superapp-mcp-http-3110.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.google-personal-mcp.app",
+      "upstream": "10.0.0.6:3106",
+      "alias_of": "google-personal-mcp-http-3106.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.google-workspace-mcp.app",
+      "upstream": "10.0.0.6:3104",
+      "alias_of": "google-workspace-mcp-http-3104.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.cloud-spec.app",
+      "upstream": "10.0.0.6:3080",
+      "alias_of": "cloud-spec-http-3080.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.matomo-hybrid.app",
+      "upstream": "10.0.0.6:8080",
+      "alias_of": "matomo-hybrid-http-8080.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.cloud-webmail.app",
+      "upstream": "10.0.0.6:3000",
+      "alias_of": "cloud-webmail-http-3000.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.continuwuity.app",
+      "upstream": "10.0.0.6:8008",
+      "alias_of": "continuwuity-http-8008.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.photoprism-app.app",
+      "upstream": "10.0.0.6:3013",
+      "alias_of": "photoprism_app-http-3013.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.calendar-radicale.app",
+      "upstream": "10.0.0.6:5232",
+      "alias_of": "calendar-radicale-http-5232.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.contacts-radicale.app",
+      "upstream": "10.0.0.6:5233",
+      "alias_of": "contacts-radicale-http-5233.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.etherpad-app.app",
+      "upstream": "10.0.0.6:3012",
+      "alias_of": "etherpad_app-http-3012.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.filebrowser-app.app",
+      "upstream": "10.0.0.6:3015",
+      "alias_of": "filebrowser_app-http-3015.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.grist-app.app",
+      "upstream": "10.0.0.6:3011",
+      "alias_of": "grist_app-http-3011.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.hedgedoc-app.app",
+      "upstream": "10.0.0.6:3018",
+      "alias_of": "hedgedoc_app-http-3018.app",
+      "source": "all_app_urls"
+    },
+    {
+      "service": "cloud.send-app.app",
+      "upstream": "10.0.0.6:3016",
+      "alias_of": "send_app-http-3016.app",
+      "source": "all_app_urls"
+    }
+  ],
+  "public_landing": {
+    "_doc": "Public scheme {app}.diegonmarcos.com (cloud-infra a0_docs/eng-specs/url-scheme.md). A request to an Authelia-gated vhost with NO credential (no Authorization header, no session cookie) is redirected to base_url + the service's proxy.primary.landing (or default_path) instead of the Authelia wall. Bearer / Basic / cookie requests are untouched. Interactive sign-in: <vhost><login_path> redirects to auth_portal with rd back to the vhost.",
+    "base_url": "https://diegonmarcos.github.io/c__Cloud/",
+    "default_path": "",
+    "login_path": "/login",
+    "session_cookie": "authelia_session",
+    "auth_portal": "https://auth.diegonmarcos.com/",
+    "_landings_doc": "vhost -> c_<category>/<app> folder of diegonmarcos.github.io/c__Cloud (the Android app that fronts it). A service may override with its own proxy.primary.landing. Unlisted gated vhosts land on the c__Cloud hub (default_path).",
+    "landings": {
+      "cal.diegonmarcos.com": "c_data-apps/cloud-tasks",
+      "chat.diegonmarcos.com": "c_inboxes/cloud-chat",
+      "contacts.diegonmarcos.com": "c_data-apps/cloud-contacts",
+      "crowdsec.diegonmarcos.com": "c_configs/cloud-c3",
+      "db.diegonmarcos.com": "c_configs/cloud-c3",
+      "git.diegonmarcos.com": "c_data-apps/cloud-drive",
+      "ide.diegonmarcos.com": "c_agi/cloud-myterminal",
+      "mail.diegonmarcos.com": "c_inboxes/cloud-mail",
+      "mesh.diegonmarcos.com": "c_configs/cloud-c3",
+      "messenger.diegonmarcos.com": "c_inboxes/cloud-matrix",
+      "photos.diegonmarcos.com": "c_data-apps/cloud-gallery",
+      "playlist.diegonmarcos.com": "c_data-apps/cloud-media",
+      "webmail.diegonmarcos.com": "c_inboxes/cloud-mail",
+      "workflows.diegonmarcos.com": "c_configs/cloud-c3"
+    }
+  },
   "s3_routes": [
     {
       "service": "s3-backups-binaries.app",
