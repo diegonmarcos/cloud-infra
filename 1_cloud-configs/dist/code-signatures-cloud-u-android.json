@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21152,
+    "files": 21159,
     "by_lang": {
-      "py": 126,
-      "sh": 471,
-      "kotlin": 10924,
+      "py": 127,
+      "sh": 472,
+      "kotlin": 10929,
       "java": 635,
       "ts": 8414,
       "nix": 30,
@@ -18,14 +18,14 @@
       "rust": 89
     },
     "by_role": {
-      "script": 222,
-      "shell": 364,
+      "script": 223,
+      "shell": 365,
       "java": 634,
       "entrypoint": 23,
       "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10921,
+      "kotlin": 10926,
       "python": 42,
       "rust-module": 89,
       "file": 2256,
@@ -259,6 +259,7 @@
       "lang": "py",
       "role": "script",
       "exports": [
+        "code(path)",
         "violations(root)",
         "main(argv)"
       ],
@@ -270,6 +271,7 @@
         "importlib"
       ],
       "symbols": [
+        "code(path)",
         "violations(root)",
         "main(argv)"
       ]
@@ -645,6 +647,73 @@
         "check_module(repo, module, locales, policy, fail)",
         "check_file(res, module, filename, base, locales, quantities, fail)",
         "main()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-ipc-mesh.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "label(path)",
+        "read(p)",
+        "walk(top, exts)",
+        "strip_comments(s)",
+        "roster(root)",
+        "libs_of(root, m, edges, libs)",
+        "own_tree(m)",
+        "manifests(root, top)",
+        "lib_manifest(root, lib)",
+        "permissions_declared(root, files)",
+        "components(root, path, pkg)",
+        "fleet_facing(c, levels)",
+        "universal_ops(root)",
+        "resolve(expr, app_dir, root, consts)",
+        "consts_in(files)",
+        "routes_in(root, files, app_dir, const_files=()",
+        "aidl_index(root)",
+        "ops_called(corpus, top, known)",
+        "endpoint(c, pkg, levels, corpus, tops, aidl)",
+        "generate(root)",
+        "dump(d)",
+        "http_hits(root)",
+        "check_http(root)",
+        "check_door(root)",
+        "main(argv)",
+        "class Corpus"
+      ],
+      "imports": [
+        "cloud_android_lib_closure",
+        "glob",
+        "xml.etree.ElementTree"
+      ],
+      "symbols": [
+        "label(path)",
+        "read(p)",
+        "walk(top, exts)",
+        "strip_comments(s)",
+        "roster(root)",
+        "libs_of(root, m, edges, libs)",
+        "own_tree(m)",
+        "manifests(root, top)",
+        "lib_manifest(root, lib)",
+        "permissions_declared(root, files)",
+        "components(root, path, pkg)",
+        "fleet_facing(c, levels)",
+        "universal_ops(root)",
+        "resolve(expr, app_dir, root, consts)",
+        "consts_in(files)",
+        "routes_in(root, files, app_dir, const_files=()",
+        "aidl_index(root)",
+        "ops_called(corpus, top, known)",
+        "endpoint(c, pkg, levels, corpus, tops, aidl)",
+        "generate(root)",
+        "_stub_of(corpus, tops, short, aidl)",
+        "dump(d)",
+        "http_hits(root)",
+        "check_http(root)",
+        "check_door(root)",
+        "main(argv)",
+        "class Corpus"
       ]
     },
     {
@@ -2274,6 +2343,7 @@
       "lang": "py",
       "role": "script",
       "exports": [
+        "code(path)",
         "violations(root)",
         "main(argv)"
       ],
@@ -2285,6 +2355,7 @@
         "importlib"
       ],
       "symbols": [
+        "code(path)",
         "violations(root)",
         "main(argv)"
       ]
@@ -5352,7 +5423,7 @@
       ],
       "symbols": [
         "pkgOf(q: string)",
-        "portOf(q: string)",
+        "appOf(q: string)",
         "main()"
       ]
     },
@@ -5427,8 +5498,11 @@
         "fleetToken",
         "sq",
         "run",
+        "parseGatewayApps",
+        "urlOf",
         "scan",
         "get",
+        "call",
         "PORT_DEVCONTROL",
         "PORT_FIRST",
         "PORT_LAST",
@@ -5442,8 +5516,13 @@
         "sq(s: string)",
         "exec(cmd: string, args: string[], stdin: string)",
         "run(script: string)",
+        "parseGatewayApps(body: string)",
+        "urlOf(a: App, path: string, qs = \"\")",
         "scan()",
-        "get(\n  port: number,\n  path: string,\n  query: Record<string, string> = {},\n  timeoutSec = 20,\n)"
+        "get(\n  port: number,\n  path: string,\n  query: Record<string, string> = {},\n  timeoutSec = 20,\n)",
+        "call(\n  a: App,\n  path: string,\n  query: Record<string, string> = {},\n  timeoutSec = 20,\n)",
+        "qs(query: Record<string, string>)",
+        "fetchUrl(url: string, timeoutSec: number)"
       ]
     },
     {
@@ -7686,6 +7765,7 @@
         "isLoopbackOnly()",
         "runServer(ctx: Context, port: Int, token: String)",
         "handle(ctx: Context, socket: Socket, token: String)",
+        "statusOf(code: Int)",
         "canonicalOp(path: String)",
         "endpointDocsJson(port: Int)",
         "energySelfJson()",
@@ -7717,8 +7797,33 @@
         "class DevControlServer",
         "class and",
         "class the",
-        "class Spec",
-        "class owns"
+        "class Spec"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/devcontrol/MeshGateway.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshGateway"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.devtools.FleetIpc",
+        "com.diegonmarcos.superapp.devtools.FleetIpcWire",
+        "com.diegonmarcos.superapp.devtools.FleetPeers",
+        "com.diegonmarcos.superapp.updater.Fleet",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "split(path: String)",
+        "resolve(roster: List<Member>, who: String)",
+        "roster()",
+        "handle(ctx: Context, path: String, query: Map<String, String>, body: String?, authed: Boolean, roster: List<Member> = roster()",
+        "appsJson(ctx: Context, roster: List<Member>)",
+        "class MeshGateway",
+        "class Member"
       ]
     },
     {
@@ -21563,6 +21668,20 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/PhoneTaxonomyLayout.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneTaxonomyLayout"
+      ],
+      "imports": [],
+      "symbols": [
+        "bucket(sections: List<Pair<String, String>>, folders: List<F>, label: (F)",
+        "class PhoneTaxonomyLayout",
+        "class Group"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/StoreShelves.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -22510,6 +22629,7 @@
         "compareNames(remote: String?, installed: String?)",
         "parts(s: String?)",
         "playAnon(cfg: Config)",
+        "izzy(cfg: Config)",
         "remoteVersion(ctx: Context, cfg: Config, app: External, src: Source)",
         "normalise(src: Source.Vendor, raw: String)",
         "path(o: JSONObject, p: String?)",
@@ -22526,15 +22646,14 @@
         "class Source",
         "class Vendor",
         "class FDroid",
+        "class Izzy",
         "class PlayAnon",
         "class Play",
         "class Store",
         "class Integrity",
         "class External",
         "class Config",
-        "class Note",
-        "class Check",
-        "class NotInstalled"
+        "class Note"
       ]
     },
     {
@@ -22653,6 +22772,8 @@
         "dp(v: Int)",
         "show(open: Boolean)",
         "actions(ctx: Context, buttons: List<View>)",
+        "detail(ctx: Context)",
+        "line(ctx: Context, text: String, color: Int = 0x99FFFFFF.toInt()",
         "filters(ctx: Context, style: StoreControls.Style, labels: List<String>, selected: Int, chips: MutableList<TextView>, onPick: (Int)",
         "frame(ctx: Context, strip: View?, content: View)",
         "bar(ctx: Context, lines: List<List<StoreControls.Control>>, buttons: MutableList<TextView>, onSelect: (Int)",
@@ -22665,8 +22786,7 @@
         "class for",
         "class StoreRow",
         "class Head",
-        "class StorePage",
-        "class StoreTabs"
+        "class StorePage"
       ]
     },
     {
@@ -22794,7 +22914,7 @@
         "lastBatch(ctx: Context)",
         "keepBatch(ctx: Context, b: JSONObject)",
         "register(ctx: Context)",
-        "search(ctx: Context, query: String, play: Boolean, fdroid: Boolean)",
+        "search(ctx: Context, query: String, q: Map<String, String>)",
         "endpoints(ctx: Context, filter: String, wake: Boolean)",
         "route(ctx: Context, op: String, q: Map<String, String>)",
         "importInventory(ctx: Context, body: String, run: Boolean)",
@@ -23204,21 +23324,34 @@
       ],
       "imports": [
         "android.content.Context",
+        "android.content.Intent",
+        "android.net.Uri",
+        "android.os.Handler",
+        "android.os.Looper",
         "android.view.View",
+        "android.widget.Toast",
+        "androidx.compose.foundation.Image",
         "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.horizontalScroll",
         "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.text.KeyboardActions",
-        "androidx.compose.foundation.text.KeyboardOptions",
-        "androidx.compose.material3.OutlinedTextField",
-        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.lazy.LazyRow",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.material3.Text",
-        "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.DisposableEffect",
         "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.key",
         "androidx.compose.runtime.mutableStateListOf",
         "androidx.compose.runtime.mutableStateMapOf",
         "androidx.compose.runtime.mutableStateOf",
@@ -23226,24 +23359,52 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.graphics.Color",
-        "androidx.compose.ui.platform.ComposeView",
-        "androidx.compose.ui.text.font.FontWeight",
-        "androidx.compose.ui.text.input.ImeAction",
-        "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.sp",
-        "kotlin.concurrent.thread"
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.ImageBitmap",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.platform.ComposeView"
       ],
       "symbols": [
+        "label(id: String)",
+        "decl(map: JSONObject, cfg: SourceResolver.Config)",
+        "sourcesOf(ctx: Context)",
+        "controlsOf(ctx: Context)",
+        "matches(q: String, vararg fields: String)",
+        "searchOne(ctx: Context, cfg: SourceResolver.Config, d: Decl, src: SearchSource, query: String)",
+        "search(ctx: Context, cfg: SourceResolver.Config, query: String, enabled: (String)",
+        "declaredList(ctx: Context, cfg: SourceResolver.Config)",
+        "pmLabel(pm: android.content.pm.PackageManager, pkg: String)",
+        "isInstalled(ctx: Context, pkg: String)",
+        "badges(cfg: SourceResolver.Config, d: Decl, ext: SourceResolver.External)",
+        "landing(ctx: Context, cfg: SourceResolver.Config)",
+        "palette(ctx: Context)",
         "view(ctx: Context, cfg: ()",
-        "search(ctx: Context, c: SourceResolver.Config, query: String, play: Boolean, fdroid: Boolean)",
-        "Pill(label: String, on: Boolean, onClick: ()",
+        "resolveCfg(ctx: Context, cfg: ()",
+        "Pill(label: String, on: Boolean, tag: String, onClick: ()",
         "Page(ctx: Context, cfg: ()",
+        "loadLanding()",
+        "runSource(c: SourceResolver.Config, d: Decl, s: SearchSource, q: String, gen: Int)",
         "run()",
-        "install(declare: Boolean)",
+        "Results( ctx: Context, cfg: ()",
+        "toast(ctx: Context, msg: String)",
+        "start(ctx: Context, intent: Intent?, what: String)",
+        "ladderOf(ctx: Context, c: SourceResolver.Config, r: StoreSuggest.Result)",
+        "kindsOf(ext: SourceResolver.External)",
+        "install(ctx: Context, lines: MutableMap<String, String>, pkg: String, work: ()",
+        "resultRow( ctx: Context, cfg: ()",
+        "button(label: String, onClick: (()",
+        "caption(ctx: Context, text: String, color: Int = DIM)",
+        "LandingView( ctx: Context, cfg: ()",
+        "AppCard( ctx: Context, cfg: ()",
+        "cardAction(ctx: Context, cfg: ()",
+        "AppIcon(ctx: Context, s: StoreSuggest.Suggestion, installed: Boolean)",
         "class StoreSearchPage",
-        "class Result",
-        "class Licence"
+        "class SearchSource",
+        "class Decl",
+        "class Card",
+        "class Landing",
+        "class Licence",
+        "class SrcState"
       ]
     },
     {
@@ -23421,6 +23582,32 @@
         "invalidate()",
         "refresh(ctx: Context, done: ()",
         "class StoreStatus"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreSuggest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreSuggest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.apps.PhoneTaxonomyLayout"
+      ],
+      "symbols": [
+        "landing( sections: List<Pair<String, String>>, folders: List<Folder>, ours: List<Suggestion>, folderOf: (Suggestion)",
+        "prettyLabel(pkg: String)",
+        "normaliseRepo(url: String)",
+        "merge(order: List<String>, hits: List<Hit>)",
+        "build(key: String, pkg: String, hs: List<Hit>)",
+        "groups(order: List<String>, results: List<Result>, installed: (String)",
+        "class StoreSuggest",
+        "class Suggestion",
+        "class Shelf",
+        "class Section",
+        "class Folder",
+        "class Hit",
+        "class Result"
       ]
     },
     {
@@ -24612,20 +24799,19 @@
         "androidx.compose.animation.core.tween",
         "androidx.compose.foundation.background",
         "androidx.compose.foundation.border",
-        "androidx.compose.foundation.horizontalScroll",
         "androidx.compose.foundation.interaction.collectIsFocusedAsState",
         "androidx.compose.foundation.layout.BoxWithConstraints",
         "androidx.compose.foundation.layout.width",
-        "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.selection.selectableGroup",
-        "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.ui.semantics.CollectionInfo",
         "androidx.compose.ui.semantics.CollectionItemInfo",
         "androidx.compose.ui.semantics.collectionInfo",
         "androidx.compose.ui.semantics.collectionItemInfo",
         "androidx.compose.ui.semantics.semantics",
         "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.TextUnit",
         "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
@@ -24646,7 +24832,8 @@
         "androidx.compose.foundation.selection.selectable",
         "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.material3.Icon",
-        "androidx.compose.material3.LocalTextStyle"
+        "androidx.compose.material3.LocalTextStyle",
+        "androidx.compose.material3.MaterialTheme"
       ],
       "symbols": [
         "itemTag(id: String)",
@@ -24656,8 +24843,11 @@
         "BottomNavIsland( entries: List<BottomNavEntry>, selectedId: String?, onSelect: (BottomNavEntry)",
         "BottomNavIslandImpl( entries: List<BottomNavEntry>, selectedId: String?, onSelect: (BottomNavEntry)",
         "IslandContent( entries: List<BottomNavEntry>, selectedId: String?, onSelect: (BottomNavEntry)",
+        "fullSizeCell(count: Int, tokens: NavTokens)",
         "planIsland(maxWidth: Dp, widthFraction: Float, endInset: Dp, count: Int, tokens: NavTokens)",
-        "islandScrollTarget(plan: IslandPlan, index: Int)",
+        "labelStyleToFit(style: TextStyle, min: TextUnit, fits: (TextStyle)",
+        "lerpDp(min: Dp, max: Dp, t: Float)",
+        "lerpSp(min: TextUnit, max: TextUnit, t: Float)",
         "barMotionEnabled(animatorDurationScale: Float, powerSaveMode: Boolean)",
         "collapseFor(collapsed: Boolean, delta: Float)",
         "onPreScroll(available: Offset, source: NestedScrollSource)",
@@ -25316,11 +25506,14 @@
         "node(tag: String)",
         "bounds(tag: String)",
         "laidOut(tag: String)",
+        "textLayout(tag: String)",
         "spoken(n: SemanticsNode)",
         "pixels(b: Rect)",
         "distance(a: Color, b: Color)",
-        "assertTouchTargets(why: String, tags: List<String>)",
+        "assertTouchTargets(why: String, tags: List<String>, minWidth: Float = px(R.dimen.bottom_nav_min_touch_target)",
+        "assertAllOnScreen(why: String, tags: List<String>)",
         "plan(width: Int, n: Int)",
+        "check(why: String, p: IslandPlan, fitted: Boolean, island: Float, end: Float, cell: Float, scale: Float)",
         "assertNoOverlapAtThisFontScale(fixture: List<Triple<String, String, ImageVector>>)",
         "key(code: Int)",
         "focusedTag()",
@@ -30676,42 +30869,26 @@
         "android.net.NetworkCapabilities",
         "android.os.Build",
         "android.util.Log",
-        "java.io.BufferedReader",
         "java.io.File",
-        "java.io.InputStreamReader",
-        "java.io.PrintWriter",
         "java.net.InetAddress",
-        "java.net.ServerSocket",
-        "java.net.Socket",
-        "java.net.URLDecoder",
         "java.util.concurrent.ConcurrentHashMap",
         "java.util.concurrent.atomic.AtomicBoolean"
       ],
       "symbols": [
         "parsePorts(raw: String)",
         "portOf(pkg: String)",
-        "fallbackPorts(first: Int, last: Int, owned: Collection<Int>)",
         "boundPort()",
         "isRunning()",
         "route(group: String, handler: (op: String, query: Map<String, String>)",
         "route( group: String, ops: List<Op>, handler: (op: String, query: Map<String, String>)",
-        "bearerOf(header: String)",
         "peersJson(ctx: Context)",
         "appRoute(op: String, query: Map<String, String>)",
         "start(ctx: Context)",
         "stop()",
-        "bindOwn(pkg: String)",
-        "tryBind(p: Int)",
-        "runServer(ctx: Context, sock: ServerSocket)",
-        "handle(ctx: Context, s: Socket)",
         "dispatch(ctx: Context, op: String, query: Map<String, String>)",
         "ok(body: String, type: String = \"text/plain\")",
-        "statusLine(code: Int)",
-        "contentLengthOf(header: String)",
-        "readBody(reader: java.io.Reader, bytes: Int)",
         "bodyLimit(op: String)",
         "withBody(query: Map<String, String>, body: String?)",
-        "canonicalOp(path: String)",
         "infoJson(ctx: Context)",
         "docs(ctx: Context)",
         "docsJson(ctx: Context)",
@@ -30721,8 +30898,6 @@
         "jsonStr(s: String?)",
         "readLogcat(n: Int)",
         "readCrashes(ctx: Context)",
-        "reply( w: PrintWriter, status: String, body: String, contentType: String = \"text/plain\", )",
-        "parseQuery(raw: String)",
         "esc(s: String)",
         "class AppDebugServer",
         "class Op"
@@ -30852,6 +31027,7 @@
       ],
       "symbols": [
         "authority(pkg: String)",
+        "gatewayBase(pkg: String)",
         "serve(ctx: Context, method: String, op: String?, extras: Bundle?)",
         "call( ctx: Context, pkg: String, op: String, query: Map<String, String> = emptyMap()",
         "hasDoor(ctx: Context, pkg: String)",
@@ -30861,9 +31037,10 @@
         "peers(ctx: Context, pkg: String)",
         "dns(ctx: Context, pkg: String)",
         "crashes(ctx: Context, pkg: String)",
-        "ask(ctx: Context, pkg: String, op: String, query: Map<String, String>)",
+        "ask(ctx: Context, pkg: String, op: String, query: Map<String, String>, body: String?)",
         "queryOf(extras: Bundle?)",
-        "pack(r: Reply)",
+        "blob(ctx: Context, text: String)",
+        "pack(ctx: Context, r: Reply)",
         "unpack(b: Bundle)",
         "class FleetIpc"
       ]
@@ -30886,6 +31063,7 @@
         "gate(granted: Boolean)",
         "ladder(ipc: ()",
         "within(timeoutMs: Long, work: ()",
+        "readBody(reader: java.io.Reader, bytes: Int)",
         "path(op: String, query: Map<String, String>)",
         "httpGet(port: Int, path: String, token: String?, readMs: Int = 3000)",
         "class FleetIpcWire",
@@ -30995,24 +31173,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/devtools/src/test/java/com/diegonmarcos/superapp/devtools/AppDebugServerAuthTest.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AppDebugServerAuthTest"
-      ],
-      "imports": [
-        "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertNull",
-        "org.junit.Test"
-      ],
-      "symbols": [
-        "bearerOf_acceptsTheFormsRealClientsSend()",
-        "bearerOf_rejectsAnythingElse()",
-        "class AppDebugServerAuthTest"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/devtools/src/test/java/com/diegonmarcos/superapp/devtools/AppDebugServerBodyTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -31027,7 +31187,6 @@
         "java.io.StringReader"
       ],
       "symbols": [
-        "contentLength_parsesOnlyThatHeader()",
         "readBody_readsExactlyTheDeclaredBytes()",
         "noBody_keyAbsent()",
         "routeSeesBody_andQueryCannotForgeIt()",
@@ -31069,7 +31228,6 @@
       "symbols": [
         "theBakedSliceIsUniqueInsideTheRangeAndOutsideTheFallback()",
         "parseReadsTheBuildConfigShape()",
-        "aFallbackNeverTakesAnOwnedPort()",
         "class AppDebugServerPortsTest"
       ]
     },
@@ -182465,13 +182623,14 @@
         "androidx.compose.ui.graphics.ImageBitmap",
         "androidx.compose.ui.layout.ContentScale",
         "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.unit.Dp",
         "app.sterna.contacts.AndroidContacts",
         "app.sterna.contacts.ContactPhotos",
         "app.sterna.contacts.SenderAvatarLoader",
         "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
-        "ContactAvatar( email: String, name: String?, photoUri: String?, modifier: Modifier = Modifier, )",
+        "ContactAvatar( email: String, name: String?, photoUri: String?, modifier: Modifier = Modifier, size: Dp = ContactAvatarSize, placeholder: (@Composable ()",
         "resolve( context: android.content.Context, email: String, photoUri: String?, )"
       ]
     },
@@ -182597,6 +182756,66 @@
         "artVector(art: EmptyArt, ink: Color, accent: Color)",
         "EmptyState( art: EmptyArt, title: String, modifier: Modifier = Modifier, body: String? = null, action: (@Composable ()",
         "class EmptyArt"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/components/GmailEmailRow.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.widget.Toast",
+        "androidx.compose.animation.core.Animatable",
+        "androidx.compose.animation.core.FastOutSlowInEasing",
+        "androidx.compose.animation.core.tween",
+        "androidx.compose.foundation.ExperimentalFoundationApi",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.combinedClickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.ExperimentalLayoutApi",
+        "androidx.compose.foundation.layout.FlowRow",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.requiredSize",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.AttachFile",
+        "androidx.compose.material.icons.filled.Check",
+        "androidx.compose.material.icons.filled.Image",
+        "androidx.compose.material.icons.filled.Person",
+        "androidx.compose.material.icons.filled.PictureAsPdf",
+        "androidx.compose.material.icons.filled.Star",
+        "androidx.compose.material.icons.outlined.StarOutline",
+        "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope"
+      ],
+      "symbols": [
+        "gmailIsImportant(email: Email)",
+        "gmailChipLineShown(hasMessageToActOn: Boolean, fileChips: Int)",
+        "GmailEmailRow( email: Email, onClick: ()",
+        "GmailAvatar(selected: Boolean, email: String, name: String)",
+        "GmailThreadCount( count: Int, expanded: Boolean, onToggleExpand: (()",
+        "GmailStar(flagged: Boolean, onToggle: ()",
+        "GmailChip( tag: String, onClick: (()",
+        "GmailChipLine( email: Email, showActions: Boolean, onLoadMessage: (suspend (Email)",
+        "gmailFileIcon(type: String?, red: Color, grey: Color)",
+        "class GmailRowTags"
       ]
     },
     {
@@ -187673,25 +187892,38 @@
         "EinkColorScheme"
       ],
       "imports": [
+        "android.content.Context",
+        "android.os.Build",
         "androidx.compose.foundation.ExperimentalFoundationApi",
         "androidx.compose.foundation.LocalOverscrollConfiguration",
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.LocalRippleConfiguration",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Typography",
+        "androidx.compose.material3.ColorScheme",
         "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.material3.dynamicDarkColorScheme",
         "androidx.compose.material3.lightColorScheme",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.runtime.staticCompositionLocalOf",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.ExperimentalTextApi",
+        "androidx.compose.ui.text.font.Font",
         "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontVariation",
+        "androidx.compose.ui.text.font.FontWeight",
+        "app.sterna.R",
         "app.sterna.core.data.settings.AppStyle"
       ],
       "symbols": [
         "appStyleIsDark(style: AppStyle, cloudDark: Boolean)",
         "appStyleAnimates(style: AppStyle)",
+        "gmailDarkMailListPalette(scheme: ColorScheme)",
+        "gmailDarkColorScheme(context: Context, sdkInt: Int = Build.VERSION.SDK_INT)",
+        "gmailTypography(base: Typography)",
+        "sans()",
         "einkTypography(base: Typography)",
         "serif()",
         "ProvideAppStyle(style: AppStyle, content: @Composable ()"
@@ -189528,6 +189760,68 @@
         "inkedPixels(b: Rect)",
         "assertRow3Visible(unread: Boolean)",
         "class EmailListItemRow3RenderedTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/components/GmailDarkRowRenderedTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GmailDarkRowRenderedTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.material3.ColorScheme",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.dynamicDarkColorScheme",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Rect",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.toArgb",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.semantics.SemanticsActions",
+        "androidx.compose.ui.test.SemanticsNodeInteraction",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onAllNodesWithText",
+        "androidx.compose.ui.test.onNodeWithContentDescription",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.onNodeWithText",
+        "androidx.compose.ui.text.TextLayoutResult",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.font.FontStyle",
+        "androidx.compose.ui.text.font.FontWeight",
+        "app.sterna.R",
+        "app.sterna.core.data.settings.AppStyle",
+        "app.sterna.core.data.settings.ThemeMode",
+        "app.sterna.core.jmap.model.Email",
+        "app.sterna.core.jmap.model.EmailAddress",
+        "app.sterna.core.jmap.model.EmailBodyPart",
+        "app.sterna.ui.text.TextTool",
+        "app.sterna.ui.theme.GmailDarkColorScheme",
+        "app.sterna.ui.theme.LocalMailListPalette"
+      ],
+      "symbols": [
+        "evaluate()",
+        "email(parts: List<EmailBodyPart> = listOf(pdf)",
+        "show( style: AppStyle, unread: Boolean = true, mail: Email = email()",
+        "tag(t: String)",
+        "bounds(t: String)",
+        "styleOf(node: SemanticsNodeInteraction)",
+        "bitmap()",
+        "near(argb: Int, c: Color, tol: Int = 6)",
+        "assertCloudRow(style: AppStyle)",
+        "class GmailDarkRowRenderedTest"
       ]
     },
     {
@@ -446501,6 +446795,33 @@
       ]
     },
     {
+      "path": "ac_cloud-store/test/kt/StoreSearchLandingCheck.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "fails",
+        "check",
+        "eq",
+        "sug",
+        "main"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.apps.PhoneTaxonomyLayout",
+        "com.diegonmarcos.superapp.appstore.StoreSuggest",
+        "com.diegonmarcos.superapp.appstore.StoreSuggest.Folder",
+        "com.diegonmarcos.superapp.appstore.StoreSuggest.Hit",
+        "com.diegonmarcos.superapp.appstore.StoreSuggest.Suggestion",
+        "java.io.File",
+        "kotlin.system.exitProcess"
+      ],
+      "symbols": [
+        "check(name: String, ok: Boolean, got: Any? = null)",
+        "eq(name: String, want: Any?, got: Any?)",
+        "sug(pkg: String, label: String, installed: Boolean = false)",
+        "main(args: Array<String>)"
+      ]
+    },
+    {
       "path": "ac_cloud-store/test/kt/StoreSizesCheck.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -446664,6 +446985,28 @@
     },
     {
       "path": "ac_cloud-store/test/test-store-phone-sizes.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "has()",
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "has()",
+        "strip()",
+        "check()",
+        "ok()",
+        "bad()",
+        "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/test/test-store-search-landing.sh",
       "lang": "sh",
       "role": "shell",
       "exports": [
