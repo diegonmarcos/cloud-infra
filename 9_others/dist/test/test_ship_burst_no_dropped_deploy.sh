@@ -258,7 +258,9 @@ def mut_844_reconcile_no_queue(s, r, w): _noq(r["jobs"]["reconcile"]["concurrenc
 def mut_844_cgc_restore_no_queue(s, r, w):
     _noq(next(y for p, y in w.items() if p.endswith("cgc-db-index.yml"))["jobs"]["restore-all"]["concurrency"])
 def mut_844_hm_no_queue(s, r, w):
-    _noq(next(y for p, y in w.items() if p.endswith("ship-home-manager.yml"))["concurrency"])
+    # 2026-10-14: home-manager takes ship-wg-runner per VM job (jobs.deploy),
+    # its workflow-level group is its own (ship-home-manager).
+    _noq(next(y for p, y in w.items() if p.endswith("ship-home-manager.yml"))["jobs"]["deploy"]["concurrency"])
 MUT844 = [mut_844_deploy_no_queue, mut_844_reconcile_no_queue, mut_844_cgc_restore_no_queue, mut_844_hm_no_queue]
 MUTANTS = [mut_requeue_no_newer_check, mut_no_requeue, mut_requeue_on_push, mut_no_trigger, mut_wrong_wf, mut_no_cancelled, mut_no_loop_bound, mut_no_dispatch_guard, mut_push_applies]
 
