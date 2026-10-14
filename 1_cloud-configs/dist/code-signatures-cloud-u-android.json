@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21128,
+    "files": 21132,
     "by_lang": {
       "py": 123,
-      "sh": 465,
-      "kotlin": 10910,
+      "sh": 466,
+      "kotlin": 10912,
       "java": 635,
-      "ts": 8413,
+      "ts": 8414,
       "nix": 30,
       "js": 463,
       "rust": 89
     },
     "by_role": {
       "script": 217,
-      "shell": 360,
+      "shell": 361,
       "java": 634,
       "entrypoint": 23,
-      "module": 6367,
+      "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10907,
+      "kotlin": 10909,
       "python": 42,
       "rust-module": 89,
       "file": 2256,
@@ -60277,12 +60277,10 @@
         "ProviderCard",
         "SecretsProvidersPage",
         "AppProfilesPage",
-        "HomePage"
+        "ConnectionsPage",
+        "ImportPage"
       ],
       "imports": [
-        "android.graphics.BitmapFactory",
-        "android.net.Uri",
-        "androidx.compose.foundation.Image",
         "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Column",
@@ -60298,6 +60296,7 @@
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateListOf",
         "androidx.compose.runtime.mutableStateMapOf",
@@ -60308,18 +60307,20 @@
         "androidx.compose.runtime.staticCompositionLocalOf",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.graphics.asImageBitmap",
-        "androidx.compose.ui.layout.ContentScale",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.text.input.KeyboardType",
         "androidx.compose.ui.text.input.PasswordVisualTransformation",
         "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.cloudaccount.autofill.AutofillImportBody",
-        "com.diegonmarcos.superapp.profile.ProfilePrefs",
         "com.diegonmarcos.superapp.settings.AccountVault",
         "com.diegonmarcos.superapp.uikit.KitAction",
-        "com.diegonmarcos.superapp.uikit.KitActionBar"
+        "com.diegonmarcos.superapp.uikit.KitActionBar",
+        "com.diegonmarcos.superapp.uikit.KitCard",
+        "com.diegonmarcos.superapp.uikit.KitConfirmDialog",
+        "com.diegonmarcos.superapp.uikit.KitDensity",
+        "com.diegonmarcos.superapp.uikit.KitEmptyState",
+        "com.diegonmarcos.superapp.uikit.KitFingerprint"
       ],
       "symbols": [
         "cell(p: String, m: AuthMethod)",
@@ -60331,13 +60332,16 @@
         "stateOf(r: SetupResult?)",
         "Scroll(tag: String, content: @Composable ()",
         "Caption(text: String)",
+        "PageFrame(tag: String, title: String, subtitle: String, content: @Composable ()",
+        "Empty(title: String, caption: String, tag: String)",
         "SecretLine(e: SecretEntry, onChanged: ()",
         "ProviderCard(p: Provider, entries: List<SecretEntry>, go: (String, String)",
         "ConnectToken(p: Provider, done: ()",
         "SecretsProvidersPage(go: (String, String)",
         "AppProfilesPage()",
-        "HomePage(go: (String, String)",
-        "ConnectionsTable(rows: List<ConnectionRow>, go: (String, String)",
+        "ConnectionsPage(go: (String, String)",
+        "ImportPage(pickText: PickText)",
+        "ConnectionsList(rows: List<ConnectionRow>, go: (String, String)",
         "TokenImporter(pickText: PickText, changed: ()",
         "SetupAllCard(changed: ()",
         "class HubTags"
@@ -60495,6 +60499,7 @@
         "MainActivity"
       ],
       "imports": [
+        "android.content.Intent",
         "android.os.Bundle",
         "androidx.activity.result.contract.ActivityResultContracts",
         "androidx.activity.compose.setContent",
@@ -60515,6 +60520,7 @@
         "androidx.compose.material3.Surface",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
@@ -60523,25 +60529,26 @@
         "androidx.compose.ui.graphics.vector.ImageVector",
         "androidx.compose.ui.graphics.vector.rememberVectorPainter",
         "androidx.compose.ui.platform.LocalContext",
-        "com.diegonmarcos.cloudaccount.autofill.AutofillImportPage",
         "com.diegonmarcos.cloudaccount.autofill.AutofillProfilesPage",
         "com.diegonmarcos.cloudaccount.autofill.AutofillRulesPage",
         "com.diegonmarcos.cloudaccount.autofill.AutofillSnippetsPage",
         "com.diegonmarcos.cloudaccount.hub.AppProfilesPage",
-        "com.diegonmarcos.cloudaccount.hub.HomePage",
+        "com.diegonmarcos.cloudaccount.hub.ConnectionsPage",
         "com.diegonmarcos.cloudaccount.hub.HubNav",
+        "com.diegonmarcos.cloudaccount.hub.ImportPage",
         "com.diegonmarcos.cloudaccount.hub.LocalDeviceAuth",
         "com.diegonmarcos.cloudaccount.hub.SecretsProvidersPage",
-        "com.diegonmarcos.cloudaccount.hub.SystemDeviceAuth",
-        "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
-        "com.diegonmarcos.superapp.bottomnav.FleetChrome"
+        "com.diegonmarcos.cloudaccount.hub.SystemDeviceAuth"
       ],
       "symbols": [
         "pickText(onText: (String)",
         "onCreate(savedInstanceState: Bundle?)",
+        "onNewIntent(intent: Intent)",
         "AccountShell()",
+        "Strips(section: NavSection, path: List<NavPage>, select: (String)",
         "Page(section: String, page: String, go: (String, String)",
         "FleetSetupPage(model: AccountModel)",
+        "deepLink(intent: Intent?)",
         "iconFor(name: String)",
         "class MainActivity"
       ]
@@ -60745,6 +60752,9 @@
         "com.diegonmarcos.cloudaccount.hub.StepResult",
         "com.diegonmarcos.cloudaccount.hub.SystemDeviceAuth",
         "com.diegonmarcos.cloudaccount.hub.TokenImport",
+        "com.diegonmarcos.superapp.fleetconfig.FleetPolicy",
+        "com.diegonmarcos.superapp.profile.AccountFleet",
+        "com.diegonmarcos.superapp.profile.SetupPlan",
         "com.diegonmarcos.superapp.settings.AccountVault",
         "com.diegonmarcos.superapp.settings.ConfigsPrefs",
         "org.json.JSONObject",
@@ -60758,9 +60768,7 @@
         "org.junit.runner.RunWith",
         "org.robolectric.Robolectric",
         "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.shadows.ShadowLog",
-        "java.io.File",
-        "java.time.Instant"
+        "org.robolectric.shadows.ShadowLog"
       ],
       "symbols": [
         "setUp()",
@@ -60768,6 +60776,10 @@
         "b64(s: String)",
         "islandOrderIsProfilesSecretsHomeConfigs()",
         "everyOldPageIsReachable()",
+        "strippedPagesSitUnderOneContainerEach()",
+        "path(section: String, page: String)",
+        "openIntentDeepLinksResolveThroughTheSameMap()",
+        "i(section: String?, page: String?)",
         "connectionsMatrixIsBuiltFromStoredAuthState()",
         "cell(p: String, m: AuthMethod)",
         "parsesEnvFileWithExportQuotesCommentsAndExpiry()",
@@ -60784,6 +60796,8 @@
         "t(id: String, body: ()",
         "run()",
         "appProfileRowReportsStateWithoutValues()",
+        "fleetManifest()",
+        "cloudChatHasASetupSchema()",
         "noSecretReachesTheLog()",
         "class HubTest"
       ]
@@ -61061,6 +61075,20 @@
         "bad()",
         "scratch()",
         "plant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/test/test-setup-schema-coverage.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "mutate()"
       ]
     },
     {
@@ -71066,6 +71094,47 @@
         "notifyReceivedToJS()",
         "addServerUrlToBundle(bundle: Bundle)",
         "class CustomPushNotification"
+      ]
+    },
+    {
+      "path": "ac_cloud-chat/android/app/src/main/java/com/mattermost/rnbeta/FleetSetupModule.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetSetupModule"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.facebook.react.bridge.Arguments",
+        "com.facebook.react.bridge.Promise",
+        "com.facebook.react.bridge.ReactApplicationContext",
+        "com.facebook.react.bridge.ReactContextBaseJavaModule",
+        "com.facebook.react.bridge.ReactMethod",
+        "com.facebook.react.module.annotations.ReactModule"
+      ],
+      "symbols": [
+        "getName()",
+        "getConfig(promise: Promise)",
+        "class FleetSetupModule"
+      ]
+    },
+    {
+      "path": "ac_cloud-chat/android/app/src/main/java/com/mattermost/rnbeta/FleetSetupPackage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetSetupPackage"
+      ],
+      "imports": [
+        "com.facebook.react.ReactPackage",
+        "com.facebook.react.bridge.NativeModule",
+        "com.facebook.react.bridge.ReactApplicationContext",
+        "com.facebook.react.uimanager.ViewManager"
+      ],
+      "symbols": [
+        "createNativeModules(ctx: ReactApplicationContext)",
+        "createViewManagers(ctx: ReactApplicationContext)",
+        "class FleetSetupPackage"
       ]
     },
     {
@@ -111581,6 +111650,7 @@
         "@screens/background",
         "@screens/navigation",
         "@utils/errors",
+        "@utils/fleet_setup",
         "@utils/push_proxy",
         "@utils/server",
         "@utils/theme",
@@ -114817,6 +114887,21 @@
         "@typings/database/models/servers/channel"
       ],
       "symbols": []
+    },
+    {
+      "path": "ac_cloud-chat/app/utils/fleet_setup.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "getFleetSetup",
+        "FleetSetupConfig"
+      ],
+      "imports": [
+        "react-native"
+      ],
+      "symbols": [
+        "getFleetSetup()"
+      ]
     },
     {
       "path": "ac_cloud-chat/app/utils/font_family.test.ts",
