@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21163,
+    "files": 21171,
     "by_lang": {
       "py": 128,
       "sh": 472,
-      "kotlin": 10932,
+      "kotlin": 10940,
       "java": 635,
       "ts": 8414,
       "nix": 30,
@@ -25,7 +25,7 @@
       "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10929,
+      "kotlin": 10937,
       "python": 43,
       "rust-module": 89,
       "file": 2256,
@@ -20341,6 +20341,7 @@
         "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.superapp.account.R",
         "com.diegonmarcos.superapp.settings.AccountVault",
+        "com.diegonmarcos.superapp.settings.MailSignatures",
         "com.diegonmarcos.superapp.uikit.KitAction",
         "com.diegonmarcos.superapp.uikit.KitActionBar",
         "com.diegonmarcos.superapp.uikit.KitCard",
@@ -20350,8 +20351,7 @@
         "com.diegonmarcos.superapp.uikit.KitSettingsRow",
         "com.diegonmarcos.superapp.uikit.KitState",
         "com.diegonmarcos.superapp.uikit.KitStatusBanner",
-        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
-        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader"
       ],
       "symbols": [
         "secretRow(path: String)",
@@ -21294,6 +21294,8 @@
         "captureConfigs(appId: String, export: JSONObject)",
         "summary()",
         "profileValues()",
+        "signatures()",
+        "takeSignatures(doc: JSONObject)",
         "bundleJson(now: String)",
         "exportBundle(passphrase: CharArray, now: String = java.time.Instant.now()",
         "importBundle(text: String, passphrase: CharArray)",
@@ -21351,6 +21353,31 @@
         "class ConfigsPrefs",
         "class refuses",
         "class rather"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/settings/MailSignatures.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailSignatures"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.fleetconfig.SetupContract",
+        "com.diegonmarcos.superapp.profile.AccountFleet",
+        "org.json.JSONObject",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "capture(ctx: Context)",
+        "handBack(ctx: Context, values: Map<String, String>)",
+        "document(values: Map<String, String>)",
+        "valuesOf(doc: JSONObject)",
+        "parseImport(text: String, fileName: String = \"\")",
+        "fromHtml(html: String, name: String)",
+        "class MailSignatures",
+        "class Handed"
       ]
     },
     {
@@ -61574,6 +61601,52 @@
         "cloudChatHasASetupSchema()",
         "noSecretReachesTheLog()",
         "class HubTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/app/src/test/java/com/diegonmarcos/cloudaccount/MailSignaturesTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailSignaturesTest"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.fleetconfig.SetupContract",
+        "com.diegonmarcos.superapp.profile.AccountStore",
+        "com.diegonmarcos.superapp.settings.AccountVault",
+        "com.diegonmarcos.superapp.settings.BundleCrypto",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "com.diegonmarcos.superapp.settings.MailSignatures",
+        "org.json.JSONObject",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "java.io.File"
+      ],
+      "symbols": [
+        "setUp()",
+        "tearDown()",
+        "exported(vararg kv: Pair<String, String>)",
+        "captureReadsMailsExportAndDropsTheTypeTable()",
+        "captureIsNullWhenMailIsAbsentOldOrEmpty()",
+        "handBackAppliesTheValuesToTheDeclaredStoreAndReportsWhatMailSaid()",
+        "aSignatureDocumentRoundTripsThroughTheContractsValues()",
+        "aBareHtmlFileImportsAsOneSignatureForEveryIdentityNamedAfterTheFile()",
+        "aSignatureDocumentImportsAsItself()",
+        "aFileThatIsNeitherIsRefused()",
+        "theBundleCapturesMailsSignaturesAndImportHandsThemBack()",
+        "withoutMailTheVaultKeepsTheCopyForTheNextExportAndTheImportStillSucceeds()",
+        "aBundleWithoutSignaturesStillExportsAndImportsAsBefore()",
+        "class MailSignaturesTest"
       ]
     },
     {
@@ -181081,6 +181154,29 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/fleet/SignaturesSetupHandler.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignaturesSetupHandler"
+      ],
+      "imports": [
+        "android.content.Context",
+        "app.sterna.core.data.account.AccountStore",
+        "app.sterna.core.data.account.SignatureTransfer",
+        "app.sterna.core.data.account.StoredAccount",
+        "com.diegonmarcos.superapp.fleetconfig.SetupStores"
+      ],
+      "symbols": [
+        "read(ctx: Context, file: String)",
+        "write(ctx: Context, file: String, set: Map<String, Any?>, remove: Set<String>)",
+        "values()",
+        "apply(set: Map<String, Any?>, remove: Set<String>)",
+        "register(store: AccountStore)",
+        "class SignaturesSetupHandler"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/folders/FolderDeleteWorker.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -187329,13 +187425,27 @@
       "role": "kotlin",
       "exports": [],
       "imports": [
+        "android.view.View",
+        "android.webkit.WebResourceRequest",
+        "android.webkit.WebResourceResponse",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.Spacer",
         "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
         "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.selection.selectable",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.AlertDialog",
         "androidx.compose.material3.HorizontalDivider",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedButton",
@@ -187344,22 +187454,68 @@
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.res.stringResource",
-        "androidx.compose.ui.semantics.Role",
-        "androidx.compose.ui.text.AnnotatedString",
-        "androidx.compose.ui.text.font.FontFamily",
-        "androidx.compose.ui.text.fromHtml",
-        "app.sterna.R",
-        "app.sterna.core.data.account.StoredSignature",
-        "app.sterna.ui.theme.MailMetrics"
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.toArgb",
+        "androidx.compose.ui.res.stringResource"
       ],
       "symbols": [
         "SignatureListEditor( signatures: List<StoredSignature>, defaultSignatureId: String?, delimiter: Boolean, onChange: (List<StoredSignature>)",
         "update(transform: (StoredSignature)",
-        "SignatureSourcePreview(signature: StoredSignature, delimiter: Boolean)"
+        "SignatureSourceEditor(signature: StoredSignature, onSource: (String)",
+        "show(edit: SignatureHtmlTools.Edit)",
+        "commit(edit: SignatureHtmlTools.Edit?)",
+        "openDialog(which: Int)",
+        "filter(text: AnnotatedString)",
+        "SignatureSourcePreview(signature: StoredSignature, delimiter: Boolean)",
+        "SignatureHtmlPreview(sanitisedHtml: String, modifier: Modifier = Modifier)",
+        "cssColour(c: Color)",
+        "shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?)",
+        "shouldInterceptRequest(view: WebView?, request: WebResourceRequest?)",
+        "class HighlightTransformation",
+        "class PreviewClient"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureHtmlTools.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "app.sterna.core.data.text.htmlToText",
+        "app.sterna.core.data.text.sanitiseReceivedHtml"
+      ],
+      "symbols": [
+        "bold(text: String, start: Int, end: Int)",
+        "italic(text: String, start: Int, end: Int)",
+        "underline(text: String, start: Int, end: Int)",
+        "wrap(text: String, start: Int, end: Int, open: String, close: String)",
+        "link(text: String, start: Int, end: Int, url: String)",
+        "image(text: String, start: Int, end: Int, url: String)",
+        "colour(text: String, start: Int, end: Int, hex: String)",
+        "safeLinkUrl(raw: String)",
+        "safeImageUrl(raw: String)",
+        "escapeAttribute(s: String)",
+        "plainText(source: String)",
+        "previewDocument(source: String, textColour: String = \"#000000\", background: String = \"#ffffff\")",
+        "highlight(source: String)",
+        "scanTag(source: String, from: Int, spans: MutableList<Span>)",
+        "record(edit: Edit, merge: Boolean = false)",
+        "undo()",
+        "redo()",
+        "ordered(text: String, start: Int, end: Int)",
+        "class SignatureHtmlTools",
+        "class Edit",
+        "class Kind",
+        "class Span",
+        "class History"
       ]
     },
     {
@@ -188858,6 +189014,37 @@
         "doWork()",
         "repoFile(path: String)",
         "class LocalDraftRearmWiringTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/fleet/SignaturesSetupHandlerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignaturesSetupHandlerTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.account.SignatureTransfer",
+        "app.sterna.core.data.account.StoredAccount",
+        "app.sterna.core.data.account.StoredIdentity",
+        "app.sterna.core.data.account.StoredSignature",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "handler()",
+        "exportsOneKeyPerAddressThatHasASignature()",
+        "nothingToExportReadsAsNull()",
+        "applyWritesThroughTheStoreAndExportSeesIt()",
+        "anUndecodableValueRefusesTheWholeApplyAndWritesNothing()",
+        "removeClearsAnIdentitysSignatures()",
+        "anApplyThatChangesNothingWritesNothing()",
+        "theApplicationRegistersTheHandlerUnderTheDeclaredStoreName()",
+        "class SignaturesSetupHandlerTest"
       ]
     },
     {
@@ -197108,6 +197295,47 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/SignatureHtmlToolsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignatureHtmlToolsTest"
+      ],
+      "imports": [
+        "app.sterna.ui.settings.SignatureHtmlTools.Edit",
+        "app.sterna.ui.settings.SignatureHtmlTools.History",
+        "app.sterna.ui.settings.SignatureHtmlTools.Kind",
+        "app.sterna.ui.settings.SignatureHtmlTools.Span",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "boldWrapsTheSelectionAndKeepsItSelected()",
+        "aSecondPressOnTheSameSelectionTakesTheTagsBackOff()",
+        "withNothingSelectedThePairIsInsertedAndTheCursorSitsBetween()",
+        "aReversedSelectionAndOutOfRangeOffsetsAreTolerated()",
+        "aLinkTakesTheSelectionAsItsLabel()",
+        "aLinkWithNothingSelectedIsLabelledByItsAddressEscaped()",
+        "onlyWebMailAndPhoneAddressesMakeALink()",
+        "anImageIsInsertedAtTheCursorWithTheSelectionAsAlt()",
+        "anImageAddressMustBeHttpOrHttps()",
+        "aColourIsASixDigitHexInASpanAndNothingElse()",
+        "thePlainTextIsDerivedWithLinkTargetsSpelledOut()",
+        "thePreviewDocumentCarriesOnlySanitisedMarkupUnderAClosedPolicy()",
+        "tagsAttributesValuesAndEntitiesArePaintedInOrder()",
+        "aCommentIsOneSpanAndMarkupInsideItIsNotPainted()",
+        "plainTextAndHalfTypedMarkupNeverThrowAndSpansStayInRange()",
+        "undoAndRedoWalkTheStepsAndANewEditDropsTheRedoBranch()",
+        "aBurstOfTypingIsOneStepAndAToolbarActionIsAStepOfItsOwn()",
+        "recordingTheSameTextOnlyUpdatesTheSelection()",
+        "theHistoryIsBounded()",
+        "class SignatureHtmlToolsTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/SignOutStopsTheSyncWiringTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -198703,6 +198931,34 @@
         "safeXmlDocumentBuilderFactory()",
         "childElements()",
         "childText(tag: String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/account/SignatureTransfer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignatureTransfer"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.htmlToText",
+        "kotlinx.serialization.Serializable",
+        "kotlinx.serialization.json.Json"
+      ],
+      "symbols": [
+        "keyOf(email: String)",
+        "collect(accounts: List<StoredAccount>)",
+        "encodeEntry(entry: Entry)",
+        "decodeEntry(text: String)",
+        "toDocument(entries: Map<String, Entry>)",
+        "parseDocument(text: String)",
+        "apply(accounts: List<StoredAccount>, entries: Map<String, Entry>)",
+        "clear(accounts: List<StoredAccount>, emails: Set<String>)",
+        "replace(identity: StoredIdentity, entry: Entry)",
+        "append(identity: StoredIdentity, entry: Entry)",
+        "class SignatureTransfer",
+        "class Entry",
+        "class Document"
       ]
     },
     {
@@ -202468,6 +202724,37 @@
       "symbols": [
         "account(id: String, on: Boolean = false)",
         "class ShowOnlySubscribedFoldersTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/account/SignatureTransferTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignatureTransferTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "sig(id: String, text: String, html: String = \"\")",
+        "account(id: String, vararg identities: StoredIdentity, server: List<StoredIdentity> = emptyList()",
+        "collectKeysByLowercasedAddressAndSkipsIdentitiesWithoutSignatures()",
+        "aLegacySinglePlainSignatureTravelsAsTheMigratedOne()",
+        "theFirstAccountThatNamesAnAddressWins()",
+        "anEntrySurvivesTheWireIncludingTheHtmlHalf()",
+        "anHtmlSignatureArrivingWithoutItsPlainTextGetsItDerived()",
+        "aDocumentRoundTripsAndForeignOrNewerOnesAreRefused()",
+        "applyWritesOntoTheAddressedIdentityOnlyAndMirrorsTheLegacyPair()",
+        "applyIsIdempotent()",
+        "anAddressNoIdentityAnswersToIsSkipped()",
+        "anAddressOnlyTheServerKnowsBecomesAManualOverride()",
+        "theAllIdentitiesKeyAddsASignatureToEachWithoutDuplicatingOrDisplacing()",
+        "clearRemovesTheNamedSignaturesAndTheLegacyPair()",
+        "class SignatureTransferTest"
       ]
     },
     {
