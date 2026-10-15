@@ -762,8 +762,13 @@ function deriveCaddy(c: any): DerivedFile[] {
   const mcpManifest: any = urlScheme ? loadManifest(urlScheme.manifests.mcp, join(CLOUD_ROOT, "a_solutions"), "MCP") : null;
   if (mcpManifest) {
     const declared = new Set<string>((mcpManifest.mcps ?? []).map((m: any) => m.base_path));
+    // auth "mesh" (build.json mesh_only:true — cloud-vault-mcp) stays WG-only:
+    // no bearer door, wg_only forced on. Only auth "token" entries get bearer.
+    const tokenPaths = new Set<string>((mcpManifest.mcps ?? []).filter((m: any) => (m.auth ?? "token") === "token").map((m: any) => m.base_path));
+    const meshPaths = new Set<string>((mcpManifest.mcps ?? []).filter((m: any) => m.auth === "mesh").map((m: any) => m.base_path));
     for (const ep of mcpEndpoints) {
-      if (declared.has(ep.base_path)) ep.bearer_auth = true;
+      if (meshPaths.has(ep.base_path)) { ep.wg_only = true; delete ep.bearer_auth; }
+      else if (tokenPaths.has(ep.base_path)) ep.bearer_auth = true;
     }
     for (const bp of declared) {
       if (!mcpEndpoints.some((e: any) => e.base_path === bp)) {
