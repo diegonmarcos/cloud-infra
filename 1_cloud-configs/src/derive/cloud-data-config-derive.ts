@@ -961,6 +961,10 @@ function deriveCaddy(c: any): DerivedFile[] {
   const oidcPublic = oidcPublicPathsEarly.length > 0 ? {
     domain: String((authSvc as any)?.proxy?.primary?.domain ?? (authSvc as any)?.domain ?? "").trim(),
     paths: oidcPublicPathsEarly,
+    // Declared exposure of the IdP host itself. wg_only:false (owner decision
+    // 2026-10-15) makes the edge proxy EVERY path on the host (login portal
+    // included) instead of only the machine endpoints above.
+    wg_only: (authSvc as any)?.proxy?.primary?.wg_only !== false,
     // Edge reaches these over the SAME wg-public path it uses for L4
     // fall-through (see the long rationale where this used to live, kept in
     // git history): authelia:9091 docker-proxy hangs, hub caddy-l4 silent on

@@ -169,4 +169,12 @@ nomesh=$(jq -r --slurpfile j "$MCPJ" '.url_scheme.mcp_private[]
   | $p.container' "$CADDY")
 [ -z "$nomesh" ] && ok "every MCP has a <name>-mesh entry at https://c3-<container>.app/mcp, no auth" || bad "MCPs without a correct -mesh entry in dist/mcp.json: $nomesh"
 
+# 15) auth.diegonmarcos.com is fully open (owner decision 2026-10-15): authelia
+#     declares wg_only:false, so oidc_public must carry wg_only:false (the edge
+#     then proxies ALL paths, login portal included) and still list its paths.
+EDGEJ="$DIST/build-caddy-edge.json"
+aw=$(jq -r '.oidc_public.wg_only' "$EDGEJ")
+[ "$aw" = "false" ] && ok "auth.diegonmarcos.com fully open at the edge (oidc_public.wg_only=false)" || bad "auth.diegonmarcos.com not fully open at the edge: oidc_public.wg_only=$aw"
+jq -e '.oidc_public.paths | index("/.well-known/openid-configuration")' "$EDGEJ" >/dev/null || bad "oidc_public lost the discovery path"
+
 exit $fail
