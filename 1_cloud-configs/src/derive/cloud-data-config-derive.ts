@@ -697,10 +697,14 @@ function deriveCaddy(c: any): DerivedFile[] {
 
   // ── MCP routes: streaming services ──
   const mcpEndpoints: any[] = [];
-  for (const [, svc] of Object.entries(services)) {
+  // base_path -> { container, upstream }: feeds the per-MCP private mesh name
+  // (c3-{container}.app) in the URL-scheme block below.
+  const mcpContainerOf = new Map<string, { container: string; upstream?: string }>();
+  for (const [svcName, svc] of Object.entries(services)) {
     const proxy = svc.proxy?.primary;
     if (!proxy?.streaming || !proxy.parent_domain) continue;
     const upstreamForCaddy = rewriteUpstreamForCaddy(svc.vm, svc.upstream);
+    if (proxy.base_path) mcpContainerOf.set(proxy.base_path, { container: (svc as any).containers?.app?.container_name ?? svcName, upstream: svc.upstream });
     mcpEndpoints.push({
       base_path: proxy.base_path,
       ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
@@ -737,6 +741,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       const wgIp = vms[svc.vm]?.wg_ip;
       const upstreamRaw = wgIp && c.port ? `${wgIp}:${c.port}` : undefined;
       const upstreamForCaddy = upstreamRaw ? rewriteUpstreamForCaddy(svc.vm, upstreamRaw) : undefined;
+      if (c?.container_name) mcpContainerOf.set(cp.base_path, { container: c.container_name, upstream: upstreamRaw });
       mcpEndpoints.push({
         base_path: cp.base_path,
         ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
@@ -1147,6 +1152,19 @@ function deriveCaddy(c: any): DerivedFile[] {
       addPrivate(priv, e.upstream, "c3");
       c3Hosts.push({ host, container, private: priv });
     }
+    // Every manifest MCP ALSO gets a private mesh address c3-{container}.app
+    // (WG peers, no token): the public mcp.diegonmarcos.com path stays
+    // token-gated (vault: mesh-only). Reuses the c3 name above when the
+    // container already has one; adds it otherwise (vault, cgc-pvt).
+    const mcpPrivate: any[] = [];
+    for (const m of (mcpManifest?.mcps ?? []) as any[]) {
+      const hit = mcpContainerOf.get(m.base_path);
+      if (!hit?.upstream) throw new Error(`MCP ${m.base_path} has no container/upstream — cannot give it a private mesh address`);
+      const base = hostSafe(hit.container);
+      const priv = `${base.startsWith(c3Prefix) ? base : c3Prefix + base}.app`;
+      addPrivate(priv, hit.upstream, "c3");
+      mcpPrivate.push({ name: m.name, base_path: m.base_path, container: hit.container, private: priv, url: `https://${priv}/mcp` });
+    }
 
     const apkManifest = loadManifest(urlScheme.manifests.apk, CLOUD_ROOT, "APK");
     const landingBase: string = publicLanding?.base_url ?? "";
@@ -1203,6 +1221,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       doc: "a0_docs/eng-specs/url-scheme.md",
       groups: urlScheme.groups ?? {},
       container_hosts: c3Hosts,
+      mcp_private: mcpPrivate,
       apk_hosts: apkHosts,
       mcp: (mcpManifest?.mcps ?? []).map((m: any) => ({ name: m.name, base_path: m.base_path, auth: m.auth })),
     };

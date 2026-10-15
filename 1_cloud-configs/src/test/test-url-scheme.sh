@@ -149,4 +149,14 @@ nobearer=$(jq -r --slurpfile m "$MCPM" '($m[0].mcps | map(select(.auth=="token")
 [ -z "$nobearer" ] && ok "every other MCP is token-public (bearer_auth)" || bad "token MCPs without bearer_auth: $nobearer"
 if [ -f "$EDGE" ] && grep -q '/cloud-vault-mcp' "$EDGE"; then bad "cloud-vault-mcp present in the public-edge allowlist"; fi
 
+# 13) every manifest MCP ALSO has a private mesh address c3-{container}.app
+#     (url_scheme.mcp_private, served as a private_mesh_routes site, no token);
+#     the public mcp.diegonmarcos.com paths stay token-gated (9, 12) and vault
+#     stays mesh-only (12).
+nopriv=$(jq -r --slurpfile m "$MCPM" --arg c3 "$C3_RE" '. as $r | $m[0].mcps[].base_path as $b
+  | ([$r.url_scheme.mcp_private[]? | select(.base_path==$b)][0]) as $p
+  | select($p == null or ($p.private | test($c3) | not)
+           or ([$r.private_mesh_routes[] | select(.service==$p.private)] | length) == 0) | $b' "$CADDY")
+[ -z "$nopriv" ] && ok "every MCP has a private mesh address c3-<container>.app" || bad "MCPs without a private mesh address: $nopriv"
+
 exit $fail
