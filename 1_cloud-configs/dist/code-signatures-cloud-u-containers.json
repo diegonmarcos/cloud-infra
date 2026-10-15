@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2920,
+    "files": 2925,
     "by_lang": {
       "sh": 146,
       "nix": 164,
       "py": 861,
-      "ts": 1143,
-      "js": 71,
+      "ts": 1147,
+      "js": 72,
       "rust": 535
     },
     "by_role": {
       "shell": 136,
       "nix-module": 16,
       "python": 853,
-      "module": 696,
-      "file": 317,
+      "module": 699,
+      "file": 318,
       "script": 8,
       "flake": 75,
       "compose": 73,
       "entrypoint": 48,
-      "mcp-tool": 112,
+      "mcp-tool": 113,
       "workflow-dag": 3,
       "rust-module": 530,
       "hook": 53
@@ -1842,6 +1842,43 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/caddy-cert-repair.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "parseDataMount",
+        "tsStamp",
+        "buildRepairScript",
+        "parseScanOutput",
+        "mismatchLines",
+        "mismatchDomains",
+        "lastStartupError",
+        "parseState",
+        "formatReport",
+        "CONTAINER_RE",
+        "MISMATCH_RE",
+        "DATA_MOUNT_TEMPLATE",
+        "ScanLine",
+        "certDomain",
+        "ContainerState",
+        "STATE_TEMPLATE",
+        "RepairReport"
+      ],
+      "imports": [],
+      "symbols": [
+        "parseDataMount(stdout: string)",
+        "tsStamp(d: Date = new Date()",
+        "buildRepairScript(o: { dataDir: string; allMesh: boolean; dryRun: boolean; ts: string })",
+        "parseScanOutput(out: string)",
+        "mismatchLines(logs: string, max = 10)",
+        "mismatchDomains(logs: string)",
+        "summarize(line: string)",
+        "lastStartupError(logs: string, domain?: string)",
+        "parseState(out: string)",
+        "formatReport(r: RepairReport)"
+      ]
+    },
+    {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/cloud/aws.ts",
       "lang": "ts",
       "role": "module",
@@ -2171,6 +2208,7 @@
         "containerPause",
         "containerUnpause",
         "containerExecCmd",
+        "caddyCertRepair",
         "logsSearch",
         "logsMulti",
         "composeUpAll",
@@ -2195,6 +2233,7 @@
         "./shell-quote.js",
         "./validators.js",
         "./redact-argv.js",
+        "./caddy-cert-repair.js",
         "zod",
         "./schemas.js"
       ],
@@ -2212,6 +2251,7 @@
         "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
+        "caddyCertRepair(\n  vmNameOrAlias: string,\n  container: string,\n  dryRun: boolean,\n  allMesh: boolean,\n)",
         "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
         "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
         "composeUpAll(\n  vmNameOrAlias: string,\n)",
@@ -4595,6 +4635,7 @@
         "../../shared/libs/gha-policy.js",
         "../../shared/libs/redact-argv.js",
         "../../shared/libs/docker.js",
+        "../../shared/libs/caddy-cert-repair.js",
         "../../shared/libs/control.js"
       ],
       "symbols": [
@@ -4863,6 +4904,43 @@
         "pruneDir(dir: string)",
         "sanitize(s: string)",
         "startCacheCleanup()"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/caddy-cert-repair.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "parseDataMount",
+        "tsStamp",
+        "buildRepairScript",
+        "parseScanOutput",
+        "mismatchLines",
+        "mismatchDomains",
+        "lastStartupError",
+        "parseState",
+        "formatReport",
+        "CONTAINER_RE",
+        "MISMATCH_RE",
+        "DATA_MOUNT_TEMPLATE",
+        "ScanLine",
+        "certDomain",
+        "ContainerState",
+        "STATE_TEMPLATE",
+        "RepairReport"
+      ],
+      "imports": [],
+      "symbols": [
+        "parseDataMount(stdout: string)",
+        "tsStamp(d: Date = new Date()",
+        "buildRepairScript(o: { dataDir: string; allMesh: boolean; dryRun: boolean; ts: string })",
+        "parseScanOutput(out: string)",
+        "mismatchLines(logs: string, max = 10)",
+        "mismatchDomains(logs: string)",
+        "summarize(line: string)",
+        "lastStartupError(logs: string, domain?: string)",
+        "parseState(out: string)",
+        "formatReport(r: RepairReport)"
       ]
     },
     {
@@ -5195,6 +5273,7 @@
         "containerPause",
         "containerUnpause",
         "containerExecCmd",
+        "caddyCertRepair",
         "logsSearch",
         "logsMulti",
         "composeUpAll",
@@ -5219,6 +5298,7 @@
         "./shell-quote.js",
         "./validators.js",
         "./redact-argv.js",
+        "./caddy-cert-repair.js",
         "zod",
         "./schemas.js"
       ],
@@ -5236,6 +5316,7 @@
         "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
+        "caddyCertRepair(\n  vmNameOrAlias: string,\n  container: string,\n  dryRun: boolean,\n  allMesh: boolean,\n)",
         "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
         "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
         "composeUpAll(\n  vmNameOrAlias: string,\n)",
@@ -5940,6 +6021,21 @@
         "envLine(e: string)",
         "shq(v: string)"
       ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-caddy-cert-repair.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "./shared/libs/caddy-cert-repair.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/test-cf-bridge.mjs",
@@ -18587,6 +18683,43 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/caddy-cert-repair.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "parseDataMount",
+        "tsStamp",
+        "buildRepairScript",
+        "parseScanOutput",
+        "mismatchLines",
+        "mismatchDomains",
+        "lastStartupError",
+        "parseState",
+        "formatReport",
+        "CONTAINER_RE",
+        "MISMATCH_RE",
+        "DATA_MOUNT_TEMPLATE",
+        "ScanLine",
+        "certDomain",
+        "ContainerState",
+        "STATE_TEMPLATE",
+        "RepairReport"
+      ],
+      "imports": [],
+      "symbols": [
+        "parseDataMount(stdout: string)",
+        "tsStamp(d: Date = new Date()",
+        "buildRepairScript(o: { dataDir: string; allMesh: boolean; dryRun: boolean; ts: string })",
+        "parseScanOutput(out: string)",
+        "mismatchLines(logs: string, max = 10)",
+        "mismatchDomains(logs: string)",
+        "summarize(line: string)",
+        "lastStartupError(logs: string, domain?: string)",
+        "parseState(out: string)",
+        "formatReport(r: RepairReport)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/cloud/aws.ts",
       "lang": "ts",
       "role": "module",
@@ -18916,6 +19049,7 @@
         "containerPause",
         "containerUnpause",
         "containerExecCmd",
+        "caddyCertRepair",
         "logsSearch",
         "logsMulti",
         "composeUpAll",
@@ -18940,6 +19074,7 @@
         "./shell-quote.js",
         "./validators.js",
         "./redact-argv.js",
+        "./caddy-cert-repair.js",
         "zod",
         "./schemas.js"
       ],
@@ -18957,6 +19092,7 @@
         "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
+        "caddyCertRepair(\n  vmNameOrAlias: string,\n  container: string,\n  dryRun: boolean,\n  allMesh: boolean,\n)",
         "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
         "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
         "composeUpAll(\n  vmNameOrAlias: string,\n)",
@@ -20000,6 +20136,43 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/caddy-cert-repair.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "parseDataMount",
+        "tsStamp",
+        "buildRepairScript",
+        "parseScanOutput",
+        "mismatchLines",
+        "mismatchDomains",
+        "lastStartupError",
+        "parseState",
+        "formatReport",
+        "CONTAINER_RE",
+        "MISMATCH_RE",
+        "DATA_MOUNT_TEMPLATE",
+        "ScanLine",
+        "certDomain",
+        "ContainerState",
+        "STATE_TEMPLATE",
+        "RepairReport"
+      ],
+      "imports": [],
+      "symbols": [
+        "parseDataMount(stdout: string)",
+        "tsStamp(d: Date = new Date()",
+        "buildRepairScript(o: { dataDir: string; allMesh: boolean; dryRun: boolean; ts: string })",
+        "parseScanOutput(out: string)",
+        "mismatchLines(logs: string, max = 10)",
+        "mismatchDomains(logs: string)",
+        "summarize(line: string)",
+        "lastStartupError(logs: string, domain?: string)",
+        "parseState(out: string)",
+        "formatReport(r: RepairReport)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/cloud/aws.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -20329,6 +20502,7 @@
         "containerPause",
         "containerUnpause",
         "containerExecCmd",
+        "caddyCertRepair",
         "logsSearch",
         "logsMulti",
         "composeUpAll",
@@ -20353,6 +20527,7 @@
         "./shell-quote.js",
         "./validators.js",
         "./redact-argv.js",
+        "./caddy-cert-repair.js",
         "zod",
         "./schemas.js"
       ],
@@ -20370,6 +20545,7 @@
         "containerPause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerUnpause(\n  vmNameOrAlias: string,\n  container: string,\n)",
         "containerExecCmd(\n  vmNameOrAlias: string,\n  container: string,\n  command: string,\n)",
+        "caddyCertRepair(\n  vmNameOrAlias: string,\n  container: string,\n  dryRun: boolean,\n  allMesh: boolean,\n)",
         "logsSearch(\n  vmNameOrAlias: string,\n  container: string,\n  pattern: string,\n  lines = 1000,\n)",
         "logsMulti(\n  serviceName: string,\n  lines = 50,\n)",
         "composeUpAll(\n  vmNameOrAlias: string,\n)",
