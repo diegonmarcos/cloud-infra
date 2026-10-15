@@ -162,6 +162,23 @@ function main(): void {
     skipped.push(`direct_http (policy not found at ${POLICY_FILE} — cloud-u-linux not checked out)`);
   }
 
+  // Private mesh addresses: every MCP in the manifest also gets a
+  // `<name>-mesh` entry at https://c3-<container>.app/mcp (url_scheme.mcp_private,
+  // derived into build-caddy.json by config-derive, which runs before this).
+  // Served as a private_mesh_routes site reachable only over WireGuard, so it
+  // carries NO auth headers — mesh membership is the gate.
+  const CADDY_FILE = path.join(DIST_DIR, 'build-caddy.json');
+  if (fs.existsSync(CADDY_FILE)) {
+    let caddy: any;
+    try { caddy = JSON.parse(fs.readFileSync(CADDY_FILE, 'utf8')); } catch { caddy = null; }
+    for (const m of caddy?.url_scheme?.mcp_private ?? []) {
+      if (!m?.container || !/^c3-[a-z0-9][a-z0-9-]*\.app$/.test(m.private ?? '')) continue;
+      servers[`${m.container}-mesh`] = { type: 'http', url: `https://${m.private}/mcp` };
+    }
+  } else {
+    skipped.push(`mesh entries (${CADDY_FILE} not derived yet)`);
+  }
+
   const names = Object.keys(servers).sort();
   const out = {
     _warning: 'GENERATED — DO NOT EDIT. Derived from a_solutions/*/build.json .mcp blocks by 1_cloud-configs/src/derive/derive-mcp-json.ts. Edit the service build.json, then run 1_cloud-configs/build.sh derive.',

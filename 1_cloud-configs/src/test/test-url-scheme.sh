@@ -159,4 +159,14 @@ nopriv=$(jq -r --slurpfile m "$MCPM" --arg c3 "$C3_RE" '. as $r | $m[0].mcps[].b
            or ([$r.private_mesh_routes[] | select(.service==$p.private)] | length) == 0) | $b' "$CADDY")
 [ -z "$nopriv" ] && ok "every MCP has a private mesh address c3-<container>.app" || bad "MCPs without a private mesh address: $nopriv"
 
+# 14) every MCP in the manifest also has a `<container>-mesh` entry in
+#     dist/mcp.json pointing at its private mesh address, with no auth headers
+#     (mesh membership is the gate).
+MCPJ="$DIST/mcp.json"
+nomesh=$(jq -r --slurpfile j "$MCPJ" '.url_scheme.mcp_private[]
+  | . as $p | ($j[0].mcpServers[$p.container + "-mesh"]) as $s
+  | select($s == null or $s.url != ("https://" + $p.private + "/mcp") or ($s.headers != null) or ($s.headersHelper != null))
+  | $p.container' "$CADDY")
+[ -z "$nomesh" ] && ok "every MCP has a <name>-mesh entry at https://c3-<container>.app/mcp, no auth" || bad "MCPs without a correct -mesh entry in dist/mcp.json: $nomesh"
+
 exit $fail
