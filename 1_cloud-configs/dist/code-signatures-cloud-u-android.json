@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21171,
+    "files": 21184,
     "by_lang": {
-      "py": 128,
-      "sh": 472,
-      "kotlin": 10940,
+      "py": 130,
+      "sh": 473,
+      "kotlin": 10950,
       "java": 635,
       "ts": 8414,
       "nix": 30,
@@ -18,14 +18,14 @@
       "rust": 89
     },
     "by_role": {
-      "script": 223,
+      "script": 226,
       "shell": 365,
       "java": 634,
       "entrypoint": 23,
       "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10937,
+      "kotlin": 10947,
       "python": 43,
       "rust-module": 89,
       "file": 2256,
@@ -164,6 +164,37 @@
         "_verdict()",
         "_self_check()",
         "_read()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-ai-chat-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "strip_comments(src)",
+        "refuse(msg)",
+        "norm(p)",
+        "load_policy(path)",
+        "owner_findings(repo, cfg)",
+        "kotlin_files(repo, cfg)",
+        "violations(repo, cfg)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "strip_comments(src)",
+        "refuse(msg)",
+        "norm(p)",
+        "load_policy(path)",
+        "owner_findings(repo, cfg)",
+        "kotlin_files(repo, cfg)",
+        "violations(repo, cfg)",
+        "main(argv)"
       ]
     },
     {
@@ -2251,6 +2282,37 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-ai-chat-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "strip_comments(src)",
+        "refuse(msg)",
+        "norm(p)",
+        "load_policy(path)",
+        "owner_findings(repo, cfg)",
+        "kotlin_files(repo, cfg)",
+        "violations(repo, cfg)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "strip_comments(src)",
+        "refuse(msg)",
+        "norm(p)",
+        "load_policy(path)",
+        "owner_findings(repo, cfg)",
+        "kotlin_files(repo, cfg)",
+        "violations(repo, cfg)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-ai-registry-refresh.py",
       "lang": "py",
       "role": "script",
@@ -4201,6 +4263,28 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/ai-chat-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "build_fixture()",
+        "expect()",
+        "mutate()",
+        "contains()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "build_fixture()",
+        "expect()",
+        "mutate()",
+        "contains()"
       ]
     },
     {
@@ -12676,7 +12760,7 @@
         "applySystemBrightness(ctx: android.content.Context, value: Int)",
         "onToggleChanged()",
         "isDefaultLauncher(ctx: android.content.Context)",
-        "newInstance()",
+        "newInstance(scope: String = \"\")",
         "loadFromBuildConfig()",
         "featuresFor(themeId: String)",
         "featuresFor(theme: LauncherTheme)",
@@ -21426,6 +21510,427 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiBackend.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiHttp",
+        "AiUrlHttp",
+        "AiToken",
+        "AiTokenSource",
+        "AiBackend",
+        "AiChatBackend",
+        "AiGatewayBackend",
+        "AiOpenRouterBackend"
+      ],
+      "imports": [
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "get(url: String, headers: Map<String, String>, timeoutMs: Int)",
+        "post(url: String, headers: Map<String, String>, body: String, timeoutMs: Int, onChunk: ((String)",
+        "token()",
+        "models()",
+        "chat(req: AiRequest, onDelta: (String)",
+        "url(req: AiRequest)",
+        "headers(req: AiRequest)",
+        "why()",
+        "model(req: AiRequest)",
+        "class AiHttp",
+        "class Response",
+        "class AiUrlHttp",
+        "class AiToken",
+        "class AiTokenSource",
+        "class AiBackend",
+        "class AiChatBackend",
+        "class AiGatewayBackend",
+        "class AiOpenRouterBackend"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiChatState.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiChatState",
+        "AiTags"
+      ],
+      "imports": [
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "kotlinx.coroutines.CancellationException",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "java.util.concurrent.CompletableFuture"
+      ],
+      "symbols": [
+        "chooseAgent(id: String)",
+        "pick(id: String)",
+        "toggleWeb()",
+        "fresh()",
+        "open(s: AiSession)",
+        "decide(allow: Boolean)",
+        "delta(text: String)",
+        "consent(request: AiConsentRequest)",
+        "send(ask: String)",
+        "host()",
+        "agent(id: String)",
+        "engine(id: String)",
+        "session(id: String)",
+        "class AiChatState",
+        "class AiTags"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiConfig.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiConfig"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parse(text: String)",
+        "load(ctx: Context)",
+        "class and",
+        "class AiConfig"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiHost.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiHost",
+        "AiPrefs",
+        "AiMemoryPrefs",
+        "AiAgents",
+        "AiStandardHost"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.modelcatalogue.AgentCatalogue",
+        "org.json.JSONObject",
+        "java.util.UUID"
+      ],
+      "symbols": [
+        "newSession(model: String, now: Long)",
+        "models()",
+        "send(session: AiSession, text: String, model: String, web: Boolean, now: Long, sink: AiSink)",
+        "openUrl(url: String)",
+        "agents()",
+        "agent()",
+        "pickAgent(id: String)",
+        "sessions()",
+        "from(cat: AgentCatalogue.Catalogue)",
+        "load(ctx: android.content.Context)",
+        "converse(backend: AiBackend, req: AiRequest, sink: AiSink)",
+        "runTool(c: AiToolCall, sink: AiSink)",
+        "class AiHost",
+        "class AiPrefs",
+        "class AiMemoryPrefs",
+        "class AiAgents",
+        "class AiStandardHost"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiMsg",
+        "AiSession",
+        "AiModel",
+        "AiAgent",
+        "AiEngine",
+        "AiOutcome",
+        "AiConsentRequest",
+        "AiSink"
+      ],
+      "imports": [],
+      "symbols": [
+        "delta(text: String)",
+        "consent(request: AiConsentRequest)",
+        "class AiMsg",
+        "class AiSession",
+        "class AiModel",
+        "class AiAgent",
+        "class AiEngine",
+        "class AiOutcome",
+        "class AiConsentRequest",
+        "class AiSink",
+        "class None"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiPage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiColors",
+        "AiMetrics",
+        "AiType",
+        "AiStrings",
+        "AiIcons",
+        "AiDefaultEngineField",
+        "AiTheme",
+        "materialAiTheme",
+        "AiChatPage",
+        "AiConsentCard"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.BoxWithConstraints",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.ColumnScope",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.RowScope",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.widthIn",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.lazy.rememberLazyListState",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.text.BasicTextField",
+        "androidx.compose.foundation.text.KeyboardActions",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.ButtonDefaults",
+        "androidx.compose.material3.DropdownMenu",
+        "androidx.compose.material3.DropdownMenuItem",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Switch",
+        "androidx.compose.material3.SwitchDefaults",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.Immutable",
+        "androidx.compose.runtime.LaunchedEffect"
+      ],
+      "symbols": [
+        "style(size: TextUnit, weight: FontWeight = FontWeight.Normal)",
+        "materialAiTheme(strings: AiStrings = AiStrings()",
+        "AiChatPage( chat: AiChatState, theme: AiTheme, modifier: Modifier = Modifier, engines: List<AiEngine> = emptyList()",
+        "AiConsentCard( request: AiConsentRequest, onAllow: ()",
+        "AiConsentCard( sentence: String, onAllow: ()",
+        "Welcome(engines: List<AiEngine>, query: (AiEngine, String)",
+        "Conversation(chat: AiChatState, theme: AiTheme)",
+        "Bubble(msg: AiMsg, max: Dp, theme: AiTheme)",
+        "AiAvatar(theme: AiTheme)",
+        "Thinking(label: String, theme: AiTheme)",
+        "AgentSelect(chat: AiChatState, theme: AiTheme)",
+        "SessionsSelect(chat: AiChatState, theme: AiTheme)",
+        "ModelSelect(chat: AiChatState, theme: AiTheme, onModel: (()",
+        "ChatBar(text: String, onText: (String)",
+        "class AiColors",
+        "class AiMetrics",
+        "class AiType",
+        "class AiStrings",
+        "class AiIcons",
+        "class AiTheme"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiPanel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiPanelLine",
+        "AiPanelTags",
+        "AiAssistantPanel"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.widthIn",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.itemsIndexed",
+        "androidx.compose.foundation.lazy.rememberLazyListState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "symbols": [
+        "AiAssistantPanel( lines: List<AiPanelLine>, busy: Boolean, pending: AiConsentRequest?, onSend: (String)",
+        "Line(l: AiPanelLine, theme: AiTheme)",
+        "class AiPanelLine",
+        "class AiPanelTags"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiProtocol.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiRequest",
+        "AiToolCall",
+        "AiReply",
+        "AiProtocol"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "title(first: String, chars: Int)",
+        "messages(history: List<AiMsg>, turns: Int)",
+        "body(cfg: AiConfig, req: AiRequest, model: String?, stream: Boolean, openRouter: Boolean)",
+        "str(k: String)",
+        "urlCitations(notes: JSONArray?)",
+        "push(chunk: String)",
+        "parseWhole(status: Int, body: String)",
+        "parseModels(json: String, nativeWebParam: String)",
+        "class AiRequest",
+        "class AiToolCall",
+        "class AiReply",
+        "class AiProtocol",
+        "class Sse"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiSessions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiSessionStore",
+        "AiMemorySessions",
+        "AiFileSessions",
+        "AiBucket",
+        "AiSessions"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.time.Instant",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "all()",
+        "put(s: AiSession)",
+        "delete(id: String)",
+        "read()",
+        "write(list: List<AiSession>)",
+        "toJson(s: AiSession)",
+        "fromJson(o: JSONObject)",
+        "bucket(updated: Long, now: Long, zone: ZoneId)",
+        "group(sessions: List<AiSession>, now: Long, zone: ZoneId)",
+        "class AiSessionStore",
+        "class AiMemorySessions",
+        "class AiFileSessions",
+        "class AiBucket",
+        "class AiSessions"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/main/kotlin/com/diegonmarcos/superapp/ai/AiTool.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiTool"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "sentence(args: JSONObject)",
+        "run(args: JSONObject)",
+        "class AiTool"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/ai/src/test/kotlin/com/diegonmarcos/superapp/ai/AiProtocolTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiProtocolTest"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "objs()",
+        "strOrNull(k: String)",
+        "sseCasesAgreeWithTheSharedFile()",
+        "wholeCasesAgreeWithTheSharedFile()",
+        "get(url: String, headers: Map<String, String>, timeoutMs: Int)",
+        "post(url: String, headers: Map<String, String>, body: String, timeoutMs: Int, onChunk: ((String)",
+        "same(a: Any?, b: Any?)",
+        "subset(want: JSONObject, got: JSONObject, name: String)",
+        "requestCasesAgreeWithTheSharedFile()",
+        "theBodyStreamsWhenAsked()",
+        "openRouterAddsItsWebFieldsAndTheGatewayDoesNot()",
+        "noTokenSendsNothingAndSaysWhy()",
+        "theContractIsTheOneTheAppsRead()",
+        "titlesAreOneLineAndCut()",
+        "modelsAreParsedFlaggedAndSorted()",
+        "sessionsGroupByDay()",
+        "models()",
+        "chat(req: AiRequest, onDelta: (String)",
+        "host(b: AiBackend, tools: List<AiTool> = emptyList()",
+        "aSendStoresTheQuestionBeforeTheAnswerAndTheAnswerAfter()",
+        "aFailedSendKeepsTheQuestion()",
+        "anAgentRoutesThroughTheGatewayAndNamesItselfWhenTheTransportFails()",
+        "sentence(args: JSONObject)",
+        "run(args: JSONObject)",
+        "toolRound()",
+        "aMutatingToolWaitsForConsentAndDenyIsToldToTheModel()",
+        "consent(request: AiConsentRequest)",
+        "anAllowedToolRunsAndItsResultGoesBack()",
+        "aReadOnlyToolNeverAsks()",
+        "class AiProtocolTest",
+        "class RecordingHttp",
+        "class Scripted",
+        "class Echo"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/analytics-sink/src/main/java/com/diegonmarcos/superapp/analytics/sink/AnalyticsSinkService.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -25739,54 +26244,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/AgentChatPanel.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AgentPanelState",
-        "AgentChatPanel"
-      ],
-      "imports": [
-        "androidx.compose.foundation.background",
-        "androidx.compose.foundation.border",
-        "androidx.compose.foundation.layout.Arrangement",
-        "androidx.compose.foundation.layout.Box",
-        "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.Row",
-        "androidx.compose.foundation.layout.fillMaxSize",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.layout.widthIn",
-        "androidx.compose.foundation.lazy.LazyColumn",
-        "androidx.compose.foundation.lazy.items",
-        "androidx.compose.foundation.lazy.rememberLazyListState",
-        "androidx.compose.foundation.shape.RoundedCornerShape",
-        "androidx.compose.material3.Button",
-        "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.OutlinedButton",
-        "androidx.compose.material3.OutlinedTextField",
-        "androidx.compose.material3.Text",
-        "androidx.compose.material3.TextButton",
-        "androidx.compose.runtime.Composable",
-        "androidx.compose.runtime.LaunchedEffect",
-        "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableStateListOf",
-        "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.setValue",
-        "androidx.compose.ui.Alignment",
-        "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.unit.dp",
-        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
-      ],
-      "symbols": [
-        "AgentChatPanel( state: AgentPanelState, onSend: (String)",
-        "Line(l: AgentLine)",
-        "class AgentPanelState"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/AgentPanelText.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -25867,6 +26324,28 @@
         "class Pending",
         "class Failed",
         "class BrowserAgentHost"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserAgentPanelHost.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentPanelState",
+        "AgentPanelActions",
+        "BrowserAgentPanelHost"
+      ],
+      "imports": [
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateListOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue"
+      ],
+      "symbols": [
+        "class AgentPanelState",
+        "class AgentPanelActions",
+        "class BrowserAgentPanelHost"
       ]
     },
     {
@@ -55274,129 +55753,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/search-page/src/main/kotlin/com/diegonmarcos/superapp/searchpage/SearchPage.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "SearchPageColors",
-        "SearchPageMetrics",
-        "SearchPageType",
-        "SearchPageStrings",
-        "SearchPageIcons",
-        "SearchPageTheme",
-        "SearchChatPage"
-      ],
-      "imports": [
-        "androidx.compose.foundation.background",
-        "androidx.compose.foundation.border",
-        "androidx.compose.foundation.clickable",
-        "androidx.compose.foundation.layout.Arrangement",
-        "androidx.compose.foundation.layout.Box",
-        "androidx.compose.foundation.layout.BoxWithConstraints",
-        "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.PaddingValues",
-        "androidx.compose.foundation.layout.Row",
-        "androidx.compose.foundation.layout.RowScope",
-        "androidx.compose.foundation.layout.Spacer",
-        "androidx.compose.foundation.layout.fillMaxSize",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.layout.size",
-        "androidx.compose.foundation.layout.widthIn",
-        "androidx.compose.foundation.lazy.LazyColumn",
-        "androidx.compose.foundation.lazy.items",
-        "androidx.compose.foundation.lazy.rememberLazyListState",
-        "androidx.compose.foundation.rememberScrollState",
-        "androidx.compose.foundation.shape.CircleShape",
-        "androidx.compose.foundation.shape.RoundedCornerShape",
-        "androidx.compose.foundation.text.BasicTextField",
-        "androidx.compose.foundation.verticalScroll",
-        "androidx.compose.material3.DropdownMenu",
-        "androidx.compose.material3.DropdownMenuItem",
-        "androidx.compose.material3.Switch",
-        "androidx.compose.material3.SwitchDefaults",
-        "androidx.compose.material3.Text",
-        "androidx.compose.runtime.Composable",
-        "androidx.compose.runtime.Immutable",
-        "androidx.compose.runtime.LaunchedEffect",
-        "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.rememberCoroutineScope",
-        "androidx.compose.runtime.setValue",
-        "androidx.compose.ui.Alignment",
-        "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.draw.clip"
-      ],
-      "symbols": [
-        "style(size: TextUnit, weight: FontWeight = FontWeight.Normal)",
-        "SearchChatPage( chat: SearchChatState, engines: List<SpEngine>, query: (SpEngine, String)",
-        "Welcome(engines: List<SpEngine>, query: (SpEngine, String)",
-        "Conversation(chat: SearchChatState, theme: SearchPageTheme)",
-        "Bubble(msg: SpMsg, max: Dp, theme: SearchPageTheme)",
-        "AiAvatar(theme: SearchPageTheme)",
-        "Thinking(label: String, theme: SearchPageTheme)",
-        "AgentSelect(chat: SearchChatState, theme: SearchPageTheme)",
-        "ModelSelect(chat: SearchChatState, theme: SearchPageTheme, onModel: (()",
-        "ChatBar(text: String, onText: (String)",
-        "class SearchPageColors",
-        "class SearchPageMetrics",
-        "class SearchPageType",
-        "class SearchPageStrings",
-        "class SearchPageIcons",
-        "class SearchPageTheme"
-      ]
-    },
-    {
-      "path": "ab_cloud-libs-shared/libs/search-page/src/main/kotlin/com/diegonmarcos/superapp/searchpage/SearchPageModel.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "SpMsg",
-        "SpSession",
-        "SpModel",
-        "SpAgent",
-        "SpEngine",
-        "SpOutcome",
-        "SearchPageHost",
-        "SearchChatState",
-        "SearchPageTags"
-      ],
-      "imports": [
-        "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.setValue"
-      ],
-      "symbols": [
-        "newSession(model: String, now: Long)",
-        "models()",
-        "send(session: SpSession, text: String, model: String, web: Boolean, now: Long)",
-        "openUrl(url: String)",
-        "agents()",
-        "agent()",
-        "pickAgent(id: String)",
-        "chooseAgent(id: String)",
-        "pick(id: String)",
-        "toggleWeb()",
-        "fresh()",
-        "open(s: SpSession)",
-        "begin(ask: String)",
-        "finish(out: SpOutcome)",
-        "host()",
-        "agent(id: String)",
-        "engine(id: String)",
-        "class SpMsg",
-        "class SpSession",
-        "class SpModel",
-        "class SpAgent",
-        "class SpEngine",
-        "class SpOutcome",
-        "class SearchPageHost",
-        "class SearchChatState",
-        "class SearchPageTags"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/search/colon-rule.test.sh",
       "lang": "sh",
       "role": "shell",
@@ -62064,6 +62420,7 @@
       "imports": [
         "android.content.Context",
         "com.diegonmarcos.cloudbrowser.BuildConfig",
+        "com.diegonmarcos.cloudbrowser.search.AgentPanelScreen",
         "com.diegonmarcos.cloudbrowser.search.AgentRunner",
         "com.diegonmarcos.cloudbrowser.search.PageSummarizer",
         "com.diegonmarcos.superapp.browser.PageSummary",
@@ -62213,6 +62570,29 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/search/AgentPanelScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AgentPanelScreen"
+      ],
+      "imports": [
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "com.diegonmarcos.superapp.ai.AiAssistantPanel",
+        "com.diegonmarcos.superapp.ai.AiConsentRequest",
+        "com.diegonmarcos.superapp.ai.AiPanelLine",
+        "com.diegonmarcos.superapp.ai.AiPanelTags",
+        "com.diegonmarcos.superapp.browser.AgentPanelState",
+        "com.diegonmarcos.superapp.browser.BrowserAgentPanelHost",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "install()",
+        "class AgentPanelScreen"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/search/AgentRunner.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -62221,7 +62601,8 @@
       ],
       "imports": [
         "android.content.Context",
-        "com.diegonmarcos.cloudsearch.core.Chat",
+        "com.diegonmarcos.superapp.ai.AiRequest",
+        "com.diegonmarcos.superapp.ai.AiTool",
         "com.diegonmarcos.superapp.browser.AgentLoop",
         "com.diegonmarcos.superapp.browser.BrowserAddon",
         "com.diegonmarcos.superapp.browser.BrowserAgentHost",
@@ -62231,6 +62612,7 @@
         "org.json.JSONObject"
       ],
       "symbols": [
+        "run(args: JSONObject)",
         "route(t: com.diegonmarcos.superapp.browser.AgentTool)",
         "sessionsJson()",
         "ask(session: String, text: String)",
@@ -62240,6 +62622,25 @@
         "callModel(messages: JSONArray)",
         "get(app: Context, search: SearchAddon, addon: BrowserAddon)",
         "class AgentRunner"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/main/java/com/diegonmarcos/cloudbrowser/search/KitAiTheme.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "kitAiTheme"
+      ],
+      "imports": [
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.graphics.SolidColor",
+        "com.diegonmarcos.superapp.ai.AiColors",
+        "com.diegonmarcos.superapp.ai.AiTheme",
+        "com.diegonmarcos.superapp.uikit.KitPalette"
+      ],
+      "symbols": [
+        "kitAiTheme(p: KitPalette)"
       ]
     },
     {
@@ -62253,7 +62654,8 @@
         "android.content.Context",
         "android.net.ConnectivityManager",
         "android.net.NetworkCapabilities",
-        "com.diegonmarcos.cloudsearch.core.Chat",
+        "com.diegonmarcos.superapp.ai.AiMsg",
+        "com.diegonmarcos.superapp.ai.AiRequest",
         "com.diegonmarcos.superapp.browser.BrowserAddon",
         "com.diegonmarcos.superapp.browser.BrowserBus",
         "com.diegonmarcos.superapp.browser.PageSummary",
@@ -62261,7 +62663,6 @@
         "com.google.mlkit.genai.summarization.Summarization",
         "com.google.mlkit.genai.summarization.SummarizationRequest",
         "com.google.mlkit.genai.summarization.SummarizerOptions",
-        "org.json.JSONArray",
         "org.json.JSONObject",
         "java.util.concurrent.TimeUnit"
       ],
@@ -62287,26 +62688,34 @@
         "android.content.Context",
         "android.os.SystemClock",
         "android.util.Base64",
-        "com.diegonmarcos.cloudsearch.core.Chat",
+        "com.diegonmarcos.cloudbrowser.BuildConfig",
         "com.diegonmarcos.cloudsearch.core.SearchConfig",
+        "com.diegonmarcos.superapp.ai.AiConfig",
+        "com.diegonmarcos.superapp.ai.AiHost",
+        "com.diegonmarcos.superapp.ai.AiMemoryPrefs",
+        "com.diegonmarcos.superapp.ai.AiMemorySessions",
+        "com.diegonmarcos.superapp.ai.AiOpenRouterBackend",
+        "com.diegonmarcos.superapp.ai.AiSession",
+        "com.diegonmarcos.superapp.ai.AiSink",
+        "com.diegonmarcos.superapp.ai.AiStandardHost",
+        "com.diegonmarcos.superapp.ai.AiToken",
+        "com.diegonmarcos.superapp.ai.AiTokenSource",
         "com.diegonmarcos.superapp.browser.BrowserSearch",
         "com.diegonmarcos.superapp.browser.BrowserSearchEngine",
         "com.diegonmarcos.superapp.texttools.TextToolsClient",
         "org.json.JSONArray",
-        "org.json.JSONObject",
-        "java.net.HttpURLConnection",
-        "java.net.URL",
-        "java.util.UUID",
-        "java.util.concurrent.ConcurrentHashMap"
+        "org.json.JSONObject"
       ],
       "symbols": [
         "engines()",
         "enginesJson()",
         "searchUrl(q: String, engineId: String?)",
         "sessionsJson()",
+        "backend(token: ()",
+        "host(app: Context, open: (String)",
         "send(sessionId: String?, text: String, model: String?, web: Boolean, token: ()",
         "outcomeJson(o: Outcome)",
-        "post(url: String, headers: Map<String, String>, body: String, timeoutMs: Int)",
+        "fromBuild()",
         "get(b64: String)",
         "accountToken(ctx: Context, provider: String)",
         "class SearchAddon",
@@ -62318,7 +62727,6 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "BrowserSearchHost",
         "SearchPageScreen"
       ],
       "imports": [
@@ -62326,49 +62734,20 @@
         "androidx.compose.foundation.background",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.fillMaxSize",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.text.KeyboardActions",
-        "androidx.compose.foundation.text.KeyboardOptions",
-        "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.graphics.SolidColor",
         "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.semantics.contentDescription",
-        "androidx.compose.ui.semantics.semantics",
-        "androidx.compose.ui.text.input.ImeAction",
-        "androidx.compose.ui.unit.sp",
-        "com.diegonmarcos.cloudsearch.core.Chat",
+        "com.diegonmarcos.superapp.ai.AiChatPage",
+        "com.diegonmarcos.superapp.ai.AiChatState",
+        "com.diegonmarcos.superapp.ai.AiEngine",
+        "com.diegonmarcos.superapp.ai.AiTags",
         "com.diegonmarcos.superapp.browser.BrowserSearchPageHost",
-        "com.diegonmarcos.superapp.searchpage.SearchChatPage",
-        "com.diegonmarcos.superapp.searchpage.SearchChatState",
-        "com.diegonmarcos.superapp.searchpage.SearchPageColors",
-        "com.diegonmarcos.superapp.searchpage.SearchPageHost",
-        "com.diegonmarcos.superapp.searchpage.SearchPageIcons",
-        "com.diegonmarcos.superapp.searchpage.SearchPageTags",
-        "com.diegonmarcos.superapp.searchpage.SearchPageTheme",
-        "com.diegonmarcos.superapp.searchpage.SpEngine",
-        "com.diegonmarcos.superapp.searchpage.SpModel",
-        "com.diegonmarcos.superapp.searchpage.SpMsg",
-        "com.diegonmarcos.superapp.searchpage.SpOutcome",
-        "com.diegonmarcos.superapp.searchpage.SpSession",
-        "com.diegonmarcos.superapp.uikit.KitPalette",
-        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
-        "java.util.UUID"
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
-        "newSession(model: String, now: Long)",
-        "models()",
-        "send(session: SpSession, text: String, model: String, web: Boolean, now: Long)",
-        "openUrl(url: String)",
-        "sp()",
         "install(app: Context, search: SearchAddon)",
-        "kitTheme(p: KitPalette)",
-        "glyph(name: String)",
-        "class BrowserSearchHost",
         "class SearchPageScreen"
       ]
     },
@@ -140004,6 +140383,7 @@
         "base_url(service)",
         "shared_agents(app_root, c)",
         "merged_agents(app_root, c)",
+        "shared_ai(app_root, c)",
         "chat(app_root, nav)",
         "main(argv)"
       ],
@@ -140024,6 +140404,7 @@
         "base_url(service)",
         "shared_agents(app_root, c)",
         "merged_agents(app_root, c)",
+        "shared_ai(app_root, c)",
         "chat(app_root, nav)",
         "main(argv)"
       ]
@@ -143506,6 +143887,42 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/ai/AiScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiScreen",
+        "DriveAi"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.compose.foundation.layout.imePadding",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "com.diegonmarcos.clouddrive.BuildConfig",
+        "com.diegonmarcos.clouddrive.ui.DriveTags",
+        "com.diegonmarcos.superapp.ai.AiAgents",
+        "com.diegonmarcos.superapp.ai.AiChatPage",
+        "com.diegonmarcos.superapp.ai.AiChatState",
+        "com.diegonmarcos.superapp.ai.AiConfig",
+        "com.diegonmarcos.superapp.ai.AiFileSessions",
+        "com.diegonmarcos.superapp.ai.AiGatewayBackend",
+        "com.diegonmarcos.superapp.ai.AiMemoryPrefs",
+        "com.diegonmarcos.superapp.ai.AiStandardHost",
+        "com.diegonmarcos.superapp.ai.materialAiTheme",
+        "java.io.File"
+      ],
+      "symbols": [
+        "AiScreen(modifier: Modifier = Modifier)",
+        "chat(ctx: Context)",
+        "build(ctx: Context)",
+        "class DriveAi"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/apps/AppsGrid.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -144757,9 +145174,9 @@
         "com.diegonmarcos.clouddrive.files.ExplorerScreen",
         "com.diegonmarcos.clouddrive.manage.ManageScreen",
         "com.diegonmarcos.clouddrive.agents.AgentsScreen",
+        "com.diegonmarcos.clouddrive.ai.AiScreen",
         "com.diegonmarcos.clouddrive.files.FilesUiState",
-        "com.diegonmarcos.clouddrive.files.Places",
-        "com.diegonmarcos.clouddrive.home.HomeScreen"
+        "com.diegonmarcos.clouddrive.files.Places"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
@@ -146067,6 +146484,7 @@
       "imports": [
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.AccountTree",
+        "androidx.compose.material.icons.filled.AutoAwesome",
         "androidx.compose.material.icons.filled.Apps",
         "androidx.compose.material.icons.filled.SmartToy",
         "androidx.compose.material.icons.filled.Screenshot",
@@ -146103,8 +146521,7 @@
         "androidx.compose.material.icons.filled.Person",
         "androidx.compose.material.icons.filled.PhotoCamera",
         "androidx.compose.material.icons.filled.PictureAsPdf",
-        "androidx.compose.material.icons.filled.PlayArrow",
-        "androidx.compose.material.icons.filled.Public"
+        "androidx.compose.material.icons.filled.PlayArrow"
       ],
       "symbols": [
         "vector(name: String)",
@@ -444046,25 +444463,6 @@
       ]
     },
     {
-      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/AgentRoute.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "AgentRoute"
-      ],
-      "imports": [
-        "android.content.Context",
-        "com.diegonmarcos.superapp.modelcatalogue.AgentCatalogue",
-        "org.json.JSONObject"
-      ],
-      "symbols": [
-        "catalogue(ctx: Context)",
-        "request(cat: AgentCatalogue.Catalogue, gatewayUrl: String, agentId: String, openAiBody: String)",
-        "class AgentRoute",
-        "class Request"
-      ]
-    },
-    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/AgentService.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -444116,26 +444514,6 @@
       ]
     },
     {
-      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/ChatFlow.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ChatFlow"
-      ],
-      "imports": [
-        "android.content.Context",
-        "com.diegonmarcos.cloudsearch.core.Chat",
-        "java.util.UUID"
-      ],
-      "symbols": [
-        "newSession(model: String, now: Long)",
-        "send(ctx: Context, s: Services, session: Chat.Session, text: String, model: String, web: Boolean, now: Long)",
-        "answer(s: Services, asked: Chat.Session, res: Result<com.diegonmarcos.cloudsearch.core.Http.Response>, via: String?)",
-        "class ChatFlow",
-        "class Outcome"
-      ]
-    },
-    {
       "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/FleetBearer.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -444181,35 +444559,31 @@
       ]
     },
     {
-      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/SearchHost.kt",
+      "path": "ac_cloud-search/app/src/main/java/com/diegonmarcos/cloudsearch/data/SearchAi.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "SearchHost",
-        "sp",
-        "chat"
+        "SearchAi"
       ],
       "imports": [
-        "com.diegonmarcos.cloudsearch.core.Chat",
-        "com.diegonmarcos.superapp.modelcatalogue.AgentCatalogue",
-        "com.diegonmarcos.superapp.searchpage.SearchPageHost",
-        "com.diegonmarcos.superapp.searchpage.SpAgent",
-        "com.diegonmarcos.superapp.searchpage.SpModel",
-        "com.diegonmarcos.superapp.searchpage.SpMsg",
-        "com.diegonmarcos.superapp.searchpage.SpOutcome",
-        "com.diegonmarcos.superapp.searchpage.SpSession"
+        "com.diegonmarcos.cloudsearch.BuildConfig",
+        "com.diegonmarcos.superapp.ai.AiAgents",
+        "com.diegonmarcos.superapp.ai.AiConfig",
+        "com.diegonmarcos.superapp.ai.AiGatewayBackend",
+        "com.diegonmarcos.superapp.ai.AiHost",
+        "com.diegonmarcos.superapp.ai.AiHttp",
+        "com.diegonmarcos.superapp.ai.AiModel",
+        "com.diegonmarcos.superapp.ai.AiOpenRouterBackend",
+        "com.diegonmarcos.superapp.ai.AiPrefs",
+        "com.diegonmarcos.superapp.ai.AiStandardHost",
+        "com.diegonmarcos.superapp.ai.AiToken",
+        "com.diegonmarcos.superapp.ai.AiTokenSource"
       ],
       "symbols": [
-        "newSession(model: String, now: Long)",
-        "models()",
-        "send(session: SpSession, text: String, model: String, web: Boolean, now: Long)",
-        "openUrl(url: String)",
-        "agents()",
-        "agent()",
-        "pickAgent(id: String)",
-        "sp()",
-        "chat()",
-        "class SearchHost"
+        "host(s: Services)",
+        "get(url: String, headers: Map<String, String>, timeoutMs: Int)",
+        "post(url: String, headers: Map<String, String>, body: String, timeoutMs: Int, onChunk: ((String)",
+        "class SearchAi"
       ]
     },
     {
@@ -444228,6 +444602,8 @@
         "com.diegonmarcos.cloudsearch.core.SearchEngine",
         "com.diegonmarcos.cloudsearch.core.ThingsEngine",
         "com.diegonmarcos.cloudsearch.core.UrlHttp",
+        "com.diegonmarcos.superapp.ai.AiFileSessions",
+        "com.diegonmarcos.superapp.ai.AiHost",
         "java.io.File"
       ],
       "symbols": [
@@ -444244,7 +444620,6 @@
       "exports": [
         "SavedStore",
         "Prefs",
-        "SessionStore",
         "ModelCatalog"
       ],
       "imports": [
@@ -444263,13 +444638,10 @@
         "toggle(l: Listing)",
         "lastQuery(vertical: String)",
         "setLastQuery(vertical: String, q: String)",
-        "put(s: Chat.Session)",
-        "delete(id: String)",
         "raw()",
         "models()",
         "class SavedStore",
         "class Prefs",
-        "class SessionStore",
         "class ModelCatalog"
       ]
     },
@@ -444555,7 +444927,7 @@
       "role": "kotlin",
       "exports": [
         "AssistantPage",
-        "searchPageTheme",
+        "aiTheme",
         "SessionsMenu",
         "bucketLabel"
       ],
@@ -444580,27 +444952,27 @@
         "androidx.compose.ui.text.font.FontWeight",
         "androidx.compose.ui.text.style.TextOverflow",
         "com.diegonmarcos.cloudsearch.R",
-        "com.diegonmarcos.cloudsearch.core.Chat",
         "com.diegonmarcos.cloudsearch.core.SearchConfig",
         "com.diegonmarcos.cloudsearch.core.Templates",
-        "com.diegonmarcos.cloudsearch.data.sp",
         "com.diegonmarcos.cloudsearch.models.ModelCataloguePage",
-        "com.diegonmarcos.superapp.searchpage.SearchChatPage",
-        "com.diegonmarcos.superapp.searchpage.SearchPageColors",
-        "com.diegonmarcos.superapp.searchpage.SearchPageIcons",
-        "com.diegonmarcos.superapp.searchpage.SearchPageMetrics",
-        "com.diegonmarcos.superapp.searchpage.SearchPageStrings",
-        "com.diegonmarcos.superapp.searchpage.SearchPageTheme",
-        "com.diegonmarcos.superapp.searchpage.SearchPageType",
-        "com.diegonmarcos.superapp.searchpage.SpEngine",
+        "com.diegonmarcos.superapp.ai.AiBucket",
+        "com.diegonmarcos.superapp.ai.AiChatPage",
+        "com.diegonmarcos.superapp.ai.AiColors",
+        "com.diegonmarcos.superapp.ai.AiEngine",
+        "com.diegonmarcos.superapp.ai.AiIcons",
+        "com.diegonmarcos.superapp.ai.AiMetrics",
+        "com.diegonmarcos.superapp.ai.AiSessions",
+        "com.diegonmarcos.superapp.ai.AiStrings",
+        "com.diegonmarcos.superapp.ai.AiTheme",
+        "com.diegonmarcos.superapp.ai.AiType",
         "java.time.ZoneId"
       ],
       "symbols": [
         "AssistantPage(v: SearchConfig.Vertical)",
-        "searchPageTheme()",
+        "aiTheme()",
         "phosphor(name: String)",
         "SessionsMenu(state: SearchState)",
-        "bucketLabel(b: Chat.Bucket)"
+        "bucketLabel(b: AiBucket)"
       ]
     },
     {
@@ -455173,7 +455545,6 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "Msg",
         "Stores"
       ],
       "imports": [
@@ -455183,17 +455554,12 @@
         "org.json.JSONObject"
       ],
       "symbols": [
-        "toJson()",
-        "fromJson(o: JSONObject)",
-        "messages()",
-        "saveMessages(list: List<Msg>)",
         "ledger()",
         "saveLedger(l: Ledger)",
         "workers()",
         "saveWorkers(m: Map<String, String>)",
         "jev()",
         "saveJev(listed: Boolean, price: Double?, at: Long)",
-        "class Msg",
         "class content",
         "class Stores"
       ]
@@ -455240,64 +455606,34 @@
       ]
     },
     {
-      "path": "ac_cloud-tools-small-llms/app/src/main/java/com/diegonmarcos/cloudtoolssmallllms/ui/ChatPage.kt",
+      "path": "ac_cloud-tools-small-llms/app/src/main/java/com/diegonmarcos/cloudtoolssmallllms/ui/AiTab.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "ChatPage",
+        "AiTab",
         "short"
       ],
       "imports": [
-        "androidx.compose.foundation.background",
         "androidx.compose.foundation.layout.Arrangement",
-        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.PaddingValues",
-        "androidx.compose.foundation.layout.Row",
-        "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.imePadding",
         "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.layout.widthIn",
-        "androidx.compose.foundation.lazy.LazyColumn",
         "androidx.compose.foundation.lazy.LazyRow",
         "androidx.compose.foundation.lazy.items",
-        "androidx.compose.foundation.lazy.itemsIndexed",
-        "androidx.compose.foundation.lazy.rememberLazyListState",
-        "androidx.compose.foundation.shape.RoundedCornerShape",
-        "androidx.compose.foundation.text.selection.SelectionContainer",
-        "androidx.compose.material.icons.Icons",
-        "androidx.compose.material.icons.filled.ContentCopy",
-        "androidx.compose.material.icons.filled.DeleteSweep",
-        "androidx.compose.material.icons.filled.Send",
-        "androidx.compose.material3.CircularProgressIndicator",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
         "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
-        "androidx.compose.runtime.LaunchedEffect",
-        "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.setValue",
-        "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.draw.clip",
-        "androidx.compose.ui.platform.LocalClipboardManager",
-        "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.res.stringResource"
+        "androidx.compose.ui.res.stringResource",
+        "com.diegonmarcos.cloudtoolssmallllms.R",
+        "com.diegonmarcos.superapp.ai.AiChatPage",
+        "com.diegonmarcos.superapp.ai.AiStrings",
+        "com.diegonmarcos.superapp.ai.materialAiTheme"
       ],
       "symbols": [
-        "ChatPage(model: ToolsModel)",
-        "Empty(model: ToolsModel)",
-        "Working()",
-        "Line(model: ToolsModel, m: Msg, index: Int)",
-        "Bubble(text: String, color: androidx.compose.ui.graphics.Color)",
-        "Answer(model: ToolsModel, m: Msg, index: Int)",
-        "Clarify(model: ToolsModel, m: Msg)",
-        "Input(model: ToolsModel)",
+        "AiTab(model: ToolsModel)",
+        "TaskRow(model: ToolsModel)",
         "short(model: String)"
       ]
     },
@@ -455475,7 +455811,6 @@
       "imports": [
         "android.content.Context",
         "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableStateListOf",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.setValue",
         "com.diegonmarcos.cloudtoolssmallllms.Decl",
@@ -455487,10 +455822,21 @@
         "com.diegonmarcos.cloudtoolssmallllms.core.ToolsFlow",
         "com.diegonmarcos.cloudtoolssmallllms.data.AccountStatus",
         "com.diegonmarcos.cloudtoolssmallllms.data.Catalogue",
-        "com.diegonmarcos.cloudtoolssmallllms.data.Msg",
         "com.diegonmarcos.cloudtoolssmallllms.data.SecretPrefs",
         "com.diegonmarcos.cloudtoolssmallllms.data.Stores",
+        "com.diegonmarcos.cloudtoolssmallllms.R",
+        "com.diegonmarcos.cloudtoolssmallllms.core.Costs",
+        "com.diegonmarcos.superapp.ai.AiBackend",
+        "com.diegonmarcos.superapp.ai.AiChatState",
+        "com.diegonmarcos.superapp.ai.AiConfig",
+        "com.diegonmarcos.superapp.ai.AiFileSessions",
+        "com.diegonmarcos.superapp.ai.AiMemoryPrefs",
+        "com.diegonmarcos.superapp.ai.AiModel",
+        "com.diegonmarcos.superapp.ai.AiReply",
+        "com.diegonmarcos.superapp.ai.AiRequest",
+        "com.diegonmarcos.superapp.ai.AiStandardHost",
         "com.diegonmarcos.superapp.decisions.UrlHttp",
+        "java.io.File",
         "kotlinx.coroutines.CoroutineScope",
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.launch",
@@ -455498,12 +455844,11 @@
       ],
       "symbols": [
         "registry()",
-        "send(text: String = draft, forcedTask: String? = pinned, echo: Boolean = true)",
-        "pick(request: String, task: String)",
-        "clearChat()",
+        "models()",
+        "chat(req: AiRequest, onDelta: (String)",
+        "turn(request: String)",
         "charge(task: String, model: String, usd: Double?)",
         "clearLedger()",
-        "add(m: Msg)",
         "saveToken(raw: String)",
         "removeToken()",
         "refreshToken()",
@@ -455512,10 +455857,10 @@
         "chooseWorker(task: String, model: String?)",
         "refreshJev()",
         "refreshAccount()",
-        "nextId()",
         "now()",
         "class only",
-        "class ToolsModel"
+        "class ToolsModel",
+        "class content"
       ]
     },
     {
