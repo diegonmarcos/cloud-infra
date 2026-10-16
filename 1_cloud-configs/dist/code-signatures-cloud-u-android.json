@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21390,
+    "files": 21411,
     "by_lang": {
-      "py": 132,
-      "sh": 476,
-      "kotlin": 11123,
+      "py": 134,
+      "sh": 477,
+      "kotlin": 11141,
       "java": 635,
       "ts": 8434,
       "nix": 30,
@@ -18,14 +18,14 @@
       "rust": 89
     },
     "by_role": {
-      "script": 229,
+      "script": 232,
       "shell": 367,
       "java": 634,
       "entrypoint": 23,
       "module": 6381,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11120,
+      "kotlin": 11138,
       "python": 43,
       "rust-module": 89,
       "file": 2271,
@@ -330,6 +330,22 @@
         "sources(root, rel, skip, exts=(\".kt\", \".java\")",
         "split_args(text, start)",
         "check(root)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-density-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "strip_comments(src)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "strip_comments(src)",
         "main(argv)"
       ]
     },
@@ -2486,6 +2502,22 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-density-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "strip_comments(src)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "strip_comments(src)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-dns-resolver-guard.py",
       "lang": "py",
       "role": "script",
@@ -4467,6 +4499,26 @@
         "plant()",
         "red()",
         "green()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/density-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "fixture()",
+        "expect()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "fixture()",
+        "expect()",
+        "mutate()"
       ]
     },
     {
@@ -17102,6 +17154,37 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/KitDensityTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KitDensityTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.IconButton",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.Settings",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.test.getUnclippedBoundsInRoot",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.uikit.KitDensity",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class KitDensityTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/KitPageHarness.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -26590,6 +26673,36 @@
         "crop(full: Bitmap, b: Rect, windowSpace: Boolean = false)",
         "distance(a: Color, b: Color)",
         "class FleetParityTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/test/kotlin/com/diegonmarcos/superapp/bottomnav/InsetOwnershipTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InsetOwnershipTest"
+      ],
+      "imports": [
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.test.getUnclippedBoundsInRoot",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "class InsetOwnershipTest"
       ]
     },
     {
@@ -59580,6 +59693,8 @@
         "KitPalette",
         "LocalKitPalette",
         "CloudKitTheme",
+        "kitTypography",
+        "KitDenseMaterial",
         "KitTags",
         "KitSectionHeader",
         "KitSelectableTile",
@@ -59604,10 +59719,12 @@
         "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.material3.AlertDialog",
         "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Switch",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
+        "androidx.compose.material3.Typography",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
@@ -59619,13 +59736,18 @@
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.graphics.toArgb",
         "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.TextStyle",
         "androidx.compose.ui.semantics.Role",
         "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.TextUnit",
         "androidx.compose.ui.unit.dp"
       ],
       "symbols": [
         "fromArgb(surface: Int, surfaceSelected: Int, textPrimary: Int, textSecondary: Int, accent: Int, hairline: Int, tileInk: Int, ok: Int = DEFAULT_OK.toArgb()",
         "CloudKitTheme(palette: KitPalette, content: @Composable ()",
+        "kitTypography(base: Typography = Typography()",
+        "dense()",
+        "KitDenseMaterial(colorScheme: androidx.compose.material3.ColorScheme, content: @Composable ()",
         "tile(id: String)",
         "row(id: String)",
         "header(id: String)",
@@ -152376,6 +152498,7 @@
         "abiVersionCodes",
         "gitShortSha",
         "galleryVersion",
+        "buildJson",
         "copySegmentModelsTask",
         "isOffline",
         "includeMaps",
@@ -185538,6 +185661,135 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/export/ExportFileName.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExportFormat",
+        "exportFileName"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.safeFileName"
+      ],
+      "symbols": [
+        "exportFileName(dateIso: String?, subject: String?, ext: String)",
+        "class ExportFormat"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/export/ExportHtml.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExportLabels",
+        "exportDocument",
+        "buildSelfContainedHtml"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.htmlEscape"
+      ],
+      "symbols": [
+        "exportDocument(msg: ExportMessage, labels: ExportLabels, bodyFragment: String = msg.bodyHtml)",
+        "line(label: String, value: String)",
+        "buildSelfContainedHtml(msg: ExportMessage, labels: ExportLabels, inlineImages: Map<String, String>)",
+        "class ExportLabels"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/export/ExportModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExportPart",
+        "ExportMessage",
+        "ExportCancelled",
+        "ExportProgress"
+      ],
+      "imports": [
+        "java.io.InputStream"
+      ],
+      "symbols": [
+        "update(done: Long, total: Long)",
+        "copyChunked( input: InputStream, chunk: ByteArray, isCancelled: ()",
+        "class ExportPart",
+        "class ExportMessage",
+        "class ExportCancelled",
+        "class ExportProgress"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/export/MailFormats.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "writeEml",
+        "writeMbox",
+        "mboxFromLine"
+      ],
+      "imports": [
+        "java.io.OutputStream"
+      ],
+      "symbols": [
+        "writeEml(out: OutputStream, raw: ByteArray)",
+        "writeMbox( out: OutputStream, messages: List<Pair<String, ByteArray>>, isCancelled: ()",
+        "isFromLine(b: ByteArray, s: Int, e: Int)",
+        "mboxFromLine(dateIso: String?)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/export/MhtmlBuilder.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "writeMhtml",
+        "newBoundary",
+        "rfc2822",
+        "headerLine",
+        "quotedPrintable"
+      ],
+      "imports": [
+        "java.io.OutputStream",
+        "java.security.SecureRandom",
+        "java.time.Instant",
+        "java.time.ZoneOffset",
+        "java.time.format.DateTimeFormatter"
+      ],
+      "symbols": [
+        "writeMhtml( out: OutputStream, msg: ExportMessage, labels: ExportLabels, boundary: String = newBoundary()",
+        "put(s: String)",
+        "newBoundary()",
+        "rfc2822(iso: String?)",
+        "headerLine(name: String, value: String)",
+        "encodedWords(s: String)",
+        "encodedWord(b: ByteArray)",
+        "pctEncode(s: String)",
+        "headerSafe(s: String)",
+        "quotedPrintable(text: String)",
+        "write(buf: ByteArray, len: Int)",
+        "finish()",
+        "flushLine()",
+        "class Base64Lines"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/export/ZipBuilder.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "dedupeNames",
+        "writeAttachmentsZip"
+      ],
+      "imports": [
+        "java.io.OutputStream",
+        "java.util.zip.ZipEntry",
+        "java.util.zip.ZipOutputStream"
+      ],
+      "symbols": [
+        "dedupeNames(names: List<String?>)",
+        "writeAttachmentsZip( out: OutputStream, parts: List<ExportPart>, progress: ExportProgress = ExportProgress.NONE, isCancelled: ()"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/fleet/SettingsSetupHandler.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -187066,6 +187318,7 @@
       ],
       "symbols": [
         "openExternally( app: Application, repo: MailRepository, storage: StorageRepository, credentials: AccountCredentials, part: EmailBodyPart, ownerId: String, )",
+        "shareFile(app: Application, file: java.io.File, mime: String, subject: String, chooserTitle: String)",
         "mimeFromName(name: String)",
         "isMetered(context: Context)",
         "cacheForScan( app: Application, repo: MailRepository, storage: StorageRepository, credentials: AccountCredentials, part: EmailBodyPart, ownerId: String, )",
@@ -189934,6 +190187,63 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/ExportSheet.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.selection.selectable",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.SaveAlt",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.DropdownMenuItem",
+        "app.sterna.ui.components.Icon",
+        "app.sterna.ui.theme.MailMetrics",
+        "androidx.compose.material3.LinearProgressIndicator",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.ModalBottomSheet",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.RadioButton",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.semantics.Role",
+        "app.sterna.R",
+        "androidx.lifecycle.compose.collectAsStateWithLifecycle",
+        "app.sterna.core.jmap.model.Email",
+        "app.sterna.export.ExportFormat",
+        "app.sterna.export.exportFileName"
+      ],
+      "symbols": [
+        "exportFormatTag(f: ExportFormat)",
+        "ExportMenuItem(onClick: ()",
+        "formatTitle(f: ExportFormat)",
+        "formatHint(f: ExportFormat)",
+        "ExportSheetContent( selected: ExportFormat, enabled: (ExportFormat)",
+        "ExportSheet( selected: ExportFormat, enabled: (ExportFormat)",
+        "ExportSheetHost( viewModel: MessageViewModel, ownerId: String, email: Email, onDismiss: ()"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/HtmlFragmentView.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -190003,6 +190313,80 @@
         "LabelSheet( /** Mailboxes this message is in right now, straight from the server. */ tags: List<MessageTag>, /** Mailboxes of this message's account it is NOT in — what \"add\" can offer. */ addableMailboxes: List<Mailbox>, nameOf: (Mailbox)",
         "LabelGroup(titleRes: Int, content: @Composable ()",
         "class note"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/MessageExport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExportUiState"
+      ],
+      "imports": [
+        "app.sterna.core.data.account.AccountCredentials",
+        "app.sterna.core.data.mail.MailRepository",
+        "app.sterna.core.jmap.model.Email",
+        "app.sterna.export.ExportFormat",
+        "app.sterna.export.ExportMessage",
+        "app.sterna.export.ExportPart",
+        "kotlinx.coroutines.runBlocking",
+        "java.io.ByteArrayInputStream",
+        "java.io.InputStream",
+        "java.util.Base64"
+      ],
+      "symbols": [
+        "exportFormatEnabled(format: ExportFormat, email: Email)",
+        "dataUriBytes(uri: String)",
+        "exportMessageOf( msg: ThreadMessage, email: Email, subject: String, noContent: String, repo: MailRepository, credentials: AccountCredentials, )",
+        "class ExportUiState"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/message/MessageExporter.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.app.Application",
+        "android.net.Uri",
+        "android.provider.DocumentsContract",
+        "android.provider.OpenableColumns",
+        "app.sterna.R",
+        "app.sterna.core.data.account.AccountCredentials",
+        "app.sterna.core.data.mail.MailRepository",
+        "app.sterna.core.jmap.ContentTooLargeException",
+        "app.sterna.ui.attachment.AttachmentOpen",
+        "app.sterna.export.ExportCancelled",
+        "app.sterna.export.ExportFormat",
+        "app.sterna.export.ExportLabels",
+        "app.sterna.export.ExportProgress",
+        "app.sterna.export.buildSelfContainedHtml",
+        "app.sterna.export.exportFileName",
+        "app.sterna.export.mboxFromLine",
+        "app.sterna.export.writeAttachmentsZip",
+        "app.sterna.export.writeEml",
+        "app.sterna.export.writeMbox",
+        "app.sterna.export.writeMhtml",
+        "java.io.File",
+        "java.io.FileOutputStream",
+        "kotlinx.coroutines.CancellationException",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.Job",
+        "kotlinx.coroutines.NonCancellable",
+        "kotlinx.coroutines.currentCoroutineContext",
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.StateFlow",
+        "kotlinx.coroutines.flow.asStateFlow",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "cancel()",
+        "start( scope: CoroutineScope, format: ExportFormat, uri: Uri?, msg: ThreadMessage?, credentials: AccountCredentials?, say: (String)",
+        "cleanUp()",
+        "displayNameOf(uri: Uri, fallback: String)",
+        "class MessageExporter"
       ]
     },
     {
@@ -190252,6 +190636,8 @@
         "setUserKeyword(keyword: String, value: Boolean)",
         "reloadKeywords(keyword: String, value: Boolean)",
         "exportSource(uri: Uri, proposedName: String, ownerId: String)",
+        "cancelExport()",
+        "exportMessage(format: app.sterna.export.ExportFormat, uri: Uri?, ownerId: String)",
         "saveAttachment(uri: Uri, proposedName: String, ownerId: String, partKey: String)",
         "discardDocument(uri: Uri)",
         "displayNameOf(uri: Uri, fallback: String)",
@@ -190262,9 +190648,7 @@
         "sendReadReceipt()",
         "declineReadReceipt()",
         "cacheAccount()",
-        "onReaderOpened(fragment: String, summarySource: String)",
-        "translateNow(fragment: String, chosenSource: String? = null)",
-        "runTranslation( id: String, fragment: String, target: String, chosenSource: String? = null, interactive: Boolean = false, )"
+        "onReaderOpened(fragment: String, summarySource: String)"
       ]
     },
     {
@@ -193908,6 +194292,115 @@
         "doWork()",
         "repoFile(path: String)",
         "class LocalDraftRearmWiringTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/export/ExportFileNameTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExportFileNameTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class ExportFileNameTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/export/ExportFixtures.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "java.io.ByteArrayInputStream"
+      ],
+      "symbols": [
+        "part(name: String?, bytes: ByteArray, type: String = \"application/octet-stream\", cid: String? = null, inline: Boolean = false)",
+        "message( parts: List<ExportPart> = emptyList()",
+        "parseMime(raw: String)",
+        "decodeQp(s: String)",
+        "class Mime"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/export/MailFormatsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailFormatsTest"
+      ],
+      "imports": [
+        "java.io.ByteArrayOutputStream",
+        "org.junit.Assert.assertArrayEquals",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class MailFormatsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/export/MhtmlBuilderTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MhtmlBuilderTest",
+        "MhtmlNonAsciiNameTest"
+      ],
+      "imports": [
+        "java.io.ByteArrayOutputStream",
+        "java.util.Base64",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertArrayEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "build(msg: ExportMessage, boundary: String = \"=_Mhtml_test\")",
+        "class MhtmlBuilderTest",
+        "class MhtmlNonAsciiNameTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/export/SelfContainedHtmlTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SelfContainedHtmlTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class SelfContainedHtmlTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/export/ZipBuilderTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ZipBuilderTest"
+      ],
+      "imports": [
+        "java.io.ByteArrayInputStream",
+        "java.io.ByteArrayOutputStream",
+        "java.util.zip.ZipInputStream",
+        "org.junit.Assert.assertArrayEquals",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "unzip(bytes: ByteArray)",
+        "class ZipBuilderTest"
       ]
     },
     {
@@ -200268,6 +200761,51 @@
       ],
       "symbols": [
         "class DeliveredToInHeaderTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/message/ExportSheetRenderedTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExportSheetRenderedTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.assertIsEnabled",
+        "androidx.compose.ui.test.assertIsNotEnabled",
+        "androidx.compose.ui.test.assertIsSelected",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.onNodeWithText",
+        "androidx.compose.ui.test.performClick",
+        "app.sterna.core.jmap.model.Email",
+        "app.sterna.core.jmap.model.EmailBodyPart",
+        "app.sterna.export.ExportFormat",
+        "app.sterna.ui.theme.SternaTheme",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "evaluate()",
+        "content( selected: ExportFormat = ExportFormat.MHTML, running: ExportUiState? = null, enabled: (ExportFormat)",
+        "class ExportSheetRenderedTest"
       ]
     },
     {
@@ -390242,6 +390780,7 @@
         "com.getcapacitor.PluginMethod",
         "com.getcapacitor.annotation.CapacitorPlugin",
         "com.getcapacitor.annotation.Permission",
+        "android.util.Base64",
         "java.io.File",
         "java.io.FileInputStream"
       ],
@@ -390250,6 +390789,8 @@
         "guardedFile(call: PluginCall, path: String)",
         "readFile(call: PluginCall)",
         "listDir(call: PluginCall)",
+        "listFiles(call: PluginCall)",
+        "readBinary(call: PluginCall)",
         "openSettings(call: PluginCall)",
         "class ExternalFilePlugin"
       ]
@@ -390921,6 +391462,7 @@
         "ExternalReadError",
         "ExternalDirEntry",
         "ExternalDirListing",
+        "ExternalBinaryReadResult",
         "ExternalFilePluginType",
         "ExternalFile",
         "EXTERNAL_FILE_ROOT",
@@ -391101,6 +391643,7 @@
         "VaultFS",
         "VaultLimits",
         "VAULT_LIMITS",
+        "CollectedAttachment",
         "CollectedNote",
         "VaultCollection"
       ],
@@ -391109,7 +391652,9 @@
       ],
       "symbols": [
         "collectVault(\n  fs: VaultFS,\n  root: string,\n  limits: VaultLimits = VAULT_LIMITS\n)",
-        "toVaultFiles(notes: CollectedNote[], vaultName: string)",
+        "collectAttachments(\n  fs: VaultFS,\n  dir: string,\n  base: string,\n  limits: VaultLimits,\n  out: VaultCollection,\n  addBytes: (n: number)",
+        "base64ToBytes(b64: string)",
+        "toVaultFiles(\n  notes: CollectedNote[],\n  vaultName: string,\n  attachments: CollectedAttachment[] = []\n)",
         "vaultNameOf(root: string)"
       ]
     },
@@ -454363,7 +454908,6 @@
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.verticalScroll",
-        "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Surface",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.darkColorScheme",
@@ -454392,7 +454936,8 @@
         "com.diegonmarcos.superapp.bottomnav.NavSection",
         "com.diegonmarcos.superapp.bottomnav.PageTabs",
         "com.diegonmarcos.superapp.bottomnav.TopBarDecl",
-        "com.diegonmarcos.superapp.bottomnav.TopBarDrawer"
+        "com.diegonmarcos.superapp.bottomnav.TopBarDrawer",
+        "com.diegonmarcos.superapp.bottomnav.islandEntries"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
