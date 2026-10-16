@@ -6,6 +6,14 @@ service `build.json` in cloud-u-containers, the generated manifests below, and t
 derive engine in `1_cloud-configs/src/derive/`. Guard:
 `1_cloud-configs/src/test/test-url-scheme.sh`.
 
+> **Superseded 2026-10-16 (owner rule: PUBLIC URL = fleet Bearer OR Authelia session cookie).**
+> Wherever this document says an anonymous request "302s to the landing page", read:
+> it now gets the shared edge gate (`import edge_auth`): `401` for API clients, `302`
+> to `auth.diegonmarcos.com` for browsers. Only a caller that passed the gate is sent
+> on to the landing page. The tiers and the complete list of anonymous exceptions are
+> in [url-exposure.md](url-exposure.md) (generated); the single source list is
+> `infra-sec_caddy/build.json` `caddy_config.edge_auth`.
+
 ## Scheme v2
 
 | Kind | Public (internet DNS, wildcard `*.diegonmarcos.com`) | Private (Hickory `app` zone, mesh only) |
