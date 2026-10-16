@@ -378,6 +378,14 @@ step_verify_committed_dist() {
     [ -n "${CI:-}${GITHUB_ACTIONS:-}" ] || return 0
     [ "${SHIP_ALLOW_STALE_DIST:-}" = "1" ] && { log_warn "committed-dist guard skipped (SHIP_ALLOW_STALE_DIST=1)"; return 0; }
     git -C "$SERVICE_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 || return 0
+    # build.dist_volatile: the dist embeds the fleet declaration (ntfy channels,
+    # the cloud-spec book), so ANY service added anywhere changes it. The ship
+    # re-renders it every run and never deploys the committed copy, so for these
+    # services the committed copy is informational and is not drift-checked --
+    # otherwise each unrelated service registration breaks Build -> oci-apps.
+    case "$(get_config build.dist_volatile)" in
+        true|True) log "committed-dist guard skipped (build.dist_volatile: dist embeds the fleet declaration)"; return 0 ;;
+    esac
     _vcd_tracked=$(git -C "$SERVICE_DIR" ls-files -- dist 2>/dev/null)
     [ -n "$_vcd_tracked" ] || return 0
     _vcd_drift=$(git -C "$SERVICE_DIR" diff --name-status -- dist 2>/dev/null)
