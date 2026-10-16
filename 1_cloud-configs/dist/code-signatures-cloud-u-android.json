@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21191,
+    "files": 21203,
     "by_lang": {
       "py": 130,
       "sh": 474,
-      "kotlin": 10956,
+      "kotlin": 10968,
       "java": 635,
       "ts": 8414,
       "nix": 30,
@@ -25,7 +25,7 @@
       "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10953,
+      "kotlin": 10965,
       "python": 43,
       "rust-module": 89,
       "file": 2256,
@@ -184570,6 +184570,7 @@
         "androidx.compose.ui.graphics.vector.ImageVector",
         "app.sterna.R",
         "app.sterna.core.data.account.StoredSignature",
+        "app.sterna.core.data.account.signatureWireHtml",
         "app.sterna.core.data.pgp.PgpMode",
         "app.sterna.core.data.pgp.encrypts",
         "app.sterna.core.data.text.RichBody",
@@ -188611,67 +188612,228 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureCodeEditor.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.text.BasicTextField",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.focus.FocusRequester",
+        "androidx.compose.ui.focus.focusRequester",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.input.key.Key",
+        "androidx.compose.ui.input.key.KeyEventType",
+        "androidx.compose.ui.input.key.isCtrlPressed",
+        "androidx.compose.ui.input.key.isShiftPressed",
+        "androidx.compose.ui.input.key.key",
+        "androidx.compose.ui.input.key.onPreviewKeyEvent",
+        "androidx.compose.ui.input.key.type",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.AnnotatedString",
+        "androidx.compose.ui.text.SpanStyle",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.buildAnnotatedString",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.input.OffsetMapping",
+        "androidx.compose.ui.text.input.TextFieldValue",
+        "androidx.compose.ui.text.input.TransformedText",
+        "androidx.compose.ui.text.input.VisualTransformation",
+        "androidx.compose.ui.text.style.TextAlign",
+        "app.sterna.ui.theme.MailMetrics"
+      ],
+      "symbols": [
+        "filter(text: AnnotatedString)",
+        "codeStyle()",
+        "SignatureCodeEditor( state: SignatureEditorState, markers: Map<Int, SignatureValidator.Severity>, find: List<Int>, findLength: Int, onFind: ()",
+        "handleKey(e: androidx.compose.ui.input.key.KeyEvent, state: SignatureEditorState, onFind: ()",
+        "class HighlightTransformation"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureEditing.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "app.sterna.ui.settings.SignatureHtmlTools.Edit"
+      ],
+      "symbols": [
+        "afterTyping(before: Edit, after: Edit)",
+        "newline(text: String, at: Int)",
+        "closeTag(text: String, at: Int)",
+        "quote(text: String, at: Int, q: Char)",
+        "quoteOpen(s: String)",
+        "quoteOpenOf(s: String, q: Char)",
+        "endsWithOpeningTag(line: String)",
+        "tab(text: String, start: Int, end: Int, outdent: Boolean = false)",
+        "strike(text: String, start: Int, end: Int)",
+        "fontSize(text: String, start: Int, end: Int, px: Int)",
+        "align(text: String, start: Int, end: Int, align: Align)",
+        "divider(text: String, start: Int, end: Int)",
+        "table(text: String, start: Int, end: Int, rows: Int, cols: Int)",
+        "social(text: String, start: Int, end: Int, entries: List<Social>)",
+        "insert(text: String, start: Int, end: Int, html: String)",
+        "importFragment(raw: String)",
+        "find(text: String, query: String, matchCase: Boolean = false)",
+        "step(matches: List<Int>, caret: Int, forward: Boolean)",
+        "replaceAll(text: String, query: String, with: String, matchCase: Boolean = false)",
+        "order(text: String, start: Int, end: Int)",
+        "class SignatureEditing",
+        "class Align",
+        "class Social"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureEditor.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [],
       "imports": [
-        "android.view.View",
-        "android.webkit.WebResourceRequest",
-        "android.webkit.WebResourceResponse",
-        "android.webkit.WebView",
-        "android.webkit.WebViewClient",
-        "androidx.compose.foundation.background",
-        "androidx.compose.foundation.clickable",
-        "androidx.compose.foundation.horizontalScroll",
-        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.Spacer",
         "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.height",
         "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.width",
-        "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.selection.selectable",
-        "androidx.compose.foundation.shape.CircleShape",
-        "androidx.compose.material3.AlertDialog",
         "androidx.compose.material3.HorizontalDivider",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedButton",
-        "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.RadioButton",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember",
         "androidx.compose.runtime.saveable.rememberSaveable",
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.draw.clip",
-        "androidx.compose.ui.graphics.Color",
-        "androidx.compose.ui.graphics.toArgb",
-        "androidx.compose.ui.res.stringResource"
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "app.sterna.R",
+        "app.sterna.core.data.account.StoredSignature",
+        "app.sterna.ui.theme.MailMetrics"
       ],
       "symbols": [
         "SignatureListEditor( signatures: List<StoredSignature>, defaultSignatureId: String?, delimiter: Boolean, onChange: (List<StoredSignature>)",
-        "update(transform: (StoredSignature)",
-        "SignatureSourceEditor(signature: StoredSignature, onSource: (String)",
-        "show(edit: SignatureHtmlTools.Edit)",
-        "commit(edit: SignatureHtmlTools.Edit?)",
-        "openDialog(which: Int)",
-        "filter(text: AnnotatedString)",
-        "SignatureSourcePreview(signature: StoredSignature, delimiter: Boolean)",
-        "SignatureHtmlPreview(sanitisedHtml: String, modifier: Modifier = Modifier)",
-        "cssColour(c: Color)",
-        "shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?)",
-        "shouldInterceptRequest(view: WebView?, request: WebResourceRequest?)",
-        "class HighlightTransformation",
-        "class PreviewClient"
+        "SignatureSummary(signature: StoredSignature, delimiter: Boolean)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureEditorScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.content.Context",
+        "android.net.Uri",
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.BoxWithConstraints",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.safeDrawing",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.windowInsetsPadding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.automirrored.filled.Redo",
+        "androidx.compose.material.icons.automirrored.filled.Undo",
+        "androidx.compose.material.icons.filled.Close",
+        "androidx.compose.material.icons.filled.Error",
+        "androidx.compose.material.icons.filled.ExpandLess",
+        "androidx.compose.material.icons.filled.ExpandMore",
+        "androidx.compose.material.icons.filled.FormatAlignLeft",
+        "androidx.compose.material.icons.filled.FormatBold",
+        "androidx.compose.material.icons.filled.FormatColorText",
+        "androidx.compose.material.icons.filled.FormatItalic",
+        "androidx.compose.material.icons.filled.FormatSize",
+        "androidx.compose.material.icons.filled.FormatUnderlined",
+        "androidx.compose.material.icons.filled.HorizontalRule",
+        "androidx.compose.material.icons.filled.Image",
+        "androidx.compose.material.icons.filled.Info",
+        "androidx.compose.material.icons.filled.KeyboardArrowDown"
+      ],
+      "symbols": [
+        "SignatureEditorDialog( signature: StoredSignature, isDefault: Boolean, delimiter: Boolean, onSave: (name: String, source: String, makeDefault: Boolean)",
+        "SignatureEditorScreen( state: SignatureEditorState, delimiter: Boolean, onSave: (name: String, source: String, makeDefault: Boolean)",
+        "focusSource()",
+        "save()",
+        "styleOrWrap(command: String, wrap: (String, Int, Int)",
+        "MenuItem(label: Int, onClick: ()",
+        "ToolButton(icon: ImageVector, label: Int, enabled: Boolean = true, onClick: ()",
+        "OptionChip(label: Int, selected: Boolean, tag: String, enabled: Boolean = true, onChange: (Boolean)",
+        "FindBar( query: String, onQuery: (String)",
+        "ValidationPanel( issues: List<SignatureValidator.Issue>, open: Boolean, onToggle: ()",
+        "issueMessage(i: SignatureValidator.Issue)",
+        "TextPrompt(title: Int, label: Int, swatches: Boolean, onDismiss: ()",
+        "TablePrompt(onDismiss: ()",
+        "SocialPrompt(onDismiss: ()",
+        "importedSource(text: String)",
+        "readText(context: Context, uri: Uri)",
+        "writeText(context: Context, uri: Uri, text: String)",
+        "class Prompt"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureEditorState.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.saveable.listSaver",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.text.TextRange",
+        "androidx.compose.ui.text.input.TextFieldValue",
+        "app.sterna.ui.settings.SignatureHtmlTools.Edit"
+      ],
+      "symbols": [
+        "show(edit: Edit)",
+        "typed(v: TextFieldValue)",
+        "commit(edit: Edit?)",
+        "tab(outdent: Boolean)",
+        "replaceAll(text: String)",
+        "fromVisual(text: String)",
+        "select(start: Int, end: Int)",
+        "undo()",
+        "redo()",
+        "saver(baselineSource: String, baselineName: String, baselineDefault: Boolean)",
+        "class SignatureEditorState"
       ]
     },
     {
@@ -188681,7 +188843,7 @@
       "exports": [],
       "imports": [
         "app.sterna.core.data.text.htmlToText",
-        "app.sterna.core.data.text.sanitiseReceivedHtml"
+        "app.sterna.core.data.account.signatureWireHtml"
       ],
       "symbols": [
         "bold(text: String, start: Int, end: Int)",
@@ -188707,6 +188869,81 @@
         "class Kind",
         "class Span",
         "class History"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignaturePreview.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "app.sterna.core.data.account.signatureWireHtml",
+        "app.sterna.core.data.text.htmlEscapeMultiline",
+        "app.sterna.core.data.text.looksLikeHtml",
+        "app.sterna.ui.compose.signatureBlockHtml"
+      ],
+      "symbols": [
+        "document(source: String, options: Options = Options()",
+        "block(source: String, delimiter: Boolean)",
+        "editable(block: String, delimiter: Boolean)",
+        "fromVisual(inner: String)",
+        "visualContent(source: String)",
+        "class SignaturePreview",
+        "class Options",
+        "class name"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureValidator.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "validate(source: String)",
+        "add(sev: Severity, code: Code, start: Int, end: Int, detail: String = \"\")",
+        "markers(issues: List<Issue>)",
+        "blocksSave(issues: List<Issue>)",
+        "checkTag(tag: Tag, add: (Severity, Code, Int, Int, String)",
+        "readTag(s: String, from: Int)",
+        "lineOf(offset: Int)",
+        "class SignatureValidator",
+        "class Severity",
+        "class Code",
+        "class Issue",
+        "class Open",
+        "class Attr",
+        "class Tag",
+        "class LineIndex"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/settings/SignatureWebPreview.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.annotation.SuppressLint",
+        "android.view.View",
+        "android.webkit.JavascriptInterface",
+        "android.webkit.WebResourceRequest",
+        "android.webkit.WebResourceResponse",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.rememberUpdatedState",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.viewinterop.AndroidView"
+      ],
+      "symbols": [
+        "exec(command: String, value: String? = null)",
+        "SignatureWebPreview( document: String, visual: Boolean, handle: VisualHandle, onVisualHtml: (String)",
+        "onHtml(html: String)",
+        "shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?)",
+        "shouldInterceptRequest(view: WebView?, request: WebResourceRequest?)",
+        "class VisualHandle",
+        "class PreviewClient"
       ]
     },
     {
@@ -198486,6 +198723,95 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/SignatureEditingTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignatureEditingTest"
+      ],
+      "imports": [
+        "app.sterna.ui.settings.SignatureHtmlTools.Edit",
+        "app.sterna.ui.settings.SignatureHtmlTools.Kind",
+        "app.sterna.ui.settings.SignatureHtmlTools.Span",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "typed(text: String, at: Int, c: String)",
+        "after(text: String, at: Int, c: String)",
+        "commentsTagsAttributesValuesAndEntitiesAreToldApart()",
+        "anUnterminatedCommentOrStringPaintsToTheEndWithoutThrowing()",
+        "enterKeepsTheIndentOfThePreviousLine()",
+        "enterAfterAnOpeningTagIndentsOneLevelDeeper()",
+        "enterBetweenOpenAndCloseOpensABlock()",
+        "enterAfterAVoidTagDoesNotIndent()",
+        "typingTheEndOfAnOpeningTagAddsItsClosingTag()",
+        "noClosingTagForVoidClosingSelfClosedOrAlreadyClosed()",
+        "aQuoteInsideATagIsPairedAndTypedOver()",
+        "anApostropheInTextIsLeftAlone()",
+        "pasteAndMultiCharacterChangesAreNotTouched()",
+        "tabInsertsTwoSpaces()",
+        "tabOverSeveralLinesIndentsEachAndShiftTabUndoesIt()",
+        "shiftTabOnOneLineRemovesUpToTwoSpaces()",
+        "fontSizeAndAlignWrapTheSelection()",
+        "tableUsesInlineStylesAndPutsTheCaretInTheFirstCell()",
+        "dividerAndSocialInsertValidMarkup()",
+        "findIsCaseInsensitiveByDefaultAndStepsWithWrap()",
+        "aWholePageIsReducedToItsBodyAndAFragmentIsOnlyTrimmed()",
+        "class SignatureEditingTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/SignatureEditorScreenTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignatureEditorScreenTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.test.assertIsEnabled",
+        "androidx.compose.ui.test.assertIsNotEnabled",
+        "androidx.compose.ui.test.assertTextContains",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performTextInput",
+        "app.sterna.ui.compose.signatureBlockHtml",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "show(state: SignatureEditorState)",
+        "typingHtmlUpdatesThePreviewWithTheSignatureAsSent()",
+        "theSanitisedMarkupIsWhatThePreviewShows()",
+        "theValidationPanelFollowsTheSource()",
+        "saveIsOnlyOfferedForUnsavedEditsAndHandsBackTheSource()",
+        "thePreviewOptionsChangeTheFrameNotTheSignature()",
+        "class SignatureEditorScreenTest"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/SignatureHtmlToolsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -198524,6 +198850,67 @@
         "recordingTheSameTextOnlyUpdatesTheSelection()",
         "theHistoryIsBounded()",
         "class SignatureHtmlToolsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/SignaturePreviewTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignaturePreviewTest"
+      ],
+      "imports": [
+        "app.sterna.core.data.account.StoredSignature",
+        "app.sterna.core.data.account.signatureWireHtml",
+        "app.sterna.core.data.text.RichBody",
+        "app.sterna.ui.compose.htmlBodyWithSignature",
+        "app.sterna.ui.compose.signatureBlockHtml",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "thePreviewCarriesTheVerySignatureBlockTheSendPathPutsOnTheWire()",
+        "thePreviewAndTheStoredRenderableHtmlAreOneFunction()",
+        "nothingTheSanitiserDropsReachesThePreview()",
+        "optionsOnlyChangeTheFrame()",
+        "visualModeEditsTheSanitisedMarkupInPlaceAndOnlyThereMayScriptRun()",
+        "roundTripThroughTheVisualPageIsStable()",
+        "fromVisualRemovesBrowserEditingArtefacts()",
+        "class SignaturePreviewTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/settings/SignatureValidatorTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignatureValidatorTest"
+      ],
+      "imports": [
+        "app.sterna.ui.settings.SignatureValidator.Code",
+        "app.sterna.ui.settings.SignatureValidator.Severity",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "codes(s: String)",
+        "cleanMarkupHasNoFindings()",
+        "anUnclosedTagIsReportedOnItsLine()",
+        "anOpenTagAtTheEndIsUnclosed()",
+        "aClosingTagWithNoOpenerIsStray()",
+        "optionalEndTagsAndVoidElementsAreNotFindings()",
+        "anUnterminatedTagOrCommentIsAnErrorAndNeverThrows()",
+        "imagesAreChecked()",
+        "styleBlocksClassesAndHandlersAreFlagged()",
+        "elementsTheSanitiserDropsAreFlaggedAndTheirBodyIsNotValidatedAsMarkup()",
+        "sizeWarnsThenBlocks()",
+        "theGutterGetsTheWorstSeverityPerLine()",
+        "neverThrowsOnGarbage()",
+        "class SignatureValidatorTest"
       ]
     },
     {
@@ -200153,6 +200540,20 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/account/SignatureWire.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "signatureWireHtml"
+      ],
+      "imports": [
+        "app.sterna.core.data.text.sanitiseReceivedHtml"
+      ],
+      "symbols": [
+        "signatureWireHtml(html: String)"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/core/data/src/main/kotlin/app/sterna/core/data/account/StoredAccount.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -200209,7 +200610,6 @@
       "imports": [
         "app.sterna.core.data.text.htmlToText",
         "app.sterna.core.data.text.looksLikeHtml",
-        "app.sterna.core.data.text.sanitiseReceivedHtml",
         "kotlinx.serialization.Serializable"
       ],
       "symbols": [
