@@ -6,13 +6,13 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2925,
+    "files": 2926,
     "by_lang": {
       "sh": 146,
       "nix": 164,
       "py": 861,
       "ts": 1147,
-      "js": 72,
+      "js": 73,
       "rust": 535
     },
     "by_role": {
@@ -20,7 +20,7 @@
       "nix-module": 16,
       "python": 853,
       "module": 699,
-      "file": 318,
+      "file": 319,
       "script": 8,
       "flake": 75,
       "compose": 73,
@@ -11665,12 +11665,15 @@
       "lang": "js",
       "role": "module",
       "exports": [
+        "retryLeg",
+        "notifyLegLost",
+        "_retry",
         "default"
       ],
       "imports": [],
       "symbols": [
-        "deliverToMaddyWithRetry(rawEmail, to, env, attempts, backoffsMs)",
-        "notifyMeshLegLost(env, { messageId, from, to, status })",
+        "retryLeg(name, attemptFn, attempts, backoffsMs, firstStatus)",
+        "notifyLegLost(marker, target, { messageId, from, to, status })",
         "deliverToMaddy(rawEmail, to, env)",
         "deliverToGoogle(rawEmail, env)",
         "getGoogleAccessToken(env)",
@@ -11678,6 +11681,21 @@
         "base64urlEncode(data)",
         "checkMailHealth(env)",
         "forwardToBackup(message, env, reason)"
+      ]
+    },
+    {
+      "path": "infra-cloud_cloudflare-worker/src/test-email-forwarder.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:crypto",
+        "./email-forwarder.js"
+      ],
+      "symbols": [
+        "setup({ google = 0, maddy = 0, healthy = true, googleThrows = false } = {})",
+        "run(opts)"
       ]
     },
     {
@@ -13243,7 +13261,9 @@
         "sh(script, env=None, cwd=None)",
         "fp(mid)",
         "scenario(plan, **kw)",
-        "class FakeSMTP"
+        "fake_call(mc)",
+        "class FakeSMTP",
+        "class FS"
       ],
       "imports": [
         "hashlib",
@@ -13262,7 +13282,9 @@
         "sh(script, env=None, cwd=None)",
         "fp(mid)",
         "scenario(plan, **kw)",
-        "class FakeSMTP"
+        "fake_call(mc)",
+        "class FakeSMTP",
+        "class FS"
       ]
     },
     {
