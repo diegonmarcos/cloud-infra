@@ -26,6 +26,7 @@ and offers three verbs:
 
 Stdlib only; reads files, never the network.
 """
+import fnmatch
 import json
 import os
 import re
@@ -422,7 +423,8 @@ def probe_list():
         for p in g.get("paths", []):
             add("protected", g["parent_domain"], p["base_path"] + "/", "gated")
             for pp in p.get("public_paths", []) or []:
-                add("protected", g["parent_domain"], pp.replace("*", "x"), "gated")
+                declared = any(fnmatch.fnmatch(pp, pat) for pat in path_open.get(g["parent_domain"], []))
+                add("open" if declared else "protected", g["parent_domain"], pp.replace("*", "x"), "any" if declared else "gated")
     for g in hub_json.get("mcp_routes", []):
         for e in g.get("endpoints", []):
             add("protected", g["parent_domain"], e["base_path"] + "/mcp", "gated")

@@ -37,8 +37,21 @@ LIST="$(python3 -I "$ROOT/1_cloud-configs/src/derive/url-exposure.py" probe-list
 probe_one() {  # kind host path expect -> prints "STATUS|redirect|verdict"
   local kind="$1" host="$2" path="$3" extra=() out code loc verdict
   case "$host" in *.app|*.db) extra=(--noproxy "*" --resolve "$host:443:$EDGE_IP" -k) ;; esac
-  out=$(curl -sS -o /dev/null -m 12 -w '%{http_code}|%{redirect_url}' "${extra[@]}" -H 'Accept: application/json' "https://$host$path" 2>/dev/null) || out="000|"
-  code="${out%%|*}"; loc="${out#*|}"
+  # The edge rate-limits one source at 100 req/min (zone global): pace ourselves, and
+  # retry a 429 (rate-limited, says nothing about the gate) instead of reporting it.
+  local try
+  for try in 1 2 3 4; do
+    sleep "${PROBE_PACE:-0.9}"
+    out=$(curl -sS -D /tmp/.eap.$$ -o /dev/null -m 12 -w '%{http_code}|%{redirect_url}' "${extra[@]}" -H 'Accept: application/json' "https://$host$path" 2>/dev/null) || out="000|"
+    code="${out%%|*}"; loc="${out#*|}"
+    # A sandboxed network's egress gateway answers *.app / unknown SNIs itself
+    # (x-deny-reason: resolve_*), or reaches the REAL public domain of that name
+    # (vaultwarden.app is one): neither says anything about OUR edge. Flag it.
+    if grep -qi '^x-deny-reason:' /tmp/.eap.$$ 2>/dev/null; then rm -f /tmp/.eap.$$; printf 'skip\t%s\t%s%s\t%s\t(egress gateway answered, not our edge)\n' "$kind" "$host" "$path" "$code"; return; fi
+    rm -f /tmp/.eap.$$
+    [ "$code" = 429 ] || break
+    sleep 30
+  done
   verdict=FAIL
   case "$kind" in
     open) verdict=info ;;
@@ -54,10 +67,14 @@ probe_one() {  # kind host path expect -> prints "STATUS|redirect|verdict"
 export -f probe_one; export AUTH_RE EDGE_IP
 
 # *.app / *.db names must never be served through the edge: probe a representative set.
-APPS="$(printf '%s\n' c3-infra-api.app c3-gitea.app gitea.app vaultwarden.app cloud.gitea.app s3-photos.app | awk '{print "private\t"$1"\t/\trefused"}')"
+# ONLY meaningful from a network with direct egress to the edge IP (a CI runner, a mesh
+# host). Behind a sandboxing egress gateway these come back as "skip" or hit the real
+# public domain of the same name (vaultwarden.app exists) -- do not read them there.
+# Only the c3-*.app names are unambiguous there (no such public domain).
+APPS="$(printf '%s\n' c3-infra-api.app c3-gitea.app c3-authelia.app gitea.app cloud.gitea.app s3-photos.app | awk '{print "private\t"$1"\t/\trefused"}')"
 
 RES="$(printf '%s\n%s\n' "$LIST" "$APPS" | awk -F'\t' 'NF>=3' | \
-  xargs -P 8 -d '\n' -I{} bash -c 'IFS=$'"'"'\t'"'"' read -r k h p e <<<"$1"; probe_one "$k" "$h" "$p" "$e"' _ {} | sort)"
+  xargs -P 2 -d '\n' -I{} bash -c 'IFS=$'"'"'\t'"'"' read -r k h p e <<<"$1"; probe_one "$k" "$h" "$p" "$e"' _ {} | sort)"
 echo "$RES"
 fails=$(printf '%s\n' "$RES" | awk -F'\t' '$1=="FAIL"' | wc -l)
 total=$(printf '%s\n' "$RES" | wc -l)
