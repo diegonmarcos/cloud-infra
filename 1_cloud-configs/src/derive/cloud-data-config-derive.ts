@@ -951,6 +951,15 @@ function deriveCaddy(c: any): DerivedFile[] {
   const edgeAuthUpstreams: Record<string, string> = {
     ...authUpstreams,
     ...(authUp ? { authelia: EDGE_TO_HUB } : {}),
+    // forward_auth target for the edge's shared (edge_auth) gate. NOT
+    // EDGE_TO_HUB: proxying /api/authz/forward-auth through the hub's auth vhost
+    // makes the hub's reverse_proxy overwrite X-Forwarded-Host/-Uri (the client
+    // is untrusted there), so Authelia would judge auth.diegonmarcos.com instead
+    // of the site being gated. The edge instead dials Authelia's published port
+    // on the hub's wg0 address directly, exactly as it already dials the
+    // introspect-proxy, so the X-Forwarded-* the edge's Caddy sets arrive intact.
+    ...(authSvc?.port && services["caddy"]?.caddy_config?.global?.wg_bind_ip
+      ? { authelia_mesh: `${services["caddy"].caddy_config.global.wg_bind_ip}:${authSvc.port}` } : {}),
   };
 
   // ── OIDC public machine endpoints — computed here (before mainFile) so BOTH
@@ -1428,6 +1437,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       on_demand_tls:    caddyCfg.on_demand_tls    ?? {},
       security_snippets:caddyCfg.security_snippets?? {},
       auth:             caddyCfg.auth             ?? {},
+      edge_auth:        caddyCfg.edge_auth        ?? {},
       error_handler:    caddyCfg.error_handler    ?? {},
       static_files:     caddyCfg.static_files     ?? [],
       wkd:              caddyCfg.wkd              ?? {},
@@ -1518,6 +1528,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       on_demand_tls:     caddyCfg.on_demand_tls     ?? {},
       security_snippets: caddyCfg.security_snippets ?? {},
       auth:              caddyCfg.auth              ?? {},
+      edge_auth:         caddyCfg.edge_auth         ?? {},
       auth_upstreams:    edgeAuthUpstreams,
       error_handler:     caddyCfg.error_handler     ?? {},
       catch_all:         caddyCfg.catch_all         ?? {},
