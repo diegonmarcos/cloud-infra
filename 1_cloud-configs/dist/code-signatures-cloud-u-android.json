@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21389,
+    "files": 21390,
     "by_lang": {
       "py": 132,
       "sh": 476,
-      "kotlin": 11122,
+      "kotlin": 11123,
       "java": 635,
       "ts": 8434,
       "nix": 30,
@@ -25,7 +25,7 @@
       "module": 6381,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11119,
+      "kotlin": 11120,
       "python": 43,
       "rust-module": 89,
       "file": 2271,
@@ -51634,7 +51634,10 @@
       "exports": [
         "AutheliaPortal",
         "MailAuthScope",
+        "RejectionLayer",
         "MailAuthRequiredException",
+        "GateHeaders",
+        "GateHeaderInterceptor",
         "MailAuthInterceptor",
         "AutheliaCookieJar",
         "MailHttp",
@@ -51664,6 +51667,8 @@
         "hostOf(server: String)",
         "registrable(host: String)",
         "allows(serverHost: String, requestHost: String)",
+        "of(wwwAuthenticate: List<String>, contentType: String?)",
+        "forRequest(serverHost: String, requestHost: String, c: MailAuthCreds)",
         "intercept(chain: Interceptor.Chain)",
         "loadForRequest(url: HttpUrl)",
         "saveFromResponse(url: HttpUrl, cookies: List<Cookie>)",
@@ -51673,7 +51678,10 @@
         "resolve(c: MailAuthCreds, now: Long)",
         "class AutheliaPortal",
         "class MailAuthScope",
+        "class RejectionLayer",
         "class MailAuthRequiredException",
+        "class GateHeaders",
+        "class GateHeaderInterceptor",
         "class MailAuthInterceptor",
         "class AutheliaCookieJar",
         "class MailHttp",
@@ -52101,6 +52109,34 @@
         "MailDivider(vertical: androidx.compose.ui.unit.Dp = 8.dp)",
         "MailStatus( loading: Boolean, text: String, modifier: Modifier = Modifier, style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.labelMedium, )",
         "MailDim(text: String, style: androidx.compose.ui.text.TextStyle, modifier: Modifier = Modifier, alpha: Float = 0.7f, mono: Boolean = false)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mail/src/test/java/com/diegonmarcos/superapp/mail/GateHeadersTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GateHeadersTest"
+      ],
+      "imports": [
+        "okhttp3.OkHttpClient",
+        "okhttp3.Request",
+        "okhttp3.mockwebserver.MockResponse",
+        "okhttp3.mockwebserver.MockWebServer",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assert.fail",
+        "org.junit.Before",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "up()",
+        "down()",
+        "bearer(token: String = \" fleet-tok \")",
+        "call()",
+        "class GateHeadersTest"
       ]
     },
     {
@@ -191339,6 +191375,7 @@
         "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
         "androidx.compose.material3.SegmentedButton",
         "androidx.compose.material3.SegmentedButtonDefaults",
         "androidx.compose.material3.SingleChoiceSegmentedButtonRow",
@@ -191355,13 +191392,12 @@
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.input.PasswordVisualTransformation",
         "androidx.compose.ui.viewinterop.AndroidView",
         "androidx.compose.ui.window.Dialog",
         "androidx.compose.ui.window.DialogProperties",
         "app.sterna.R",
-        "app.sterna.core.data.account.GatewayMode",
-        "app.sterna.core.data.account.GatewayStatus",
-        "app.sterna.core.jmap.GatewayCookies"
+        "app.sterna.core.data.account.GatewayMode"
       ],
       "symbols": [
         "mode(m: GatewayMode)",
@@ -191444,6 +191480,7 @@
         "gatewayMode(id: String)",
         "gatewayStatus(id: String)",
         "setGatewayMode(id: String, mode: GatewayMode)",
+        "setFleetToken(id: String, token: String)",
         "autheliaSignedIn(id: String, cookie: String)",
         "autheliaSignOut(id: String)",
         "isSignedIn(id: String)",
@@ -191478,8 +191515,7 @@
         "clearPgpSetup()",
         "choosePgpKey(accountId: String, interactionResult: Intent? = null)",
         "setPgp(accountId: String, enabled: Boolean, encryptByDefault: Boolean)",
-        "signOut(id: String)",
-        "failureDetail(raw: String?)"
+        "signOut(id: String)"
       ]
     },
     {
@@ -203958,6 +203994,7 @@
         "android.util.Base64",
         "app.sterna.core.data.crypto.KeystoreCrypto",
         "app.sterna.core.jmap.GatewayCookies",
+        "app.sterna.core.jmap.GatewayFleetTokens",
         "kotlinx.serialization.json.Json",
         "kotlinx.serialization.json.JsonObject",
         "kotlinx.serialization.json.JsonPrimitive",
@@ -203971,6 +204008,9 @@
         "get(accountId: String)",
         "put(accountId: String, a: GatewayAuth)",
         "setAuthelia(accountId: String, server: String, on: Boolean)",
+        "setBearer(accountId: String, server: String, on: Boolean)",
+        "setFleetToken(accountId: String, server: String, token: String)",
+        "wireFleet(server: String, a: GatewayAuth)",
         "signIn(accountId: String, server: String, cookie: String, now: Long)",
         "signOut(accountId: String, server: String)",
         "forget(accountId: String, server: String)",
@@ -217367,7 +217407,10 @@
       "role": "kotlin",
       "exports": [
         "GatewayCookies",
+        "GatewayFleetTokens",
+        "GatewayHeaders",
         "GatewayCookieInterceptor",
+        "RejectionLayer",
         "GatewayRedirectGuard",
         "GatewayErrors"
       ],
@@ -217383,11 +217426,18 @@
         "markRejected(host: String)",
         "isRejected(host: String)",
         "sessionValue(cookieHeader: String)",
+        "set(host: String, token: String?)",
+        "tokenFor(host: String)",
+        "compose(host: String, hasCookie: Boolean, hasFleet: Boolean)",
         "intercept(chain: Interceptor.Chain)",
+        "of(wwwAuthenticate: List<String>, contentType: String?)",
         "kind(t: Throwable)",
         "describe(t: Throwable)",
         "class GatewayCookies",
+        "class GatewayFleetTokens",
+        "class GatewayHeaders",
         "class GatewayCookieInterceptor",
+        "class RejectionLayer",
         "class GatewayRedirectGuard",
         "class GatewayErrors",
         "class Kind"
