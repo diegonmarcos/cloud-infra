@@ -1599,6 +1599,46 @@
         "auth": "basic"
       }
     },
+    "cloud-notes-sync": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 8098
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/healthz",
+      "domain": "notes-sync.diegonmarcos.com",
+      "description": "Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync).",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/healthz"
+        ],
+        "type": "no-api"
+      }
+    },
+    "cloud-notes-web": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 8097
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/healthz",
+      "domain": "notes.diegonmarcos.com",
+      "description": "Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web).",
+      "api": {
+        "has_api": false,
+        "has_web_ui": true,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/healthz"
+        ],
+        "type": "no-api"
+      }
+    },
     "code-server": {
       "ip": "10.0.0.6",
       "ports": {

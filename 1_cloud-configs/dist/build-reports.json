@@ -102,6 +102,14 @@
       "url": "https://cal.diegonmarcos.com/.web/"
     },
     {
+      "service": "cloud-notes-sync",
+      "url": "https://notes-sync.diegonmarcos.com/healthz"
+    },
+    {
+      "service": "cloud-notes-web",
+      "url": "https://notes.diegonmarcos.com/healthz"
+    },
+    {
       "service": "code-server",
       "url": "https://ide.diegonmarcos.com/"
     },
@@ -234,6 +242,14 @@
     {
       "service": "calendar-radicale",
       "domain": "cal.diegonmarcos.com"
+    },
+    {
+      "service": "cloud-notes-sync",
+      "domain": "notes-sync.diegonmarcos.com"
+    },
+    {
+      "service": "cloud-notes-web",
+      "domain": "notes.diegonmarcos.com"
     },
     {
       "service": "code-server",
@@ -372,6 +388,14 @@
     {
       "service": "calendar-radicale",
       "domain": "cal.diegonmarcos.com"
+    },
+    {
+      "service": "cloud-notes-sync",
+      "domain": "notes-sync.diegonmarcos.com"
+    },
+    {
+      "service": "cloud-notes-web",
+      "domain": "notes.diegonmarcos.com"
     },
     {
       "service": "code-server",
@@ -1279,6 +1303,32 @@
         "path": "/.web/"
       }
     },
+    "cloud-notes-sync": {
+      "name": "cloud-notes-sync",
+      "vm": "oci-A1-f_0",
+      "domain": "notes-sync.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8098
+      },
+      "health": {
+        "path": "/healthz"
+      }
+    },
+    "cloud-notes-web": {
+      "name": "cloud-notes-web",
+      "vm": "oci-A1-f_0",
+      "domain": "notes.diegonmarcos.com",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8097
+      },
+      "health": {
+        "path": "/healthz"
+      }
+    },
     "code-server": {
       "name": "code-server",
       "vm": "oci-A1-f_0",
@@ -1924,6 +1974,24 @@
       "dns": "calendar.app"
     },
     {
+      "service": "cloud-notes-sync",
+      "dns": "cloud-notes-sync.app"
+    },
+    {
+      "service": "cloud-notes-sync",
+      "container": "app",
+      "dns": "cloud-notes-sync.app"
+    },
+    {
+      "service": "cloud-notes-web",
+      "dns": "cloud-notes-web.app"
+    },
+    {
+      "service": "cloud-notes-web",
+      "container": "app",
+      "dns": "cloud-notes-web.app"
+    },
+    {
       "service": "code-server",
       "dns": "code-server.app"
     },
@@ -2172,6 +2240,8 @@
           "playlist-syncer",
           "news-gdelt",
           "calendar-radicale",
+          "cloud-notes-sync",
+          "cloud-notes-web",
           "code-server",
           "contacts-radicale",
           "etherpad",
@@ -3066,6 +3136,32 @@
         },
         "health": {
           "path": "/.web/"
+        }
+      },
+      "cloud-notes-sync": {
+        "name": "cloud-notes-sync",
+        "vm": "oci-A1-f_0",
+        "domain": "notes-sync.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8098
+        },
+        "health": {
+          "path": "/healthz"
+        }
+      },
+      "cloud-notes-web": {
+        "name": "cloud-notes-web",
+        "vm": "oci-A1-f_0",
+        "domain": "notes.diegonmarcos.com",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8097
+        },
+        "health": {
+          "path": "/healthz"
         }
       },
       "code-server": {

@@ -6,24 +6,24 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2929,
+    "files": 2935,
     "by_lang": {
-      "sh": 146,
-      "nix": 165,
+      "sh": 148,
+      "nix": 169,
       "py": 862,
       "ts": 1148,
       "js": 73,
       "rust": 535
     },
     "by_role": {
-      "shell": 136,
+      "shell": 138,
       "nix-module": 17,
       "python": 853,
       "module": 700,
       "file": 319,
       "script": 8,
-      "flake": 75,
-      "compose": 73,
+      "flake": 77,
+      "compose": 75,
       "entrypoint": 48,
       "mcp-tool": 113,
       "workflow-dag": 4,
@@ -76065,6 +76065,193 @@
         "APP_PORT",
         "IMAP_HOST",
         "IMAP_PORT",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
+      "path": "user-prod_cloud-notes-sync/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "user-prod_cloud-notes-sync/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "base_domain",
+        "services"
+      ],
+      "imports": [],
+      "symbols": [
+        "svc",
+        "self",
+        "binariesImage",
+        "services",
+        "cloud-notes-sync",
+        "image",
+        "container_name",
+        "ports",
+        "environment",
+        "PORT",
+        "SYNC_DB",
+        "SYNC_FORWARD_AUTH_URL",
+        "volumes",
+        "cloud_notes_sync_data"
+      ]
+    },
+    {
+      "path": "user-prod_cloud-notes-sync/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "lib",
+        "base_domain",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
+      "path": "user-prod_cloud-notes-web/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "user-prod_cloud-notes-web/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container",
+        "base_domain",
+        "services"
+      ],
+      "imports": [],
+      "symbols": [
+        "svc",
+        "self",
+        "binariesImage",
+        "services",
+        "cloud-notes-web",
+        "image",
+        "container_name",
+        "ports"
+      ]
+    },
+    {
+      "path": "user-prod_cloud-notes-web/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "dist",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "lib",
+        "base_domain",
         "packages",
         "pkgs",
         "default",

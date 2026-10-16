@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 318,
-    "edges": 437,
+    "nodes": 326,
+    "edges": 449,
     "by_table": {
       "vm": 4,
-      "service": 75,
-      "container": 91,
-      "domain": 42,
+      "service": 77,
+      "container": 93,
+      "domain": 44,
       "repo": 3,
-      "module": 75,
+      "module": 77,
       "package": 28
     }
   },
@@ -1992,6 +1992,58 @@
     },
     {
       "table": "service",
+      "id": "cloud_notes_sync",
+      "key": "service:cloud_notes_sync",
+      "properties": {
+        "name": "cloud-notes-sync",
+        "category": "app",
+        "description": "Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync).",
+        "domain": "notes-sync.diegonmarcos.com",
+        "port": 8098,
+        "vm": "oci-apps",
+        "folder": "user-prod_cloud-notes-sync"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_notes_sync",
+      "key": "container:cloud_notes_sync",
+      "properties": {
+        "name": "cloud-notes-sync",
+        "image": "ghcr.io/diegonmarcos/cloud-notes-sync-binaries:latest",
+        "role": "app",
+        "port": 8098,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_notes_web",
+      "key": "service:cloud_notes_web",
+      "properties": {
+        "name": "cloud-notes-web",
+        "category": "app",
+        "description": "Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web).",
+        "domain": "notes.diegonmarcos.com",
+        "port": 8097,
+        "vm": "oci-apps",
+        "folder": "user-prod_cloud-notes-web"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_notes_web",
+      "key": "container:cloud_notes_web",
+      "properties": {
+        "name": "cloud-notes-web",
+        "image": "ghcr.io/diegonmarcos/cloud-notes-web-binaries:latest",
+        "role": "app",
+        "port": 8097,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
       "id": "code_server",
       "key": "service:code_server",
       "properties": {
@@ -2530,6 +2582,22 @@
       "key": "domain:cal_diegonmarcos_com",
       "properties": {
         "fqdn": "cal.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "notes_sync_diegonmarcos_com",
+      "key": "domain:notes_sync_diegonmarcos_com",
+      "properties": {
+        "fqdn": "notes-sync.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "domain",
+      "id": "notes_diegonmarcos_com",
+      "key": "domain:notes_diegonmarcos_com",
+      "properties": {
+        "fqdn": "notes.diegonmarcos.com"
       }
     },
     {
@@ -3329,6 +3397,28 @@
         "repo": "cloud",
         "category": "app",
         "service": "calendar-radicale"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_prod_cloud_notes_sync",
+      "key": "module:user_prod_cloud_notes_sync",
+      "properties": {
+        "name": "user-prod_cloud-notes-sync",
+        "repo": "cloud",
+        "category": "app",
+        "service": "cloud-notes-sync"
+      }
+    },
+    {
+      "table": "module",
+      "id": "user_prod_cloud_notes_web",
+      "key": "module:user_prod_cloud_notes_web",
+      "properties": {
+        "name": "user-prod_cloud-notes-web",
+        "repo": "cloud",
+        "category": "app",
+        "service": "cloud-notes-web"
       }
     },
     {
@@ -4935,6 +5025,38 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:cloud_notes_sync",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_notes_sync->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_notes_sync",
+      "to": "container:cloud_notes_sync",
+      "key": "service:cloud_notes_sync->runs_container->container:cloud_notes_sync",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_notes_web",
+      "to": "vm:oci_apps",
+      "key": "service:cloud_notes_web->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_notes_web",
+      "to": "container:cloud_notes_web",
+      "key": "service:cloud_notes_web->runs_container->container:cloud_notes_web",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:code_server",
       "to": "vm:oci_apps",
       "key": "service:code_server->hosted_on->vm:oci_apps",
@@ -5450,6 +5572,24 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:cloud_notes_sync",
+      "to": "service:caddy",
+      "key": "service:cloud_notes_sync->proxied_by->service:caddy",
+      "properties": {
+        "domain": "notes-sync.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
+      "from": "service:cloud_notes_web",
+      "to": "service:caddy",
+      "key": "service:cloud_notes_web->proxied_by->service:caddy",
+      "properties": {
+        "domain": "notes.diegonmarcos.com"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:code_server",
       "to": "service:caddy",
       "key": "service:code_server->proxied_by->service:caddy",
@@ -5791,6 +5931,20 @@
       "from": "domain:cal_diegonmarcos_com",
       "to": "service:calendar_radicale",
       "key": "domain:cal_diegonmarcos_com->routes_to->service:calendar_radicale",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:notes_sync_diegonmarcos_com",
+      "to": "service:cloud_notes_sync",
+      "key": "domain:notes_sync_diegonmarcos_com->routes_to->service:cloud_notes_sync",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:notes_diegonmarcos_com",
+      "to": "service:cloud_notes_web",
+      "key": "domain:notes_diegonmarcos_com->routes_to->service:cloud_notes_web",
       "properties": {}
     },
     {
@@ -6771,6 +6925,34 @@
       "from": "module:user_prod_calendar_radicale",
       "to": "service:calendar_radicale",
       "key": "module:user_prod_calendar_radicale->implements->service:calendar_radicale",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_prod_cloud_notes_sync",
+      "to": "repo:cloud",
+      "key": "module:user_prod_cloud_notes_sync->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_prod_cloud_notes_sync",
+      "to": "service:cloud_notes_sync",
+      "key": "module:user_prod_cloud_notes_sync->implements->service:cloud_notes_sync",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:user_prod_cloud_notes_web",
+      "to": "repo:cloud",
+      "key": "module:user_prod_cloud_notes_web->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:user_prod_cloud_notes_web",
+      "to": "service:cloud_notes_web",
+      "key": "module:user_prod_cloud_notes_web->implements->service:cloud_notes_web",
       "properties": {}
     },
     {
