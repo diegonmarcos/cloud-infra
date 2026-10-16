@@ -95,21 +95,6 @@ SERVICES=$(jq -r --arg vm "$VM" '
   | join("|")
 ' "$GHA_CONFIG")
 
-# build.ship_hold (string = reason): a registered service whose build cannot succeed
-# yet (e.g. its upstream GHCR package is not readable) is held out of the ship, so
-# one pending service does not fail the build gate and skip every other deploy.
-# Config, dist and routes stay; remove the field to ship it. (`enabled:false` is NOT
-# a ship filter: disabled services such as postlite still build and deploy.)
-if [ -n "$SERVICES" ]; then
-  _held=""
-  SERVICES=$(echo "$SERVICES" | while IFS='|' read -r _d _n; do
-    _bj="$REPO_ROOT/a_solutions/$_d/build.json"
-    _why=$(jq -r '.build.ship_hold // empty' "$_bj" 2>/dev/null || true)
-    if [ -n "$_why" ]; then echo "HELD $_n: $_why" >&2; continue; fi
-    echo "$_d|$_n"
-  done)
-fi
-
 if [ -z "$SERVICES" ]; then
   echo "No services found for VM: $VM"
   exit 0
@@ -225,6 +210,22 @@ if [ "$_as_n" -eq 0 ] || [ ! -f "$_AS_DIR/_shared/engine.nix" ]; then
   exit 1
 fi
 log "a_solutions ready: ${_as_n} service build.sh @ $(git -C "$_AS_DIR" rev-parse --short HEAD 2>/dev/null || echo '?')"
+
+# build.ship_hold (string = reason): a registered service whose build cannot succeed
+# yet (e.g. its upstream GHCR package is not readable) is held out of the ship, so
+# one pending service does not fail the build gate and skip every other deploy.
+# Runs AFTER a_solutions is materialised (build.json is not there before). Config, dist and routes stay; remove the field to ship it. (`enabled:false` is NOT
+# a ship filter: disabled services such as postlite still build and deploy.)
+if [ -n "$SERVICES" ]; then
+  _held=""
+  SERVICES=$(echo "$SERVICES" | while IFS='|' read -r _d _n; do
+    _bj="$REPO_ROOT/a_solutions/$_d/build.json"
+    _why=$(jq -r '.build.ship_hold // empty' "$_bj" 2>/dev/null || true)
+    if [ -n "$_why" ]; then echo "HELD $_n: $_why" >&2; continue; fi
+    echo "$_d|$_n"
+  done)
+fi
+
 
 # ── Update cloud-data submodule ONCE (locked, before parallel workers) ──
 # Per-service parallel updates race on .git/modules/cloud-data/config lock

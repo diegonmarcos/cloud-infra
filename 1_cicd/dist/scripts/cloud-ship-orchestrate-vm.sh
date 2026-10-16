@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud-ship-orchestrate-vm.sh
+# ║   Source : 1_cicd/src/scripts/cloud-ship-orchestrate-vm.sh
 # ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
@@ -78,19 +78,6 @@ SERVICES=$(jq -r --arg vm "$VM" '
   | [.value.dir, .key, (.value.has_docker // false | tostring)]
   | join("|")
 ' "$GHA_CONFIG")
-
-# build.ship_hold (string = reason): a registered service whose build cannot succeed
-# yet (e.g. its upstream GHCR package is not readable) is held out of the ship, so
-# one pending service does not fail the build gate and skip every other deploy.
-# Config, dist and routes stay; remove the field to ship it. (`enabled:false` is NOT
-# a ship filter.) Same filter as cloud-ship-ci-builder-dispatch.sh.
-if [ -n "$SERVICES" ]; then
-  SERVICES=$(echo "$SERVICES" | while IFS='|' read -r _d _n _rest; do
-    _why=$(jq -r '.build.ship_hold // empty' "$REPO_ROOT/a_solutions/$_d/build.json" 2>/dev/null || true)
-    if [ -n "$_why" ]; then echo "HELD $_n: $_why" >&2; continue; fi
-    echo "$_d|$_n|$_rest"
-  done)
-fi
 
 if [ -z "$SERVICES" ]; then
   echo "No services found for VM: $VM"
