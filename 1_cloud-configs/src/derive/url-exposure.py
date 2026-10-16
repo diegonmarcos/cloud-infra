@@ -232,6 +232,17 @@ def evaluate():
             res[where].append({"addr": s["raw_addr"], "hosts": [host_of(a) for a in s["addrs"]],
                                "tier": tier, "why": why, "feat": f})
         res[where + "_global"] = glob
+    # the gate snippets must accept the fleet token in X-Fleet-Authorization (clients whose
+    # Authorization carries a mailbox credential: jmap./mails.) and strip it before proxying
+    for where, text in (("hub", hub_text), ("edge", edge_text)):
+        for snip in ("edge_auth", "edge_auth_offmesh", "edge_auth_ws"):
+            m = re.search(r"^\s*\(" + snip + r"\) \{\n(.*?)^  \}\n", text, re.S | re.M)
+            body = m.group(1) if m else ""
+            for need in ("header X-Fleet-Authorization Bearer*",
+                         "header_up Authorization {http.request.header.X-Fleet-Authorization}",
+                         "request_header -X-Fleet-Authorization"):
+                if need not in body:
+                    problems.append(f"[{where}] ({snip}) snippet lacks `{need}` (X-Fleet-Authorization path)")
     # the edge must not serve a private site
     hub_private = {h for r in res["hub"] if r["tier"] == "a" for h in r["hosts"]}
     for r in res["edge"]:
@@ -271,7 +282,7 @@ def evaluate():
 
 
 # ───────────────────────── table ─────────────────────────
-BEARER_OR_COOKIE = "Bearer (fleet token, introspect-proxy) OR Authelia session"
+BEARER_OR_COOKIE = "Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session"
 
 
 def md_escape(s):

@@ -7,7 +7,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | Tier | Meaning | Access |
 |---|---|---|
 | a) private | mesh / WireGuard only; never served by the public edge | 403 to any non-mesh source |
-| b) public-protected | **default** for anything public; `import edge_auth` | Bearer (fleet token, introspect-proxy) OR Authelia session; else 401 (API) / 302 to auth. (browser) |
+| b) public-protected | **default** for anything public; `import edge_auth` | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session; else 401 (API) / 302 to auth. (browser) |
 | c) public-open | anonymous; ONLY what is listed below, each with a reason | none |
 
 ## Tier c: public-open (the complete list)
@@ -28,13 +28,13 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 
 | Host | Tier | Current auth | Exempt (tier c) paths |
 |---|---|---|---|
-| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` |
-| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
-| nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- except `Upgrade: websocket` | - |
+| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` |
+| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
+| nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
 | auth.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
 
@@ -103,60 +103,60 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | vault.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | webmail.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | workflows.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
-| *.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| analytics.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` |
-| analytics.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` |
-| api.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| app.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| chat.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
-| cloud-account.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-browser.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-c3-morpheus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-c3-watchdog.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-c3-watchtower.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-c3.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-calc.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-camera.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-chat.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-code.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-contacts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-dialer.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-drive.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-gallery.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-keyboard.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-mail.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-me.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-media-center.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-myterminal.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-nav.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-news.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-notes.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-office.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-search.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-store.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-superapp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-tasks.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-terminal-nix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-terminal-termux.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-tools-small-llms.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-vault.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-wallet.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud-writer.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| cloud.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| git.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| jmap.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
-| mail.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| mails.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
-| maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` |
-| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
-| mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| playlist.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
-| suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session | - |
-| vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy) OR Authelia session -- except `Upgrade: websocket` | - |
+| *.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| analytics.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` |
+| analytics.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` |
+| api.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| app.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| chat.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
+| cloud-account.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-browser.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-c3-morpheus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-c3-watchdog.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-c3-watchtower.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-c3.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-calc.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-camera.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-chat.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-code.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-contacts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-dialer.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-drive.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-gallery.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-keyboard.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-mail.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-me.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-media-center.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-myterminal.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-nav.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-news.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-notes.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-office.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-search.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-store.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-superapp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-tasks.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-terminal-nix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-terminal-termux.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-tools-small-llms.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-vault.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-wallet.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud-writer.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| cloud.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| git.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| jmap.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
+| mail.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| mails.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
+| maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` |
+| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
+| mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| playlist.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
+| suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
 | auth.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | 217 x `*.app` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
