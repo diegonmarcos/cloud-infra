@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21203,
+    "files": 21209,
     "by_lang": {
       "py": 130,
       "sh": 474,
-      "kotlin": 10968,
+      "kotlin": 10974,
       "java": 635,
       "ts": 8414,
       "nix": 30,
@@ -25,7 +25,7 @@
       "module": 6368,
       "compose": 1,
       "flake": 26,
-      "kotlin": 10965,
+      "kotlin": 10971,
       "python": 43,
       "rust-module": 89,
       "file": 2256,
@@ -13009,6 +13009,8 @@
         "ShellActivity"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.mail.jmapClient",
+        "com.diegonmarcos.superapp.mail.signedIn",
         "com.diegonmarcos.superapp.ui.snack",
         "com.diegonmarcos.superapp.system.Trace",
         "com.diegonmarcos.superapp.system.ShellOverride",
@@ -13046,9 +13048,7 @@
         "com.diegonmarcos.superapp.battery.BatterySessionWorker",
         "com.diegonmarcos.superapp.search.SearchOpener",
         "com.diegonmarcos.superapp.network.WgState",
-        "com.diegonmarcos.superapp.shell.SuppressVerticalSwipe",
-        "com.diegonmarcos.superapp.launcher.LauncherToolbarFx",
-        "com.diegonmarcos.superapp.launcher.LauncherNavController"
+        "com.diegonmarcos.superapp.shell.SuppressVerticalSwipe"
       ],
       "symbols": [
         "onAppTabPicked(entry: com.diegonmarcos.superapp.apptabs.AppTabPrefs.Entry)",
@@ -15298,6 +15298,77 @@
         "play(gate: StarGestureGate, gesture: List<Ev>)",
         "class StarGestureGateTest",
         "class Ev"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/mail/MailAuthHttpTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailAuthHttpTest"
+      ],
+      "imports": [
+        "okhttp3.OkHttpClient",
+        "okhttp3.Request",
+        "okhttp3.mockwebserver.MockResponse",
+        "okhttp3.mockwebserver.MockWebServer",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.io.File",
+        "java.net.InetAddress",
+        "java.net.SocketTimeoutException",
+        "java.net.UnknownHostException",
+        "javax.net.ssl.SSLHandshakeException"
+      ],
+      "symbols": [
+        "up()",
+        "down()",
+        "url(host: String = \"jmap.diegonmarcos.com\")",
+        "get(c: OkHttpClient, u: String = url()",
+        "client(creds: MailAuthCreds, onRefresh: (String, Long)",
+        "s(c: MailAuthCreds)",
+        "get(key: String)",
+        "put(key: String, value: String)",
+        "remove(key: String)",
+        "class MailAuthHttpTest",
+        "class MapStore"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/mail/MailAuthSectionComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailAuthSectionComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assert",
+        "androidx.compose.ui.test.assertIsEnabled",
+        "androidx.compose.ui.test.assertIsNotEnabled",
+        "androidx.compose.ui.test.hasText",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "show(initial: MailAuthSectionState = MailAuthSectionState()",
+        "class MailAuthSectionComposeTest"
       ]
     },
     {
@@ -50889,8 +50960,10 @@
         "kotlinx.serialization.json.jsonObject",
         "kotlinx.serialization.json.jsonPrimitive",
         "kotlinx.serialization.json.put",
-        "java.net.HttpURLConnection",
-        "java.net.URL",
+        "okhttp3.MediaType.Companion.toMediaType",
+        "okhttp3.OkHttpClient",
+        "okhttp3.Request",
+        "okhttp3.RequestBody.Companion.toRequestBody",
         "java.util.Base64"
       ],
       "symbols": [
@@ -50905,8 +50978,8 @@
         "wrap(block: ()",
         "httpGet(url: String)",
         "httpPost(url: String, payload: String)",
-        "openConn(url: String, method: String)",
-        "readBody()",
+        "request(url: String)",
+        "exec(req: Request)",
         "class JmapClient",
         "class Session",
         "class Result",
@@ -50944,6 +51017,206 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/mail/src/main/java/com/diegonmarcos/superapp/mail/MailAuth.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailAuthMode",
+        "MailAuthCreds",
+        "MailSecretStore",
+        "EncryptedMailSecretStore",
+        "MailAuthStore",
+        "jmapClient",
+        "signedIn"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.security.crypto.EncryptedSharedPreferences",
+        "androidx.security.crypto.MasterKey",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.booleanOrNull",
+        "kotlinx.serialization.json.buildJsonObject",
+        "kotlinx.serialization.json.contentOrNull",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.longOrNull",
+        "kotlinx.serialization.json.put"
+      ],
+      "symbols": [
+        "parse(s: String?)",
+        "toString()",
+        "cookieExpired(now: Long)",
+        "get(key: String)",
+        "put(key: String, value: String)",
+        "remove(key: String)",
+        "load(account: String)",
+        "s(k: String)",
+        "l(k: String)",
+        "b(k: String)",
+        "save(account: String, c: MailAuthCreds)",
+        "update(account: String, f: (MailAuthCreds)",
+        "saveCookie(account: String, value: String, expiresAt: Long, now: Long)",
+        "signOut(account: String)",
+        "markNeedsSignIn(account: String)",
+        "markOk(account: String)",
+        "markError(account: String, why: String)",
+        "forget(account: String)",
+        "key(account: String)",
+        "of(ctx: Context)",
+        "accountKey(server: String, email: String)",
+        "jmapClient(ctx: Context)",
+        "signedIn(ctx: Context)",
+        "class MailAuthMode",
+        "class MailAuthCreds",
+        "class MailSecretStore",
+        "class EncryptedMailSecretStore",
+        "class MailAuthStore"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mail/src/main/java/com/diegonmarcos/superapp/mail/MailAuthHttp.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutheliaPortal",
+        "MailAuthScope",
+        "MailAuthRequiredException",
+        "MailAuthInterceptor",
+        "AutheliaCookieJar",
+        "MailHttp",
+        "ConnProblem",
+        "ConnErrors",
+        "MailAuthStatus",
+        "MailAuthStatuses"
+      ],
+      "imports": [
+        "okhttp3.Cookie",
+        "okhttp3.CookieJar",
+        "okhttp3.HttpUrl",
+        "okhttp3.HttpUrl.Companion.toHttpUrlOrNull",
+        "okhttp3.Interceptor",
+        "okhttp3.OkHttpClient",
+        "okhttp3.Response",
+        "java.io.IOException",
+        "java.net.ConnectException",
+        "java.net.SocketTimeoutException",
+        "java.net.UnknownHostException",
+        "java.util.concurrent.TimeUnit",
+        "javax.net.ssl.SSLException"
+      ],
+      "symbols": [
+        "sessionValue(cookieHeader: String)",
+        "isPortalHost(host: String)",
+        "hostOf(server: String)",
+        "registrable(host: String)",
+        "allows(serverHost: String, requestHost: String)",
+        "intercept(chain: Interceptor.Chain)",
+        "loadForRequest(url: HttpUrl)",
+        "saveFromResponse(url: HttpUrl, cookies: List<Cookie>)",
+        "client( server: String, creds: ()",
+        "forAccount(ctx: android.content.Context, server: String, email: String)",
+        "classify(code: Int?, cause: Throwable?)",
+        "resolve(c: MailAuthCreds, now: Long)",
+        "class AutheliaPortal",
+        "class MailAuthScope",
+        "class MailAuthRequiredException",
+        "class MailAuthInterceptor",
+        "class AutheliaCookieJar",
+        "class MailHttp",
+        "class ConnProblem",
+        "class ConnErrors",
+        "class MailAuthStatus",
+        "class MailAuthStatuses"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mail/src/main/java/com/diegonmarcos/superapp/mail/MailAuthUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailAuthTags",
+        "MailAuthSectionState",
+        "mailAuthStatusLabel",
+        "MailAuthChip",
+        "MailAuthSection",
+        "AutheliaSignInDialog",
+        "clearAutheliaWebSession"
+      ],
+      "imports": [
+        "android.annotation.SuppressLint",
+        "android.content.ClipboardManager",
+        "android.content.Context",
+        "android.webkit.CookieManager",
+        "android.webkit.WebResourceRequest",
+        "android.webkit.WebView",
+        "android.webkit.WebViewClient",
+        "androidx.compose.foundation.BorderStroke",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.ExperimentalMaterial3Api",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.SegmentedButton",
+        "androidx.compose.material3.SegmentedButtonDefaults",
+        "androidx.compose.material3.SingleChoiceSegmentedButtonRow",
+        "androidx.compose.material3.Surface",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.input.KeyboardType",
+        "androidx.compose.ui.text.input.PasswordVisualTransformation",
+        "androidx.compose.ui.text.input.VisualTransformation",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "symbols": [
+        "mode(m: MailAuthMode)",
+        "mailAuthStatusLabel(s: MailAuthStatus)",
+        "MailAuthChip(status: MailAuthStatus, modifier: Modifier = Modifier)",
+        "MailAuthSection( state: MailAuthSectionState, onMode: (MailAuthMode)",
+        "authSessionLine(s: MailAuthSectionState)",
+        "pasteFromClipboard(ctx: Context)",
+        "AutheliaSignInDialog(onCaptured: (String)",
+        "shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?)",
+        "clearAutheliaWebSession()",
+        "class MailAuthTags",
+        "class MailAuthSectionState"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mail/src/main/java/com/diegonmarcos/superapp/mail/MailConnTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailConnTest"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "run(ctx: Context, server: String, email: String, password: String, creds: MailAuthCreds)",
+        "describe(ctx: Context, p: ConnProblem, code: Int?, detail: String)",
+        "class MailConnTest",
+        "class Outcome"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/mail/src/main/java/com/diegonmarcos/superapp/mail/MailDrawerFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -50951,7 +51224,9 @@
         "MailDrawerFragment"
       ],
       "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.padding",
@@ -50961,6 +51236,7 @@
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.text.font.FontWeight",
         "androidx.compose.ui.unit.dp",
@@ -51045,6 +51321,7 @@
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
@@ -51068,6 +51345,10 @@
       "symbols": [
         "palette()",
         "Content()",
+        "key()",
+        "keep(c: MailAuthCreds)",
+        "failed(problem: ConnProblem, words: String)",
+        "test()",
         "newInstance()",
         "class MailFragment"
       ]
@@ -188625,6 +188906,7 @@
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.widthIn",
         "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.text.BasicTextField",
         "androidx.compose.foundation.verticalScroll",
@@ -198778,6 +199060,7 @@
         "androidx.compose.material3.Text",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.SemanticsProperties",
         "androidx.compose.ui.test.assertIsEnabled",
         "androidx.compose.ui.test.assertIsNotEnabled",
         "androidx.compose.ui.test.assertTextContains",
@@ -198798,10 +199081,14 @@
         "org.robolectric.RuntimeEnvironment",
         "org.robolectric.Shadows.shadowOf",
         "org.robolectric.annotation.Config",
-        "org.robolectric.annotation.GraphicsMode"
+        "org.robolectric.annotation.GraphicsMode",
+        "org.robolectric.shadows.ShadowLooper",
+        "java.util.concurrent.TimeUnit"
       ],
       "symbols": [
         "evaluate()",
+        "settle()",
+        "assertPreviewHas(expected: String)",
         "show(state: SignatureEditorState)",
         "typingHtmlUpdatesThePreviewWithTheSignatureAsSent()",
         "theSanitisedMarkupIsWhatThePreviewShows()",
