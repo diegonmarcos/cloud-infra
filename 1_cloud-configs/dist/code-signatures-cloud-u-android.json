@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21411,
+    "files": 21467,
     "by_lang": {
       "py": 134,
-      "sh": 477,
-      "kotlin": 11141,
+      "sh": 479,
+      "kotlin": 11168,
       "java": 635,
-      "ts": 8434,
+      "ts": 8461,
       "nix": 30,
       "js": 471,
       "rust": 89
     },
     "by_role": {
       "script": 232,
-      "shell": 367,
+      "shell": 369,
       "java": 634,
       "entrypoint": 23,
-      "module": 6381,
+      "module": 6408,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11138,
+      "kotlin": 11165,
       "python": 43,
       "rust-module": 89,
       "file": 2271,
@@ -6587,32 +6587,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/FolderDialog.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "launcherFolderDialog",
-        "setFolderContent"
-      ],
-      "imports": [
-        "android.app.Dialog",
-        "android.content.Context",
-        "android.graphics.Color",
-        "android.graphics.drawable.ColorDrawable",
-        "android.graphics.drawable.GradientDrawable",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.view.WindowManager",
-        "android.widget.FrameLayout"
-      ],
-      "symbols": [
-        "launcherFolderDialog(ctx: Context)",
-        "setFolderContent(ctx: Context, sheet: View)",
-        "dp(value: Float)"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/InboxClasses.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -6651,72 +6625,133 @@
       "imports": [
         "com.diegonmarcos.superapp.settings.GridColumns",
         "com.diegonmarcos.superapp.settings.redrawOnGridColumns",
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.ui.Haptics",
-        "com.diegonmarcos.superapp.launcher.AppLongPressMenu",
-        "com.diegonmarcos.superapp.App",
-        "com.diegonmarcos.superapp.MainActivity",
         "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.ShellActivity",
-        "com.diegonmarcos.superapp.settings.LauncherProfile",
+        "com.diegonmarcos.superapp.ui.Haptics",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "com.diegonmarcos.superapp.settings.LauncherProfiles",
         "com.diegonmarcos.superapp.settings.LauncherProfilePrefs",
-        "android.app.Dialog",
         "android.content.Context",
         "android.content.pm.LauncherApps",
-        "android.graphics.drawable.Drawable",
         "android.os.Bundle",
         "android.os.Process",
-        "android.view.Gravity",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.view.Window",
-        "android.widget.FrameLayout",
-        "android.widget.GridLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "androidx.core.content.ContextCompat",
-        "androidx.fragment.app.Fragment",
-        "androidx.lifecycle.LifecycleOwner",
-        "androidx.lifecycle.lifecycleScope",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.produceState",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.unit.dp",
         "kotlinx.coroutines.Dispatchers",
-        "kotlinx.coroutines.launch",
         "kotlinx.coroutines.withContext"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "buildContent(ctx: Context, rootCol: LinearLayout)",
-        "modeToggle(ctx: Context, content: LinearLayout)",
-        "rebuild()",
-        "iconBtn(res: Int, active: Boolean, desc: String, onPick: ()",
-        "buildAlphabetic(ctx: Context, rootCol: LinearLayout)",
-        "buildCategories(ctx: Context, rootCol: LinearLayout)",
-        "collectLaunchableApps(ctx: Context)",
+        "palette()",
+        "Content()",
+        "ModeButton(res: Int, active: Boolean, desc: String, tag: String, onPick: ()",
         "newInstance()",
-        "refreshBar(ctx: Context, onRefresh: ()",
-        "renderAllApps( ctx: Context, rootCol: LinearLayout, exclude: Set<String> = emptySet()",
-        "renderSmartFolders( ctx: Context, rootCol: LinearLayout, exclude: Set<String> = emptySet()",
-        "renderSmartFoldersAsync( owner: LifecycleOwner, ctx: Context, body: LinearLayout, exclude: Set<String> = emptySet()",
+        "alphabetic(ctx: Context)",
+        "cachedFolders()",
+        "groupedFor(apps: List<PhoneApp>, folders: List<PhoneFolders.Folder>, unfiltered: Boolean)",
+        "loadSmartFolders(ctx: Context, exclude: Set<String>)",
         "computeSmartFolders( ctx: Context, exclude: Set<String>, )",
         "smartFoldersCached( ctx: Context, exclude: Set<String>, )",
-        "renderSmartFolderBody( ctx: Context, rootCol: LinearLayout, rendered: List<SmartRendered>, )",
-        "subhead(ctx: Context, title: String)",
-        "renderFolderGrid( parent: LinearLayout, ctx: Context, folders: List<PhoneFolders.Folder>, grouped: Map<String, List<PhoneApp>>, columns: Int, cellSize: Int = dp(ctx, 60)",
-        "makeFolderCard( ctx: Context, folder: PhoneFolders.Folder, apps: List<PhoneApp>, cellSize: Int = dp(ctx, 60)",
-        "showFolderDialog( ctx: Context, folder: PhoneFolders.Folder, apps: List<PhoneApp>, )",
-        "makeExpandedAppTile( ctx: Context, app: PhoneApp, dialog: Dialog, launcherApps: LauncherApps, )",
-        "openStore(ctx: Context)",
-        "dp(ctx: Context, v: Int)",
         "invalidateCache()",
         "warmUp(ctx: Context)",
         "snapshot(ctx: Context)",
         "collectLaunchableAppsStatic(ctx: Context)",
         "class PhoneAppsFragment",
-        "class SmartRendered"
+        "class SmartRendered",
+        "class removed"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/apps/PhoneAppsUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.content.Context",
+        "android.content.pm.LauncherApps",
+        "android.graphics.drawable.Drawable",
+        "androidx.compose.foundation.ExperimentalFoundationApi",
+        "androidx.compose.foundation.Image",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.combinedClickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.lazy.LazyListScope",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.text.style.TextAlign"
+      ],
+      "symbols": [
+        "folderTag(id: String)",
+        "appTag(pkg: String)",
+        "phoneSubheadTag(t: String)",
+        "AppIcon(icon: Drawable?, size: Dp, modifier: Modifier = Modifier)",
+        "PhoneSubhead(text: String, modifier: Modifier = Modifier)",
+        "PhoneSectionDivider()",
+        "PhoneRefreshBar(onRefresh: ()",
+        "folderCellDp(ctx: Context, wantDp: Int, columns: Int)",
+        "FolderCard(label: String, apps: List<PhoneApp>, cell: Dp, labelSp: Float, modifier: Modifier = Modifier, tag: String, onOpen: ()",
+        "folderGridItems( ctx: Context, keyPrefix: String, folders: List<PhoneFolders.Folder>, grouped: Map<String, List<PhoneApp>>, columns: Int, cellDp: Int, onOpen: (OpenFolder)",
+        "allApps(ctx: Context, exclude: Set<String> = emptySet()",
+        "allAppsItems(ctx: Context, data: AllApps, onOpen: (OpenFolder)",
+        "smartFolderItems(ctx: Context, rendered: List<PhoneAppsFragment.SmartRendered>, onOpen: (OpenFolder)",
+        "openStore(ctx: Context)",
+        "expandedIconDp(ctx: Context, cols: Int)",
+        "FolderSheetFrame(label: String, onDismiss: ()",
+        "ExpandedAppTile( tag: String, label: String, icon: Drawable?, installed: Boolean, cols: Int, iconDp: Dp, desc: String?, modifier: Modifier = Modifier, onClick: ()",
+        "PhoneFolderSheet(open: OpenFolder, onDismiss: ()",
+        "class OpenFolder",
+        "class AllAppsSection",
+        "class AllApps"
       ]
     },
     {
@@ -6827,69 +6862,74 @@
         "com.diegonmarcos.superapp.launcher.AppInstall",
         "com.diegonmarcos.superapp.launcher.AppLongPressMenu",
         "com.diegonmarcos.superapp.launcher.Sections",
+        "com.diegonmarcos.superapp.launcher.TileSeparator",
         "com.diegonmarcos.superapp.ui.LauncherPalette",
         "com.diegonmarcos.superapp.ui.snack",
-        "com.diegonmarcos.superapp.App",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.datamanager.AppUsageProvider",
-        "android.app.Dialog",
+        "com.diegonmarcos.superapp.ui.AppIconCache",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "android.content.BroadcastReceiver",
         "android.content.Context",
         "android.content.Intent",
         "android.content.IntentFilter",
-        "android.content.res.ColorStateList",
-        "android.content.pm.LauncherApps",
         "android.graphics.drawable.Drawable",
-        "android.os.Bundle",
         "android.util.Base64",
-        "android.view.Gravity",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.view.Window",
-        "android.widget.FrameLayout",
-        "android.widget.GridLayout",
-        "android.widget.HorizontalScrollView",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "androidx.core.content.ContextCompat",
-        "androidx.fragment.app.Fragment",
-        "org.json.JSONArray",
-        "com.diegonmarcos.superapp.ui.AppIconCache"
+        "androidx.compose.foundation.ExperimentalFoundationApi",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.combinedClickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.LazyListScope",
+        "androidx.compose.foundation.lazy.LazyRow",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.shape.RoundedCornerShape"
       ],
       "symbols": [
         "onCreate(savedInstanceState: android.os.Bundle?)",
-        "onCreateView(inflater: LayoutInflater, c: ViewGroup?, s: Bundle?)",
-        "onReceive(context: Context?, intent: Intent?)",
-        "onResume()",
-        "onPause()",
-        "onDestroyView()",
-        "buildPage(ctx: Context, root: LinearLayout)",
-        "resolve(pkg: String)",
-        "curated(entry: Entry)",
-        "addSmartFoldersSection(ctx: Context, root: LinearLayout, exclude: Set<String>)",
-        "paint()",
+        "palette()",
+        "Content()",
+        "newInstance()",
+        "groupTag(title: String)",
+        "strip(title: String)",
+        "tileTag(pkg: String)",
+        "folderTileTag(label: String)",
         "parseGroups()",
         "parseEntries(arr: JSONArray?)",
         "derivedLabel(pkg: String)",
-        "sectionDivider(ctx: Context)",
-        "usageSection( ctx: Context, root: LinearLayout, title: String, apps: List<AppInfo>, )",
-        "tileStrip(ctx: Context, tiles: List<View>)",
+        "SuitePhoneAppsBody()",
+        "onReceive(context: Context?, intent: Intent?)",
         "cellWidth(ctx: Context)",
-        "subhead(ctx: Context, t: String)",
-        "makeAppTile( ctx: Context, app: AppInfo, anchor: View, )",
-        "makeFolderTile( ctx: Context, label: String, contents: List<AppInfo>, anchor: View, )",
-        "showFolderDialog( ctx: Context, label: String, contents: List<AppInfo>, anchor: View, )",
-        "makeExpandedAppTile( ctx: Context, app: AppInfo, dialog: Dialog, anchor: View, )",
-        "dp(ctx: Context, v: Int)",
-        "newInstance()",
+        "SuitePhonePage(epoch: Int, refresh: ()",
+        "resolve(pkg: String)",
+        "curated(entry: Entry)",
+        "usageSection(title: String, apps: List<AppInfo>)",
+        "TileStrip(tag: String, content: LazyListScope.()",
+        "AppTile(app: AppInfo)",
+        "FolderTile(label: String, contents: List<AppInfo>, onOpen: ()",
+        "SuiteFolderSheet(open: SuiteOpen, onDismiss: ()",
         "class SuitePhoneAppsFragment",
         "class Entry",
         "class Folder",
         "class Group",
-        "class AppInfo"
+        "class AppInfo",
+        "class SmartState",
+        "class Loading",
+        "class Done",
+        "class Failed",
+        "class SuiteOpen"
       ]
     },
     {
@@ -6998,19 +7038,44 @@
         "com.diegonmarcos.superapp.launcher.TileGridFragment",
         "com.diegonmarcos.superapp.launcher.AggregatorStackFragment",
         "com.diegonmarcos.superapp.R",
-        "android.graphics.drawable.GradientDrawable",
         "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.widget.LinearLayout",
-        "android.widget.ProgressBar",
-        "android.widget.TextView",
-        "androidx.core.view.isVisible",
-        "androidx.fragment.app.Fragment"
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
-        "addSectionHeader(parent: LinearLayout, label: String)",
+        "palette()",
+        "Content()",
+        "Header(label: String, tag: String)",
+        "ProbeRow(name: String, auth: String, domain: String, priv: String, vm: String, dot: androidx.compose.ui.graphics.Color, modifier: Modifier)",
+        "pageModifier()",
+        "rowTag(name: String)",
         "newInstance(scope: String = SCOPE_ALL)",
         "class C3HealthFragment"
       ]
@@ -7024,15 +7089,29 @@
       ],
       "imports": [
         "com.diegonmarcos.superapp.R",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment"
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
+        "palette()",
+        "Content()",
+        "pageModifier()",
         "newInstance()",
         "class C3MeshFragment"
       ]
@@ -7133,26 +7212,49 @@
       "imports": [
         "com.diegonmarcos.superapp.launcher.AggregatorStackFragment",
         "com.diegonmarcos.superapp.R",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
-        "android.os.Bundle",
-        "android.view.Gravity",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.ImageButton",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.draw.rotate",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "java.util.Calendar",
         "java.util.Locale"
       ],
       "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "shiftMonth(delta: Int)",
-        "drawMonth()",
-        "onDayTapped(dom: Int)",
-        "dp(v: Int)",
+        "palette()",
+        "Content()",
+        "Arrow(next: Boolean, onClick: ()",
+        "dayTag(day: Int)",
+        "monthTitle(year: Int, month: Int)",
+        "monthGrid(year: Int, month: Int)",
         "newInstance()",
         "class CalendarMonthFragment"
       ]
@@ -7363,19 +7465,40 @@
         "com.diegonmarcos.superapp.launcher.Sections",
         "com.diegonmarcos.superapp.R",
         "android.content.Context",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.widget.LinearLayout",
-        "android.widget.TextView"
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
+        "blockTag(transport: String)",
+        "nodeTag(name: String)",
+        "peerTag(from: String, to: String)",
         "statusText(ctx: Context)",
-        "render(ctx: Context, inflater: LayoutInflater, root: LinearLayout)",
-        "renderTransportCard( ctx: Context, root: LinearLayout, inflater: LayoutInflater, t: Sections.MeshTransport, nodes: List<Sections.MeshNode>, peers: List<Sections.MeshPeer>, )",
-        "addSubheader(ctx: Context, host: LinearLayout, text: String)",
-        "addLine(ctx: Context, host: LinearLayout, text: String, titleSize: Boolean = false, dim: Boolean = false)",
+        "Content()",
+        "TransportCard(t: Sections.MeshTransport, nodes: List<Sections.MeshNode>, peers: List<Sections.MeshPeer>)",
+        "NodeRow(n: Sections.MeshNode)",
+        "Subheader(text: String)",
+        "Line(text: String, titleSize: Boolean = false, dim: Boolean = false)",
         "class MeshView"
       ]
     },
@@ -7389,37 +7512,61 @@
       "imports": [
         "com.diegonmarcos.superapp.launcher.TileGridFragment",
         "com.diegonmarcos.superapp.launcher.Sections",
-        "com.diegonmarcos.superapp.MainActivity",
         "com.diegonmarcos.superapp.R",
-        "android.graphics.Typeface",
-        "android.os.Bundle",
-        "android.util.TypedValue",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.ProgressBar",
-        "android.widget.TextView",
-        "androidx.core.view.isVisible",
-        "androidx.fragment.app.Fragment",
+        "androidx.compose.animation.core.animateFloatAsState",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.CircularProgressIndicator",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.draw.rotate",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp",
+        "androidx.fragment.app.FragmentActivity",
         "com.diegonmarcos.superapp.rss.FeedItem",
-        "com.diegonmarcos.superapp.rss.RemoteFeed",
-        "java.util.concurrent.ConcurrentHashMap",
-        "java.util.concurrent.Executors"
+        "com.diegonmarcos.superapp.rss.RemoteFeed"
       ],
       "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "onDestroyView()",
-        "catHeader(ctx: android.content.Context, text: String)",
-        "channelCard(ctx: android.content.Context, feed: Sections.NewsFeed)",
-        "renderItems(ctx: android.content.Context, body: LinearLayout, feed: Sections.NewsFeed)",
-        "itemRow(ctx: android.content.Context, item: FeedItem)",
-        "emptyText(ctx: android.content.Context, msg: String)",
+        "palette()",
+        "Content()",
+        "ChannelCard(feed: Sections.NewsFeed)",
+        "Hint(text: String, modifier: Modifier = Modifier)",
         "hostOf(url: String)",
-        "dp(v: Int)",
+        "catTag(cat: String)",
+        "headerTag(id: String)",
+        "bodyTag(id: String)",
+        "failTag(id: String)",
         "newInstance()",
-        "class NewsFeedFragment"
+        "class NewsFeedFragment",
+        "class Load",
+        "class Busy",
+        "class Done",
+        "class Failed"
       ]
     },
     {
@@ -7458,28 +7605,46 @@
       ],
       "imports": [
         "com.diegonmarcos.superapp.launcher.AggregatorStackFragment",
-        "android.graphics.Typeface",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.semantics.selected",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "java.text.SimpleDateFormat",
         "java.util.Calendar",
         "java.util.Locale"
       ],
       "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "setActive(t: Tab)",
-        "renderAgenda(ctx: android.content.Context, host: LinearLayout)",
-        "renderDay(ctx: android.content.Context, host: LinearLayout)",
-        "renderToDo(ctx: android.content.Context, host: LinearLayout)",
-        "chip(ctx: android.content.Context, label: String, onClick: ()",
-        "simpleRow(ctx: android.content.Context, title: String, body: String, highlight: Boolean)",
-        "caption(ctx: android.content.Context, text: String)",
-        "dp(v: Int)",
+        "palette()",
+        "Content()",
+        "Agenda()",
+        "Day()",
+        "ToDo()",
+        "SimpleRow(title: String, body: String, highlight: Boolean)",
+        "Caption(text: String)",
+        "chipTag(t: Tab)",
+        "agendaDays()",
         "newInstance()",
         "class TasksFragment",
         "class Tab"
@@ -8196,6 +8361,41 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/extinstall/ExtInstallRing.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "extInstallRing"
+      ],
+      "imports": [
+        "android.graphics.Paint",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.DisposableEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.drawWithContent",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.geometry.Size",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.StrokeCap",
+        "androidx.compose.ui.graphics.drawscope.Stroke",
+        "androidx.compose.ui.graphics.drawscope.drawIntoCanvas",
+        "androidx.compose.ui.graphics.nativeCanvas",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "extInstallRing(tileId: String, iconSize: Dp, iconTop: Dp = 8.dp)"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/extinstall/ExtTileRing.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -8222,6 +8422,8 @@
       "symbols": [
         "packageFor(tileId: String)",
         "attach(tile: View, tileId: String)",
+        "showing(pkg: String, host: View)",
+        "hidden(pkg: String, host: View)",
         "viewFor(pkg: String)",
         "onInstalled(ctx: Context, pkg: String)",
         "handleBusyTap(ctx: Context, pkg: String)",
@@ -8234,7 +8436,6 @@
         "onViewDetachedFromWindow(v: View)",
         "place()",
         "refresh()",
-        "byId(v: View, id: Int)",
         "firstImage(v: View)",
         "offsetIn(root: View, child: View)",
         "draw(canvas: Canvas)",
@@ -8623,28 +8824,35 @@
         "AppDrawerSheetFragment"
       ],
       "imports": [
-        "com.diegonmarcos.superapp.App",
-        "com.diegonmarcos.superapp.MainActivity",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.ui.Haptics",
-        "com.diegonmarcos.superapp.apps.SuitePhoneAppsFragment",
-        "com.diegonmarcos.superapp.search.InlineSearch",
+        "com.diegonmarcos.superapp.apps.SuitePhoneAppsBody",
+        "com.diegonmarcos.superapp.bottomnav.NavPage",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
         "com.diegonmarcos.superapp.search.SearchEntry",
+        "com.diegonmarcos.superapp.search.SearchFrame",
+        "com.diegonmarcos.superapp.search.SearchSession",
+        "com.diegonmarcos.superapp.ui.Haptics",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "android.widget.LinearLayout",
-        "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.launcher.themes.cloud.Home3DFragment"
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag"
       ],
       "symbols": [
         "tryHandleBack()",
         "onDestroyView()",
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "showTab(id: String)",
-        "dp(v: Int)",
+        "palette()",
+        "Content()",
         "newInstance(initialTab: String = \"\")",
         "class AppDrawerSheetFragment"
       ]
@@ -8825,6 +9033,45 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/DrawerList.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.itemsIndexed",
+        "androidx.compose.foundation.lazy.rememberLazyListState",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "drawerRowTag(i: Int)",
+        "DrawerList( rows: List<DrawerRow>, onPick: (DrawerTarget)",
+        "class DrawerTarget",
+        "class Section",
+        "class Page",
+        "class Action",
+        "class Tile",
+        "class DrawerRow",
+        "class Kind"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/GroupedTilesFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -8832,31 +9079,63 @@
         "GroupedTilesFragment"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.apps.AllApps",
+        "com.diegonmarcos.superapp.apps.OpenFolder",
+        "com.diegonmarcos.superapp.apps.PhoneFolderSheet",
+        "com.diegonmarcos.superapp.apps.PhoneRefreshBar",
+        "com.diegonmarcos.superapp.apps.PhoneSectionDivider",
+        "com.diegonmarcos.superapp.apps.PhoneSubhead",
+        "com.diegonmarcos.superapp.apps.allApps",
+        "com.diegonmarcos.superapp.apps.allAppsItems",
+        "com.diegonmarcos.superapp.extinstall.extInstallRing",
+        "com.diegonmarcos.superapp.search.SearchFrame",
+        "com.diegonmarcos.superapp.search.SearchSession",
+        "com.diegonmarcos.superapp.search.SearchEntry",
         "com.diegonmarcos.superapp.ui.Haptics",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "android.content.Context",
         "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.search.InlineSearch",
-        "com.diegonmarcos.superapp.search.SearchEntry"
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.LazyRow",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.produceState",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment"
       ],
       "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "palette()",
+        "Content()",
         "tryHandleBack()",
         "onDestroyView()",
-        "groupHeader(ctx: android.content.Context, title: String)",
-        "sectionDivider(ctx: android.content.Context)",
-        "tileRow(ctx: android.content.Context, tiles: List<Sections.AggTile>)",
-        "separatorCell(ctx: android.content.Context, tile: Sections.AggTile)",
-        "tileCell(ctx: android.content.Context, tile: Sections.AggTile)",
-        "dp(v: Int)",
-        "mountSearch(search: InlineSearch, content: View)",
+        "groupTag(title: String)",
+        "tileTag(target: String)",
+        "starActions()",
+        "recentTiles(ctx: Context)",
         "newInstance(sectionId: String, search: Boolean = false)",
-        "class GroupedTilesFragment"
+        "GroupedTilesPage(sectionId: String, click: (String)",
+        "GroupTitle(text: String)",
+        "TileStrip(tiles: List<Sections.AggTile>, click: (String)",
+        "TileCell(tile: Sections.AggTile, click: (String)",
+        "class GroupedTilesFragment",
+        "class BelowFold"
       ]
     },
     {
@@ -8886,19 +9165,45 @@
       ],
       "imports": [
         "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.MainActivity",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.system.ModePrefs",
         "com.diegonmarcos.superapp.ui.Haptics",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "com.diegonmarcos.superapp.profile.ProfilePrefs",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.Menu",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment",
-        "com.google.android.material.navigation.NavigationView"
+        "android.content.Context",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.gestures.detectTapGestures",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.input.pointer.pointerInput",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp"
       ],
       "symbols": [
         "onDrawerSectionSelected(sectionId: String, label: String)",
@@ -8906,18 +9211,15 @@
         "onDrawerActionSelected(actionType: String)",
         "onDrawerModeToggle()",
         "onDrawerBusinessCardOpen()",
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
-        "rebind()",
+        "palette()",
+        "Content()",
+        "Header()",
+        "onItemPicked(t: DrawerTarget)",
+        "rows(ctx: Context)",
         "iconForTile(tile: Sections.HomeTile)",
-        "onItemPicked(itemId: Int)",
         "newInstance()",
         "class HomeDrawerFragment",
-        "class NavigationListener",
-        "class Target",
-        "class Section",
-        "class Page",
-        "class Action"
+        "class NavigationListener"
       ]
     },
     {
@@ -8967,35 +9269,36 @@
       "imports": [
         "com.diegonmarcos.superapp.settings.GridColumns",
         "com.diegonmarcos.superapp.settings.redrawOnGridColumns",
-        "com.diegonmarcos.superapp.MainActivity",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.system.ModePrefs",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
         "android.content.Context",
-        "android.content.res.ColorStateList",
-        "android.graphics.drawable.GradientDrawable",
         "android.os.Bundle",
-        "android.view.HapticFeedbackConstants",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.view.animation.AnimationUtils",
-        "android.widget.FrameLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.fragment.app.Fragment",
-        "kotlin.math.abs",
-        "kotlin.math.ceil"
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
+        "palette()",
+        "Content()",
+        "TileGroupHeaderPlain(title: String)",
         "newInstance()",
-        "buildInto(ctx: Context, inflater: LayoutInflater, root: LinearLayout)",
+        "headerTag(title: String)",
+        "buckets(ctx: Context)",
         "resolveTileIcon(tile: Sections.HomeTile)",
-        "addGroupHeader(container: LinearLayout, inflater: LayoutInflater, title: String)",
-        "bindTile( ctx: Context, tileView: View, tileId: String, label: String, iconRes: Int, palette: List<Pair<Int, Int>>, )",
-        "tilePalette(ctx: Context)",
         "class HomeGroupedFragment",
         "class Bucket"
       ]
@@ -9178,6 +9481,60 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/LauncherTiles.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.annotation.DrawableRes",
+        "androidx.compose.animation.core.animateFloatAsState",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.LocalIndication",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.interaction.collectIsPressedAsState",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.draw.scale",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.semantics.clearAndSetSemantics",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.extinstall.extInstallRing",
+        "com.diegonmarcos.superapp.settings.GridColumns",
+        "com.diegonmarcos.superapp.ui.Haptics",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "LauncherTile( tileId: String, label: String, @DrawableRes iconRes: Int, cols: Int, pageDp: Int, chromeDp: Int, onClick: ()",
+        "tileIconDp(widthPx: Int, density: Float, cols: Int, pageDp: Int, chromeDp: Int)",
+        "TileSeparator(text: String, modifier: Modifier = Modifier)",
+        "TileGroupHeader(text: String, modifier: Modifier = Modifier)",
+        "TileSubgroupHeader(text: String, modifier: Modifier = Modifier)",
+        "tileTag(id: String)"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/LauncherToolbarFx.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -9238,26 +9595,50 @@
       ],
       "imports": [
         "com.diegonmarcos.superapp.R",
-        "android.content.res.ColorStateList",
-        "android.graphics.drawable.GradientDrawable",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.widget.FrameLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.core.content.ContextCompat",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
         "androidx.core.os.bundleOf",
-        "androidx.core.view.isVisible",
-        "androidx.fragment.app.Fragment",
-        "com.google.android.material.card.MaterialCardView",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "kotlin.math.abs"
       ],
       "symbols": [
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
-        "paletteBgFg()",
-        "paletteForContext()",
+        "palette()",
+        "Content()",
+        "rowTag(i: Int)",
+        "stripeSlot(key: String, idx: Int)",
+        "stripeColor(p: KitPalette, slot: Int)",
         "newInstance( sectionId: String, pageId: String, title: String, subtitle: String = \"\", )",
         "class PageContentFragment"
       ]
@@ -9368,28 +9749,24 @@
         "SectionMenuFragment"
       ],
       "imports": [
-        "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.system.ModePrefs",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.Menu",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "androidx.core.os.bundleOf",
-        "androidx.fragment.app.Fragment",
-        "com.google.android.material.navigation.NavigationView"
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "android.content.Context",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.core.os.bundleOf"
       ],
       "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
-        "addLinkRow( menu: Menu, ctx: android.content.Context, groupId: Int, label: String, iconName: String, url: String, idSupplier: ()",
-        "onItemPicked(itemId: Int)",
+        "palette()",
+        "Content()",
+        "onItemPicked(t: DrawerTarget)",
+        "rows(ctx: Context, sectionId: String)",
+        "icon(name: String?)",
         "newInstance(sectionId: String)",
-        "class SectionMenuFragment",
-        "class Target",
-        "class Section",
-        "class Page",
-        "class Tile"
+        "class SectionMenuFragment"
       ]
     },
     {
@@ -9493,21 +9870,32 @@
       ],
       "imports": [
         "android.os.Bundle",
-        "android.view.LayoutInflater",
         "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "android.widget.LinearLayout",
-        "androidx.fragment.app.Fragment",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.viewinterop.AndroidView",
+        "androidx.fragment.app.FragmentContainerView",
         "com.diegonmarcos.superapp.ShellActivity",
         "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
         "com.diegonmarcos.superapp.shell.Collapsible",
         "com.diegonmarcos.superapp.system.ModePrefs",
-        "com.diegonmarcos.superapp.bottomnav.PageTabsView"
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment"
       ],
       "symbols": [
         "toggleAllCollapsed()",
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
+        "onCreate(savedInstanceState: Bundle?)",
+        "palette()",
+        "Content()",
         "startIndex(pages: List<Sections.Page>, saved: Bundle?)",
         "onSaveInstanceState(outState: Bundle)",
         "render(index: Int, pageId: String)",
@@ -9581,35 +9969,49 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "Home3DFragment",
-        "RotatingCubeView"
+        "Home3DFragment"
       ],
       "imports": [
         "com.diegonmarcos.superapp.launcher.*",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.system.ScreenLocker",
-        "android.content.Context",
-        "android.graphics.BlurMaskFilter",
-        "android.graphics.Canvas",
-        "android.graphics.Paint",
-        "android.os.Bundle",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.ui.lockOnDoubleTap",
         "android.os.SystemClock",
-        "android.util.AttributeSet",
-        "android.view.LayoutInflater",
-        "android.view.MotionEvent",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "androidx.fragment.app.Fragment"
+        "androidx.compose.foundation.Canvas",
+        "androidx.compose.foundation.gestures.detectDragGestures",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableLongStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberUpdatedState",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.StrokeCap",
+        "androidx.compose.ui.input.pointer.pointerInput",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "kotlinx.coroutines.isActive"
       ],
       "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "dp(v: Int)",
+        "palette()",
+        "Content()",
         "newInstance()",
-        "onTouchEvent(event: MotionEvent)",
-        "onDraw(canvas: Canvas)",
+        "angleY(elapsedMs: Double)",
+        "angleX(elapsedMs: Double)",
+        "project(rotX: Float, rotY: Float, width: Float, height: Float)",
+        "edgeAlpha(avgZ: Float)",
+        "NeonCube(animate: Boolean, interactive: Boolean, modifier: Modifier = Modifier)",
+        "pt(i: Int)",
         "class Home3DFragment",
-        "class RotatingCubeView"
+        "class CubeMath",
+        "class Projected"
       ]
     },
     {
@@ -9620,31 +10022,46 @@
         "MinimalistBlackFragment"
       ],
       "imports": [
-        "com.diegonmarcos.superapp.system.ScreenLocker",
         "com.diegonmarcos.superapp.ui.Haptics",
+        "com.diegonmarcos.superapp.ui.lockOnDoubleTap",
         "android.content.Context",
         "android.content.pm.LauncherApps",
-        "android.os.Bundle",
         "android.os.Process",
-        "android.text.Editable",
-        "android.text.TextWatcher",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.EditText",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "androidx.core.view.ViewCompat",
-        "androidx.core.view.WindowInsetsCompat",
-        "androidx.fragment.app.Fragment"
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.displayCutout",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.systemBars",
+        "androidx.compose.foundation.layout.union",
+        "androidx.compose.foundation.layout.windowInsetsPadding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.text.BasicTextField",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment"
       ],
       "symbols": [
-        "onCreateView(inflater: LayoutInflater, container: ViewGroup?, s: Bundle?)",
-        "beforeTextChanged(t: CharSequence?, a: Int, b: Int, c: Int)",
-        "onTextChanged(t: CharSequence?, a: Int, b: Int, c: Int)",
-        "afterTextChanged(e: Editable?)",
-        "rebuildList(filter: String)",
+        "palette()",
+        "Content()",
         "loadApps(ctx: Context)",
+        "lineTag(label: String)",
+        "matches(label: String, filter: String)",
         "newInstance()",
         "class MinimalistBlackFragment",
         "class AppRow"
@@ -9656,27 +10073,39 @@
       "role": "kotlin",
       "exports": [],
       "imports": [
-        "android.content.Context",
-        "android.graphics.Color",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
-        "android.util.TypedValue",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.TextView"
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.ColumnScope",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
-        "dp(ctx: Context, value: Int)",
-        "rule(ctx: Context)",
-        "space(ctx: Context, height: Int)",
-        "outline(ctx: Context)",
-        "text(ctx: Context, value: String, size: Float, colour: Int)",
-        "head(ctx: Context, value: String)",
-        "body(ctx: Context, value: String, colour: Int = INK)",
-        "hint(ctx: Context, value: String)",
-        "line( ctx: Context, value: String, trailing: String = \"\", onTap: (()",
-        "page(ctx: Context)",
+        "gap(step: Int)",
+        "Rule()",
+        "Space(height: Int)",
+        "style(size: Float)",
+        "Head(value: String, modifier: Modifier = Modifier)",
+        "Body(value: String, modifier: Modifier = Modifier, colour: Color = INK)",
+        "Hint(value: String, modifier: Modifier = Modifier)",
+        "lineText(value: String, tappable: Boolean)",
+        "Line(value: String, modifier: Modifier = Modifier, trailing: String = \"\", onTap: (()",
+        "Page(modifier: Modifier = Modifier, content: @Composable ColumnScope.()",
         "class MinimalistDesign"
       ]
     },
@@ -9688,25 +10117,40 @@
         "TileFolderDialog"
       ],
       "imports": [
-        "android.app.Dialog",
-        "android.content.Context",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
-        "com.diegonmarcos.superapp.apps.launcherFolderDialog",
-        "com.diegonmarcos.superapp.apps.setFolderContent",
-        "com.diegonmarcos.superapp.ui.Haptics"
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.window.Dialog",
+        "androidx.compose.ui.window.DialogProperties",
+        "com.diegonmarcos.superapp.ui.Haptics",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
-        "open(ctx: Context, folder: Sections.AggTile, onPick: (Sections.AggTile)",
-        "gridBody( ctx: Context, folder: Sections.AggTile, dialog: Dialog, onPick: (Sections.AggTile)",
-        "gridCell( ctx: Context, child: Sections.AggTile, dialog: Dialog, onPick: (Sections.AggTile)",
-        "tableBody( ctx: Context, folder: Sections.AggTile, dialog: Dialog, onPick: (Sections.AggTile)",
-        "tableRow( ctx: Context, child: Sections.AggTile, dialog: Dialog, onPick: (Sections.AggTile)",
-        "dp(ctx: Context, value: Int)",
+        "childTag(id: String)",
+        "TileFolderSheet(folder: Sections.AggTile, onDismiss: ()",
         "class TileFolderDialog"
       ]
     },
@@ -9721,39 +10165,46 @@
         "com.diegonmarcos.superapp.settings.GridColumns",
         "com.diegonmarcos.superapp.settings.redrawOnGridColumns",
         "com.diegonmarcos.superapp.R",
-        "android.content.res.ColorStateList",
-        "android.graphics.drawable.GradientDrawable",
-        "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.view.HapticFeedbackConstants",
-        "android.view.animation.AnimationUtils",
-        "android.widget.FrameLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.annotation.ColorInt",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "androidx.annotation.DrawableRes",
-        "androidx.core.content.ContextCompat",
-        "androidx.core.os.bundleOf",
-        "androidx.core.view.isVisible",
-        "androidx.fragment.app.Fragment",
-        "kotlin.math.abs"
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.IntrinsicSize",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.core.os.bundleOf"
       ],
       "symbols": [
         "onCreate(savedInstanceState: android.os.Bundle?)",
         "onTileClicked(tileId: String)",
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
-        "bindTile( tileView: View, tileId: String, label: String, @DrawableRes iconRes: Int, palette: List<Pair<Int, Int>>, cols: Int, )",
-        "separatorView(ctx: android.content.Context, text: String)",
-        "groupHeader(text: String)",
-        "subgroupHeader(text: String)",
-        "tilePalette(ctx: android.content.Context)",
-        "color(id: Int)",
+        "palette()",
+        "Content()",
+        "headerTag(text: String)",
+        "subHeaderTag(text: String)",
+        "plan(ids: Array<String>, groups: Array<String>, subs: Array<String>, breaks: BooleanArray, cols: Int)",
         "newInstance(title: String, tiles: List<Tile>, columns: Int = 0)",
         "class TileGridFragment",
         "class TileClickListener",
-        "class Tile"
+        "class Tile",
+        "class GridItem",
+        "class Header",
+        "class SubHeader",
+        "class TileRow"
       ]
     },
     {
@@ -9765,26 +10216,40 @@
       ],
       "imports": [
         "android.os.Bundle",
-        "android.view.LayoutInflater",
         "android.view.View",
-        "android.view.ViewGroup",
         "android.webkit.WebView",
         "android.webkit.WebViewClient",
-        "android.widget.FrameLayout",
-        "android.widget.ImageButton",
         "androidx.activity.OnBackPressedCallback",
-        "androidx.fragment.app.Fragment",
-        "com.diegonmarcos.superapp.R"
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.viewinterop.AndroidView",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
       ],
       "symbols": [
         "handleOnBackPressed()",
-        "onCreateView( inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?, )",
+        "palette()",
+        "onViewCreated(view: View, savedInstanceState: Bundle?)",
+        "Content()",
         "onPageFinished(view: WebView?, url: String?)",
         "onReceivedError( view: WebView, request: android.webkit.WebResourceRequest, error: android.webkit.WebResourceError, )",
-        "backControl()",
         "goBackOrClose()",
-        "dp(value: Int)",
-        "onDestroyView()",
         "errorHtml(host: String, detail: String?)",
         "newInstance(url: String)",
         "class WebPageFragment"
@@ -12275,32 +12740,55 @@
         "RecoveryActivity"
       ],
       "imports": [
-        "android.app.Activity",
         "android.content.Context",
         "android.content.Intent",
-        "android.graphics.Color",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
         "android.os.Bundle",
-        "android.util.TypedValue",
-        "android.view.Gravity",
-        "android.view.ViewGroup",
-        "android.widget.LinearLayout",
-        "android.widget.ScrollView",
-        "android.widget.TextView",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "com.diegonmarcos.superapp.uikit.kitComposeView",
         "com.diegonmarcos.superapp.updater.BootstrapInstall",
         "com.diegonmarcos.superapp.updater.BuildAge",
         "com.diegonmarcos.superapp.updater.BuildConfig",
         "com.diegonmarcos.superapp.updater.Fleet",
-        "kotlin.concurrent.thread"
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
       ],
       "symbols": [
-        "dp(v: Int)",
         "onCreate(savedInstanceState: Bundle?)",
-        "onNewIntent(intent: Intent?)",
-        "render(preselect: String?)",
-        "row(app: Fleet.App, highlight: Boolean)",
+        "Screen(preselect: String?)",
+        "AppCard(app: Fleet.App, highlight: Boolean)",
         "onResume()",
+        "cardTag(id: String)",
+        "statusTag(id: String)",
+        "goTag(id: String)",
+        "ordered(items: List<T>, id: (T)",
         "intent(ctx: Context, appId: String?)",
         "class RecoveryActivity"
       ]
@@ -12314,16 +12802,35 @@
       ],
       "imports": [
         "android.app.Activity",
-        "android.graphics.Color",
-        "android.graphics.drawable.GradientDrawable",
-        "android.util.TypedValue",
         "android.view.Gravity",
         "android.view.View",
         "android.view.ViewGroup",
         "android.widget.FrameLayout",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
         "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "com.diegonmarcos.superapp.uikit.kitComposeView",
         "com.diegonmarcos.superapp.updater.Advisory",
         "com.diegonmarcos.superapp.updater.BuildConfig",
         "com.diegonmarcos.superapp.updater.Fleet"
@@ -12333,7 +12840,11 @@
         "attach(activity: Activity)",
         "detach()",
         "build(activity: Activity, item: Advisory.Item)",
-        "button(activity: Activity, label: String, color: Int, onTap: ()",
+        "act(activity: Activity, item: Advisory.Item)",
+        "actionLabel(item: Advisory.Item)",
+        "accentOf(severity: Advisory.Severity, p: com.diegonmarcos.superapp.uikit.KitPalette)",
+        "Card(item: Advisory.Item, onAct: ()",
+        "Button(label: String, color: Color, onTap: ()",
         "class RecoveryBanner"
       ]
     },
@@ -12356,6 +12867,19 @@
         "cancel(ctx: Context, item: Advisory.Item)",
         "cancelAll(ctx: Context)",
         "class RecoveryNotifier"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/recovery/RecoveryPalette.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.ui.graphics.Color",
+        "com.diegonmarcos.superapp.uikit.KitPalette"
+      ],
+      "symbols": [
+        "class RecoveryPalette"
       ]
     },
     {
@@ -12463,25 +12987,62 @@
         "com.diegonmarcos.superapp.cloud.CloudData",
         "com.diegonmarcos.superapp.launcher.TileGridFragment",
         "android.os.Bundle",
-        "android.view.LayoutInflater",
-        "android.view.View",
-        "android.widget.LinearLayout",
-        "android.widget.ProgressBar",
-        "android.widget.TextView",
-        "androidx.core.view.isVisible",
-        "androidx.fragment.app.Fragment",
-        "androidx.lifecycle.lifecycleScope",
-        "kotlinx.coroutines.Dispatchers",
-        "kotlinx.coroutines.launch",
-        "kotlinx.coroutines.withContext"
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.CircularProgressIndicator",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.produceState",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "kotlinx.coroutines.Dispatchers"
       ],
       "symbols": [
-        "onViewCreated(view: View, savedInstanceState: Bundle?)",
-        "render(container: LinearLayout, status: TextView, topics: List<String>)",
-        "renderScope(container: LinearLayout, inflater: LayoutInflater, topics: List<String>)",
-        "renderAdvisories(container: LinearLayout)",
+        "palette()",
+        "Content()",
+        "pageModifier()",
+        "ScopeSection(sp: ScopePlan)",
+        "TopicCard(name: String, sub: String, modifier: Modifier)",
+        "Advisories()",
+        "scopeTag(id: String)",
+        "emptyTag(id: String)",
+        "topicTag(topic: String)",
+        "advisoryTag(title: String)",
+        "plan(topics: List<String>, scopes: List<NtfyScopes.Scope>, wanted: List<String>)",
         "newInstance(scopeIds: List<String> = emptyList()",
-        "class RssFeedFragment"
+        "class RssFeedFragment",
+        "class Topics",
+        "class Loading",
+        "class Ok",
+        "class Err",
+        "class ScopePlan"
       ]
     },
     {
@@ -12509,6 +13070,37 @@
         "live(ctx: Context, scopes: List<SearchScope>, q: String, now: Long = System.currentTimeMillis()",
         "class BrowserLookupClient",
         "class Row"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/search/SearchFrame.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SearchSession",
+        "SearchFrame"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.view.inputmethod.InputMethodManager",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.shadow",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.unit.dp",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.ui.LauncherPalette"
+      ],
+      "symbols": [
+        "withActions(block: SearchActions.()",
+        "handleBack()",
+        "reset()",
+        "SearchFrame(session: SearchSession, placeholder: String, modifier: Modifier = Modifier, content: @Composable ()",
+        "class SearchSession"
       ]
     },
     {
@@ -13090,8 +13682,7 @@
         "redrawOnGridColumns(kind: GridColumns.Kind)",
         "redrawIfChanged()",
         "onStart(owner: androidx.lifecycle.LifecycleOwner)",
-        "onStop(owner: androidx.lifecycle.LifecycleOwner)",
-        "fitTileIcon(tile: View, iconBgId: Int, cols: Int, pageDp: Int, chromeDp: Int)"
+        "onStop(owner: androidx.lifecycle.LifecycleOwner)"
       ]
     },
     {
@@ -13529,7 +14120,6 @@
       ],
       "imports": [
         "android.accessibilityservice.AccessibilityService",
-        "android.annotation.SuppressLint",
         "android.app.Activity",
         "android.app.admin.DevicePolicyManager",
         "android.content.ComponentName",
@@ -13537,9 +14127,6 @@
         "android.content.Intent",
         "android.os.Build",
         "android.provider.Settings",
-        "android.view.GestureDetector",
-        "android.view.MotionEvent",
-        "android.view.View",
         "android.widget.Toast"
       ],
       "symbols": [
@@ -13554,9 +14141,7 @@
         "isAccessibilityEnabled(ctx: Context)",
         "statusStringAccessibility(ctx: Context)",
         "statusString(ctx: Context)",
-        "attachDoubleTapLock(root: View)",
-        "onDown(e: MotionEvent)",
-        "onDoubleTap(e: MotionEvent)",
+        "lockOrExplain(ctx: Context)",
         "class ScreenLocker"
       ]
     },
@@ -13908,6 +14493,24 @@
         "parse()",
         "class LauncherStyle",
         "class of"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/LockOnDoubleTap.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "lockOnDoubleTap"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.input.pointer.pointerInput",
+        "androidx.compose.foundation.gestures.detectTapGestures",
+        "com.diegonmarcos.superapp.system.ScreenLocker"
+      ],
+      "symbols": [
+        "lockOnDoubleTap(ctx: Context, onDoubleTap: ()"
       ]
     },
     {
@@ -14273,6 +14876,40 @@
         "declared()",
         "take(arr: org.json.JSONArray)",
         "class IpcMeshPageTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/PhoneAppsComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneAppsComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.hasTestTag",
+        "androidx.compose.ui.test.performScrollToNode",
+        "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
+        "androidx.compose.ui.test.performClick",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.launcher.AppDrawerSheetFragment",
+        "com.diegonmarcos.superapp.launcher.GroupedTilesFragment",
+        "com.diegonmarcos.superapp.launcher.HomeAppsTabs",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class PhoneAppsComposeTest"
       ]
     },
     {
@@ -15103,6 +15740,39 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/cloud/C3PagesComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "C3PagesComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "android.os.Bundle",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.FrameLayout",
+        "android.widget.ScrollView",
+        "androidx.fragment.app.Fragment",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?)",
+        "class C3PagesComposeTest",
+        "class StackHost"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/cloud/CalendarAgendaComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -15124,6 +15794,39 @@
       ],
       "symbols": [
         "class CalendarAgendaComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/cloud/CloudInfosPagesComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudInfosPagesComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assert",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.assertIsSelected",
+        "androidx.compose.ui.test.assertIsNotSelected",
+        "androidx.compose.ui.test.hasText",
+        "androidx.compose.ui.test.onAllNodesWithText",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "java.util.Calendar",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "assertCountEquals1()",
+        "assertCountEquals0()",
+        "class CloudInfosPagesComposeTest"
       ]
     },
     {
@@ -15385,15 +16088,14 @@
       ],
       "imports": [
         "android.app.Application",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.getUnclippedBoundsInRoot",
+        "androidx.compose.ui.test.onAllNodesWithTag",
         "androidx.compose.ui.test.onNodeWithTag",
         "androidx.compose.ui.test.performTextInput",
         "com.diegonmarcos.superapp.search.SearchPanelTags",
         "com.diegonmarcos.superapp.ui.KitPageHarness",
         "com.diegonmarcos.superapp.uikit.KitSearchTags",
-        "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
@@ -15443,6 +16145,95 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/DrawerMenuComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DrawerMenuComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assert",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.hasText",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.profile.ProfilePrefs",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class DrawerMenuComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/HomePanesComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HomePanesComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performTextInput",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.launcher.themes.cloud.CubeMath",
+        "com.diegonmarcos.superapp.launcher.themes.cloud.Home3DFragment",
+        "com.diegonmarcos.superapp.launcher.themes.minimalist.MinimalistBlackFragment",
+        "com.diegonmarcos.superapp.launcher.themes.minimalist.MinimalistDesign",
+        "com.diegonmarcos.superapp.settings.LauncherSettingsPrefs",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class HomePanesComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/PageContentComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageContentComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assert",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.hasText",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "anyKeyWithSamples()",
+        "class PageContentComposeTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/PlaceholderPagesComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -15478,6 +16269,58 @@
         "play(gate: StarGestureGate, gesture: List<Ev>)",
         "class StarGestureGateTest",
         "class Ev"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/TileGridComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TileGridComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "plan(ids: List<String>, g: List<String> = emptyList()",
+        "shape(items: List<TileGridFragment.GridItem>)",
+        "class TileGridComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/WebAndTabsComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebAndTabsComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
+        "com.diegonmarcos.superapp.launcher.WebPageFragment",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class WebAndTabsComposeTest"
       ]
     },
     {
@@ -16798,6 +17641,55 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/recovery/RecoveryComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RecoveryComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assert",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.hasText",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.updater.Advisory",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "item(sev: Advisory.Severity, source: String = \"local\", link: String? = null)",
+        "draw(i: Advisory.Item, act: ()",
+        "order(pre: String?)",
+        "class RecoveryComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/rss/RssFeedPlanTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RssFeedPlanTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class RssFeedPlanTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/search/SearchEngineTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -17162,18 +18054,14 @@
       ],
       "imports": [
         "android.app.Application",
-        "androidx.compose.foundation.layout.Column",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
         "androidx.compose.material3.Text",
-        "androidx.compose.material.icons.Icons",
-        "androidx.compose.material.icons.filled.Settings",
-        "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.test.getUnclippedBoundsInRoot",
-        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.text.TextLayoutResult",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.compose.ui.unit.isUnspecified",
         "androidx.compose.ui.unit.sp",
         "com.diegonmarcos.superapp.uikit.KitDensity",
+        "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
         "org.junit.runner.RunWith",
@@ -18281,6 +19169,24 @@
         "ok()",
         "bad()",
         "scan()",
+        "mutate()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-edge-overlay-touch.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()",
         "mutate()"
       ]
     },
@@ -22022,6 +22928,7 @@
         "AiTheme",
         "materialAiTheme",
         "AiChatPage",
+        "AiSettingsPickers",
         "AiConsentCard"
       ],
       "imports": [
@@ -22070,6 +22977,7 @@
         "style(size: TextUnit, weight: FontWeight = FontWeight.Normal)",
         "materialAiTheme(strings: AiStrings = AiStrings()",
         "AiChatPage( chat: AiChatState, theme: AiTheme, modifier: Modifier = Modifier, engines: List<AiEngine> = emptyList()",
+        "AiSettingsPickers(chat: AiChatState, theme: AiTheme, modifier: Modifier = Modifier)",
         "AiConsentCard( request: AiConsentRequest, onAllow: ()",
         "AiConsentCard( sentence: String, onAllow: ()",
         "Welcome(engines: List<AiEngine>, query: (AiEngine, String)",
@@ -23355,7 +24263,7 @@
         "com.diegonmarcos.superapp.updater.Fleet"
       ],
       "symbols": [
-        "channelUp()",
+        "channelUp(ctx: Context)",
         "channel(ctx: Context)",
         "up()",
         "exec(command: String)",
@@ -24446,6 +25354,24 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreSourcePrefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreSourcePrefs"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "isOn(off: Set<String>, id: String)",
+        "off(ctx: Context)",
+        "enabled(ctx: Context, id: String)",
+        "set(ctx: Context, id: String, on: Boolean)",
+        "class StoreSourcePrefs"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreSourceTabs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -24547,6 +25473,7 @@
       "exports": [],
       "imports": [
         "android.content.Context",
+        "com.diegonmarcos.superapp.adbdebug.AdbScope",
         "com.diegonmarcos.superapp.adbdebug.ChannelMode",
         "com.diegonmarcos.superapp.adbdebug.ChannelModePrefs",
         "com.diegonmarcos.superapp.adbdebug.ControlStatus",
@@ -24562,8 +25489,8 @@
         "paired()",
         "id()",
         "shizukuState()",
-        "channel()",
-        "fresh()",
+        "channel(ctx: Context)",
+        "fresh(ctx: Context)",
         "playProtect(ctx: Context)",
         "invalidate()",
         "refresh(ctx: Context, done: ()",
@@ -26612,6 +27539,58 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/test/kotlin/com/diegonmarcos/superapp/bottomnav/ConfigsMenuTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsMenuTest"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.test.assertExists",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "java.io.File",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assume.assumeTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "storeUi()",
+        "decl()",
+        "configs()",
+        "show(pages: List<NavPage>)",
+        "class ConfigsMenuTest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/bottomnav/src/test/kotlin/com/diegonmarcos/superapp/bottomnav/FleetParityTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -26683,6 +27662,7 @@
         "InsetOwnershipTest"
       ],
       "imports": [
+        "android.content.ComponentName",
         "androidx.activity.ComponentActivity",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -26691,17 +27671,25 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.test.getUnclippedBoundsInRoot",
+        "androidx.compose.ui.unit.height",
+        "androidx.compose.ui.unit.width",
         "androidx.compose.ui.test.junit4.createAndroidComposeRule",
         "androidx.compose.ui.test.onNodeWithTag",
         "org.junit.Assert.assertEquals",
         "org.junit.Rule",
         "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
         "org.junit.runner.RunWith",
         "org.robolectric.RobolectricTestRunner",
         "org.robolectric.annotation.Config",
         "org.robolectric.annotation.GraphicsMode"
       ],
       "symbols": [
+        "evaluate()",
         "class InsetOwnershipTest"
       ]
     },
@@ -29886,6 +30874,27 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/core/src/main/java/com/diegonmarcos/superapp/core/StoreNotifyPrefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreNotifyPrefs"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "key(kind: Kind, channel: Channel)",
+        "allows(off: Set<String>, kind: Kind, channel: Channel)",
+        "off(ctx: Context)",
+        "allows(ctx: Context, kind: Kind, channel: Channel)",
+        "set(ctx: Context, kind: Kind, channel: Channel, on: Boolean)",
+        "class StoreNotifyPrefs",
+        "class Kind",
+        "class Channel"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/core/src/main/java/com/diegonmarcos/superapp/core/Telemetry.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -29909,6 +30918,30 @@
         "postBlocking( context: Context, kind: String, title: String?, message: String?, log: String?, meta: Map<String, String>, connectTimeoutMs: Int = 5_000, readTimeoutMs: Int = 8_000, )",
         "class Telemetry",
         "class or"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/core/src/test/java/com/diegonmarcos/superapp/core/StoreNotifyPrefsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreNotifyPrefsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.core.StoreNotifyPrefs.Channel",
+        "com.diegonmarcos.superapp.core.StoreNotifyPrefs.Kind",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "everythingIsOnUntilSwitchedOff()",
+        "aSwitchNarrowsOnlyItsOwnKindAndChannel()",
+        "keysAreDistinctPerKindAndChannel()",
+        "theStoreDeclaresTheThreeKindsTheOwnerAskedFor()",
+        "theSuperAppStaysClosedWhateverIsStored()",
+        "class StoreNotifyPrefsTest"
       ]
     },
     {
@@ -51170,6 +52203,43 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/EdgeGestureMachine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EdgeGestureMachine"
+      ],
+      "imports": [
+        "kotlin.math.hypot"
+      ],
+      "symbols": [
+        "down(x: Float, y: Float, t: Long)",
+        "tick(t: Long)",
+        "move(x: Float, y: Float, t: Long)",
+        "up(t: Long)",
+        "cancel()",
+        "class EdgeGestureMachine",
+        "class State",
+        "class Outcome"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/EdgeHandleWindow.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EdgeHandleWindow"
+      ],
+      "imports": [
+        "android.view.WindowManager.LayoutParams"
+      ],
+      "symbols": [
+        "size(edge: OneHandConfig.Edge, lengthPx: Int, thicknessPx: Int, density: Float)",
+        "class EdgeHandleWindow",
+        "class Size"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/GestureAction.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -51312,6 +52382,7 @@
         "android.view.Gravity",
         "android.view.MotionEvent",
         "android.view.View",
+        "android.view.ViewConfiguration",
         "android.view.WindowManager",
         "android.view.HapticFeedbackConstants",
         "kotlin.math.hypot"
@@ -51326,6 +52397,7 @@
         "addPreviewLayer()",
         "addHandle(h: OneHandConfig.Handle)",
         "onHandleTouch(h: OneHandConfig.Handle, view: View, e: MotionEvent)",
+        "endGesture()",
         "activate(h: OneHandConfig.Handle)",
         "endPreview()",
         "updatePreview(h: OneHandConfig.Handle, x: Float, y: Float)",
@@ -51506,6 +52578,54 @@
         "emptyRankedYieldsEmpty()",
         "ninthEntryStillIncluded()",
         "class CentaurusStarFilterTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/test/java/com/diegonmarcos/superapp/onehand/EdgeGestureMachineTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EdgeGestureMachineTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.onehand.EdgeGestureMachine.Outcome",
+        "com.diegonmarcos.superapp.onehand.EdgeGestureMachine.State",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "m()",
+        "quickTapIsNotClaimedAndFiresNothing()",
+        "longPressWithoutPushDoesNothing()",
+        "pushBeforeHoldIsPassThroughNeverMenu()",
+        "holdThenInwardPushOpensMenuAndReleaseFires()",
+        "holdThenOutwardDragDoesNotOpenMenu()",
+        "cancelResets()",
+        "class EdgeGestureMachineTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/test/java/com/diegonmarcos/superapp/onehand/EdgeHandleWindowTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EdgeHandleWindowTest"
+      ],
+      "imports": [
+        "android.view.WindowManager.LayoutParams",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "declaredFullHeightWideStripIsClampedThin()",
+        "smallDeclaredSizeIsKept()",
+        "bottomEdgeIsWideAndShort()",
+        "idleFlags()",
+        "previewVeilIsNeverTouchable()",
+        "class EdgeHandleWindowTest"
       ]
     },
     {
@@ -57576,6 +58696,27 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/main/java/com/diegonmarcos/superapp/adbdebug/AdbIdentity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbIdentity",
+        "AdbScope"
+      ],
+      "imports": [],
+      "symbols": [
+        "owns(packageName: String)",
+        "derive(name: String?, applicationId: String?, runtimePackage: String)",
+        "host(runtimePackage: String)",
+        "peek(forPackage: String)",
+        "get(forPackage: String, make: ()",
+        "current(f: (T)",
+        "clear()",
+        "class AdbIdentity",
+        "class AdbScope"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/main/java/com/diegonmarcos/superapp/adbdebug/AdbManager.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -57606,8 +58747,8 @@
         "getCertificate()",
         "getDeviceName()",
         "getInstance(ctx: Context)",
-        "loadOrCreate(ctx: Context)",
-        "selfSign(kp: KeyPair)",
+        "loadOrCreate(ctx: Context, identity: AdbIdentity)",
+        "selfSign(kp: KeyPair, identity: AdbIdentity)",
         "class AdbManager"
       ]
     },
@@ -58586,6 +59727,42 @@
         "destroy()",
         "exec(command: String)",
         "class ShizukuUserService"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/test/java/com/diegonmarcos/superapp/adbdebug/AdbIdentityTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbIdentityTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertSame",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assume.assumeTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "repo()",
+        "derived(app: String)",
+        "theStorePresentsAsCloudStoreAndNotAsTheSuperApp()",
+        "theSuperAppKeepsItsOwnIdentity()",
+        "twoHostAppsNeverShareALabelOrASubject()",
+        "everyAppThatLinksTheLibDerivesADistinctLabel()",
+        "aBlankDeclarationStillPresentsTheRunningAppNeverAnother()",
+        "anIdentityOwnsOnlyItsOwnPackage()",
+        "theKeyAliasAndPrefsStayStableSoExistingPairingsSurvive()",
+        "stateIsScopedToThePackageItWasMeasuredFor()",
+        "anotherPackageGetsItsOwnStateNeverTheCachedOne()",
+        "currentTouchesOnlyTheHeldValueAndClearEmptiesIt()",
+        "noSharedAdbCodeHardCodesAnAppLabel()",
+        "class AdbIdentityTest"
       ]
     },
     {
@@ -60597,7 +61774,8 @@
         "com.diegonmarcos.superapp.core.FleetAlerts",
         "com.diegonmarcos.superapp.core.NotificationStore",
         "com.diegonmarcos.superapp.core.SilentChannels",
-        "com.diegonmarcos.superapp.core.StoreNotifyGate"
+        "com.diegonmarcos.superapp.core.StoreNotifyGate",
+        "com.diegonmarcos.superapp.core.StoreNotifyPrefs"
       ],
       "symbols": [
         "reapCachedApk(context: Context, path: String?)",
@@ -60624,7 +61802,8 @@
       ],
       "imports": [
         "android.content.Context",
-        "com.diegonmarcos.superapp.core.FleetAlerts"
+        "com.diegonmarcos.superapp.core.FleetAlerts",
+        "com.diegonmarcos.superapp.core.StoreNotifyPrefs"
       ],
       "symbols": [
         "entry(pkg: String, version: String)",
@@ -68884,12 +70063,16 @@
       ],
       "imports": [
         "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
         "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Typography",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.unit.TextUnit",
         "androidx.compose.ui.unit.Dp",
         "androidx.compose.ui.unit.dp",
         "androidx.core.content.ContextCompat",
@@ -68898,6 +70081,8 @@
       "symbols": [
         "CalcTheme(content: @Composable ()",
         "col(id: Int)",
+        "noFixedLine()",
+        "dense()",
         "class CalcMetrics"
       ]
     },
@@ -148659,6 +149844,7 @@
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
+        "com.diegonmarcos.clouddrive.ui.denseTypography",
         "com.diegonmarcos.cloudlib.fileeditor.FileEditorScreen",
         "com.diegonmarcos.cloudlib.gitsync.GitSyncScreen",
         "com.diegonmarcos.cloudlib.mounts.MountSpec",
@@ -150543,6 +151729,7 @@
       ],
       "imports": [
         "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Typography",
         "androidx.compose.material3.darkColorScheme",
@@ -150550,12 +151737,14 @@
         "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.ui.res.colorResource",
         "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.unit.TextUnit",
         "androidx.compose.ui.unit.isSpecified",
         "com.diegonmarcos.clouddrive.R"
       ],
       "symbols": [
         "dense(scale: Float = DriveMetrics.textScale)",
         "denseTypography()",
+        "denseScale()",
         "DriveTheme(content: @Composable ()",
         "class chrome"
       ]
@@ -182923,6 +184112,7 @@
         "androidx.compose.foundation.LocalOverscrollFactory",
         "androidx.compose.foundation.isSystemInDarkTheme",
         "androidx.compose.material3.ColorScheme",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.material3.dynamicDarkColorScheme",
@@ -182936,6 +184126,7 @@
         "androidx.compose.runtime.saveable.rememberSaveable",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.mediacenter.core.Settings",
         "com.diegonmarcos.mediacenter.core.Settings.Misc.rememberForceTheme",
         "com.diegonmarcos.mediacenter.core.Settings.Misc.rememberIsAmoledMode",
@@ -182967,13 +184158,17 @@
       ],
       "imports": [
         "androidx.compose.material3.Typography",
+        "androidx.compose.ui.text.TextStyle",
         "androidx.compose.ui.text.font.Font",
         "androidx.compose.ui.text.font.FontFamily",
         "androidx.compose.ui.text.font.FontStyle",
         "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.TextUnit",
         "com.diegonmarcos.mediacenter.R"
       ],
-      "symbols": []
+      "symbols": [
+        "dense()"
+      ]
     },
     {
       "path": "ac_cloud-gallery/app/src/maps/kotlin/com/diegonmarcos/mediacenter/feature_node/presentation/location/GalleryCameraPosition.kt",
@@ -340915,6 +342110,20 @@
       "symbols": []
     },
     {
+      "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/connector-anchors.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "@blocksuite/affine-gfx-connector",
+        "@blocksuite/global/gfx",
+        "vitest"
+      ],
+      "symbols": [
+        "rect(x: number, y: number, w: number, h: number)"
+      ]
+    },
+    {
       "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/database/database.unit.spec.ts",
       "lang": "ts",
       "role": "module",
@@ -340943,6 +342152,23 @@
         "../../../../blocks/database/src/properties/paste-url.js"
       ],
       "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/database/relation.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "@blocksuite/affine-block-database",
+        "@blocksuite/affine-model",
+        "@blocksuite/data-view",
+        "@blocksuite/store",
+        "@blocksuite/store/test",
+        "vitest"
+      ],
+      "symbols": [
+        "setup()"
+      ]
     },
     {
       "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/database/typesystem.unit.spec.ts",
@@ -341015,6 +342241,52 @@
         "../../../../gfx/turbo-renderer/src/turbo-renderer.js"
       ],
       "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/portal.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "@blocksuite/affine-model",
+        "@blocksuite/store",
+        "@blocksuite/store/test",
+        "vitest"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/synced-actions.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "@blocksuite/affine-block-paragraph",
+        "@blocksuite/affine-model",
+        "@blocksuite/store",
+        "@blocksuite/store/test",
+        "vitest"
+      ],
+      "symbols": [
+        "setup()"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/synced-block.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "@blocksuite/affine-block-paragraph",
+        "@blocksuite/affine-model",
+        "@blocksuite/store",
+        "@blocksuite/store/test",
+        "vitest",
+        "yjs"
+      ],
+      "symbols": [
+        "twoDocs()"
+      ]
     },
     {
       "path": "ac_cloud-notes/blocksuite/affine/all/src/__tests__/utils/create-job.ts",
@@ -343350,6 +344622,7 @@
         "@blocksuite/store",
         "@preact/signals-core",
         "./block-icons.js",
+        "./properties/relation/space.js",
         "./properties/index.js",
         "./utils/block-utils.js",
         "./views/index.js"
@@ -343579,6 +344852,7 @@
         "@blocksuite/data-view/property-presets",
         "./created-time/cell-renderer.js",
         "./link/cell-renderer.js",
+        "./relation/cell-renderer.js",
         "./rich-text/cell-renderer.js",
         "./title/cell-renderer.js"
       ],
@@ -343677,6 +344951,62 @@
       "symbols": [
         "analyzeTextForUrlPaste(text: string)",
         "insertUrlTextSegments(\n  inlineEditor: UrlPasteInlineEditor,\n  inlineRange: InlineRange,\n  segments: UrlTextSegment[]\n)"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/database/src/properties/relation/cell-renderer.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "RelationCell",
+        "relationColumnConfig",
+        "RollupCell",
+        "rollupColumnConfig"
+      ],
+      "imports": [
+        "@blocksuite/affine-components/context-menu",
+        "@blocksuite/data-view",
+        "@emotion/css",
+        "@preact/signals-core",
+        "lit",
+        "./define.js"
+      ],
+      "symbols": [
+        "class RelationCell",
+        "class RollupCell"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/database/src/properties/relation/define.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "relationPropertyType",
+        "relationPropertyModelConfig",
+        "rollupPropertyType",
+        "rollupPropertyModelConfig"
+      ],
+      "imports": [
+        "@blocksuite/data-view",
+        "zod"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/database/src/properties/relation/space.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "StoreRelationSpace"
+      ],
+      "imports": [
+        "@blocksuite/affine-model",
+        "@blocksuite/data-view",
+        "@blocksuite/store",
+        "../../utils/block-utils.js"
+      ],
+      "symbols": [
+        "class StoreRelationSpace"
       ]
     },
     {
@@ -344973,6 +346303,29 @@
       ]
     },
     {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/embed-doc/src/synced-block-ui.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "SyncedBlockSlashMenuExtension",
+        "SyncedBlockToolbarExtension",
+        "SyncedBlockUIExtensions"
+      ],
+      "imports": [
+        "@blocksuite/affine-block-paragraph",
+        "@blocksuite/affine-components/toast",
+        "@blocksuite/affine-model",
+        "@blocksuite/affine-shared/services",
+        "@blocksuite/affine-widget-slash-menu",
+        "@blocksuite/icons/lit",
+        "@blocksuite/std",
+        "@blocksuite/store"
+      ],
+      "symbols": [
+        "syncTo(ctx: ToolbarContext, blockId: string, docId: string, title?: string)"
+      ]
+    },
+    {
       "path": "ac_cloud-notes/blocksuite/affine/blocks/embed-doc/src/view.ts",
       "lang": "ts",
       "role": "module",
@@ -344984,6 +346337,7 @@
         "./effects",
         "./embed-linked-doc-block",
         "./embed-synced-doc-block",
+        "./synced-block-ui",
         "./embed-synced-doc-block/configs/edgeless-interaction"
       ],
       "symbols": [
@@ -349794,7 +351148,8 @@
       "imports": [
         "@blocksuite/affine-ext-loader",
         "@blocksuite/affine-model",
-        "./adapters/extension"
+        "./adapters/extension",
+        "./synced/synced-blocks"
       ],
       "symbols": [
         "class ParagraphStoreExtension"
@@ -349812,6 +351167,64 @@
         "lit"
       ],
       "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/paragraph/src/synced/bind-ytexts.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "bindYTexts",
+        "SYNCED_ORIGIN"
+      ],
+      "imports": [
+        "yjs"
+      ],
+      "symbols": [
+        "bindYTexts(copy: Y.Text, source: Y.Text)"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/paragraph/src/synced/synced-actions.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "readSyncedSource",
+        "copyAsSynced",
+        "insertSyncedCopy",
+        "pasteAsSynced",
+        "syncBlockToDoc",
+        "SyncedBlockInfo",
+        "syncedClipboard"
+      ],
+      "imports": [
+        "@blocksuite/store",
+        "yjs",
+        "./synced-blocks.js"
+      ],
+      "symbols": [
+        "readSyncedSource(\n  workspace: Workspace,\n  source: SyncedSource\n)",
+        "copyAsSynced(store: Store, blockId: string)",
+        "insertSyncedCopy(\n  store: Store,\n  source: SyncedSource,\n  place: { parentId: string; index?: number }\n)",
+        "pasteAsSynced(store: Store, afterBlockId: string)",
+        "syncBlockToDoc(\n  sourceStore: Store,\n  blockId: string,\n  targetStore: Store\n)"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/paragraph/src/synced/synced-blocks.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "SyncedSource",
+        "SyncedBlocksExtension"
+      ],
+      "imports": [
+        "@blocksuite/store",
+        "yjs",
+        "./bind-ytexts.js"
+      ],
+      "symbols": [
+        "class SyncedBlocksExtension"
+      ]
     },
     {
       "path": "ac_cloud-notes/blocksuite/affine/blocks/paragraph/src/turbo/paragraph-layout-handler.ts",
@@ -351085,6 +352498,18 @@
       "symbols": []
     },
     {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/surface/src/__tests__/deck-pdf.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "pdf-lib",
+        "vitest",
+        "../extensions/export-manager/deck-pdf.js"
+      ],
+      "symbols": []
+    },
+    {
       "path": "ac_cloud-notes/blocksuite/affine/blocks/surface/src/__tests__/graph.unit.spec.ts",
       "lang": "ts",
       "role": "module",
@@ -351492,6 +352917,20 @@
       "symbols": []
     },
     {
+      "path": "ac_cloud-notes/blocksuite/affine/blocks/surface/src/extensions/export-manager/deck-pdf.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sortFramesForDeck",
+        "buildDeckPdf",
+        "DeckPage"
+      ],
+      "imports": [],
+      "symbols": [
+        "buildDeckPdf(pages: DeckPage[])"
+      ]
+    },
+    {
       "path": "ac_cloud-notes/blocksuite/affine/blocks/surface/src/extensions/export-manager/export-manager.ts",
       "lang": "ts",
       "role": "module",
@@ -351514,6 +352953,7 @@
         "../../renderer/canvas-renderer.js",
         "../../surface-block.js",
         "../../utils/get-bg-grip-gap.js",
+        "./deck-pdf.js",
         "./file-exporter.js"
       ],
       "symbols": [
@@ -355448,6 +356888,21 @@
       "symbols": []
     },
     {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/__tests__/gallery.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "@preact/signals-core",
+        "vitest",
+        "../core/data-source/base.js",
+        "../view-presets/gallery/index.js",
+        "../view-presets/convert.js",
+        "../view-presets/table/index.js"
+      ],
+      "symbols": []
+    },
+    {
       "path": "ac_cloud-notes/blocksuite/affine/data-view/src/__tests__/hotkeys.unit.spec.ts",
       "lang": "ts",
       "role": "module",
@@ -355492,6 +356947,19 @@
         "../view-presets/kanban/pc/group.js"
       ],
       "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/__tests__/relation.unit.spec.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "vitest",
+        "../core/relation/index.js"
+      ],
+      "symbols": [
+        "makeSpace(init: {\n  dbs: Record<\n    string,\n    {\n      name: string;\n      rows: Record<string, { title: string; cells?: Record<string, unknown> }>;\n      columns: RelationColumn[];\n    }\n  >;\n})"
+      ]
     },
     {
       "path": "ac_cloud-notes/blocksuite/affine/data-view/src/__tests__/table.unit.spec.ts",
@@ -355777,6 +357245,7 @@
         "@blocksuite/global/di",
         "@preact/signals-core",
         "../logical/type.js",
+        "../relation/relation.js",
         "../property/property-config.js",
         "../types.js",
         "../view/convert.js",
@@ -356842,6 +358311,46 @@
         "./types"
       ],
       "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/core/relation/relation.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "relationValue",
+        "relationSet",
+        "rollupValue",
+        "findMirror",
+        "ensureMirror",
+        "RelationData",
+        "RollupData",
+        "RelationColumn",
+        "RelationSpace"
+      ],
+      "imports": [
+        "./rollup.js"
+      ],
+      "symbols": [
+        "relationValue(\n  space: RelationSpace,\n  databaseId: string,\n  rowId: string,\n  propertyId: string\n)",
+        "relationSet(\n  space: RelationSpace,\n  databaseId: string,\n  rowId: string,\n  propertyId: string,\n  targetRowIds: string[]\n)",
+        "rollupValue(\n  space: RelationSpace,\n  databaseId: string,\n  rowId: string,\n  propertyId: string\n)",
+        "findMirror(\n  space: RelationSpace,\n  databaseId: string,\n  propertyId: string\n)",
+        "ensureMirror(\n  space: RelationSpace,\n  databaseId: string,\n  propertyId: string\n)"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/core/relation/rollup.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "computeRollup",
+        "RollupFn",
+        "ROLLUP_FNS"
+      ],
+      "imports": [],
+      "symbols": [
+        "computeRollup(fn: RollupFn, values: unknown[])"
+      ]
     },
     {
       "path": "ac_cloud-notes/blocksuite/affine/data-view/src/core/sort/add-sort.ts",
@@ -358614,6 +360123,7 @@
       "imports": [
         "../core/view/convert.js",
         "./calendar/index.js",
+        "./gallery/index.js",
         "./kanban/index.js",
         "./table/index.js"
       ],
@@ -358628,12 +360138,152 @@
       ],
       "imports": [
         "./calendar/effect.js",
+        "./gallery/effect.js",
         "./kanban/effect.js",
         "./table/effect.js"
       ],
       "symbols": [
         "viewPresetsEffects()"
       ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/define.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "galleryViewType",
+        "galleryViewModel"
+      ],
+      "imports": [
+        "../../core/view/data-view.js",
+        "./gallery-view-manager.js",
+        "./types.js"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/effect.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "galleryEffects"
+      ],
+      "imports": [
+        "./pc/effect.js"
+      ],
+      "symbols": [
+        "galleryEffects()"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/gallery-view-manager.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "GallerySingleView",
+        "GalleryProperty",
+        "GalleryRow"
+      ],
+      "imports": [
+        "@blocksuite/affine-shared/utils",
+        "@preact/signals-core",
+        "../../core/filter/eval.js",
+        "../../core/filter/trait.js",
+        "../../core/filter/types.js",
+        "../../core/filter/utils.js",
+        "../../core/sort/manager.js",
+        "../../core/view-manager/property.js",
+        "../../core/view-manager/row.js",
+        "../../core/view-manager/single-view.js",
+        "../../core/view-manager/view-manager.js",
+        "./types.js"
+      ],
+      "symbols": [
+        "class GallerySingleView",
+        "class GalleryProperty",
+        "class GalleryRow"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/pc/effect.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "pcEffects"
+      ],
+      "imports": [
+        "./view.js"
+      ],
+      "symbols": [
+        "pcEffects()"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/pc/styles.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "galleryViewStyles"
+      ],
+      "imports": [
+        "lit"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/pc/view.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "GalleryViewUILogic",
+        "GalleryViewUI"
+      ],
+      "imports": [
+        "@blocksuite/affine-shared/utils",
+        "lit",
+        "lit/directives/repeat.js",
+        "../../../core/index.js",
+        "../../../core/view/data-view-base.js",
+        "../gallery-view-manager.js",
+        "./styles.js"
+      ],
+      "symbols": [
+        "class GalleryViewUILogic",
+        "class GalleryViewUI"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/renderer.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "galleryViewMeta"
+      ],
+      "imports": [
+        "./pc/effect.js",
+        "../../core/utils/uni-icon.js",
+        "../../core/view/data-view-base.js",
+        "./define.js",
+        "./pc/view.js"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/gallery/types.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "GalleryCardSize",
+        "GalleryViewData",
+        "GalleryCardProperty",
+        "GalleryCard"
+      ],
+      "imports": [
+        "../../core/filter/types.js",
+        "../../core/sort/types.js",
+        "../../core/view/data-view.js"
+      ],
+      "symbols": []
     },
     {
       "path": "ac_cloud-notes/blocksuite/affine/data-view/src/view-presets/index.ts",
@@ -358644,6 +360294,7 @@
       ],
       "imports": [
         "./calendar/index.js",
+        "./gallery/index.js",
         "./kanban/index.js",
         "./table/index.js"
       ],
@@ -363025,12 +364676,15 @@
         "isConnectorWithLabel",
         "calculateNearestLocation",
         "isConnectorAndBindingsAllSelected",
+        "anchorProbePoints",
         "getAnchors",
         "getNearestConnectableAnchor",
         "Connectable",
         "OrthogonalConnectorInput",
         "ConnectorEndpointLocations",
         "ConnectorEndpointLocationsOnTriangle",
+        "ANCHOR_PROBE_OFFSET",
+        "MAGNETIC_ANCHOR_DISTANCE",
         "ConnectionOverlay",
         "PathGenerator",
         "ConnectorPathGenerator"
@@ -363051,6 +364705,7 @@
         "calculateNearestLocation(\n  point: IVec,\n  bounds: IBound,\n  locations = ConnectorEndpointLocations,\n  shortestDistance = Number.POSITIVE_INFINITY\n)",
         "rBound(ele: GfxModel, anti = false)",
         "isConnectorAndBindingsAllSelected(\n  connector: ConnectorElementModel | LocalConnectorElementModel,\n  selected: GfxModel[]\n)",
+        "anchorProbePoints(\n  bound: { x: number; y: number; maxX: number; maxY: number; center: IVec },\n  offset = ANCHOR_PROBE_OFFSET\n)",
         "getAnchors(ele: GfxModel)",
         "getConnectableRelativePosition(connectable: GfxModel, position: IVec)",
         "getNearestConnectableAnchor(ele: Connectable, point: IVec)",
@@ -368502,6 +370157,20 @@
       ],
       "symbols": [
         "class EmbedSyncedDocModel"
+      ]
+    },
+    {
+      "path": "ac_cloud-notes/blocksuite/affine/model/src/blocks/embed/synced-doc/synced-doc-portal.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "syncedDocStoreOptions"
+      ],
+      "imports": [
+        "@blocksuite/store"
+      ],
+      "symbols": [
+        "syncedDocStoreOptions(opts: {\n  portal?: boolean;\n  parentReadonly?: boolean;\n  query?: Query;\n})"
       ]
     },
     {
@@ -452804,6 +454473,7 @@
       ],
       "imports": [
         "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Typography",
         "androidx.compose.material3.darkColorScheme",
@@ -454847,6 +456517,71 @@
       ]
     },
     {
+      "path": "ac_cloud-store/app/src/main/java/com/diegonmarcos/cloudstore/ConfigsPage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsPages",
+        "ConfigsPage"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Switch",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.input.PasswordVisualTransformation",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.adbdebug.AdbIdentity",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellPage",
+        "com.diegonmarcos.superapp.ai.AiFleetChat",
+        "com.diegonmarcos.superapp.ai.AiSettingsPickers",
+        "com.diegonmarcos.superapp.ai.materialAiTheme",
+        "com.diegonmarcos.superapp.appstore.FeedViewer",
+        "com.diegonmarcos.superapp.appstore.FleetBearer",
+        "com.diegonmarcos.superapp.appstore.PhoneAppActions",
+        "com.diegonmarcos.superapp.appstore.StoreDensity",
+        "com.diegonmarcos.superapp.appstore.StoreSourcePrefs",
+        "com.diegonmarcos.superapp.core.StoreNotifyPrefs"
+      ],
+      "symbols": [
+        "body(page: String)",
+        "feedSwitch(id: String)",
+        "notifySwitch(kind: StoreNotifyPrefs.Kind, channel: StoreNotifyPrefs.Channel)",
+        "ConfigsPage(page: String)",
+        "Head(text: String)",
+        "Note(text: String)",
+        "Body(text: String)",
+        "SwitchRow(label: String, sub: String?, on: Boolean, tag: String, onChange: (Boolean)",
+        "SourcesPage()",
+        "FleetTokenEntry(ctx: Context)",
+        "AdbPage()",
+        "AiPage()",
+        "NotificationsPage()",
+        "AboutPage()",
+        "class ConfigsPages"
+      ]
+    },
+    {
       "path": "ac_cloud-store/app/src/main/java/com/diegonmarcos/cloudstore/FeedPage.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -454905,11 +456640,8 @@
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
-        "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material3.Surface",
-        "androidx.compose.material3.Text",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateMapOf",
@@ -454918,7 +456650,6 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.sp",
         "androidx.compose.foundation.layout.statusBarsPadding",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.Cloud",
@@ -454937,7 +456668,11 @@
         "com.diegonmarcos.superapp.bottomnav.PageTabs",
         "com.diegonmarcos.superapp.bottomnav.TopBarDecl",
         "com.diegonmarcos.superapp.bottomnav.TopBarDrawer",
-        "com.diegonmarcos.superapp.bottomnav.islandEntries"
+        "com.diegonmarcos.superapp.bottomnav.islandEntries",
+        "com.diegonmarcos.superapp.bottomnav.rememberAccountLauncher",
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
+        "androidx.appcompat.app.AppCompatActivity",
+        "androidx.fragment.compose.AndroidFragment"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
@@ -454945,7 +456680,6 @@
         "StoreShell()",
         "pageOf(section: NavSection)",
         "choose(section: String, page: String)",
-        "SettingsPage()",
         "tabFrom(i: Intent?)",
         "iconFor(name: String)",
         "class MainActivity"
@@ -455251,6 +456985,20 @@
       ]
     },
     {
+      "path": "ac_cloud-store/test/test-store-configs-pages.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "mutate()"
+      ]
+    },
+    {
       "path": "ac_cloud-store/test/test-store-import-resumes.sh",
       "lang": "sh",
       "role": "shell",
@@ -455473,7 +457221,6 @@
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.material3.TextButton",
-        "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
@@ -455499,7 +457246,8 @@
         "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "kotlinx.browser.document",
         "kotlinx.browser.window",
-        "kotlinx.serialization.json.Json"
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.contentOrNull"
       ],
       "symbols": [
         "main()",
@@ -456818,7 +458566,6 @@
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.background",
         "androidx.compose.material3.ColorScheme",
-        "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.material3.lightColorScheme",
         "androidx.compose.runtime.Composable",
@@ -456828,6 +458575,7 @@
         "androidx.compose.ui.graphics.Color",
         "com.diegonmarcos.cloudagenda.data.ThemeMode",
         "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
         "com.diegonmarcos.superapp.uikit.KitPalette"
       ],
       "symbols": [
@@ -464934,12 +466682,16 @@
       ],
       "imports": [
         "androidx.compose.material3.LocalContentColor",
+        "androidx.compose.material3.LocalMinimumInteractiveComponentSize",
         "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Typography",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.unit.TextUnit",
         "androidx.compose.ui.unit.Dp",
         "androidx.compose.ui.unit.dp",
         "androidx.core.content.ContextCompat",
@@ -464948,6 +466700,8 @@
       "symbols": [
         "ToolsTheme(content: @Composable ()",
         "col(id: Int)",
+        "noFixedLine()",
+        "dense()",
         "class ToolsMetrics"
       ]
     },
@@ -538841,8 +540595,7 @@
         "android.os.Build",
         "androidx.compose.foundation.isSystemInDarkTheme",
         "androidx.compose.material3.ColorScheme",
-        "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.Typography",
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
         "androidx.compose.material3.darkColorScheme",
         "androidx.compose.material3.dynamicDarkColorScheme",
         "androidx.compose.material3.dynamicLightColorScheme",
