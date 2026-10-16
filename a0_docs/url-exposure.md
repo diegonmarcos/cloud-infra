@@ -54,6 +54,8 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | c3-cloud-infra-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-mail-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-mattermost-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-notes-sync.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-notes-web.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-services-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-spec.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-superapp-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
@@ -158,12 +160,14 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` |
 | mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/mta-sts.txt` |
 | nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| notes-sync.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| notes.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | playlist.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
 | auth.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
-| 217 x `*.app` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
+| 225 x `*.app` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
 | 13 x `*.db` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
 
 ## Routes inside a host
