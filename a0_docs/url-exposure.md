@@ -16,7 +16,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 |---|---|---|
 | auth.diegonmarcos.com | whole host | The IdP itself: login portal and OIDC endpoints (authorize / token / JWKS / discovery) cannot require the token or session they exist to issue. |
 | linktree.diegonmarcos.com | whole host | Owner decision 2026-10-16: the public link page is deliberately anonymous. |
-| mcp.diegonmarcos.com | paths: `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` | Owner decision 2026-10-16: MCP OAuth discovery metadata (RFC 9728 / RFC 8414) is read by a client BEFORE it holds a token. Only these two documents; every MCP endpoint stays Bearer-protected. |
+| mcp.diegonmarcos.com | paths: `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` | Owner decision 2026-10-16 + item 5 (MCP auth discovery): a claude.ai MCP connector completes the OAuth sign-in BEFORE it holds a token -- discovery metadata (RFC 9728 / RFC 8414, incl. per-resource variants), Dynamic Client Registration (/register), /authorize, /token and the callback. The tool endpoints (/<route>/mcp) stay Bearer-protected; a request to any of these paths is answered by the MCP side itself. |
 | analytics.diegonmarcos.com | paths: `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` | Owner decision 2026-10-16: the tracker script and its event-collection endpoint are loaded by anonymous visitors of the public websites (umami script.js + /api/send; Matomo's tracker equivalents). Dashboards, the reporting APIs (matomo api.php, umami /api/*) and OpenObserve stay protected. |
 | matrix.diegonmarcos.com | paths: `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` | Owner decision 2026-10-16: other homeservers federate and discover this one without credentials. Owner decision 22: the Matrix client API (/_matrix/client/*) is open for Element web and token-less clients -- the homeserver does its own auth. Media and everything else stays protected. |
 | chat.diegonmarcos.com | paths: `/api/v4/*` | Owner decision 22: Mattermost mobile login and API -- Mattermost does its own authentication on /api/v4/*. The web UI stays gated. |
@@ -35,7 +35,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/openpgpkey/*` `/.well-known/jmap` |
 | maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` |
-| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
+| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` |
 | nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
@@ -155,7 +155,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | mails.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` |
-| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
+| mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` |
 | mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/mta-sts.txt` |
 | nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | playlist.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
@@ -236,6 +236,18 @@ A tier-b host's gate runs before any of these; the inner column is the *addition
 | matrix.diegonmarcos.com | `/_matrix/client/*` | c | declared public-open |
 | mcp.diegonmarcos.com | `/.well-known/oauth-protected-resource*` | c | declared public-open |
 | mcp.diegonmarcos.com | `/.well-known/oauth-authorization-server*` | c | declared public-open |
+| mcp.diegonmarcos.com | `/.well-known/openid-configuration*` | c | declared public-open |
+| mcp.diegonmarcos.com | `/register` | c | declared public-open |
+| mcp.diegonmarcos.com | `/authorize` | c | declared public-open |
+| mcp.diegonmarcos.com | `/token` | c | declared public-open |
+| mcp.diegonmarcos.com | `/callback` | c | declared public-open |
+| mcp.diegonmarcos.com | `/oauth/*` | c | declared public-open |
+| mcp.diegonmarcos.com | `/*/.well-known/oauth-protected-resource*` | c | declared public-open |
+| mcp.diegonmarcos.com | `/*/.well-known/oauth-authorization-server*` | c | declared public-open |
+| mcp.diegonmarcos.com | `/*/register` | c | declared public-open |
+| mcp.diegonmarcos.com | `/*/authorize` | c | declared public-open |
+| mcp.diegonmarcos.com | `/*/token` | c | declared public-open |
+| mcp.diegonmarcos.com | `/*/callback` | c | declared public-open |
 | mta-sts.diegonmarcos.com | `/.well-known/mta-sts.txt` | c | declared public-open |
 | vpn.diegonmarcos.com | `Upgrade: websocket` | c | declared public-open (wstunnel enforces its own secret path prefix) |
 | every host | `/.well-known/acme-challenge/*` | c | ACME http-01 |
