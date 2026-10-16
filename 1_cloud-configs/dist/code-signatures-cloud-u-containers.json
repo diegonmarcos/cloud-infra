@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2927,
+    "files": 2928,
     "by_lang": {
       "sh": 146,
-      "nix": 164,
+      "nix": 165,
       "py": 862,
       "ts": 1147,
       "js": 73,
@@ -17,7 +17,7 @@
     },
     "by_role": {
       "shell": 136,
-      "nix-module": 16,
+      "nix-module": 17,
       "python": 853,
       "module": 699,
       "file": 319,
@@ -234,6 +234,33 @@
         "hasReservations",
         "pidsLine",
         "deployLines"
+      ]
+    },
+    {
+      "path": "_shared/edge-auth.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "tpl",
+        "subst",
+        "note",
+        "mk",
+        "entries",
+        "openHosts",
+        "hostsOf",
+        "acmePath",
+        "pathsOf",
+        "heldHosts",
+        "wsHosts",
+        "argsFor",
+        "snippets",
+        "isOpen",
+        "gateKind",
+        "name",
+        "gate",
+        "gateOff"
       ]
     },
     {
@@ -17887,7 +17914,10 @@
         "lib",
         "caddyPublic"
       ],
-      "imports": [],
+      "imports": [
+        "../../_shared/edge-auth.nix",
+        "../_shared/edge-auth.nix"
+      ],
       "symbols": [
         "readTpl",
         "subst",
@@ -17911,6 +17941,9 @@
         "introspectUpstream",
         "bearer",
         "wgCidrs",
+        "ea",
+        "edgeAuth",
+        "autheliaUpstream",
         "eh",
         "codesExpr",
         "handleErrors",
@@ -17925,10 +17958,7 @@
         "globalsBlock",
         "ghPages",
         "ghPagesDomainLists",
-        "ghPagesDomains",
-        "wellKnownRoutes",
-        "mkGithubProxy",
-        "mkWellKnownBlock"
+        "ghPagesDomains"
       ]
     },
     {
@@ -18046,7 +18076,9 @@
         "caddyRoutes"
       ],
       "imports": [
+        "../../_shared/edge-auth.nix",
         "./identity.nix",
+        "../_shared/edge-auth.nix",
         "identity.nix"
       ],
       "symbols": [
@@ -18080,16 +18112,16 @@
         "introspectUpstream",
         "authelia",
         "bearer",
+        "ea",
+        "edgeAuth",
+        "meshGuard",
         "handleErrors",
         "eh",
         "codesExpr",
         "errPath",
         "protectedTpl",
         "protectedCustomTpl",
-        "emptyGuard",
-        "bearerHeaderUp",
-        "identityOf",
-        "mkProtectedOpt"
+        "emptyGuard"
       ]
     },
     {
