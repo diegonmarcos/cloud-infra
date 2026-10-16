@@ -18,7 +18,11 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | linktree.diegonmarcos.com | whole host | Owner decision 2026-10-16: the public link page is deliberately anonymous. |
 | mcp.diegonmarcos.com | paths: `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` | Owner decision 2026-10-16: MCP OAuth discovery metadata (RFC 9728 / RFC 8414) is read by a client BEFORE it holds a token. Only these two documents; every MCP endpoint stays Bearer-protected. |
 | analytics.diegonmarcos.com | paths: `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` | Owner decision 2026-10-16: the tracker script and its event-collection endpoint are loaded by anonymous visitors of the public websites (umami script.js + /api/send; Matomo's tracker equivalents). Dashboards, the reporting APIs (matomo api.php, umami /api/*) and OpenObserve stay protected. |
-| matrix.diegonmarcos.com | paths: `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` | Owner decision 2026-10-16: other homeservers federate and discover this one without credentials. Client API (/_matrix/client/*, media) stays protected. |
+| matrix.diegonmarcos.com | paths: `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` | Owner decision 2026-10-16: other homeservers federate and discover this one without credentials. Owner decision 22: the Matrix client API (/_matrix/client/*) is open for Element web and token-less clients -- the homeserver does its own auth. Media and everything else stays protected. |
+| chat.diegonmarcos.com | paths: `/api/v4/*` | Owner decision 22: Mattermost mobile login and API -- Mattermost does its own authentication on /api/v4/*. The web UI stays gated. |
+| git.diegonmarcos.com | paths: `/*/*/info/refs` `/*/*/git-upload-pack` `/*/*/git-receive-pack` `/api/v1/*` | Owner decision 22: git-over-HTTPS (smart HTTP) with Basic auth and the Gitea API -- Gitea does its own authentication; git clients cannot do a cookie/bearer handshake. The web UI stays gated. |
+| diegonmarcos.com | paths: `/.well-known/openpgpkey/*` `/.well-known/jmap` | Owner decision 22: WKD (OpenPGP key discovery, public keys by design) and the apex /.well-known/jmap autoconfig redirect (redirect only, no content). |
+| mta-sts.diegonmarcos.com | paths: `/.well-known/mta-sts.txt` | Owner decision 22: MTA-STS policy (RFC 8461) is fetched anonymously by sending MTAs. |
 | vpn.diegonmarcos.com | WebSocket upgrade requests only (`Upgrade: websocket`) | Owner decision 2026-10-16: the wstunnel client opens a WebSocket upgrade to a secret path prefix and cannot do a cookie/bearer handshake. The exemption is `Upgrade: websocket` only; wstunnel itself rejects every upgrade whose path is not its secret --http-upgrade-path-prefix, and every non-upgrade request to vpn. is gated. |
 | every host | acme-http-01: `/.well-known/acme-challenge/*` | Owner decision 2026-10-16: ACME http-01 validation requests come from the CA and cannot carry a token. Exempted on EVERY host (the path is excluded from the gate). Caddy core answers a live token before any route runs; this fleet itself issues via DNS-01. |
 | every host | cors-preflight: `OPTIONS with Access-Control-Request-Method` | Browsers never attach credentials to a CORS preflight. The (edge_auth) snippet answers it itself with 204; it is never proxied to an upstream, so it serves no content. Plain OPTIONS (WebDAV discovery) is NOT exempt. |
@@ -28,9 +32,9 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 
 | Host | Tier | Current auth | Exempt (tier c) paths |
 |---|---|---|---|
-| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/openpgpkey/*` `/.well-known/jmap` |
 | maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` |
+| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` |
 | mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
 | nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
@@ -108,7 +112,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | analytics.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` |
 | api.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | app.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| chat.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
+| chat.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | `/api/v4/*` |
 | cloud-account.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud-browser.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud-c3-morpheus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
@@ -144,15 +148,15 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | cloud-wallet.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud-writer.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| git.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/openpgpkey/*` `/.well-known/jmap` |
+| git.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/*/*/info/refs` `/*/*/git-upload-pack` `/*/*/git-receive-pack` `/api/v1/*` |
 | jmap.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | mail.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | mails.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` |
+| matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` |
 | mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` |
-| mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/mta-sts.txt` |
 | nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | playlist.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
@@ -219,11 +223,20 @@ A tier-b host's gate runs before any of these; the inner column is the *addition
 | analytics.diegonmarcos.com | `/matomo/matomo.php` | c | declared public-open |
 | analytics.diegonmarcos.com | `/matomo/piwik.php` | c | declared public-open |
 | analytics.diegonmarcos.com | `/matomo/js/*` | c | declared public-open |
+| chat.diegonmarcos.com | `/api/v4/*` | c | declared public-open |
+| diegonmarcos.com | `/.well-known/openpgpkey/*` | c | declared public-open |
+| diegonmarcos.com | `/.well-known/jmap` | c | declared public-open |
+| git.diegonmarcos.com | `/*/*/info/refs` | c | declared public-open |
+| git.diegonmarcos.com | `/*/*/git-upload-pack` | c | declared public-open |
+| git.diegonmarcos.com | `/*/*/git-receive-pack` | c | declared public-open |
+| git.diegonmarcos.com | `/api/v1/*` | c | declared public-open |
 | matrix.diegonmarcos.com | `/_matrix/federation/*` | c | declared public-open |
 | matrix.diegonmarcos.com | `/_matrix/key/*` | c | declared public-open |
 | matrix.diegonmarcos.com | `/.well-known/matrix/*` | c | declared public-open |
+| matrix.diegonmarcos.com | `/_matrix/client/*` | c | declared public-open |
 | mcp.diegonmarcos.com | `/.well-known/oauth-protected-resource*` | c | declared public-open |
 | mcp.diegonmarcos.com | `/.well-known/oauth-authorization-server*` | c | declared public-open |
+| mta-sts.diegonmarcos.com | `/.well-known/mta-sts.txt` | c | declared public-open |
 | vpn.diegonmarcos.com | `Upgrade: websocket` | c | declared public-open (wstunnel enforces its own secret path prefix) |
 | every host | `/.well-known/acme-challenge/*` | c | ACME http-01 |
 | every host | `OPTIONS` + `Access-Control-Request-Method` | c | CORS preflight, answered 204 by the gate, never proxied |
