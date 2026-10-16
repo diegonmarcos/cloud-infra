@@ -6,10 +6,10 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21489,
+    "files": 21494,
     "by_lang": {
-      "py": 136,
-      "sh": 479,
+      "sh": 482,
+      "py": 138,
       "kotlin": 11193,
       "java": 630,
       "ts": 8461,
@@ -18,8 +18,8 @@
       "rust": 89
     },
     "by_role": {
-      "script": 232,
-      "shell": 369,
+      "shell": 371,
+      "script": 235,
       "java": 629,
       "entrypoint": 23,
       "module": 6408,
@@ -35,6 +35,20 @@
     }
   },
   "files": [
+    {
+      "path": ".github/actions/publish-ghcr/publish.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "repo_is_private()",
+        "verify_visibility()"
+      ],
+      "imports": [],
+      "symbols": [
+        "repo_is_private()",
+        "verify_visibility()"
+      ]
+    },
     {
       "path": ".github/workflows/scripts/cloud_android_ci_fanout.py",
       "lang": "py",
@@ -1124,6 +1138,25 @@
       ]
     },
     {
+      "path": ".github/workflows/scripts/cloud-android-publish-module-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "fail(m)",
+        "read(rel)",
+        "count(text)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "fail(m)",
+        "read(rel)",
+        "count(text)",
+        "_scan()"
+      ]
+    },
+    {
       "path": ".github/workflows/scripts/cloud-android-rebuild-isolation-guard.py",
       "lang": "py",
       "role": "script",
@@ -2201,6 +2234,20 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/actions/publish-ghcr/publish.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "repo_is_private()",
+        "verify_visibility()"
+      ],
+      "imports": [],
+      "symbols": [
+        "repo_is_private()",
+        "verify_visibility()"
       ]
     },
     {
@@ -3289,6 +3336,25 @@
       "symbols": [
         "_summary()",
         "_red()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/cloud-android-publish-module-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "fail(m)",
+        "read(rel)",
+        "count(text)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "fail(m)",
+        "read(rel)",
+        "count(text)",
+        "_scan()"
       ]
     },
     {
@@ -5133,6 +5199,26 @@
         "ok()",
         "bad()",
         "_rc()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/publish-module-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "run_guard()",
+        "fresh()",
+        "expect_fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "run_guard()",
+        "fresh()",
+        "expect_fail()"
       ]
     },
     {

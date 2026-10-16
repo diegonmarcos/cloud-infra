@@ -490,13 +490,13 @@
       "domain": "notes-sync.diegonmarcos.com",
       "upstream": "10.0.0.6:8098",
       "landing": "https://diegonmarcos.github.io/c__Cloud/",
-      "comment": "DISABLED pending GHCR package visibility (owner action: make the upstream ghcr package public, then enabled:true). Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync)."
+      "comment": "Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync)."
     },
     {
       "domain": "notes.diegonmarcos.com",
       "upstream": "10.0.0.6:8097",
       "landing": "https://diegonmarcos.github.io/c__Cloud/",
-      "comment": "DISABLED pending GHCR package visibility (owner action: make the upstream ghcr package public, then enabled:true). Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web)."
+      "comment": "Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web)."
     },
     {
       "domain": "ide.diegonmarcos.com",
@@ -820,6 +820,22 @@
       "wg_only": true,
       "container": "calendar-radicale",
       "comment": "c3 container calendar-radicale (mesh-only; calendar-radicale-http-5232.app)"
+    },
+    {
+      "domain": "c3-cloud-notes-sync.diegonmarcos.com",
+      "upstream": "10.0.0.6:8098",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-notes-sync",
+      "comment": "c3 container cloud-notes-sync (mesh-only; cloud-notes-sync-http-8098.app)"
+    },
+    {
+      "domain": "c3-cloud-notes-web.diegonmarcos.com",
+      "upstream": "10.0.0.6:8097",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-notes-web",
+      "comment": "c3 container cloud-notes-web (mesh-only; cloud-notes-web-http-8097.app)"
     },
     {
       "domain": "c3-contacts-radicale.diegonmarcos.com",
@@ -1700,6 +1716,16 @@
       "private_name": "cloud.calendar.app"
     },
     {
+      "service": "cloud-notes-sync.app",
+      "upstream": "10.0.0.6:8098",
+      "private_name": "cloud.cloud-notes-sync.app"
+    },
+    {
+      "service": "cloud-notes-web.app",
+      "upstream": "10.0.0.6:8097",
+      "private_name": "cloud.cloud-notes-web.app"
+    },
+    {
       "service": "code-server.app",
       "upstream": "10.0.0.6:8443",
       "private_name": "cloud.code-server.app"
@@ -1979,6 +2005,18 @@
       "service": "cloud.calendar.app",
       "upstream": "10.0.0.6:5232",
       "alias_of": "calendar.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-notes-sync.app",
+      "upstream": "10.0.0.6:8098",
+      "alias_of": "cloud-notes-sync.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-notes-web.app",
+      "upstream": "10.0.0.6:8097",
+      "alias_of": "cloud-notes-web.app",
       "source": "internal_routes"
     },
     {
@@ -2348,6 +2386,18 @@
       "source": "url_scheme"
     },
     {
+      "service": "c3-cloud-notes-sync.app",
+      "upstream": "10.0.0.6:8098",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-cloud-notes-web.app",
+      "upstream": "10.0.0.6:8097",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
       "service": "c3-contacts-radicale.app",
       "upstream": "10.0.0.6:5233",
       "scheme": "c3",
@@ -2657,6 +2707,16 @@
         "host": "c3-calendar-radicale.diegonmarcos.com",
         "container": "calendar-radicale",
         "private": "c3-calendar-radicale.app"
+      },
+      {
+        "host": "c3-cloud-notes-sync.diegonmarcos.com",
+        "container": "cloud-notes-sync",
+        "private": "c3-cloud-notes-sync.app"
+      },
+      {
+        "host": "c3-cloud-notes-web.diegonmarcos.com",
+        "container": "cloud-notes-web",
+        "private": "c3-cloud-notes-web.app"
       },
       {
         "host": "c3-contacts-radicale.diegonmarcos.com",
@@ -4005,6 +4065,48 @@
     },
     {
       "kind": "redirect",
+      "service": "cloud-notes-sync.app",
+      "redirect_to": "https://cloud-notes-sync-http-8098.app",
+      "container": "cloud-notes-sync",
+      "container_key": "app",
+      "svc": "cloud-notes-sync",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-notes-sync-http-8098.app",
+      "container": "cloud-notes-sync",
+      "container_key": "app",
+      "svc": "cloud-notes-sync",
+      "vm": "oci-A1-f_0",
+      "port": 8098,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8098",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cloud-notes-web.app",
+      "redirect_to": "https://cloud-notes-web-http-8097.app",
+      "container": "cloud-notes-web",
+      "container_key": "app",
+      "svc": "cloud-notes-web",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-notes-web-http-8097.app",
+      "container": "cloud-notes-web",
+      "container_key": "app",
+      "svc": "cloud-notes-web",
+      "vm": "oci-A1-f_0",
+      "port": 8097,
+      "protocol": "http",
+      "upstream": "10.0.0.6:8097",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "code-server.app",
       "redirect_to": "https://code-server-https-8443.app",
       "container": "code-server",
@@ -4693,7 +4795,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "DISABLED pending GHCR package visibility (owner action: make the upstream ghcr package public, then enabled:true). Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync)."
+      "notes": "Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync)."
     },
     {
       "host": "notes.diegonmarcos.com",
@@ -4703,7 +4805,7 @@
       "tls": "public",
       "zone": "com",
       "service": null,
-      "notes": "DISABLED pending GHCR package visibility (owner action: make the upstream ghcr package public, then enabled:true). Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web)."
+      "notes": "Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web)."
     },
     {
       "host": "ide.diegonmarcos.com",
@@ -5114,6 +5216,26 @@
       "zone": "com",
       "service": null,
       "notes": "c3 container calendar-radicale (mesh-only; calendar-radicale-http-5232.app)"
+    },
+    {
+      "host": "c3-cloud-notes-sync.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8098",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-notes-sync (mesh-only; cloud-notes-sync-http-8098.app)"
+    },
+    {
+      "host": "c3-cloud-notes-web.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8097",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-notes-web (mesh-only; cloud-notes-web-http-8097.app)"
     },
     {
       "host": "c3-contacts-radicale.diegonmarcos.com",
@@ -6048,6 +6170,26 @@
       "notes": null
     },
     {
+      "host": "cloud-notes-sync.app",
+      "path": null,
+      "upstream": "10.0.0.6:8098",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cloud-notes-web.app",
+      "path": null,
+      "upstream": "10.0.0.6:8097",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "code-server.app",
       "path": null,
       "upstream": "10.0.0.6:8443",
@@ -6567,6 +6709,26 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "calendar-radicale",
+      "notes": null
+    },
+    {
+      "host": "cloud-notes-sync-http-8098.app",
+      "path": null,
+      "upstream": "10.0.0.6:8098",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-notes-sync",
+      "notes": null
+    },
+    {
+      "host": "cloud-notes-web-http-8097.app",
+      "path": null,
+      "upstream": "10.0.0.6:8097",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-notes-web",
       "notes": null
     },
     {
