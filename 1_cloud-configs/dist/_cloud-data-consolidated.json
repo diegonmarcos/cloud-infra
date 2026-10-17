@@ -14009,11 +14009,10 @@
           "host_literal": true
         },
         "protection": {
-          "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). THE FLEET'S ONLY PUBLIC EDGE — tier-1 is the edge data path itself: caddy-public terminates TLS, unbound-dns64 resolves for it, cf-worker-http-to-wg-public-bridge carries inbound off-mesh traffic, and c3-public-api plus git-proxy-api are the public APIs served off-mesh from this VM. Analytics (umami, umami-db) is the sheddable demand. Empty tier1 here made shed_non_tier1() return 1 and escalate straight to `systemctl stop docker` — that amputated the public edge twice in 24h (2026-09-05 ~70min, 2026-09-06 seven hours).",
+          "_doc": "Per-VM overrides for the protection stack; merged over native.protection defaults (config.json). THE FLEET'S ONLY PUBLIC EDGE — tier-1 is the edge data path itself: caddy-public terminates TLS, unbound-dns64 resolves for it, and c3-public-api (which took over inbound off-mesh traffic when cf-worker-http-to-wg-public-bridge was retired 2026-06-23; its container was removed 2026-10-17) plus git-proxy-api are the public APIs served off-mesh from this VM. Analytics (umami, umami-db) is the sheddable demand. Empty tier1 here made shed_non_tier1() return 1 and escalate straight to `systemctl stop docker` — that amputated the public edge twice in 24h (2026-09-05 ~70min, 2026-09-06 seven hours).",
           "tier1_services": [
             "caddy-public",
             "unbound-dns64",
-            "cf-worker-http-to-wg-public-bridge",
             "c3-public-api",
             "git-proxy-api"
           ],
