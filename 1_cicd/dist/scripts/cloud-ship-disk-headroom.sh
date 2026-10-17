@@ -61,3 +61,39 @@ ship_disk_headroom_guard() {
   log_error "disk headroom: $vm has only ${free} GB free after the prune (< ${min} GB). Refusing to deploy before touching any container -- free space on $vm (see the disk-janitor / volumes) or grow its root, then re-run. Override with SHIP_MIN_FREE_GB."
   return 1
 }
+
+# ── Clean up after the deploy: drop the images this ship REPLACED ───────────────────────────
+# `docker image prune -f` only removes untagged layers. A redeploy leaves the previous
+# version of every service's image TAGGED (the tag moved, the old image id stayed around
+# with a different tag or digest), and on oci-apps that was ~8 GB per full ship.
+#
+# Scope is deliberately narrow: only repositories that a container on the VM runs RIGHT NOW
+# (i.e. services this ship just deployed), and only image ids that NO container -- running or
+# stopped -- references. `docker rmi` is never forced, so an image that is somehow still in use
+# is refused by docker itself. Images of repositories nothing runs (rollback copies of services
+# that were never redeployed) are not touched.
+#
+# The remote script is a single here-doc so the test can run it against a stub `docker`.
+SHIP_PRUNE_REPLACED_REMOTE='
+set -u
+used="$(docker ps -aq | xargs -r docker inspect --format "{{.Image}}" 2>/dev/null | sort -u)"
+repos="$(docker ps -a --format "{{.Image}}" | sed -E "s/@sha256:.*//; s/:[^/]*\$//" | sort -u)"
+removed=0
+for repo in $repos; do
+  docker image ls --no-trunc --filter "reference=$repo" --format "{{.Repository}}:{{.Tag}} {{.ID}}" 2>/dev/null | while read -r ref id; do
+    case "$ref" in *"<none>"*) continue ;; esac
+    printf "%s\n" "$used" | grep -qxF "$id" && continue
+    if docker rmi "$ref" >/dev/null 2>&1; then echo "removed $ref"; fi
+  done
+done
+'
+
+ship_prune_replaced_images() { # $1 = vm
+  local vm="$1" out
+  # shellcheck disable=SC2086
+  out="$(ssh ${SSH_OPTS:-} -o BatchMode=yes -o ConnectTimeout=20 "$vm" "bash -s" <<< "$SHIP_PRUNE_REPLACED_REMOTE" 2>/dev/null)" || {
+    log "WARN: could not prune replaced images on $vm (ssh); disk is left for the disk-janitor"; return 0; }
+  log "prune replaced images on $vm: $(printf '%s\n' "$out" | grep -c '^removed ') image tag(s) removed"
+  [ -z "$out" ] || printf '%s\n' "$out" | sed 's/^/    /'
+  return 0
+}

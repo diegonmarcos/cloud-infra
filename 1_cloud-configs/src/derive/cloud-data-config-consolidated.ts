@@ -868,6 +868,10 @@ function main() {
       // (`matrix.runner_label || 'ubuntu-latest'`) is what makes "no label
       // set" behaviour-neutral, not a value written here.
       ...(vm.runner_label ? { runner_label: vm.runner_label } : {}),
+      // Per-VM deploy disk floor (vms.<host>.gha.min_free_gb in config.json): a ship refuses to
+      // start on this VM with less free space on / than this, after pruning dangling images.
+      // Absent -> the engine default (5 GB). See cloud-ship-disk-headroom.sh.
+      ...(typeof vm.gha.min_free_gb === "number" ? { min_free_gb: vm.gha.min_free_gb } : {}),
     };
   }
 

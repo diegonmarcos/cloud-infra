@@ -351,7 +351,9 @@ echo "SHIP_MODE=${SHIP_MODE:-ship} -> per-service verb: $SHIP_VERB"
 if [ "$SHIP_VERB" != "ship-build" ]; then
   # shellcheck source=cloud-ship-disk-headroom.sh
   . "$_DISPATCH_DIR/cloud-ship-disk-headroom.sh"
-  ship_disk_headroom_guard "$VM" || exit 1
+  # Floor per VM: vms.<host>.gha.min_free_gb in config.json (-> build-gha.json), env wins, default 5.
+  _VM_FLOOR="$(jq -r --arg vm "$VM" '.vms[$vm].min_free_gb // empty' "$GHA_CONFIG" 2>/dev/null || true)"
+  ship_disk_headroom_guard "$VM" "${SHIP_MIN_FREE_GB:-${_VM_FLOOR:-5}}" || exit 1
 fi
 
 # ── Per-service worker (runs in background) ──────────────────────
@@ -439,6 +441,13 @@ if [ -n "${CLOUD_DATA_PRESTAGED:-}" ]; then
     [ -n "$REL" ] && git -C "$REPO_ROOT" reset HEAD "$REL" 2>/dev/null || true
     rm -f "$t"
   done
+fi
+
+# ── Clean up after ourselves: drop the images this ship replaced ──
+# Only where the VM was touched; a failed service must not skip it (its OLD image is still
+# referenced by its container, so it is kept, and everything else stays tidy).
+if [ "$SHIP_VERB" != "ship-build" ] && command -v ship_prune_replaced_images >/dev/null 2>&1; then
+  ship_prune_replaced_images "$VM" || true
 fi
 
 # ── Collect results ──────────────────────────────────────────────

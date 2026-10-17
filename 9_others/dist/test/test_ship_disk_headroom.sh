@@ -65,7 +65,7 @@ D="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-ci-builder-dispatch.sh"
 ln_guard="$(grep -n 'ship_disk_headroom_guard "\$VM"' "$D" | head -1 | cut -d: -f1)"
 ln_launch="$(grep -n '^SHIP_CMDS=\$(mktemp)' "$D" | head -1 | cut -d: -f1)"
 ck "dispatch calls the guard before launching services" "$([ -n "$ln_guard" ] && [ -n "$ln_launch" ] && [ "$ln_guard" -lt "$ln_launch" ] && echo yes || echo no)" "yes"
-ck "build-only ship skips the guard" "$(grep -B4 'ship_disk_headroom_guard "\$VM"' "$D" | grep -c 'ship-build')" "1"
+ck "build-only ship skips the guard" "$(grep -B8 'ship_disk_headroom_guard "\$VM"' "$D" | grep -c 'ship-build')" "1"
 
 echo ""; echo "  passed $pass, failed $fail"
 [ "$fail" -eq 0 ] || exit 1
