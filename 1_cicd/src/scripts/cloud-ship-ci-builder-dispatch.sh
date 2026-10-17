@@ -346,6 +346,14 @@ case "${SHIP_MODE:-ship}" in
 esac
 echo "SHIP_MODE=${SHIP_MODE:-ship} -> per-service verb: $SHIP_VERB"
 
+# ── Disk headroom guard (before any container is touched) ────────
+# Build-only shipping never touches the VM; every other verb pulls images onto it.
+if [ "$SHIP_VERB" != "ship-build" ]; then
+  # shellcheck source=cloud-ship-disk-headroom.sh
+  . "$_DISPATCH_DIR/cloud-ship-disk-headroom.sh"
+  ship_disk_headroom_guard "$VM" || exit 1
+fi
+
 # ── Per-service worker (runs in background) ──────────────────────
 RESULTS_DIR=$(mktemp -d)
 
