@@ -1000,6 +1000,26 @@ function main() {
   // For each VM, look up its services that declared a top-level `ssh` field
   // in their build.json, and emit them as a `ssh_containers` array on the
   // VM's homeManagerVms entry. This is what ssh-keys.nix consumes.
+  // build.json `ssh.extra_hosts`: ssh aliases a container needs beyond the
+  // fleet VMs (e.g. cloud-superapp-mcp -> the phone). Each entry names a mesh
+  // client instead of an IP, so the address has ONE source:
+  //   { host, wg_client, family: "v4"|"v6", user, port, identity_file? }
+  // hostname := native.wireguard.clients[wg_client].wg_ip | wg_ipv6.
+  // An unresolvable entry FAILS the derive: a silently missing Host block is
+  // exactly how SUPERAPP_HOSTS ended up naming aliases no config defined.
+  const resolveExtraHosts = (svcName: string, raw: any): any[] => {
+    if (raw == null) return [];
+    if (!Array.isArray(raw)) throw new Error(`${svcName}: ssh.extra_hosts must be an array`);
+    const clients = native.wireguard?.clients ?? {};
+    return raw.map((e: any) => {
+      const c = clients[e.wg_client];
+      if (!e.host || !c) throw new Error(`${svcName}: ssh.extra_hosts entry ${JSON.stringify(e.host)} names unknown wg_client ${JSON.stringify(e.wg_client)}`);
+      const hostname = (e.family ?? "v4") === "v6" ? c.wg_ipv6 : c.wg_ip;
+      if (!hostname) throw new Error(`${svcName}: wg_client ${e.wg_client} has no ${e.family ?? "v4"} address`);
+      if (!e.user || !Number.isInteger(e.port)) throw new Error(`${svcName}: ssh.extra_hosts ${e.host} needs user and integer port`);
+      return { host: e.host, hostname, user: e.user, port: e.port, identity_file: e.identity_file ?? "~/.ssh/vault_id_rsa" };
+    });
+  };
   for (const [alias, hmVm] of Object.entries(homeManagerVms) as [string, any][]) {
     const containerSshTargets: any[] = [];
     for (const svcName of (hmVm.containers ?? []) as string[]) {
@@ -1017,6 +1037,7 @@ function main() {
             uid: svc.ssh.uid ?? 0,
             ssh_dir: svc.ssh.ssh_dir ?? "/root/.ssh",
             keys: svc.ssh.keys ?? [],
+            extra_hosts: resolveExtraHosts(svcName, svc.ssh.extra_hosts),
           });
         }
       }
