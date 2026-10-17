@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21575,
+    "files": 21579,
     "by_lang": {
       "sh": 483,
       "py": 138,
-      "kotlin": 11271,
+      "kotlin": 11275,
       "java": 630,
       "ts": 8461,
       "nix": 30,
@@ -25,7 +25,7 @@
       "module": 6410,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11268,
+      "kotlin": 11272,
       "python": 45,
       "rust-module": 89,
       "file": 2271,
@@ -6925,6 +6925,7 @@
         "openStore(ctx: Context)",
         "expandedIconDp(ctx: Context, cols: Int)",
         "FolderSheetFrame(label: String, onDismiss: ()",
+        "FolderSheetCard(label: String, content: @Composable ()",
         "ExpandedAppTile( tag: String, label: String, icon: Drawable?, installed: Boolean, cols: Int, iconDp: Dp, desc: String?, modifier: Modifier = Modifier, onClick: ()",
         "PhoneFolderSheet(open: OpenFolder, onDismiss: ()",
         "class OpenFolder",
@@ -10036,6 +10037,26 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/ExternalAppLaunch.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExternalAppLaunch",
+        "DynamicIslandAction"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent"
+      ],
+      "symbols": [
+        "candidates(app: Sections.ExternalApp, forkKey: String?)",
+        "launchInstalled(ctx: Context, app: Sections.ExternalApp, forkKey: String?, deepTarget: String?)",
+        "dispatch( ctx: Context, launchExternalApp: (String)",
+        "class ExternalAppLaunch",
+        "class DynamicIslandAction"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/GroupedTilesFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10963,6 +10984,24 @@
       "symbols": [
         "admits(isDown: Boolean, x: Float, y: Float)",
         "class StarGestureGate"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/StripIslandGap.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StripIslandGap"
+      ],
+      "imports": [
+        "android.view.View",
+        "android.view.ViewGroup"
+      ],
+      "symbols": [
+        "marginFor(stripHeight: Int, gapPx: Int)",
+        "follow(strip: View, island: View, gapPx: Int)",
+        "seat(strip: View, island: View, gapPx: Int)",
+        "class StripIslandGap"
       ]
     },
     {
@@ -15888,13 +15927,19 @@
         "GalaxyBackdrop",
         "IslandWave",
         "PrismaticShimmer",
-        "WaveLine"
+        "WaveLine",
+        "DynamicIsland"
       ],
       "imports": [
         "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
         "android.app.Activity",
         "android.content.Context",
         "androidx.compose.foundation.Canvas",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.background",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.LaunchedEffect",
@@ -15929,12 +15974,13 @@
       ],
       "symbols": [
         "refresh(ctx: Context)",
-        "install(ctx: Context, galaxy: ComposeView?, wave: ComposeView?, prism: ComposeView?)",
+        "install(ctx: Context, galaxy: ComposeView?)",
         "rememberPhase(periodMs: Long, running: Boolean)",
         "GalaxyBackdrop(modifier: Modifier = Modifier.fillMaxSize()",
         "IslandWave(modifier: Modifier = Modifier.fillMaxSize()",
         "PrismaticShimmer(modifier: Modifier = Modifier.fillMaxSize()",
         "WaveLine(modifier: Modifier = Modifier.fillMaxSize()",
+        "DynamicIsland(onTap: ()",
         "class ShellFxState",
         "class Star",
         "class Comet",
@@ -16202,6 +16248,34 @@
       ],
       "symbols": [
         "class CloudStoreRouteTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/FolderSheetOpaqueTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FolderSheetOpaqueTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class FolderSheetOpaqueTest"
       ]
     },
     {
@@ -17817,6 +17891,46 @@
       ],
       "symbols": [
         "class DrawerMenuComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/DynamicIslandTapTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DynamicIslandTapTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Intent",
+        "android.content.pm.ActivityInfo",
+        "android.content.pm.ApplicationInfo",
+        "android.content.pm.ResolveInfo",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.FrameLayout",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.unit.dp",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.ui.DynamicIsland",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.ui.ShellFxState",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class DynamicIslandTapTest"
       ]
     },
     {
