@@ -18,6 +18,17 @@
 # Needs `log` / `log_error` (cloud-ship-lib.sh) and, optionally, $SSH_OPTS.
 # Env:    SHIP_MIN_FREE_GB overrides the default; 0 disables the guard.
 
+# The big per-VM floor protects a FULL ship; a scoped ship of a few services needs a few hundred MB
+# and must not be refused by it. $1 = services about to ship, $2 = the VM's declared floor (may be empty).
+# Echoes the floor to apply: the VM floor from SHIP_FULL_MIN_SERVICES (default 8) services up, else 5.
+ship_effective_floor() {
+  local n="${1:-0}" vmfloor="${2:-}" full="${SHIP_FULL_MIN_SERVICES:-8}"
+  case "$n" in ''|*[!0-9]*) n=0 ;; esac
+  case "$full" in ''|*[!0-9]*) full=8 ;; esac
+  case "$vmfloor" in ''|*[!0-9]*) vmfloor=5 ;; esac
+  if [ "$n" -ge "$full" ]; then echo "$vmfloor"; else echo 5; fi
+}
+
 _ship_free_gb() { # $1 = vm  -> integer GB free on / of that VM, or empty
   # shellcheck disable=SC2086
   ssh ${SSH_OPTS:-} -o BatchMode=yes -o ConnectTimeout=20 "$1" \

@@ -47,12 +47,28 @@ ck "SHIP_MIN_FREE_GB=0 disables the guard"  "$(SHIP_MIN_FREE_GB=0 run "0")" "0";
 ck "only dangling images are ever pruned"   "$(grep -c -E 'prune -a|system prune|rmi|volume' "$STUB_LOG")" "0"
 ck "no unexpected remote command was issued" "$(grep -c UNEXPECTED "$STUB_LOG")" "0"
 
+# the big per-VM floor applies to full ships only
+eff() { ( . "$LIB"; ship_effective_floor "$@" ); }
+ck "full ship (59 services) gets the VM floor"      "$(eff 59 12)"  "12"
+ck "scoped ship (1 service) gets the default 5"     "$(eff 1 12)"   "5"
+ck "7 services is still scoped, 8 is full"          "$(eff 7 12)/$(eff 8 12)" "5/12"
+ck "a VM without a floor gets 5 either way"         "$(eff 59 '')/$(eff 1 '')" "5/5"
+ck "SHIP_FULL_MIN_SERVICES moves the cut-over"      "$(SHIP_FULL_MIN_SERVICES=2 eff 2 12)" "12"
+ck "junk input degrades to the default"             "$(eff x y)"    "5"
+
 # wired in: the dispatch script calls it, before the services launch, and never for a build-only ship
 D="$REPO_ROOT/1_cicd/src/scripts/cloud-ship-ci-builder-dispatch.sh"
 ln_guard="$(grep -n 'ship_disk_headroom_guard "\$VM"' "$D" | head -1 | cut -d: -f1)"
 ln_launch="$(grep -n '^SHIP_CMDS=\$(mktemp)' "$D" | head -1 | cut -d: -f1)"
 ck "dispatch calls the guard before launching services" "$([ -n "$ln_guard" ] && [ -n "$ln_launch" ] && [ "$ln_guard" -lt "$ln_launch" ] && echo yes || echo no)" "yes"
-ck "build-only ship skips the guard" "$(grep -B8 'ship_disk_headroom_guard "\$VM"' "$D" | grep -c 'ship-build')" "1"
+ck "build-only ship skips the guard" "$(python3 -I - "$D" <<'PY'
+import sys
+s = open(sys.argv[1]).read()
+g = s.index('ship_disk_headroom_guard "$VM"')
+c = s.rfind('if [ "$SHIP_VERB" != "ship-build" ]', 0, g)
+print("yes" if c != -1 and "\nfi\n" not in s[c:g] else "no")
+PY
+)" "yes"
 
 echo ""; echo "  passed $pass, failed $fail"
 [ "$fail" -eq 0 ] || exit 1

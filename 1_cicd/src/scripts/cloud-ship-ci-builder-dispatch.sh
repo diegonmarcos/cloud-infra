@@ -352,8 +352,16 @@ if [ "$SHIP_VERB" != "ship-build" ]; then
   # shellcheck source=cloud-ship-disk-headroom.sh
   . "$_DISPATCH_DIR/cloud-ship-disk-headroom.sh"
   # Floor per VM: vms.<host>.gha.min_free_gb in config.json (-> build-gha.json), env wins, default 5.
+  # The big floor protects a FULL ship (it pulls a fresh image for most services: ~8 GB on
+  # oci-apps). A scoped ship of a few services needs a few hundred MB, so it must not be
+  # refused by it: the per-VM floor applies from SHIP_FULL_MIN_SERVICES (default 8) services
+  # up; below that the default 5 GB floor applies.
   _VM_FLOOR="$(jq -r --arg vm "$VM" '.vms[$vm].min_free_gb // empty' "$GHA_CONFIG" 2>/dev/null || true)"
-  ship_disk_headroom_guard "$VM" "${SHIP_MIN_FREE_GB:-${_VM_FLOOR:-5}}" || exit 1
+  if [ -n "$FILTER" ]; then _N_SHIP=1
+  elif [ -n "${CHANGED_DIRS:-}" ]; then _N_SHIP="$(printf '%s\n' $CHANGED_DIRS | grep -c .)"
+  else _N_SHIP="$TOTAL"; fi
+  _FLOOR="$(ship_effective_floor "${_N_SHIP:-0}" "$_VM_FLOOR")"
+  ship_disk_headroom_guard "$VM" "${SHIP_MIN_FREE_GB:-$_FLOOR}" || exit 1
 fi
 
 # ── Per-service worker (runs in background) ──────────────────────
