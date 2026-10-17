@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21563,
+    "files": 21575,
     "by_lang": {
       "sh": 483,
       "py": 138,
-      "kotlin": 11259,
+      "kotlin": 11271,
       "java": 630,
       "ts": 8461,
       "nix": 30,
@@ -25,7 +25,7 @@
       "module": 6410,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11256,
+      "kotlin": 11268,
       "python": 45,
       "rust-module": 89,
       "file": 2271,
@@ -6253,7 +6253,8 @@
         "stripsAreHostedAndBounded()",
         "quickTapsNearTheStripReachTheAppBelow()",
         "quickTapOnTheStripOpensNothing()",
-        "sweepWithoutHoldOpensNothing()",
+        "inwardSwipeWithoutHoldOpensTheMenu()",
+        "sweepAlongTheEdgeOpensNothing()",
         "holdThenPush(edgeLeft: Boolean)",
         "holdThenPushInwardOpensTheMenuFromTheLeftEdge()",
         "holdThenPushInwardOpensTheMenuFromTheRightEdge()",
@@ -7382,6 +7383,7 @@
       "symbols": [
         "stopwatchCurrentMs()",
         "show(ctx: Context, anchor: View)",
+        "show(host: View, rect: androidx.compose.ui.unit.IntRect)",
         "CalendarBubble()",
         "Tab(text: String, selected: Boolean, modifier: Modifier, onClick: ()",
         "AgendaView()",
@@ -8664,7 +8666,8 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "DevControlServer"
+        "DevControlServer",
+        "NavIslandSource"
       ],
       "imports": [
         "com.diegonmarcos.superapp.devtools.BuildConfig",
@@ -8738,10 +8741,10 @@
         "readCrashes(ctx: android.content.Context)",
         "navGeometryJson(host: DevControlBridge.ActivityHost)",
         "readExitReasons(ctx: android.content.Context, n: Int)",
+        "navIsland()",
         "class DevControlServer",
         "class and",
-        "class the",
-        "class Spec"
+        "class the"
       ]
     },
     {
@@ -9062,8 +9065,6 @@
         "android.app.usage.UsageStatsManager",
         "android.content.Context",
         "android.content.Intent",
-        "android.graphics.Color",
-        "android.graphics.drawable.GradientDrawable",
         "android.os.Build",
         "android.os.Handler",
         "android.os.IBinder",
@@ -9073,10 +9074,9 @@
         "android.view.MotionEvent",
         "android.view.View",
         "android.view.WindowManager",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
         "androidx.core.app.NotificationCompat",
-        "com.diegonmarcos.superapp.R"
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.OverlayCompose"
       ],
       "symbols": [
         "onBind(intent: Intent?)",
@@ -9098,7 +9098,6 @@
         "savePos()",
         "resetPosition()",
         "showBar(ctx: NavContext)",
-        "itemRow(items: List<NavItem>, boldCtx: NavContext?, topGap: Boolean = false, size: Float = 13f)",
         "parentMatchesContext(target: String, ctx: NavContext)",
         "removeBar()",
         "collapse()",
@@ -9111,14 +9110,50 @@
         "openApp(pkg: String, installApp: String)",
         "openSuperApp(shortcutAction: String)",
         "launchPackage(pkg: String)",
-        "chip(text: String, bold: Boolean = false, size: Float = 13f, onClick: ()",
-        "divider()",
         "barParams(outsideTouch: Boolean = false)",
         "dp(v: Int)",
         "buildNotification()",
         "actionPi(target: String)",
         "serviceAction(action: String)",
-        "actionIcon(target: String)"
+        "actionIcon(target: String)",
+        "showMenu(ctx: Context)",
+        "overlayAllowed(ctx: Context)",
+        "setEnabled(ctx: Context, on: Boolean)"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/floatingnav/FloatingNavUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp"
+      ],
+      "symbols": [
+        "NavBubble()",
+        "NavBar( root: NavItem?, parents: List<NavItem>, children: List<NavItem>, boldOf: (NavItem)",
+        "NavRow(items: List<NavItem>, size: Float, topGap: Boolean, boldOf: (NavItem)"
       ]
     },
     {
@@ -9216,23 +9251,20 @@
         "android.app.Service",
         "android.content.Context",
         "android.content.Intent",
-        "android.graphics.Color",
-        "android.graphics.Typeface",
         "android.os.Build",
         "android.os.Handler",
         "android.os.IBinder",
         "android.os.Looper",
         "android.provider.Settings",
         "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup.LayoutParams.WRAP_CONTENT",
         "android.view.WindowManager",
-        "android.widget.FrameLayout",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
         "androidx.core.app.NotificationCompat",
         "com.diegonmarcos.superapp.BuildConfig",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
         "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.OverlayCompose",
         "java.text.SimpleDateFormat",
         "java.util.Date",
         "java.util.Locale"
@@ -9244,19 +9276,69 @@
         "onDestroy()",
         "run()",
         "showOverlay()",
-        "onAttachedToWindow()",
-        "onDraw(canvas: android.graphics.Canvas)",
         "overlayParams()",
         "realScreenSize()",
-        "dp(v: Int)",
         "buildNotification()",
         "allowed(ctx: Context)",
         "start(ctx: Context)",
         "stop(ctx: Context)",
-        "class ScreensaverService",
+        "class ScreensaverService"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/floatingnav/ScreensaverUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.graphics.Matrix",
+        "android.graphics.Shader",
+        "android.graphics.SweepGradient",
+        "androidx.compose.foundation.Canvas",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableFloatStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.runtime.withFrameNanos",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.CornerRadius",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.geometry.Size",
+        "androidx.compose.ui.graphics.Brush",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.ShaderBrush",
+        "androidx.compose.ui.graphics.Shadow",
+        "androidx.compose.ui.graphics.drawscope.DrawScope",
+        "androidx.compose.ui.graphics.drawscope.Stroke",
+        "androidx.compose.ui.graphics.drawscope.rotate",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp"
+      ],
+      "symbols": [
+        "rememberSeconds()",
+        "NeonBackdrop(modifier: Modifier = Modifier.fillMaxSize()",
+        "createShader(size: Size)",
+        "ScreensaverScene(neon: Boolean, time: String, date: String, unlockLabel: String, onUnlock: ()",
         "class Moon",
-        "class Planet",
-        "class NeonBackdropView"
+        "class Planet"
       ]
     },
     {
@@ -10320,34 +10402,22 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/LauncherStatusStripView.kt",
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/LauncherStatusStrip.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "LauncherStatusStripView"
+        "StatusStripModel",
+        "LauncherStatusStrip"
       ],
       "imports": [
-        "com.diegonmarcos.superapp.BuildConfig",
-        "com.diegonmarcos.superapp.MainActivity",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.ui.SystemInfoPopup",
-        "com.diegonmarcos.superapp.settings.LauncherTheme",
-        "com.diegonmarcos.superapp.cloud.CalendarAgendaPopup",
-        "com.diegonmarcos.superapp.battery.BatteryIconView",
-        "com.diegonmarcos.superapp.battery.BatteryEstimatePopup",
-        "com.diegonmarcos.superapp.network.NetworkInfoPopup",
-        "com.diegonmarcos.superapp.network.SignalLevels",
-        "com.diegonmarcos.superapp.network.TetherModel",
-        "com.diegonmarcos.superapp.network.UsbDataModel",
-        "com.diegonmarcos.superapp.zoomies.PetStrengthView",
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
+        "android.app.Activity",
         "android.app.ActivityManager",
         "android.content.BroadcastReceiver",
         "android.content.Context",
         "android.content.Intent",
         "android.content.IntentFilter",
         "android.database.ContentObserver",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
         "android.net.ConnectivityManager",
         "android.net.Network",
         "android.net.NetworkCapabilities",
@@ -10357,39 +10427,49 @@
         "android.os.Handler",
         "android.os.Looper",
         "android.os.StatFs",
-        "android.util.AttributeSet",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.widget.FrameLayout",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
         "android.util.Base64",
-        "androidx.core.view.ViewCompat",
-        "androidx.core.view.WindowInsetsCompat",
-        "org.json.JSONObject"
+        "android.view.View",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.DisposableEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateMapOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue"
       ],
       "symbols": [
-        "emptyDots()",
+        "petOf(toolId: String)",
         "run()",
         "centreTopReservePx()",
-        "applyCutoutReserve()",
+        "clockReservePx()",
+        "readCutoutFrom(host: View)",
+        "noteCutout(top: Int)",
         "parsePetsConfig()",
-        "withDots(icon: TextView, dots: LinearLayout)",
-        "dotsRowPx()",
-        "makeToolColumn(toolId: String, iconView: View)",
         "gaitForLevel(level: Int)",
         "bucketLevel(pct: Int, buckets: List<Int>)",
         "updatePet(toolId: String, level: Int)",
         "updateBoolPet(toolId: String, on: Boolean)",
-        "applyPetsPref()",
-        "makeIconLabel(text: String)",
         "onReceive(c: Context, i: Intent)",
         "onChange(selfChange: Boolean)",
         "onCapabilitiesChanged(network: Network, caps: NetworkCapabilities)",
         "onLost(network: Network)",
         "onAvailable(network: Network)",
-        "onAttachedToWindow()",
-        "onDetachedFromWindow()",
+        "start()",
+        "stop()",
         "refreshTime()",
         "refreshBattery(intent: Intent)",
         "refreshUsb(intent: Intent?)",
@@ -10402,12 +10482,16 @@
         "refreshBluetooth(apply: Boolean = true)",
         "applyIconTints()",
         "refreshMetrics()",
-        "create(ctx: Context)",
-        "set(row: LinearLayout, level: Int, tint: Int)",
-        "heightPx(ctx: Context)",
-        "class LauncherStatusStripView",
+        "install(activity: Activity, host: ComposeView)",
+        "SignalDots(level: Int, tint: Int, modifier: Modifier = Modifier)",
+        "IconLabel(text: String, tint: Int, modifier: Modifier = Modifier)",
+        "Tappable(tag: String, onTap: (IntRect)",
+        "PetAbove(model: StatusStripModel, toolId: String)",
+        "LauncherStripContent(model: StatusStripModel)",
+        "StatusStripBody(model: StatusStripModel, ctx: Context)",
+        "class StripChip",
         "class ToolPet",
-        "class SignalDots"
+        "class StatusStripModel"
       ]
     },
     {
@@ -10485,12 +10569,7 @@
       ],
       "imports": [
         "android.graphics.Rect",
-        "android.os.Handler",
-        "android.os.Looper",
         "android.view.HapticFeedbackConstants",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.ImageButton",
         "androidx.appcompat.app.AppCompatActivity",
         "androidx.compose.foundation.gestures.awaitEachGesture",
         "androidx.compose.foundation.gestures.awaitFirstDown",
@@ -10502,29 +10581,15 @@
         "androidx.compose.ui.input.pointer.pointerInput",
         "androidx.compose.ui.layout.onGloballyPositioned",
         "androidx.compose.ui.layout.positionOnScreen",
-        "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.bottomnav.BottomNavIslandView",
-        "com.diegonmarcos.superapp.system.Trace",
-        "com.google.android.material.appbar.MaterialToolbar",
-        "java.util.Random"
+        "com.diegonmarcos.superapp.system.Trace"
       ],
       "symbols": [
         "install()",
-        "resume()",
-        "pause()",
         "installNavFanMenus()",
         "fanItemsFor(sectionId: String)",
         "fanGesture(sectionId: String, items: List<Pair<String, Pair<Int, String>>>)",
         "awaitLiftOrDrift(id: PointerId, start: Offset, slop: Float)",
-        "installTooltipConsumer()",
-        "applyToChildren(vg: ViewGroup)",
-        "onChildViewAdded(parent: View?, child: View?)",
-        "onChildViewRemoved(parent: View?, child: View?)",
-        "scheduleHamburgerJitter()",
-        "cancelHamburgerJitter()",
-        "findToolbarNavIcon(toolbar: ViewGroup)",
-        "postNextJitter(view: View)",
-        "playHamburgerJitter(view: View)",
         "class LauncherToolbarFx"
       ]
     },
@@ -10667,18 +10732,12 @@
         "com.diegonmarcos.superapp.ui.LauncherPalette",
         "com.diegonmarcos.superapp.uikit.KitComposeFragment",
         "com.diegonmarcos.superapp.uikit.KitEmptyState",
-        "android.view.Menu",
-        "android.view.MenuInflater",
-        "android.view.MenuItem",
-        "android.widget.Toast",
         "androidx.compose.runtime.Composable",
         "androidx.core.os.bundleOf"
       ],
       "symbols": [
         "palette()",
         "Content()",
-        "onCreateOptionsMenu(menu: Menu, inflater: MenuInflater)",
-        "onOptionsItemSelected(item: MenuItem)",
         "forSection(id: String, label: String)",
         "class SectionFragment"
       ]
@@ -11296,18 +11355,65 @@
         "MusicIslandController"
       ],
       "imports": [
-        "android.view.View",
-        "android.widget.FrameLayout",
-        "android.widget.ImageView",
-        "android.widget.TextView",
         "androidx.appcompat.app.AppCompatActivity",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.ui.AppIconCache"
+        "androidx.compose.ui.platform.ComposeView"
       ],
       "symbols": [
         "resume()",
         "pause()",
         "class MusicIslandController"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/media/MusicIslandUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NowPlayingLine",
+        "MusicIslandState",
+        "MusicIsland"
+      ],
+      "imports": [
+        "android.graphics.drawable.Drawable",
+        "androidx.compose.foundation.Image",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.basicMarquee",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.produceState",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "androidx.core.graphics.drawable.toBitmap",
+        "com.diegonmarcos.superapp.ui.AppIconCache",
+        "com.diegonmarcos.superapp.ui.WaveLine",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "MusicIsland(state: MusicIslandState, onTap: ()",
+        "class NowPlayingLine",
+        "class MusicIslandState"
       ]
     },
     {
@@ -12615,6 +12721,7 @@
         "wgLink(ctx: Context, vpnTransport: Boolean = hasTransport(ctx, NetworkCapabilities.TRANSPORT_VPN)",
         "wgLinkOf(ctx: Context, up: Boolean, stats: com.wireguard.android.backend.Statistics?, vpnTransport: Boolean)",
         "show(ctx: Context, anchor: View, focus: String? = null)",
+        "show(ctx: Context, host: View, rect: androidx.compose.ui.unit.IntRect, focus: String? = null)",
         "NetworkBubble(ctx: Context, focus: String?, dismiss: ()",
         "Section(key: String, content: @Composable ()",
         "Header(key: String, row: @Composable ()",
@@ -12650,8 +12757,7 @@
         "hexToIp(a: String)",
         "fmtKbps(kbps: Int)",
         "readLocalIps()",
-        "sampleTraffic()",
-        "fmtRate(rxNow: Long, txNow: Long, rxPrev: Long?, txPrev: Long?, tsNow: Long, tsPrev: Long?)"
+        "sampleTraffic()"
       ]
     },
     {
@@ -13543,6 +13649,22 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/MarketsLastGood.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MarketsLastGood"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "save(quotes: Map<String, MarketsQuotes.Quote>)",
+        "load()",
+        "class MarketsLastGood"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/MarketsQuotes.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13560,12 +13682,14 @@
         "java.util.Locale"
       ],
       "symbols": [
+        "isGood(q: Quote?)",
+        "merge(previous: Map<String, Quote>, fetched: List<Quote>, nowMillis: Long)",
         "unavailable(symbol: String, reason: String)",
         "chartUrl(symbol: String)",
         "parse(symbol: String, body: String?)",
         "fetch(instrument: Instrument)",
-        "row(instrument: Instrument, quote: Quote?, nowMillis: Long, staleAfterMillis: Long)",
-        "summary( instruments: List<Instrument>, quotes: Map<String, Quote>, nowMillis: Long, staleAfterMillis: Long, )",
+        "row( instrument: Instrument, quote: Quote?, nowMillis: Long, staleAfterMillis: Long, zone: java.util.TimeZone = java.util.TimeZone.getDefault()",
+        "summary( instruments: List<Instrument>, quotes: Map<String, Quote>, nowMillis: Long, staleAfterMillis: Long, zone: java.util.TimeZone = java.util.TimeZone.getDefault()",
         "format(price: Double, decimals: Int)",
         "ageText(ms: Long)",
         "class MarketsQuotes",
@@ -13790,9 +13914,10 @@
         "kotlinx.coroutines.SupervisorJob",
         "kotlinx.coroutines.cancel",
         "kotlinx.coroutines.launch",
-        "org.json.JSONObject",
         "java.net.HttpURLConnection",
         "java.net.URL",
+        "java.time.Instant",
+        "java.time.ZoneId",
         "java.util.Locale"
       ],
       "symbols": [
@@ -13812,6 +13937,28 @@
         "ensureChannel()",
         "class WeatherBadgeService",
         "class WeatherToday"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/WeatherModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherModel"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "java.time.Instant",
+        "java.time.ZoneId",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "apiUrl(lat: Double, lon: Double)",
+        "parse(body: String?, now: Instant, zone: ZoneId)",
+        "precipProbability(data: JSONObject)",
+        "headline(f: Forecast)",
+        "class WeatherModel",
+        "class Forecast"
       ]
     },
     {
@@ -13935,7 +14082,6 @@
         "androidx.compose.ui.text.style.TextOverflow",
         "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.unit.sp",
-        "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "com.diegonmarcos.superapp.uikit.kitComposeView",
         "com.diegonmarcos.superapp.updater.Advisory",
@@ -13943,8 +14089,8 @@
         "com.diegonmarcos.superapp.updater.Fleet"
       ],
       "symbols": [
-        "refresh(activity: Activity)",
-        "attach(activity: Activity)",
+        "refresh(activity: Activity, host: FrameLayout?)",
+        "attach(activity: Activity, host: FrameLayout?)",
         "detach()",
         "build(activity: Activity, item: Advisory.Item)",
         "act(activity: Activity, item: Advisory.Item)",
@@ -14931,7 +15077,7 @@
         "com.diegonmarcos.superapp.system.ModePrefs",
         "com.diegonmarcos.superapp.system.BackgroundOrchestrator",
         "com.diegonmarcos.superapp.ui.Haptics",
-        "com.diegonmarcos.superapp.ui.IslandWaveView",
+        "com.diegonmarcos.superapp.ui.ShellFxState",
         "com.diegonmarcos.superapp.launcher.Pages",
         "com.diegonmarcos.superapp.launcher.TileGridFragment",
         "com.diegonmarcos.superapp.launcher.WebPageFragment",
@@ -14942,7 +15088,7 @@
         "com.diegonmarcos.superapp.launcher.SectionMenuFragment",
         "com.diegonmarcos.superapp.launcher.SectionTabsFragment",
         "com.diegonmarcos.superapp.launcher.PlaceholderDrawerFragment",
-        "com.diegonmarcos.superapp.launcher.LauncherStatusStripView",
+        "com.diegonmarcos.superapp.launcher.LauncherStatusStrip",
         "com.diegonmarcos.superapp.launcher.HomeDrawerFragment",
         "com.diegonmarcos.superapp.launcher.themes.cloud.Home3DFragment",
         "com.diegonmarcos.superapp.launcher.DetailPlaceholderFragment",
@@ -15529,36 +15675,6 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/GalaxyBackdropView.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "GalaxyBackdropView"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.battery.EnergyLedger",
-        "android.animation.ValueAnimator",
-        "android.content.Context",
-        "android.graphics.Canvas",
-        "android.graphics.Paint",
-        "android.util.AttributeSet",
-        "android.view.View",
-        "android.view.animation.LinearInterpolator",
-        "kotlin.math.absoluteValue",
-        "kotlin.math.sin",
-        "kotlin.random.Random"
-      ],
-      "symbols": [
-        "onAttachedToWindow()",
-        "applyStarsPref()",
-        "onDraw(canvas: Canvas)",
-        "drawScene(canvas: Canvas)",
-        "class GalaxyBackdropView",
-        "class Star",
-        "class Comet"
-      ]
-    },
-    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/Haptics.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -15576,36 +15692,6 @@
         "tap(view: View)",
         "class Haptics",
         "class keeps"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/IslandWaveView.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "IslandWaveView"
-      ],
-      "imports": [
-        "android.animation.ValueAnimator",
-        "android.content.Context",
-        "android.graphics.Canvas",
-        "android.graphics.Paint",
-        "android.graphics.Path",
-        "android.graphics.RectF",
-        "android.util.AttributeSet",
-        "android.view.View",
-        "android.view.animation.LinearInterpolator",
-        "kotlin.math.PI",
-        "kotlin.math.min",
-        "kotlin.math.sin"
-      ],
-      "symbols": [
-        "onAttachedToWindow()",
-        "applyIslandPref()",
-        "onDetachedFromWindow()",
-        "onDraw(canvas: Canvas)",
-        "class IslandWaveView",
-        "class Wave"
       ]
     },
     {
@@ -15650,6 +15736,7 @@
       ],
       "symbols": [
         "show(anchor: View, align: Align = Align.END, content: @Composable (close: ()",
+        "show(from: View, rect: IntRect, align: Align = Align.END, content: @Composable (close: ()",
         "close()",
         "calculatePosition( anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize, )",
         "KitBubble(modifier: Modifier = Modifier, scroll: ScrollState? = null, content: @Composable ColumnScope.()",
@@ -15742,27 +15829,34 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/PrismaticShimmerView.kt",
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/OverlayCompose.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "PrismaticShimmerView"
+        "OverlayCompose"
       ],
       "imports": [
-        "android.animation.ValueAnimator",
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
         "android.content.Context",
-        "android.graphics.Canvas",
-        "android.graphics.Matrix",
-        "android.graphics.Paint",
-        "android.graphics.RectF",
-        "android.graphics.SweepGradient",
-        "android.util.AttributeSet",
-        "android.view.View",
-        "android.view.animation.LinearInterpolator"
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.lifecycle.Lifecycle",
+        "androidx.lifecycle.LifecycleOwner",
+        "androidx.lifecycle.LifecycleRegistry",
+        "androidx.lifecycle.ViewModelStore",
+        "androidx.lifecycle.ViewModelStoreOwner",
+        "androidx.lifecycle.setViewTreeLifecycleOwner",
+        "androidx.lifecycle.setViewTreeViewModelStoreOwner",
+        "androidx.savedstate.SavedStateRegistry",
+        "androidx.savedstate.SavedStateRegistryController",
+        "androidx.savedstate.SavedStateRegistryOwner",
+        "androidx.savedstate.setViewTreeSavedStateRegistryOwner"
       ],
       "symbols": [
-        "onDraw(canvas: Canvas)",
-        "class PrismaticShimmerView"
+        "destroy()",
+        "finish()",
+        "class OverlayCompose",
+        "class Owner"
       ]
     },
     {
@@ -15783,6 +15877,118 @@
         "items(ctx: Context, mode: String)",
         "configure(nav: BottomNavIslandView, mode: String, content: ViewGroup)",
         "class ShellBottomNav"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/ShellFx.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShellFxState",
+        "GalaxyBackdrop",
+        "IslandWave",
+        "PrismaticShimmer",
+        "WaveLine"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
+        "android.app.Activity",
+        "android.content.Context",
+        "androidx.compose.foundation.Canvas",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableFloatStateOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.runtime.withFrameNanos",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.CornerRadius",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.geometry.RoundRect",
+        "androidx.compose.ui.geometry.Size",
+        "androidx.compose.ui.graphics.Brush",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.Path",
+        "androidx.compose.ui.graphics.StrokeCap",
+        "androidx.compose.ui.graphics.drawscope.Stroke",
+        "androidx.compose.ui.graphics.drawscope.clipPath",
+        "androidx.compose.ui.graphics.drawscope.rotate",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.platform.LocalDensity",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.battery.EnergyLedger",
+        "com.diegonmarcos.superapp.settings.LauncherSettingsPrefs",
+        "kotlin.math.PI",
+        "kotlin.math.absoluteValue",
+        "kotlin.math.min",
+        "kotlin.math.sin",
+        "kotlin.random.Random"
+      ],
+      "symbols": [
+        "refresh(ctx: Context)",
+        "install(ctx: Context, galaxy: ComposeView?, wave: ComposeView?, prism: ComposeView?)",
+        "rememberPhase(periodMs: Long, running: Boolean)",
+        "GalaxyBackdrop(modifier: Modifier = Modifier.fillMaxSize()",
+        "IslandWave(modifier: Modifier = Modifier.fillMaxSize()",
+        "PrismaticShimmer(modifier: Modifier = Modifier.fillMaxSize()",
+        "WaveLine(modifier: Modifier = Modifier.fillMaxSize()",
+        "class ShellFxState",
+        "class Star",
+        "class Comet",
+        "class Wave"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/ShellToolbar.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShellToolbarState",
+        "OrbGlyph",
+        "ShellToolbarRow"
+      ],
+      "imports": [
+        "androidx.annotation.DrawableRes",
+        "androidx.compose.animation.core.Animatable",
+        "androidx.compose.animation.core.tween",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.rotate",
+        "androidx.compose.ui.graphics.graphicsLayer",
+        "androidx.compose.ui.platform.LocalDensity",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.lifecycle.Lifecycle",
+        "androidx.lifecycle.compose.LocalLifecycleOwner",
+        "androidx.lifecycle.repeatOnLifecycle",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "kotlin.random.Random",
+        "kotlinx.coroutines.launch"
+      ],
+      "symbols": [
+        "OrbGlyph(@DrawableRes res: Int, modifier: Modifier = Modifier)",
+        "ShellToolbarRow(onMenu: ()",
+        "wiggle(a: Animatable<Float, *>, peak: Float)",
+        "class ShellToolbarState"
       ]
     },
     {
@@ -15818,6 +16024,7 @@
       ],
       "symbols": [
         "show(ctx: Context, anchor: View)",
+        "show(ctx: Context, host: View, rect: androidx.compose.ui.unit.IntRect)",
         "SystemInfoBubble(ctx: Context)",
         "psiRow(name: String, p: Map<String, Float>?)",
         "readMemory(ctx: Context)",
@@ -15833,35 +16040,6 @@
         "ValueSmall(t: String)",
         "Gap(dp: Int)",
         "class SystemInfoPopup"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/ui/WaveLineView.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "WaveLineView"
-      ],
-      "imports": [
-        "com.diegonmarcos.superapp.media.NowPlayingMonitor",
-        "android.animation.ValueAnimator",
-        "android.content.Context",
-        "android.graphics.Canvas",
-        "android.graphics.Color",
-        "android.graphics.Paint",
-        "android.graphics.Path",
-        "android.util.AttributeSet",
-        "android.view.View",
-        "android.view.animation.LinearInterpolator",
-        "kotlin.math.PI",
-        "kotlin.math.sin"
-      ],
-      "symbols": [
-        "dp(v: Float)",
-        "onAttachedToWindow()",
-        "onDetachedFromWindow()",
-        "onDraw(canvas: Canvas)",
-        "class WaveLineView"
       ]
     },
     {
@@ -17390,6 +17568,42 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/floatingnav/OverlayComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OverlayComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.wrapContentSize",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.semantics.SemanticsActions",
+        "androidx.compose.ui.semantics.getOrNull",
+        "androidx.compose.ui.text.TextLayoutResult",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.ui.ShellFxState",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "item(label: String)",
+        "weightOf(tag: String)",
+        "class OverlayComposeTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/AggregatorComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -17752,6 +17966,41 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/StatusStripComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StatusStripComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.layout.wrapContentSize",
+        "androidx.compose.ui.semantics.SemanticsProperties",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.onRoot",
+        "androidx.compose.ui.test.performClick",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.network.NetworkSections",
+        "com.diegonmarcos.superapp.settings.LauncherSettingsPrefs",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.ui.ShellFxState",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "petsOff()",
+        "showStrip()",
+        "left(tag: String)",
+        "reserve()",
+        "class StatusStripComposeTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/TileGridComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -17931,6 +18180,36 @@
       ],
       "symbols": [
         "class MusicControlsPopupComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/media/MusicIslandComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MusicIslandComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.ui.ShellFxState",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "show(state: MusicIslandState, onTap: ()",
+        "class MusicIslandComposeTest"
       ]
     },
     {
@@ -18471,7 +18750,7 @@
       ],
       "symbols": [
         "weatherOpensTheProvidersPageForThePosition()",
-        "weatherWithoutAFixOpensTheProvidersDocs()",
+        "weatherWithoutAFixOpensTheProvidersHome()",
         "weatherUrlUsesDotDecimalsInAnyLocale()",
         "healthOpensNavTimelineSteps()",
         "permissionStateMapping()",
@@ -18712,6 +18991,38 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/WeatherModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherModelTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.time.Instant",
+        "java.time.ZoneId",
+        "android.app.Application"
+      ],
+      "symbols": [
+        "entry(time: String, temp: Double, p1: Double? = null, p6: Double? = null)",
+        "body(vararg e: String)",
+        "parsesCurrentRangeHoursAndRainMax()",
+        "fallsBackToSixHourProbability()",
+        "noProbabilityMeansNullNotZero()",
+        "hoursAreLocal()",
+        "brokenBodyIsNull()",
+        "headlineIsDense()",
+        "apiUrlAndUserAgent()",
+        "class WeatherModelTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/onehand/OneHandResolvedTargetTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -18737,6 +19048,32 @@
         "store(slot: String, value: String)",
         "resolved(slot: String)",
         "class OneHandResolvedTargetTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/onehand/StarsComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StarsComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.view.View",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "host(navigate: (String)",
+        "class StarsComposeTest"
       ]
     },
     {
@@ -19791,7 +20128,16 @@
         "android.app.Application",
         "android.widget.FrameLayout",
         "android.widget.ScrollView",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performTouchInput",
+        "androidx.compose.ui.test.swipeDown",
+        "androidx.compose.ui.test.swipeUp",
+        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.superapp.bottomnav.BottomNavTags",
         "com.diegonmarcos.superapp.launcher.Sections",
         "org.junit.Assert.assertEquals",
@@ -19807,8 +20153,38 @@
         "firstId()",
         "islandHeight()",
         "labelCount()",
+        "dropSink()",
         "class ShellBottomNavCollapseTest",
         "class Scroll"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/ShellFxComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShellFxComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.wrapContentSize",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.dp",
+        "androidx.test.core.app.ApplicationProvider",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class ShellFxComposeTest"
       ]
     },
     {
@@ -19866,6 +20242,37 @@
         "distance(a: Color, b: Color)",
         "near(msg: String, expected: Float, actual: Float)",
         "class ShellIslandHarness"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/ShellToolbarComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShellToolbarComposeTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.unit.dp",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "reset()",
+        "show(onMenu: ()",
+        "class ShellToolbarComposeTest"
       ]
     },
     {
@@ -28886,6 +29293,7 @@
       ],
       "symbols": [
         "collapseOnScrollIn(content: ViewGroup)",
+        "onPreScroll( available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource, )",
         "onContentScrolled()",
         "hookScrollables(root: View)",
         "attachCollapse()",
@@ -54612,7 +55020,8 @@
         "android.view.MotionEvent",
         "android.view.View",
         "android.view.ViewGroup",
-        "android.widget.TextView"
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.core.view.ViewCompat"
       ],
       "symbols": [
         "tryAnchor()",
@@ -54642,7 +55051,8 @@
         "android.view.MotionEvent",
         "android.view.View",
         "android.view.ViewGroup",
-        "android.widget.TextView",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.core.view.ViewCompat",
         "com.diegonmarcos.superapp.datamanager.AppUsageProvider"
       ],
       "symbols": [
@@ -55029,7 +55439,8 @@
         "android.app.Activity",
         "android.util.TypedValue",
         "android.view.View",
-        "android.widget.TextView"
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.core.view.ViewCompat"
       ],
       "symbols": [
         "setup()",
@@ -55078,12 +55489,46 @@
         "android.view.MotionEvent",
         "android.view.View",
         "android.view.ViewGroup",
-        "android.widget.TextView"
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.core.view.ViewCompat"
       ],
       "symbols": [
         "setup()",
         "update(currentSection: String)",
         "class SiriusStar"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/launcher-onehand/src/main/java/com/diegonmarcos/superapp/onehand/StarGlyph.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.text.BasicText",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableFloatStateOf",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.Shadow",
+        "androidx.compose.ui.platform.ComposeView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitPalette"
+      ],
+      "symbols": [
+        "bindStar(state: StarGlyphState)",
+        "StarGlyph(s: StarGlyphState)",
+        "class poked",
+        "class StarGlyphState"
       ]
     },
     {
@@ -63756,7 +64201,9 @@
       "role": "kotlin",
       "exports": [
         "KitComposeFragment",
-        "kitComposeView"
+        "kitComposeView",
+        "KitScroll",
+        "KitPage"
       ],
       "imports": [
         "android.content.Context",
@@ -63765,16 +64212,20 @@
         "android.view.View",
         "android.view.ViewGroup",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.input.nestedscroll.nestedScroll",
         "androidx.compose.ui.platform.ComposeView",
         "androidx.compose.ui.platform.ViewCompositionStrategy",
         "androidx.fragment.app.Fragment"
       ],
       "symbols": [
+        "Page()",
         "palette()",
         "Content()",
         "onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?)",
         "kitComposeView(palette: KitPalette, content: @Composable ()",
-        "class KitComposeFragment"
+        "KitPage(content: @Composable ()",
+        "class KitComposeFragment",
+        "class KitScroll"
       ]
     },
     {
