@@ -131,9 +131,8 @@ step_status() {
                 _dig="${_repodig##*@}"   # repo@sha256:… → sha256:…
                 # #358: asked through cloud-ship-registry-digest.sh, and asked
                 # WITH $DEPLOY_HOST, so the question is answered by the VM's own
-                # ghcr pull credential. Three fleet packages are private
-                # (kg-store-binaries, session-memory-binaries,
-                # cf-worker-http-to-wg-public-bridge-binaries); the operator's
+                # ghcr pull credential. Fleet packages can be private
+                # (kg-store-binaries, session-memory-binaries); the operator's
                 # local docker may or may not be logged in to them, so a local
                 # probe made the verdict depend on who happened to run it. The
                 # VM that runs the container can always read the image it
