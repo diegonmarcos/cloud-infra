@@ -101,7 +101,7 @@ if [ -d "$DF_SRC/claude" ]; then
         # renamed on the way in: in the SoT it sits beside settings.base.json /
         # settings.{termux,desktop}.json and needs a distinguishing suffix,
         # while Claude Code will only read `.claude/settings.json`.
-        for _pair in agents:agents mcp-auth-headers.sh:mcp-auth-headers.sh settings.project.json:settings.json; do
+        for _pair in agents:agents mcp-auth-headers.sh:mcp-auth-headers.sh mcp-connect.mjs:mcp-connect.mjs settings.project.json:settings.json; do
             _from="$CLAUDE_SOT/${_pair%%:*}"
             _to="$DF_SRC/claude/${_pair##*:}"
             if [ -d "$_from" ]; then
@@ -181,6 +181,10 @@ for rf in $ROOT_FILES; do
     # sops.yaml lives in its own tier (2_sops/), not under apps/root/.
     [ "$rf" = "sops.yaml" ] && [ -f "$REPO_ROOT/2_sops/sops.yaml" ] && src="$REPO_ROOT/2_sops/sops.yaml"
     _derived="$REPO_ROOT/1_cloud-configs/dist/$rf"
+    # .mcp.json ships the PROJECT shape (owner decision 31: mesh-first stdio
+    # bridge, bearer fallback, no OAuth). dist/mcp.json keeps the url shape that
+    # gen-mcp-tpl.sh derives the user-level client lists from.
+    [ "$rf" = "mcp.json" ] && _derived="$REPO_ROOT/1_cloud-configs/dist/mcp.project.json"
     if [ -f "$_derived" ] && [ -f "$src" ] && ! cmp -s "$_derived" "$src"; then
         cp -f "$_derived" "$src"
         log "root: $rf refreshed from 1_cloud-configs/dist/ (derive is the source of truth)"

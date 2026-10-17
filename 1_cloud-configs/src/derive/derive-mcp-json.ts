@@ -190,8 +190,62 @@ function main(): void {
 
   fs.mkdirSync(DIST_DIR, { recursive: true });
   fs.writeFileSync(OUT_FILE, JSON.stringify(out, null, 2) + '\n');
+  writeProjectMcp(servers);
   console.log(`derive-mcp-json: ${names.length} server(s) → ${OUT_FILE}`);
   if (skipped.length) console.log(`derive-mcp-json: skipped ${skipped.join(', ')}`);
+}
+
+// ── dist/mcp.project.json — what every repo's .mcp.json actually is ─────────
+//
+// OWNER DECISION 31 (2026-10-17): "first use private if a mesh member, then
+// fallback to public using bearer". NO OAuth/DCR. A plain `type: http` entry
+// has no fallback and, with no bearer, Claude Code falls into Dynamic Client
+// Registration and dies on 401 at mcp.diegonmarcos.com/register. So each
+// fleet server becomes a stdio entry running .claude/mcp-connect.mjs, which
+// probes the mesh url (no auth) and otherwise bridges to the public url with
+// `Authorization: Bearer $FLEET_BEARER` (or $AUTHELIA_BEARER_TOKEN, or the
+// vault helper). dist/mcp.json above keeps its url shape: gen-mcp-tpl.sh
+// (cloud-u-linux) derives the user-level client lists from it.
+//
+// One exception, cloud-infra-mcp: it stays on its proven http + static bearer
+// path as the control-plane lifeline (it is how a broken launcher gets fixed).
+// It still carries a bearer, so the guard (test_mcp_json_no_oauth_only.sh)
+// accepts it; what the guard rejects is any http entry WITHOUT Authorization.
+function writeProjectMcp(servers: Record<string, Server>): void {
+  const LIFELINE = new Set(['cloud-infra-mcp']);
+  const AUTH_HOST = 'mcp.diegonmarcos.com';
+  const meshOf: Record<string, string> = {};
+  const project: Record<string, any> = {};
+  for (const [n, e] of Object.entries(servers)) {
+    if (n.endsWith('-mesh')) meshOf[n.slice(0, -5)] = e.url;
+  }
+  for (const n of Object.keys(servers).sort()) {
+    if (n.endsWith('-mesh')) continue;
+    const e = servers[n];
+    if (LIFELINE.has(n)) {
+      project[n] = { type: 'http', url: e.url, headers: { Authorization: 'Bearer ${AUTHELIA_BEARER_TOKEN:-}' },
+                     headersHelper: e.headersHelper ?? 'sh "${CLAUDE_PROJECT_DIR:-.}/.claude/mcp-auth-headers.sh"' };
+      continue;
+    }
+    const isPublic = e.url.startsWith(`https://${AUTH_HOST}/`);
+    // direct_http (mesh-IP) servers: the edge serves /<name>/mcp for those it
+    // routes (cloud-cgc-pvt-mcp: 200) and 404s the rest (cloud-vault-mcp) —
+    // an honest failure, never an OAuth prompt.
+    const mesh = isPublic ? meshOf[n] : e.url;
+    const pub = isPublic ? e.url : `https://${AUTH_HOST}/${n}/mcp`;
+    const args = ['${CLAUDE_PROJECT_DIR:-.}/.claude/mcp-connect.mjs'];
+    if (mesh) args.push('--mesh', mesh);
+    args.push('--public', pub);
+    project[n] = { type: 'stdio', command: 'node', args };
+  }
+  const out = {
+    _warning: 'GENERATED — DO NOT EDIT. Derived by 1_cloud-configs/src/derive/derive-mcp-json.ts (writeProjectMcp) from the same inputs as dist/mcp.json.',
+    _schema: 'mcp-servers/v1',
+    _doc: 'Owner decision 31: mesh first (no auth), else public https://mcp.diegonmarcos.com/<svc>/mcp with Authorization: Bearer $FLEET_BEARER (fallback $AUTHELIA_BEARER_TOKEN). No OAuth/DCR. Set FLEET_BEARER in the Claude Code cloud environment secrets / your shell. Bridge: .claude/mcp-connect.mjs.',
+    mcpServers: project,
+  };
+  fs.writeFileSync(path.join(DIST_DIR, 'mcp.project.json'), JSON.stringify(out, null, 2) + '\n');
+  console.log(`derive-mcp-json: ${Object.keys(project).length} server(s) → dist/mcp.project.json`);
 }
 
 main();

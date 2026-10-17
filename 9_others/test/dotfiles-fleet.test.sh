@@ -109,7 +109,7 @@ n=$(jq '.fleet.repos|length' "$M"); u=$(jq '[.fleet.repos[].dir]|unique|length' 
 [ "$n" -gt 1 ] && [ "$n" = "$u" ] && ok "R1 fleet lists $n distinct repos" || bad "R1 fleet repos missing/duplicated ($n/$u)"
 missing=$(jq -r --slurpfile g "$ROOT/1_cloud-configs/src/inputs/github-repos.json" '[.fleet.repos[].github] - [$g[0].repos[].name] | join(",")' "$M")
 [ -z "$missing" ] && ok "R2 every fleet repo exists on GitHub" || bad "R2 not on GitHub: $missing"
-cmp -s "$ROOT/1_cloud-configs/dist/mcp.json" "$ROOT/0_apps/dist/dotfiles/root/mcp.json" && ok "R3 shipped .mcp.json IS the deriver's output" || bad "R3 0_apps/dist/dotfiles/root/mcp.json differs from 1_cloud-configs/dist/mcp.json — run build.sh dotfiles"
+cmp -s "$ROOT/1_cloud-configs/dist/mcp.project.json" "$ROOT/0_apps/dist/dotfiles/root/mcp.json" && ok "R3 shipped .mcp.json IS the deriver's output" || bad "R3 0_apps/dist/dotfiles/root/mcp.json differs from 1_cloud-configs/dist/mcp.project.json — run build.sh dotfiles"
 jq -e '.mcpServers|has("cloud-infra-mcp") and has("cloud-services-mcp") and (length>=11)' "$ROOT/0_apps/dist/dotfiles/root/mcp.json" >/dev/null && ok "R4 shipped .mcp.json has the full list incl. cloud-infra-mcp" || bad "R4 shipped .mcp.json lacks cloud-infra-mcp/cloud-services-mcp or has <11 servers"
 [ -x "$ROOT/0_apps/dist/dotfiles/claude/mcp-auth-headers.sh" ] && ok "R5 the headersHelper ships with the dotfiles" || bad "R5 mcp-auth-headers.sh missing/not executable in dist"
 
