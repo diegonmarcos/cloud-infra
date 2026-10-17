@@ -114,8 +114,47 @@ permissions:
   actions: write
 
 jobs:
+  # YIELD TO A SHIP IN FLIGHT (2026-10-17)
+  #
+  # The reconcile job below takes a place in the fleet-wide ship-wg-runner FIFO. A
+  # Ship's per-VM deploy jobs re-enter that FIFO one after another (max-parallel 1), so
+  # every reconcile that queues while a Ship is running lands AHEAD of that Ship's next
+  # deploy job, and each cancel of a queued reconcile makes `requeue` dispatch another
+  # (observed: Ship 38998754151's oci-analytics deploy waited ~20 min behind a scheduled
+  # reconcile, and cancelling that reconcile spawned the next one).
+  #
+  # A reconcile queued DURING a Ship is redundant anyway: it recomputes drift against
+  # HEAD, and a Ship that does not end green triggers its own workflow_run reconcile
+  # afterwards (see `on.workflow_run` above), so the last word is always computed after
+  # the Ship finished. So: no group, no WG, a one-API-call probe -- and if a Ship is
+  # queued or running, the reconcile job is SKIPPED instead of queueing. A human
+  # workflow_dispatch always runs (the operator asked for it). If the probe cannot
+  # answer, it fails open: reconcile proceeds exactly as before.
+  yield-to-ship:
+    name: Yield to a Ship in flight
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: read
+    outputs:
+      ship_active: ${{ steps.probe.outputs.ship_active }}
+    steps:
+      - id: probe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          active="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/ship.yml/runs?per_page=30" \
+                      --jq '[.workflow_runs[] | select(.status != "completed")] | length' 2>/dev/null)"
+          case "$active" in
+            ''|*[!0-9]*) echo "ship_active=false" >> "$GITHUB_OUTPUT"; echo "::notice::could not list Ship runs; not yielding" ;;
+            0)           echo "ship_active=false" >> "$GITHUB_OUTPUT" ;;
+            *)           echo "ship_active=true"  >> "$GITHUB_OUTPUT"; echo "::notice::$active Ship run(s) queued or running; reconcile yields (the post-Ship reconcile covers any drift)" ;;
+          esac
+
   reconcile:
     name: Reconcile fleet against registry
+    needs: yield-to-ship
     runs-on: ubuntu-latest
 
     # This job SSHes every VM over the mesh as 10.0.0.200, so it takes the
@@ -148,11 +187,12 @@ jobs:
     # #842: only a completed *Ship* chains a reconcile; home-manager
     # completions are handled by requeue-evicted-run.
     if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.name == 'Ship' &&
-       (github.event.workflow_run.conclusion == 'cancelled' ||
-        (github.event.workflow_run.conclusion == 'failure' &&
-         github.event.workflow_run.event != 'workflow_dispatch')))
+      (github.event_name == 'workflow_dispatch' || needs.yield-to-ship.outputs.ship_active != 'true') &&
+      (github.event_name != 'workflow_run' ||
+       (github.event.workflow_run.name == 'Ship' &&
+        (github.event.workflow_run.conclusion == 'cancelled' ||
+         (github.event.workflow_run.conclusion == 'failure' &&
+          github.event.workflow_run.event != 'workflow_dispatch'))))
 
     # Probing, not building. Four SSH round-trips plus a handful of registry
     # HEADs is a ~2 minute job; 30 minutes is a generous hang ceiling and keeps
