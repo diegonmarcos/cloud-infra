@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21579,
+    "files": 21586,
     "by_lang": {
-      "sh": 483,
+      "sh": 485,
       "py": 138,
-      "kotlin": 11275,
+      "kotlin": 11280,
       "java": 630,
       "ts": 8461,
       "nix": 30,
@@ -18,14 +18,14 @@
       "rust": 89
     },
     "by_role": {
-      "shell": 372,
+      "shell": 374,
       "script": 235,
       "java": 629,
       "entrypoint": 23,
       "module": 6410,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11272,
+      "kotlin": 11277,
       "python": 45,
       "rust-module": 89,
       "file": 2271,
@@ -6171,6 +6171,18 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp-mcp/test/test-superapp-hosts.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/androidTest/java/com/diegonmarcos/superapp/AbiUpdateTagTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -11257,6 +11269,7 @@
       "imports": [
         "android.os.Bundle",
         "android.view.View",
+        "android.webkit.WebSettings",
         "android.webkit.WebView",
         "android.webkit.WebViewClient",
         "androidx.activity.OnBackPressedCallback",
@@ -11267,9 +11280,7 @@
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.shape.CircleShape",
-        "androidx.compose.material3.ExperimentalMaterial3Api",
         "androidx.compose.material3.Icon",
-        "androidx.compose.material3.pulltorefresh.PullToRefreshBox",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
@@ -11278,6 +11289,7 @@
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.input.nestedscroll.nestedScroll",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.painterResource",
         "androidx.compose.ui.res.stringResource",
@@ -11291,6 +11303,8 @@
       "symbols": [
         "handleOnBackPressed()",
         "palette()",
+        "loadFresh(w: WebView, target: String)",
+        "onResume()",
         "onViewCreated(view: View, savedInstanceState: Bundle?)",
         "Content()",
         "onPageFinished(view: WebView?, url: String?)",
@@ -11302,6 +11316,9 @@
         "isPublicHost(host: String)",
         "sameSite(declared: String, target: String)",
         "newInstance(url: String)",
+        "PullDownToRefresh( modifier: Modifier, refreshing: Boolean, onRefresh: ()",
+        "onPostScroll( consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource, )",
+        "onPreFling(available: androidx.compose.ui.unit.Velocity)",
         "class WebPageFragment"
       ]
     },
@@ -15958,6 +15975,7 @@
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.graphics.Path",
         "androidx.compose.ui.graphics.StrokeCap",
+        "androidx.compose.ui.graphics.toArgb",
         "androidx.compose.ui.graphics.drawscope.Stroke",
         "androidx.compose.ui.graphics.drawscope.clipPath",
         "androidx.compose.ui.graphics.drawscope.rotate",
@@ -15969,8 +15987,7 @@
         "kotlin.math.PI",
         "kotlin.math.absoluteValue",
         "kotlin.math.min",
-        "kotlin.math.sin",
-        "kotlin.random.Random"
+        "kotlin.math.sin"
       ],
       "symbols": [
         "refresh(ctx: Context)",
@@ -15979,6 +15996,7 @@
         "GalaxyBackdrop(modifier: Modifier = Modifier.fillMaxSize()",
         "IslandWave(modifier: Modifier = Modifier.fillMaxSize()",
         "PrismaticShimmer(modifier: Modifier = Modifier.fillMaxSize()",
+        "createShader(size: Size)",
         "WaveLine(modifier: Modifier = Modifier.fillMaxSize()",
         "DynamicIsland(onTap: ()",
         "class ShellFxState",
@@ -18198,6 +18216,40 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/WebPagesLoadTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebPagesLoadTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.webkit.WebSettings",
+        "android.webkit.WebView",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.fragment.app.Fragment",
+        "androidx.lifecycle.Lifecycle",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "declared(id: String)",
+        "pageFor(id: String)",
+        "webViewOf(root: View)",
+        "shown(id: String)",
+        "class WebPagesLoadTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/mail/MailAuthHttpTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20141,6 +20193,43 @@
         "capsuleProbe(bmp: Bitmap, id: String)",
         "inkPixels(bmp: Bitmap, box: Rect, ink: Color)",
         "class BottomNavSelectedPillTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/ui/IslandBordersTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IslandBordersTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.wrapContentSize",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.media.MusicIsland",
+        "com.diegonmarcos.superapp.media.MusicIslandState",
+        "com.diegonmarcos.superapp.media.NowPlayingLine",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "paint()",
+        "twice(content: @androidx.compose.runtime.Composable ()",
+        "mask(b: Bitmap, w: Int, h: Int)",
+        "class IslandBordersTest"
       ]
     },
     {
@@ -30300,6 +30389,7 @@
         "fillPage(done: (String?)",
         "chooserFill(choice: AcChoice)",
         "chooserDismiss()",
+        "thenVault(fieldId: Int)",
         "askVault(fieldId: Int)",
         "onFramework(o: JSONObject)",
         "mergeFromVault(h: AcAndroid.Holder, f: Form, values: Map<Int, String>)",
@@ -30311,8 +30401,7 @@
         "refresh()",
         "focus(json: String?)",
         "none(json: String?)",
-        "submitted(json: String?)",
-        "framework(json: String?)"
+        "submitted(json: String?)"
       ]
     },
     {
@@ -30582,7 +30671,9 @@
         "AcKeyProvider",
         "AcSecretsJson",
         "AcCardFormat",
-        "AcUnlockWindow"
+        "AcUnlockWindow",
+        "AcFillStep",
+        "AcFillOrder"
       ],
       "imports": [
         "org.json.JSONArray",
@@ -30619,6 +30710,8 @@
         "open(nowMs: Long)",
         "isOpen(nowMs: Long)",
         "lock()",
+        "steps(localPicked: Boolean, vault: AcVaultState, incognito: Boolean = false)",
+        "finalValue(local: String?, vault: String?)",
         "class AcSource",
         "class AcLogin",
         "class AcCard",
@@ -30631,9 +30724,7 @@
         "class AcVaultState",
         "class AcSealedBox",
         "class AcKeyProvider",
-        "class AcSecretsJson",
-        "class AcCardFormat",
-        "class AcUnlockWindow"
+        "class AcSecretsJson"
       ]
     },
     {
@@ -30675,6 +30766,7 @@
         "com.diegonmarcos.superapp.uikit.KitConfirmDialog",
         "com.diegonmarcos.superapp.uikit.KitListRow",
         "com.diegonmarcos.superapp.uikit.KitSectionHeader",
+        "com.diegonmarcos.superapp.uikit.KitSwitchRow",
         "com.diegonmarcos.superapp.uikit.KitState",
         "com.diegonmarcos.superapp.uikit.KitStatusBanner",
         "com.diegonmarcos.superapp.uikit.LocalKitPalette"
@@ -30683,7 +30775,7 @@
         "AcSitesSection( entries: List<AcMemoryEntry>, onlyOrigin: String? = null, onForget: (String)",
         "AcPasswordsSection( logins: List<AcLogin>, unreadable: Int, available: Boolean, onSave: (AcLogin)",
         "AcCardsSection( cards: List<AcCard>, unreadable: Int, available: Boolean, onSave: (AcCard)",
-        "AcVaultSection(state: AcVaultState, localCount: Int, vaultCount: Int)",
+        "AcVaultSection( state: AcVaultState, localCount: Int, vaultCount: Int, onUseVault: ((Boolean)",
         "AcSitePage( entries: List<AcMemoryEntry>, origin: String, onForget: (String)"
       ]
     },
@@ -30838,6 +30930,59 @@
         "parse(arr: JSONArray?)",
         "class BrowserAddon",
         "class BrowserAddons"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/BrowserAddressOverlay.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserAddressOverlay"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.text.KeyboardActions",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.focus.FocusRequester",
+        "androidx.compose.ui.focus.focusRequester",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalClipboardManager",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.AnnotatedString",
+        "androidx.compose.ui.text.TextRange",
+        "androidx.compose.ui.text.input.ImeAction",
+        "androidx.compose.ui.text.input.KeyboardType",
+        "androidx.compose.ui.text.input.TextFieldValue",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette"
+      ],
+      "symbols": [
+        "BrowserAddressOverlay( title: String, url: String, hint: String, state: SuggestState, onQuery: (String)"
       ]
     },
     {
@@ -68997,6 +69142,31 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/AcFillOrderTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AcFillOrderTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.AcFillOrder",
+        "com.diegonmarcos.superapp.browser.AcFillStep",
+        "com.diegonmarcos.superapp.browser.AcLogin",
+        "com.diegonmarcos.superapp.browser.AcSite",
+        "com.diegonmarcos.superapp.browser.AcSource",
+        "com.diegonmarcos.superapp.browser.AcVaultItem",
+        "com.diegonmarcos.superapp.browser.AcVaultMerge",
+        "com.diegonmarcos.superapp.browser.AcVaultState",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class AcFillOrderTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/AcNoSecretLogTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -69289,6 +69459,47 @@
       ],
       "symbols": [
         "class BrowserAddonsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserAddressOverlayUiTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserAddressOverlayUiTest"
+      ],
+      "imports": [
+        "android.content.ClipboardManager",
+        "android.content.ComponentName",
+        "android.content.Context",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.ui.semantics.SemanticsProperties",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "com.diegonmarcos.superapp.browser.BrowserAddressOverlay",
+        "com.diegonmarcos.superapp.browser.SuggestState",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "show()",
+        "fieldText()",
+        "class BrowserAddressOverlayUiTest"
       ]
     },
     {
@@ -70292,6 +70503,18 @@
         "_red()",
         "_green()",
         "_applied()"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/test/test-browser-no-secret-logs.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "scan()"
+      ],
+      "imports": [],
+      "symbols": [
+        "scan()"
       ]
     },
     {

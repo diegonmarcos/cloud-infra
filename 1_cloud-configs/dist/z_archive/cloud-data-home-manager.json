@@ -237,7 +237,8 @@
             "vault_id_rsa.pub",
             "google_compute_engine",
             "google_compute_engine.pub"
-          ]
+          ],
+          "extra_hosts": []
         },
         {
           "name": "cloud-infra-mcp",
@@ -248,7 +249,8 @@
             "vault_id_rsa.pub",
             "google_compute_engine",
             "google_compute_engine.pub"
-          ]
+          ],
+          "extra_hosts": []
         },
         {
           "name": "cloud-mail-mcp",
@@ -257,7 +259,8 @@
           "keys": [
             "vault_id_rsa",
             "vault_id_rsa.pub"
-          ]
+          ],
+          "extra_hosts": []
         },
         {
           "name": "cloud-superapp-mcp",
@@ -266,6 +269,36 @@
           "keys": [
             "vault_id_rsa",
             "vault_id_rsa.pub"
+          ],
+          "extra_hosts": [
+            {
+              "host": "phone",
+              "hostname": "10.0.0.9",
+              "user": "nix-on-droid",
+              "port": 8024,
+              "identity_file": "~/.ssh/vault_id_rsa"
+            },
+            {
+              "host": "phone-v6",
+              "hostname": "fd0c:1d00::9",
+              "user": "nix-on-droid",
+              "port": 8024,
+              "identity_file": "~/.ssh/vault_id_rsa"
+            },
+            {
+              "host": "phone-termux",
+              "hostname": "10.0.0.9",
+              "user": "termux",
+              "port": 8023,
+              "identity_file": "~/.ssh/vault_id_rsa"
+            },
+            {
+              "host": "phone-termux-v6",
+              "hostname": "fd0c:1d00::9",
+              "user": "termux",
+              "port": 8023,
+              "identity_file": "~/.ssh/vault_id_rsa"
+            }
           ]
         },
         {
@@ -277,7 +310,8 @@
             "vault_id_rsa.pub",
             "google_compute_engine",
             "google_compute_engine.pub"
-          ]
+          ],
+          "extra_hosts": []
         }
       ]
     },
