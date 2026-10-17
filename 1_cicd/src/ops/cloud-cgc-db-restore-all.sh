@@ -322,10 +322,39 @@ cleanup() {
   CURRENT_CID=""
   [ -n "$CURRENT_IMG" ] && docker rmi "$CURRENT_IMG" >/dev/null 2>&1
   CURRENT_IMG=""
-  [ -n "${STAGING:-}" ] && [ -d "$STAGING" ] && rm -rf "$STAGING" 2>/dev/null
+  if [ -n "${STAGING:-}" ] && [ -d "$STAGING" ]; then
+    rm -rf "$STAGING" 2>/dev/null
+    # A file the host user cannot unlink (uid from an image layer) must not
+    # leave a multi-GB orphan behind: retry as root in a throwaway container.
+    if [ -d "$STAGING" ]; then
+      docker run --rm -v "$STAGING_PARENT:/p" busybox rm -rf "/p/$(basename "$STAGING")" >/dev/null 2>&1 || true
+    fi
+  fi
   return 0
 }
+# EXIT alone is not enough: POSIX sh does NOT run the EXIT trap when the job is
+# killed by a signal (GHA cancel / timeout sends SIGTERM over the SSH session).
+# Each such kill left a 1-4GB cgc-db-staging.* orphan in ~/.cache — 11GB of them
+# on oci-apps by 2026-10-17. Trap the signals, clean up, and exit non-zero.
 trap cleanup EXIT
+trap 'cleanup; trap - EXIT; exit 130' INT
+trap 'cleanup; trap - EXIT; exit 143' TERM
+trap 'cleanup; trap - EXIT; exit 129' HUP
+
+# Sweep orphans of earlier runs that died before any trap could fire (SIGKILL,
+# VM reset). Only siblings older than a day, and only when no process has them
+# as cwd or holds a file in them, so a concurrent run's staging is never hit.
+for _old in "$STAGING_PARENT"/cgc-db-staging.*; do
+  [ -d "$_old" ] && [ "$_old" != "$STAGING" ] || continue
+  [ -n "$(find "$_old" -maxdepth 0 -mmin +1440 2>/dev/null)" ] || continue
+  _held=0
+  for _l in /proc/[0-9]*/cwd /proc/[0-9]*/fd/*; do
+    case "$(readlink "$_l" 2>/dev/null)" in "$_old"|"$_old"/*) _held=1; break;; esac
+  done
+  [ "$_held" = 0 ] || continue
+  echo "[cgc-db-restore-all] removing stale staging orphan $_old ($(du -sh "$_old" 2>/dev/null | cut -f1))"
+  rm -rf "$_old" 2>/dev/null || docker run --rm -v "$STAGING_PARENT:/p" busybox rm -rf "/p/$(basename "$_old")" >/dev/null 2>&1 || true
+done
 
 # Extract one already-pulled image's /octocode-db/. into STAGING. Always
 # removes the throwaway container (including on a failed `docker cp`, via
