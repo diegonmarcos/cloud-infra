@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21809,
+    "files": 21839,
     "by_lang": {
-      "sh": 527,
+      "sh": 530,
       "py": 148,
-      "kotlin": 11422,
+      "kotlin": 11449,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -18,14 +18,14 @@
       "rust": 107
     },
     "by_role": {
-      "shell": 416,
+      "shell": 419,
       "script": 241,
       "java": 634,
       "entrypoint": 23,
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11419,
+      "kotlin": 11446,
       "python": 49,
       "rust-module": 107,
       "file": 2273,
@@ -24407,6 +24407,22 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/lib-apks/test/test-git-sync-engine.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "_code()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "_code()"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/lib-apks/test/test-lib-apk-label.sh",
       "lang": "sh",
       "role": "shell",
@@ -24444,6 +24460,34 @@
       "imports": [],
       "symbols": [
         "goldens()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/lib-apks/test/test-mounts-engine.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/lib-apks/test/test-rclone-engine.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()"
       ]
     },
     {
@@ -40647,63 +40691,89 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitAuthChain.kt",
+      "path": "ab_cloud-libs-shared/libs/git-sync-engine/src/main/java/com/diegonmarcos/cloudlib/gitsync/engine/GitCalls.kt",
       "lang": "kotlin",
       "role": "kotlin",
-      "exports": [
-        "GitAuthChain"
+      "exports": [],
+      "imports": [
+        "com.diegonmarcos.cloudlib.gitsync.ConflictSide",
+        "com.diegonmarcos.cloudlib.gitsync.GitAuth",
+        "com.diegonmarcos.cloudlib.gitsync.GitBranchInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitCommitInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitOpResult",
+        "com.diegonmarcos.cloudlib.gitsync.GitRemoteInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitStatusSnapshot",
+        "com.diegonmarcos.cloudlib.gitsync.GitWire",
+        "kotlinx.serialization.KSerializer",
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.util.UUID",
+        "java.util.concurrent.ConcurrentHashMap"
       ],
-      "imports": [],
       "symbols": [
-        "toString()",
-        "narrative()",
-        "resolve( chain: List<Rung>, store: GitCredentialStore?, credentialId: String, )",
-        "rungs( declared: List<Pair<String, String>>, implementations: Map<String, ()",
-        "class GitAuthChain",
-        "class Answer",
-        "class Credential",
-        "class Served",
-        "class Unreachable",
-        "class Declined",
-        "class NoImplementation",
-        "class holds",
-        "class Rung",
-        "class Result",
-        "class Step",
-        "class Outcome"
+        "info()",
+        "git(req: JSONObject)",
+        "chunk(req: JSONObject)",
+        "enc(s: KSerializer<T>, v: T)",
+        "execute(verb: String, dir: File, a: JSONObject, auth: GitAuth)",
+        "strings(a: JSONObject, key: String)",
+        "fail(why: String)",
+        "touchesSharedStorage(dir: File)",
+        "knownHostsIfChanged()",
+        "delete()",
+        "ownerOnly(f: File, directory: Boolean = false)",
+        "class GitCalls",
+        "class AuthFiles"
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitCredentialStore.kt",
+      "path": "ab_cloud-libs-shared/libs/git-sync-engine/src/main/java/com/diegonmarcos/cloudlib/gitsync/engine/GitSyncEngineService.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "GitCredentialStore"
+        "GitSyncEngineService"
       ],
       "imports": [
+        "android.app.Service",
         "android.content.Context",
-        "android.content.SharedPreferences",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Environment",
+        "android.os.IBinder",
+        "com.diegonmarcos.cloudlib.gitsync.IGitSyncEngine",
+        "org.json.JSONObject",
         "java.io.File"
       ],
       "symbols": [
-        "setSecret(repoId: String, secret: String)",
-        "clear(repoId: String)",
-        "hasSecret(repoId: String)",
-        "rekey(from: String, to: String)",
-        "authFor(repo: ManagedRepo)",
-        "class GitCredentialStore"
+        "methodNames()",
+        "dispatch(method: String, request: String)",
+        "calls()",
+        "call(method: String?, request: String?)",
+        "methods()",
+        "onBind(intent: Intent?)",
+        "calls(context: Context)",
+        "class GitSyncEngineService",
+        "class EngineState"
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitEngine.kt",
+      "path": "ab_cloud-libs-shared/libs/git-sync-engine/src/main/java/com/diegonmarcos/cloudlib/gitsync/engine/JGitEngine.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "GitEngine"
+        "JGitEngine"
       ],
       "imports": [
+        "com.diegonmarcos.cloudlib.gitsync.ConflictSide",
+        "com.diegonmarcos.cloudlib.gitsync.GitAuth",
+        "com.diegonmarcos.cloudlib.gitsync.GitBranchInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitChange",
+        "com.diegonmarcos.cloudlib.gitsync.GitCommitInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitFileStatus",
+        "com.diegonmarcos.cloudlib.gitsync.GitOpResult",
+        "com.diegonmarcos.cloudlib.gitsync.GitRemoteInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitStatusSnapshot",
         "com.jcraft.jsch.JSch",
         "com.jcraft.jsch.Session",
         "java.io.ByteArrayOutputStream",
@@ -40770,7 +40840,252 @@
         "createDefaultJSch(fs: FS)",
         "sessionCallback(auth: GitAuth.Session)",
         "httpsCredentials(username: String, secret: String)",
+        "class JGitEngine"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync-engine/src/test/java/com/diegonmarcos/cloudlib/gitsync/engine/GitCallsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitCallsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.gitsync.GitAuth",
+        "com.diegonmarcos.cloudlib.gitsync.GitBranchInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitCommitInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitOpResult",
+        "com.diegonmarcos.cloudlib.gitsync.GitStatusSnapshot",
+        "com.diegonmarcos.cloudlib.gitsync.GitWire",
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.io.File",
+        "java.nio.file.Files"
+      ],
+      "symbols": [
+        "setUp()",
+        "tearDown()",
+        "calls(access: Boolean = true)",
+        "req(dir: File, verb: String, args: JSONObject = JSONObject()",
+        "ok(answer: String)",
+        "anInitStageCommitStatusRoundTripAnswersTheModels()",
+        "aPushOverFileCarriesTheRemoteAndTheResultModel()",
+        "aSessionAndAHttpsAuthReachTheEngineAsTheModelsTheJgitEngineTakes()",
+        "anSshKeyBecomesPrivateFilesForOneCallAndAnExtendedKnownHostsComesBack()",
+        "aMissingSshKeyIsASentenceOnTheClientSide()",
+        "aLongDiffComesBackInChunksThatJoinToTheWhole()",
+        "anUnknownVerbIsRefusedAndNamesTheOnesItRuns()",
+        "aSharedStorageRepositoryWithoutAllFilesAccessSaysWhatToGrant()",
+        "aFailingVerbAnswersItsMessageNotACrash()",
+        "infoNamesTheVersionAndTheGrant()",
+        "class GitCallsTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync-engine/src/test/java/com/diegonmarcos/cloudlib/gitsync/engine/JGitEngineTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "JGitEngineTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.gitsync.ConflictSide",
+        "com.diegonmarcos.cloudlib.gitsync.GitAuth",
+        "com.diegonmarcos.cloudlib.gitsync.GitChange",
+        "com.diegonmarcos.cloudlib.gitsync.GitFileStatus",
+        "java.io.File",
+        "java.nio.file.Files",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "write(dir: File, path: String, text: String)",
+        "setUp()",
+        "tearDown()",
+        "initIsARepositoryAndStatusStartsClean()",
+        "untrackedThenStagedThenCommittedThenModified()",
+        "deletedFileIsStagedAsDeletionAndDiscardRestores()",
+        "untrackedDiffShowsWholeFileAndCommitDiffAgainstParentAndEmptyTree()",
+        "amendRewritesTheTip()",
+        "remotesAreListedAddedRenamedAndRemoved()",
+        "pushSetsUpstreamThenPullAndFetchTrackAheadBehind()",
+        "conflictSurfacesInStatusAndResolvesOursOrTheirs()",
+        "syncCommitsPullsAndPushesInOneTap()",
+        "forcePushOverwritesTheRemoteAndForcePullOverwritesTheLocalSide()",
+        "sessionAuthNeverPrintsItsValueAndOnlyTouchesHttpTransports()",
+        "branchesAreReadOnlyByConstruction()",
+        "class JGitEngineTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitAuthChain.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitAuthChain"
+      ],
+      "imports": [],
+      "symbols": [
+        "toString()",
+        "narrative()",
+        "resolve( chain: List<Rung>, store: GitCredentialStore?, credentialId: String, )",
+        "rungs( declared: List<Pair<String, String>>, implementations: Map<String, ()",
+        "class GitAuthChain",
+        "class Answer",
+        "class Credential",
+        "class Served",
+        "class Unreachable",
+        "class Declined",
+        "class NoImplementation",
+        "class holds",
+        "class Rung",
+        "class Result",
+        "class Step",
+        "class Outcome"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitCredentialStore.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitCredentialStore"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "androidx.security.crypto.EncryptedSharedPreferences",
+        "androidx.security.crypto.MasterKey",
+        "java.io.File"
+      ],
+      "symbols": [
+        "setSecret(repoId: String, secret: String)",
+        "clear(repoId: String)",
+        "hasSecret(repoId: String)",
+        "rekey(from: String, to: String)",
+        "authFor(repo: ManagedRepo)",
+        "class GitCredentialStore"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitEngine.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitEngine"
+      ],
+      "imports": [
+        "java.io.File",
+        "java.io.IOException",
+        "kotlinx.serialization.KSerializer",
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "close()",
+        "status()",
+        "stage(paths: Collection<String>)",
+        "stageAll()",
+        "unstage(paths: Collection<String>)",
+        "unstageAll()",
+        "discard(path: String)",
+        "commit(message: String, authorName: String, authorEmail: String, amend: Boolean = false)",
+        "push(remote: String = \"origin\", auth: GitAuth = GitAuth.None)",
+        "fetch(remote: String = \"origin\", auth: GitAuth = GitAuth.None)",
+        "forcePush(remote: String = \"origin\", auth: GitAuth = GitAuth.None)",
+        "forcePull(remote: String = \"origin\", auth: GitAuth = GitAuth.None)",
+        "pull(remote: String = \"origin\", rebase: Boolean = true, auth: GitAuth = GitAuth.None)",
+        "sync(message: String, authorName: String, authorEmail: String, remote: String = \"origin\", rebase: Boolean = true, auth: GitAuth = GitAuth.None)",
+        "branches()",
+        "log(max: Int = 100, path: String? = null)",
+        "diff(path: String? = null, staged: Boolean = false)",
+        "commitDiff(sha: String)",
+        "remotes()",
+        "addRemote(name: String, url: String)",
+        "removeRemote(name: String)",
+        "setRemoteUrl(name: String, url: String, push: Boolean = false)",
+        "resolve(path: String, side: ConflictSide)",
+        "markResolved(path: String)",
+        "abortMerge()",
+        "op(verb: String, remote: String, auth: GitAuth, extra: JSONObject = JSONObject()",
+        "paths(key: String, paths: Collection<String>)",
+        "decode(serializer: KSerializer<T>, text: String)",
+        "call(verb: String, args: JSONObject = JSONObject()",
+        "keepKnownHosts(auth: GitAuth, answer: JSONObject)",
+        "isRepository(dir: File)",
+        "init(transport: GitTransport, dir: File)",
+        "clone(transport: GitTransport, url: String, dir: File, auth: GitAuth = GitAuth.None, depth: Int = 0)",
         "class GitEngine"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitEngines.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitEngine",
+        "init",
+        "clone"
+      ],
+      "imports": [
+        "android.content.Context",
+        "java.io.File"
+      ],
+      "symbols": [
+        "GitEngine(context: Context, workTree: File)",
+        "init(context: Context, dir: File)",
+        "clone(context: Context, url: String, dir: File, auth: GitAuth = GitAuth.None, depth: Int = 0)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitLink.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitLink"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.ServiceConnection",
+        "android.content.pm.PackageManager",
+        "android.content.pm.ServiceInfo",
+        "android.os.IBinder",
+        "org.json.JSONObject",
+        "java.io.IOException",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "unavailable()",
+        "resolve(ctx: Context)",
+        "session()",
+        "git(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "close()",
+        "ask(method: String, request: JSONObject)",
+        "onServiceConnected(name: ComponentName?, binder: IBinder?)",
+        "onServiceDisconnected(name: ComponentName?)",
+        "release(ctx: Context)",
+        "class GitLink",
+        "class Conn"
       ]
     },
     {
@@ -40818,6 +41133,7 @@
         "GitSyncScreen"
       ],
       "imports": [
+        "android.content.Context",
         "androidx.compose.foundation.background",
         "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.horizontalScroll",
@@ -40856,8 +41172,7 @@
         "androidx.compose.material3.Icon",
         "androidx.compose.material3.IconButton",
         "androidx.compose.material3.ListItem",
-        "androidx.compose.material3.MaterialTheme",
-        "androidx.compose.material3.ModalBottomSheet"
+        "androidx.compose.material3.MaterialTheme"
       ],
       "symbols": [
         "GitSyncScreen( target: String?, onOpenFile: (String)",
@@ -40876,6 +41191,44 @@
         "SettingsTab(repo: ManagedRepo, credentials: GitCredentialStore, onSave: (ManagedRepo)",
         "class RepoGlance",
         "class RepoSession"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitTransport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitTransport"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "unavailable()",
+        "session()",
+        "git(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "close()",
+        "class GitTransport",
+        "class Session"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/main/java/com/diegonmarcos/cloudlib/gitsync/GitWire.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitWire"
+      ],
+      "imports": [
+        "java.io.File",
+        "kotlinx.serialization.json.Json",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "request(dir: File, verb: String, args: JSONObject = JSONObject()",
+        "authToJson(auth: GitAuth, readText: (String)",
+        "class GitWire"
       ]
     },
     {
@@ -40922,41 +41275,48 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/git-sync/src/test/java/com/diegonmarcos/cloudlib/gitsync/GitEngineTest.kt",
+      "path": "ab_cloud-libs-shared/libs/git-sync/src/test/java/com/diegonmarcos/cloudlib/gitsync/GitEngineClientTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "GitEngineTest"
+        "GitEngineClientTest"
       ],
       "imports": [
-        "java.io.File",
-        "java.nio.file.Files",
-        "org.junit.After",
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONObject",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertFalse",
-        "org.junit.Assert.assertNotNull",
         "org.junit.Assert.assertNull",
         "org.junit.Assert.assertTrue",
         "org.junit.Before",
-        "org.junit.Test"
+        "org.junit.Test",
+        "java.io.File",
+        "java.io.IOException",
+        "java.nio.file.Files",
+        "java.util.concurrent.CopyOnWriteArrayList"
       ],
       "symbols": [
-        "write(dir: File, path: String, text: String)",
         "setUp()",
-        "tearDown()",
-        "initIsARepositoryAndStatusStartsClean()",
-        "untrackedThenStagedThenCommittedThenModified()",
-        "deletedFileIsStagedAsDeletionAndDiscardRestores()",
-        "untrackedDiffShowsWholeFileAndCommitDiffAgainstParentAndEmptyTree()",
-        "amendRewritesTheTip()",
-        "remotesAreListedAddedRenamedAndRemoved()",
-        "pushSetsUpstreamThenPullAndFetchTrackAheadBehind()",
-        "conflictSurfacesInStatusAndResolvesOursOrTheirs()",
-        "syncCommitsPullsAndPushesInOneTap()",
-        "forcePushOverwritesTheRemoteAndForcePullOverwritesTheLocalSide()",
-        "sessionAuthNeverPrintsItsValueAndOnlyTouchesHttpTransports()",
-        "branchesAreReadOnlyByConstruction()",
-        "class GitEngineTest"
+        "unavailable()",
+        "session()",
+        "ask(method: String, request: JSONObject)",
+        "git(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "close()",
+        "ok(result: String = \"\")",
+        "engine(t: GitTransport)",
+        "aStatusIsOneGitCallForTheRepositoryAndDecodesTheSnapshot()",
+        "everyVerbTheScreensCallIsOneTheEngineRuns()",
+        "argumentsTravelAsNamedFields()",
+        "anHttpsTokenAndASessionTravelWithTheCallAndNothingElseDoes()",
+        "anSshKeyTravelsAsTextAndAnExtendedKnownHostsIsWrittenBack()",
+        "aLongResultIsReassembledFromItsChunks()",
+        "anEngineRefusalIsAnIOExceptionWithItsSentence()",
+        "noEngineInstalledIsASentenceNotACrash()",
+        "anEmptyCommitMessageNeverLeavesTheApp()",
+        "isRepositoryIsAPlainFileCheck()",
+        "class GitEngineClientTest",
+        "class Fake"
       ]
     },
     {
@@ -61606,29 +61966,40 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/MountCredentialStore.kt",
+      "path": "ab_cloud-libs-shared/libs/mounts-engine/src/main/java/com/diegonmarcos/cloudlib/mounts/engine/MountCalls.kt",
       "lang": "kotlin",
       "role": "kotlin",
-      "exports": [
-        "MountCredentialStore"
-      ],
+      "exports": [],
       "imports": [
-        "android.content.Context",
-        "android.content.SharedPreferences",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
-        "java.io.File"
+        "com.diegonmarcos.cloudlib.mounts.MountSecret",
+        "com.diegonmarcos.cloudlib.mounts.MountSpec",
+        "com.diegonmarcos.cloudlib.mounts.MountWire",
+        "com.diegonmarcos.cloudlib.mounts.RemoteEntry",
+        "com.diegonmarcos.cloudlib.mounts.RemoteFs",
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.util.UUID",
+        "java.util.concurrent.ConcurrentHashMap"
       ],
       "symbols": [
-        "set(id: String, secret: String)",
-        "clear(id: String)",
-        "has(id: String)",
-        "secretFor(m: MountSpec)",
-        "class MountCredentialStore"
+        "info()",
+        "open(req: JSONObject)",
+        "fs(req: JSONObject)",
+        "chunk(req: JSONObject)",
+        "close(req: JSONObject)",
+        "reap()",
+        "text(req: JSONObject, key: String)",
+        "fail(why: String)",
+        "ownerOnly(f: File, directory: Boolean = false)",
+        "touchesSharedStorage(f: File)",
+        "class keeps",
+        "class MountCalls",
+        "class Entry"
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/MountEngines.kt",
+      "path": "ab_cloud-libs-shared/libs/mounts-engine/src/main/java/com/diegonmarcos/cloudlib/mounts/engine/MountEngines.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
@@ -61639,6 +62010,12 @@
         "MountFsFactory"
       ],
       "imports": [
+        "com.diegonmarcos.cloudlib.mounts.MountSecret",
+        "com.diegonmarcos.cloudlib.mounts.MountSpec",
+        "com.diegonmarcos.cloudlib.mounts.MountType",
+        "com.diegonmarcos.cloudlib.mounts.RemoteEntry",
+        "com.diegonmarcos.cloudlib.mounts.RemoteFs",
+        "com.diegonmarcos.cloudlib.mounts.RemotePaths",
         "java.io.File",
         "java.io.IOException",
         "java.security.PublicKey",
@@ -61677,6 +62054,254 @@
         "class FtpFs",
         "class WebDavFs",
         "class MountFsFactory"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts-engine/src/main/java/com/diegonmarcos/cloudlib/mounts/engine/MountsEngineService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountsEngineService"
+      ],
+      "imports": [
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Environment",
+        "android.os.IBinder",
+        "com.diegonmarcos.cloudlib.mounts.IMountsEngine",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "methodNames()",
+        "dispatch(method: String, request: String)",
+        "calls()",
+        "call(method: String?, request: String?)",
+        "methods()",
+        "onBind(intent: Intent?)",
+        "calls(context: Context)",
+        "class MountsEngineService",
+        "class EngineState"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts-engine/src/main/java/com/diegonmarcos/cloudlib/mounts/engine/WebDavParser.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebDavParser"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.mounts.RemoteEntry",
+        "com.diegonmarcos.cloudlib.mounts.RemotePaths",
+        "java.io.ByteArrayInputStream",
+        "java.net.URLDecoder",
+        "java.text.SimpleDateFormat",
+        "java.util.Locale",
+        "java.util.TimeZone",
+        "javax.xml.parsers.DocumentBuilderFactory",
+        "org.w3c.dom.Element"
+      ],
+      "symbols": [
+        "parseMultistatus(xml: String, requestedPath: String)",
+        "text(e: Element, local: String)",
+        "normalise(p: String)",
+        "class WebDavParser"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts-engine/src/test/java/com/diegonmarcos/cloudlib/mounts/engine/MountCallsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountCallsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.mounts.MountSecret",
+        "com.diegonmarcos.cloudlib.mounts.MountSpec",
+        "com.diegonmarcos.cloudlib.mounts.MountType",
+        "com.diegonmarcos.cloudlib.mounts.MountWire",
+        "com.diegonmarcos.cloudlib.mounts.RemoteEntry",
+        "com.diegonmarcos.cloudlib.mounts.RemoteFs",
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONObject",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.io.File",
+        "java.io.BufferedInputStream",
+        "java.net.InetAddress",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.net.URLDecoder",
+        "java.nio.file.Files",
+        "java.util.concurrent.ConcurrentHashMap"
+      ],
+      "symbols": [
+        "setUp()",
+        "tearDown()",
+        "readLine(i: BufferedInputStream)",
+        "serve(c: Socket)",
+        "close()",
+        "dav(method: String, rawPath: String, headers: Map<String, String>, body: ByteArray)",
+        "enc(p: String)",
+        "spec()",
+        "calls(access: Boolean = true, opener: ((MountSpec, MountSecret, File)",
+        "openReq(sp: MountSpec = spec()",
+        "fsReq(handle: String, verb: String, args: JSONObject = JSONObject()",
+        "ok(answer: String)",
+        "entries(a: JSONObject)",
+        "aWebDavMountIsOpenedListedUploadedDownloadedRenamedAndDeleted()",
+        "aLongListingComesBackInChunksThatJoinToTheWhole()",
+        "aHandleTheEngineNoLongerKnowsAnswersUnknownHandleSoTheClientCanReopen()",
+        "anIdleConnectionIsClosedAndForgotten()",
+        "list(path: String)",
+        "download(path: String, into: File, onProgress: (Long)",
+        "upload(local: File, path: String, onProgress: (Long)",
+        "mkdir(path: String)",
+        "delete(path: String, isDir: Boolean)",
+        "rename(from: String, to: String)",
+        "theKeyAndKnownHostsAreFilesOnlyForTheConnectAndAnExtendedKnownHostsComesBack()",
+        "aRefusedLoginOrDeadHostIsASentenceNotACrash()",
+        "anUnknownVerbIsRefusedAndASharedStorageTransferWithoutAllFilesAccessSaysWhatToGrant()",
+        "infoNamesTheVersionTheGrantAndTheOpenConnections()",
+        "class MountCallsTest",
+        "class MiniHttp",
+        "class Reply"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts-engine/src/test/java/com/diegonmarcos/cloudlib/mounts/engine/MountsEngineProtocolTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountsEngineProtocolTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "java.nio.file.Files",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "webDavMultistatusParsesNextcloudShapeAndDropsTheCollectionItself()",
+        "tofuVerifierRecordsFirstKeyAndRefusesAChangedOne()",
+        "class MountsEngineProtocolTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/EngineFs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EngineFs"
+      ],
+      "imports": [
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.io.IOException"
+      ],
+      "symbols": [
+        "connect()",
+        "list(path: String)",
+        "download(path: String, into: File, onProgress: (Long)",
+        "upload(local: File, path: String, onProgress: (Long)",
+        "mkdir(path: String)",
+        "delete(path: String, isDir: Boolean)",
+        "rename(from: String, to: String)",
+        "exec(command: String)",
+        "close()",
+        "ensure(s: MountTransport.Session)",
+        "failIfRefused(a: JSONObject, what: String)",
+        "step(verb: String, args: JSONObject)",
+        "ask()",
+        "class holds",
+        "class EngineFs"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/MountCredentialStore.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountCredentialStore"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "androidx.security.crypto.EncryptedSharedPreferences",
+        "androidx.security.crypto.MasterKey",
+        "java.io.File"
+      ],
+      "symbols": [
+        "set(id: String, secret: String)",
+        "clear(id: String)",
+        "has(id: String)",
+        "secretFor(m: MountSpec)",
+        "class MountCredentialStore"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/MountFsFactory.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountFsFactory"
+      ],
+      "imports": [
+        "android.content.Context",
+        "java.io.File"
+      ],
+      "symbols": [
+        "open(context: Context, spec: MountSpec, secret: MountSecret, knownHosts: File)",
+        "open( transport: MountTransport, spec: MountSpec, secret: MountSecret, knownHosts: File, readText: (String)",
+        "class MountFsFactory"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/MountLink.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountLink"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.ServiceConnection",
+        "android.content.pm.PackageManager",
+        "android.content.pm.ServiceInfo",
+        "android.os.IBinder",
+        "org.json.JSONObject",
+        "java.io.IOException",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "unavailable()",
+        "resolve(ctx: Context)",
+        "session()",
+        "open(request: JSONObject)",
+        "fs(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "closeHandle(request: JSONObject)",
+        "close()",
+        "ask(method: String, request: JSONObject)",
+        "onServiceConnected(name: ComponentName?, binder: IBinder?)",
+        "onServiceDisconnected(name: ComponentName?)",
+        "release(ctx: Context)",
+        "class MountLink",
+        "class Conn"
       ]
     },
     {
@@ -61772,6 +62397,45 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/MountTransport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountTransport"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "unavailable()",
+        "session()",
+        "open(request: JSONObject)",
+        "fs(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "closeHandle(request: JSONObject)",
+        "close()",
+        "class MountTransport",
+        "class Session"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/MountWire.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MountWire"
+      ],
+      "imports": [
+        "java.io.File",
+        "kotlinx.serialization.json.Json",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "openRequest(spec: MountSpec, secret: MountSecret, knownHosts: File, readText: (String)",
+        "class MountWire"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/RemoteFs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -61801,26 +62465,48 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/mounts/src/main/java/com/diegonmarcos/cloudlib/mounts/WebDavParser.kt",
+      "path": "ab_cloud-libs-shared/libs/mounts/src/test/java/com/diegonmarcos/cloudlib/mounts/EngineFsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "WebDavParser"
+        "EngineFsTest"
       ],
       "imports": [
-        "java.io.ByteArrayInputStream",
-        "java.net.URLDecoder",
-        "java.text.SimpleDateFormat",
-        "java.util.Locale",
-        "java.util.TimeZone",
-        "javax.xml.parsers.DocumentBuilderFactory",
-        "org.w3c.dom.Element"
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.io.File",
+        "java.io.IOException",
+        "java.nio.file.Files",
+        "java.util.concurrent.CopyOnWriteArrayList"
       ],
       "symbols": [
-        "parseMultistatus(xml: String, requestedPath: String)",
-        "text(e: Element, local: String)",
-        "normalise(p: String)",
-        "class WebDavParser"
+        "setUp()",
+        "unavailable()",
+        "session()",
+        "ask(method: String, request: JSONObject)",
+        "open(request: JSONObject)",
+        "fs(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "closeHandle(request: JSONObject)",
+        "close()",
+        "ok()",
+        "open(t: Fake, secret: MountSecret = MountSecret(\"pw\", null)",
+        "openingConnectsNowAndEveryVerbIsOneFsStepOnTheHandle()",
+        "theSpecTheSecretTheKeyTextAndKnownHostsTravelOnOpenAndNothingElseDoes()",
+        "aPasswordMountSendsNoKeyAtAll()",
+        "aLostConnectionIsReopenedOnceAndTheStepRepeated()",
+        "aLongListingIsReassembledFromItsChunks()",
+        "aRefusalIsAnIOExceptionWithTheEnginesSentence()",
+        "noEngineInstalledIsASentenceAtOpenNotACrash()",
+        "anSshKeyThatIsMissingIsASentenceBeforeAnythingIsSent()",
+        "class EngineFsTest",
+        "class Fake"
       ]
     },
     {
@@ -61843,9 +62529,7 @@
       "symbols": [
         "uriParsesEveryShapeAndRoundTrips()",
         "remotePathsJoinParentName()",
-        "webDavMultistatusParsesNextcloudShapeAndDropsTheCollectionItself()",
         "storeDeclareKeepsUserMountsAndReplacesDeclared()",
-        "tofuVerifierRecordsFirstKeyAndRefusesAChangedOne()",
         "class MountsEngineTest"
       ]
     },
@@ -63790,6 +64474,143 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/ArgPolicy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "refusal(args: List<String>)",
+        "touchesSharedStorage(args: List<String>)",
+        "class ArgPolicy"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/RcloneCalls.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.util.UUID"
+      ],
+      "symbols": [
+        "info()",
+        "run(req: JSONObject)",
+        "outChunk(req: JSONObject)",
+        "jobStart(req: JSONObject)",
+        "jobPoll(req: JSONObject)",
+        "jobCancel(req: JSONObject)",
+        "args(req: JSONObject)",
+        "gate(args: List<String>)",
+        "fail(why: String)",
+        "class RcloneCalls"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/RcloneEngineService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RcloneEngineService"
+      ],
+      "imports": [
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Environment",
+        "android.os.IBinder",
+        "android.util.Log",
+        "com.diegonmarcos.cloudlib.rclone.IRcloneEngine",
+        "com.diegonmarcos.cloudlib.sysdns.ResolverProxy",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "methodNames()",
+        "dispatch(method: String, request: String)",
+        "calls()",
+        "call(method: String?, request: String?)",
+        "methods()",
+        "onBind(intent: Intent?)",
+        "calls(context: Context)",
+        "build(context: Context)",
+        "childEnv()",
+        "class RcloneEngineService",
+        "class EngineState"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/RcloneExec.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "java.io.File",
+        "java.util.UUID",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "add(line: String)",
+        "read(cursor: Int, limit: Int = POLL_LINES)",
+        "finish(code: Int, config: String?)",
+        "cancel()",
+        "job(id: String)",
+        "configFile()",
+        "command(conf: File, args: List<String>)",
+        "builder(conf: File, args: List<String>)",
+        "harvest(conf: File, sent: String)",
+        "run(config: String, args: List<String>, timeoutSeconds: Long = RUN_TIMEOUT_S)",
+        "start(config: String, args: List<String>)",
+        "forget(id: String)",
+        "class RcloneExec",
+        "class Result",
+        "class Job"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/test/java/com/diegonmarcos/cloudlib/rclone/engine/RcloneExecTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RcloneExecTest"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.io.File",
+        "java.nio.file.Files"
+      ],
+      "symbols": [
+        "setUp()",
+        "exec(binary: File = fake)",
+        "calls(access: Boolean = true, binary: File = fake)",
+        "req(config: String, vararg args: String)",
+        "policyAllowsTheDeclaredVerbsAndRefusesTheRest()",
+        "sharedStorageIsRecognisedOnPathsOnly()",
+        "aRunAnswersItsOutputAndExitCodeAndDeletesTheConfigItWrote()",
+        "theCallersConfigReachesRcloneVerbatim()",
+        "aConfigRcloneRewroteIsHandedBackAndAFailureKeepsItsStderr()",
+        "anArgumentTheEngineWouldNotRunIsRefusedBeforeAnythingStarts()",
+        "aLongListingComesBackInChunksThatJoinToTheWhole()",
+        "aJobIsPolledToTheEndWithItsLinesItsExitCodeAndItsRewrittenConfig()",
+        "cancellingAJobEndsItWithTheCancelledCode()",
+        "aSharedStoragePathWithoutAllFilesAccessSaysWhatToGrant()",
+        "aMissingBinaryIsNamedNotCrashed()",
+        "infoNamesTheVersionAndTheGrant()",
+        "class RcloneExecTest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/RcloneConfig.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -63837,6 +64658,44 @@
         "declare(jobs: List<RcloneJob>)",
         "class RcloneJob",
         "class RcloneJobStore"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/RcloneLink.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RcloneLink"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.ServiceConnection",
+        "android.content.pm.PackageManager",
+        "android.content.pm.ServiceInfo",
+        "android.os.IBinder",
+        "org.json.JSONObject",
+        "java.io.IOException",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "unavailable()",
+        "resolve(ctx: Context)",
+        "session()",
+        "run(request: JSONObject)",
+        "outChunk(request: JSONObject)",
+        "jobStart(request: JSONObject)",
+        "jobPoll(request: JSONObject)",
+        "jobCancel(request: JSONObject)",
+        "close()",
+        "ask(method: String, request: JSONObject)",
+        "onServiceConnected(name: ComponentName?, binder: IBinder?)",
+        "onServiceDisconnected(name: ComponentName?)",
+        "release(ctx: Context)",
+        "class RcloneLink",
+        "class Conn"
       ]
     },
     {
@@ -63904,16 +64763,19 @@
       ],
       "imports": [
         "android.content.Context",
-        "android.util.Log",
-        "com.diegonmarcos.cloudlib.sysdns.ResolverProxy",
+        "android.os.Environment",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
         "java.io.File",
-        "java.util.concurrent.TimeUnit"
+        "java.io.IOException"
       ],
       "symbols": [
         "cancel()",
         "waitFor()",
-        "base()",
-        "process(args: List<String>)",
+        "configText()",
+        "keepConfig(text: String?)",
+        "request(args: List<String>)",
+        "checked()",
         "capture(args: List<String>, onStderr: (String)",
         "version()",
         "remotes()",
@@ -63921,7 +64783,10 @@
         "obscure(secret: String)",
         "test(remoteName: String)",
         "start(job: RcloneJob, onStats: (RcloneStats)",
+        "refused(why: String?)",
+        "line(line: String, onStats: (RcloneStats)",
         "download(remotePath: String, name: String)",
+        "class is",
         "class RcloneRunner",
         "class Handle"
       ]
@@ -63988,6 +64853,29 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/RcloneTransport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RcloneTransport"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "unavailable()",
+        "session()",
+        "run(request: JSONObject)",
+        "outChunk(request: JSONObject)",
+        "jobStart(request: JSONObject)",
+        "jobPoll(request: JSONObject)",
+        "jobCancel(request: JSONObject)",
+        "close()",
+        "class RcloneTransport",
+        "class Session"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/RcloneEngineTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -64013,6 +64901,56 @@
         "jobStoreDeclareKeepsUserJobsAndDeclaredHistory()",
         "remoteTypesCatalogueIsWellFormed()",
         "class RcloneEngineTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/RcloneRunnerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RcloneRunnerTest"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.io.File",
+        "java.io.IOException",
+        "java.nio.file.Files",
+        "java.util.concurrent.CopyOnWriteArrayList",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "setUp()",
+        "unavailable()",
+        "session()",
+        "ask(method: String, request: JSONObject)",
+        "run(request: JSONObject)",
+        "outChunk(request: JSONObject)",
+        "jobStart(request: JSONObject)",
+        "jobPoll(request: JSONObject)",
+        "jobCancel(request: JSONObject)",
+        "close()",
+        "runner(t: RcloneTransport)",
+        "ok()",
+        "theRcloneConfTravelsWithTheCallAndAProbeAnswers()",
+        "aLongListingIsReassembledFromItsChunksAndParsed()",
+        "aConfigRcloneRewroteIsKeptAndAnUnchangedOneIsNotTouched()",
+        "aNonZeroExitSurfacesItsStderrAndAnEngineRefusalItsSentence()",
+        "noEngineInstalledIsASentenceNotACrash()",
+        "job()",
+        "aJobIsPolledToItsEndWithStatsLinesExitAndTheRewrittenConfig()",
+        "cancellingTellsTheEngineAndEndsWithTheCancelledCode()",
+        "anEngineThatRefusesAJobEndsItInsteadOfThrowing()",
+        "class RcloneRunnerTest",
+        "class Fake"
       ]
     },
     {
@@ -159966,6 +160904,7 @@
         "com.diegonmarcos.clouddrive.files.Places",
         "com.diegonmarcos.cloudlib.gitsync.GitAuth",
         "com.diegonmarcos.cloudlib.gitsync.GitEngine",
+        "com.diegonmarcos.cloudlib.gitsync.clone",
         "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
         "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
         "java.io.File"
@@ -160275,6 +161214,7 @@
         "com.diegonmarcos.cloudlib.gitsync.GitCommitInfo",
         "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
         "com.diegonmarcos.cloudlib.gitsync.GitEngine",
+        "com.diegonmarcos.cloudlib.gitsync.clone",
         "com.diegonmarcos.cloudlib.gitsync.GitOpResult",
         "com.diegonmarcos.cloudlib.gitsync.GitRemoteInfo",
         "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
