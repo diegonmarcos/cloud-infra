@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21750,
+    "files": 21752,
     "by_lang": {
       "sh": 512,
       "py": 148,
-      "kotlin": 11378,
+      "kotlin": 11380,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -25,7 +25,7 @@
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11375,
+      "kotlin": 11377,
       "python": 49,
       "rust-module": 107,
       "file": 2273,
@@ -13723,6 +13723,7 @@
         "nm(ctx: Context)",
         "badge()",
         "refresh(ctx: Context, fresh: String? = null)",
+        "silent(alertId: String, fresh: String?, quiet: Set<String>)",
         "channelFor(severity: String)",
         "appLabel(ctx: Context, pkg: String)",
         "contentIntent(ctx: Context, a: AlertStore.Alert)",
@@ -14129,6 +14130,37 @@
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
         "class HealthGrantActivity"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/JevNotify.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "JevNotify"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
+        "com.diegonmarcos.superapp.decisions.link.Verdict",
+        "org.json.JSONObject",
+        "java.util.Calendar",
+        "java.util.concurrent.Callable",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "questions()",
+        "state(a: AlertStore.Alert, hour: Int)",
+        "quiet(v: Verdict?)",
+        "worthLabel(ageMs: Long)",
+        "quietIds(ctx: Context, fresh: AlertStore.Alert?)",
+        "settle(ctx: Context, alert: AlertStore.Alert?, now: Long = System.currentTimeMillis()",
+        "prefs(ctx: Context)",
+        "remember(ctx: Context, alertId: String, call: String)",
+        "recall(ctx: Context, alertId: String)",
+        "forget(ctx: Context, alertId: String)",
+        "class JevNotify"
       ]
     },
     {
@@ -19994,6 +20026,31 @@
         "report(r: BatteryReading, samples: List<BatterySample> = discharged()",
         "card(r: BatteryReading, samples: List<BatterySample> = discharged()",
         "class BatteryBadgeModelTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/JevNotifyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "JevNotifyTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.decisions.link.Answer",
+        "com.diegonmarcos.superapp.decisions.link.Verdict",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "verdict(value: Boolean, confident: Boolean)",
+        "noVerdictIsTodaysBehaviourForEveryAlert()",
+        "onlyAConfidentNotWorthItMakesTheFreshAlertSilent()",
+        "aQuickSwipeAwayIsTheOnlyObservedLabel()",
+        "theQuestionNamesTheAlertAndNeverItsBodyText()",
+        "class JevNotifyTest"
       ]
     },
     {
