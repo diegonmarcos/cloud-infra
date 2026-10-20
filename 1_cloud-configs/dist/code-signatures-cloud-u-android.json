@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21839,
+    "files": 21853,
     "by_lang": {
       "sh": 530,
       "py": 148,
-      "kotlin": 11449,
+      "kotlin": 11463,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -25,7 +25,7 @@
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11446,
+      "kotlin": 11460,
       "python": 49,
       "rust-module": 107,
       "file": 2273,
@@ -15132,6 +15132,27 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/search/SearchJev.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SearchJev"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.decisions.link.Advice",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "valid(pick: String?, scopeIds: Collection<String>)",
+        "questions(scopes: List<SearchScope>)",
+        "suggest(ctx: Context, query: String, scopes: List<SearchScope>)",
+        "chose(ctx: Context, suggestion: Advice.Suggestion?, scopeId: String)",
+        "class SearchJev"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/search/SearchOpener.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -15210,6 +15231,7 @@
         "liveScopes()",
         "fetchLive(q: String)",
         "setLive(q: String, r: LiveResult)",
+        "setSuggestion(s: com.diegonmarcos.superapp.decisions.link.Advice.Suggestion?)",
         "sections()",
         "notices()",
         "SearchBox(c: SearchController, placeholder: String, onGo: ()",
@@ -18530,6 +18552,52 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/jev/AdvisoryJevTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdvisoryJevTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.updater.Advisory",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "noOpinionIsTodaysSixHours()",
+        "onlyAConfidentLowOrInterruptMovesTheWindow()",
+        "theQuestionOffersExactlyTheThreeOptionsTheEngineMayAccept()",
+        "class AdvisoryJevTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/jev/PhoneJevTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneJevTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.apps.PhoneFolders",
+        "com.diegonmarcos.superapp.apps.PhoneJev",
+        "com.diegonmarcos.superapp.appstore.AppStoreHost",
+        "com.diegonmarcos.superapp.appstore.StoreJev",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "f(id: String)",
+        "noSuggestionKeepsTheSinkForEveryPackage()",
+        "aRuleClaimedAppIsNeverTouched()",
+        "onlyAnOfferedNonSinkFolderIsAccepted()",
+        "theQuestionOffersEveryFolderButTheSink()",
+        "aStoreRowNobodyFiledStaysUnshelvedWithoutASuggestion()",
+        "class PhoneJevTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/AggregatorComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20908,6 +20976,25 @@
       "symbols": [
         "hit(label: String, scope: String, crumb: String = \"\")",
         "class SearchEngineTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/search/SearchJevTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SearchJevTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "noOpinionMarksNoChip()",
+        "anOfferedScopeIsMarked()",
+        "aShortQueryIsNeverAsked()",
+        "class SearchJevTest"
       ]
     },
     {
@@ -26908,6 +26995,27 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/PhoneJev.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneJev"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.decisions.link.Advice",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "refine(id: String, sinkId: String, pkg: String, now: Long = System.currentTimeMillis()",
+        "valid(pick: String?, folders: List<PhoneFolders.Folder>, sinkId: String)",
+        "questions(folders: List<PhoneFolders.Folder>, sinkId: String)",
+        "ask(ctx: Context, unclaimed: Map<String, String>, folders: List<PhoneFolders.Folder>, sinkId: String)",
+        "class PhoneJev"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/apps/PhoneSections.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -28333,6 +28441,7 @@
         "fleetObjects(key: String)",
         "applicationOf(id: String)",
         "shelfOf(app: Fleet.App)",
+        "jevShelf(app: Fleet.App)",
         "headingOf(app: Fleet.App)",
         "palette()",
         "onResume()",
@@ -28368,8 +28477,7 @@
         "runStage(ctx: Context, app: Fleet.App, verb: String)",
         "rowAction(ctx: Context, app: Fleet.App, a: FleetActions.Action, stg: StoreStages.Stage?)",
         "verb(onClick: ()",
-        "stageVerb(ctx: Context, app: Fleet.App, a: FleetActions.Action, verb: String, stg: StoreStages.Stage?, tag: String)",
-        "stop(ctx: Context, app: Fleet.App)"
+        "stageVerb(ctx: Context, app: Fleet.App, a: FleetActions.Action, verb: String, stg: StoreStages.Stage?, tag: String)"
       ]
     },
     {
@@ -28554,6 +28662,27 @@
         "class StoreInstallWatch",
         "class Decl",
         "class Pending"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/StoreJev.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreJev"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.decisions.link.Advice",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "shelfFor(id: String, shelves: Collection<AppStoreHost.Shelf>, now: Long = System.currentTimeMillis()",
+        "pick(pick: String?, shelves: Collection<AppStoreHost.Shelf>)",
+        "questions(shelves: Collection<AppStoreHost.Shelf>)",
+        "ask(ctx: Context, rows: List<Pair<String, String>>, shelves: Collection<AppStoreHost.Shelf>)",
+        "class StoreJev"
       ]
     },
     {
@@ -38020,6 +38149,46 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/decisions-link/src/main/java/com/diegonmarcos/superapp/decisions/link/Advice.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Advice"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.util.concurrent.Callable",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "onMain()",
+        "within(ms: Long, task: ()",
+        "background(task: ()",
+        "removeEldestEntry(eldest: MutableMap.MutableEntry<String, Entry>?)",
+        "peek(slot: String, now: Long = System.currentTimeMillis()",
+        "peekOrAsk(slot: String, ttlMs: Long, now: Long = System.currentTimeMillis()",
+        "put(slot: String, s: Suggestion?, ttlMs: Long, now: Long = System.currentTimeMillis()",
+        "add(e: Entry)",
+        "drop(call: String)",
+        "takeDue(now: Long, windowMs: Long)",
+        "load()",
+        "save(list: List<Entry>)",
+        "pending(ctx: Context)",
+        "remember(ctx: Context, use: String, s: Suggestion, label: Any = s.pick, now: Long = System.currentTimeMillis()",
+        "explicit(ctx: Context, use: String, call: String?, label: Any)",
+        "settleDue(ctx: Context, now: Long = System.currentTimeMillis()",
+        "class Advice",
+        "class Suggestion",
+        "class Suggestions",
+        "class Entry",
+        "class Pending"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/decisions-link/src/main/java/com/diegonmarcos/superapp/decisions/link/DecisionsLink.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -38077,6 +38246,36 @@
         "class Outcome",
         "class Answered",
         "class NoOpinion"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-link/src/test/java/com/diegonmarcos/superapp/decisions/link/AdviceTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdviceTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "withinReturnsTheValueOrNullOnTimeoutOrFailure()",
+        "aMissStartsOneBackgroundAskAndTheNextPeekSeesItsAnswer()",
+        "noOpinionIsRememberedToo()",
+        "anAnswerExpiresAfterItsTtl()",
+        "theMemoIsBounded()",
+        "tmp()",
+        "pendingSuggestionsAreReportedOnlyOncePastTheWindow()",
+        "anExplicitCorrectionRemovesThePendingEntry()",
+        "theFileIsBoundedAndATornFileIsEmptyNotACrash()",
+        "aRepeatedCallReplacesItsEntry()",
+        "class AdviceTest"
       ]
     },
     {
@@ -47936,7 +48135,7 @@
         "summarise(context: Context, style: Style, text: String, route: Route = route(context)",
         "enforceBullets(reply: String)",
         "compose(style: Style, extra: List<String>)",
-        "enhanceStyle(context: Context)",
+        "enhanceStyle(context: Context, base: Style = style(context)",
         "pick(context: Context, set: List<Style>, key: String, fallback: String)",
         "complete(context: Context, system: String, user: String)",
         "complete(context: Context, system: String, user: String, route: Route)",
@@ -50353,6 +50552,27 @@
         "class MotionEventForwarder",
         "class KeyboardTopPaddingForwarder",
         "class MoreSuggestionsViewCanceler"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/latin/KeyboardJev.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.decisions.link.Advice",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
+        "helium314.keyboard.latin.settings.Settings",
+        "helium314.keyboard.latin.utils.prefs",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "applies(userChose: Boolean, pick: String?, styles: List<AiRouter.Style>)",
+        "shape(text: String)",
+        "questions(styles: List<AiRouter.Style>)",
+        "base(context: Context, text: String)",
+        "class KeyboardJev"
       ]
     },
     {
@@ -57713,6 +57933,29 @@
         "snippets_only_on_multi_line_fields()",
         "suppressed_and_id_fields_get_nothing()",
         "class ImeAutofillTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/latin/KeyboardJevTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KeyboardJevTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "noAdviceKeepsTheDefaultStyle()",
+        "aStyleTheOwnerChoseIsNeverReplaced()",
+        "anOfferedStyleIsAcceptedWhenNothingWasChosen()",
+        "theStateIsTheShapeOfTheTextNotTheText()",
+        "theQuestionOffersEveryRegistryStyle()",
+        "class KeyboardJevTest"
       ]
     },
     {
@@ -67915,6 +68158,8 @@
         "android.annotation.SuppressLint",
         "android.content.Context",
         "android.util.Log",
+        "com.diegonmarcos.superapp.decisions.link.Advice",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
         "org.json.JSONArray",
         "org.json.JSONObject"
       ],
@@ -67930,6 +68175,9 @@
         "current(ctx: Context, fleet: List<Fleet.App> = emptyList()",
         "tooOld(item: Item)",
         "shouldNotify(ctx: Context, item: Item)",
+        "renotifyWindow(urgency: String?)",
+        "urgencyQuestions()",
+        "urgencyOf(ctx: Context, item: Item, sinceMs: Long)",
         "dismiss(ctx: Context, id: String)",
         "snoozed(p: android.content.SharedPreferences, id: String)",
         "setListener(l: (()",
@@ -201306,6 +201554,26 @@
       ]
     },
     {
+      "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/inbox/MailJev.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.decisions.link.Advice",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "promote(rows: List<T>, suggestedId: String?, idOf: (T)",
+        "valid(pick: String?, offered: Collection<String>)",
+        "state(from: String, subject: String)",
+        "questions(offered: List<Pair<String, String>>)",
+        "suggest(ctx: Context, from: String, subject: String, offered: List<Pair<String, String>>)",
+        "class MailJev"
+      ]
+    },
+    {
       "path": "ac_cloud-mail/app/src/main/kotlin/app/sterna/ui/inbox/MoveAccountRow.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -210763,6 +211031,29 @@
       "symbols": [
         "codeLines(file: File)",
         "class MailboxUnreadFallbackTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/test/kotlin/app/sterna/ui/inbox/MailJevTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MailJevTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertSame",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "noSuggestionIsTheSameListInstance()",
+        "aSuggestionMovesOneRowToTheFrontAndKeepsTheRest()",
+        "onlyAnOfferedFolderIsAccepted()",
+        "theStateIsHeadersOnly()",
+        "theQuestionOffersExactlyThePickersFolders()",
+        "class MailJevTest"
       ]
     },
     {
@@ -552858,6 +553149,31 @@
       ]
     },
     {
+      "path": "ac_cloud-writer/app/src/main/java/com/diegonmarcos/cloudwriter/WriterJev.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WriterJev"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudwriter.core.Answer",
+        "com.diegonmarcos.cloudwriter.core.Route",
+        "com.diegonmarcos.superapp.decisions.link.Advice",
+        "com.diegonmarcos.superapp.decisions.link.DecisionsLink",
+        "org.json.JSONObject",
+        "java.util.Calendar"
+      ],
+      "symbols": [
+        "slot(f: WriterRoutes.Function, online: Boolean)",
+        "advice(ctx: Context, f: WriterRoutes.Function)",
+        "routeOf(pick: String?)",
+        "questions()",
+        "observed(ctx: Context, f: WriterRoutes.Function, advised: Route?, answer: Answer)",
+        "class WriterJev"
+      ]
+    },
+    {
       "path": "ac_cloud-writer/app/src/main/java/com/diegonmarcos/cloudwriter/WriterNav.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -552997,6 +553313,7 @@
         "defaultRoute(f: Function)",
         "route(context: Context, f: Function)",
         "setRoute(context: Context, f: Function, route: Route)",
+        "advisedOrNull(context: Context, f: Function)",
         "defaultModel(f: Function)",
         "model(context: Context, f: Function)",
         "setModel(context: Context, f: Function, id: String)",
@@ -553357,6 +553674,7 @@
         "failed(why: String)",
         "toJson()",
         "modelBlocker(online: Boolean, hasToken: Boolean, model: String?)",
+        "chosen(saved: String?, advice: Route?, default: Route)",
         "run(requested: Route, blocker: String?, model: ()",
         "class Route",
         "class Outcome",
@@ -553467,6 +553785,23 @@
         "model(id: String, ins: List<String>, outs: List<String>, prompt: String?, name: String? = null)",
         "class OpenRouterTest",
         "class FakeHttp"
+      ]
+    },
+    {
+      "path": "ac_cloud-writer/core/src/test/kotlin/com/diegonmarcos/cloudwriter/core/RoutingJevTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RoutingJevTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "noAdviceIsTheOldRuleForEverySavedValue()",
+        "adviceOnlyFillsAnUnchosenRoute()",
+        "class RoutingJevTest"
       ]
     },
     {
