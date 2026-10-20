@@ -27,7 +27,7 @@
 # GitHub restore check, the alert), so it needs no fleet and no network:
 #   1. dry-run acts on nothing and names what it would do
 #   2. apply brings up exactly ONE service even when two are eligible
-#   3. only `absent` findings are candidates (drift/created/stopped ignored)
+#   3. only `absent` and `stopped` findings are candidates (drift/created ignored)
 #   4. excluded services, never-deployed projects, uncached images and port
 #      clashes are skipped — the last two with an alert naming why
 #   5. never during a cgc-db restore: GitHub run in progress, GitHub
@@ -141,12 +141,24 @@ ck "exit 0 when it came up" "$RC" "0"
 ck "exactly one compose up although two services are eligible" "$(ups)" "infra-obs_matomo"
 ck "a redeploy is announced" "$(alerts)" "1"
 
-echo "== only absent findings are candidates =="
+echo "== only absent and stopped findings are candidates =="
 reset_vm
-printf 'testvm\tinfra-ai_jev-sidecar\tdrift\tjev-sidecar\ntestvm\tuser-prod_second\tcreated\tsecond-app\ntestvm\tinfra-obs_matomo\tstopped\tmatomo-hybrid\n' > "$WORK/f2"
-run --apply "$WORK/f2"; ck "drift/created/stopped are not redeployed here" "$OUT" "none"
+printf 'testvm\tinfra-ai_jev-sidecar\tdrift\tjev-sidecar\ntestvm\tuser-prod_second\tcreated\tsecond-app\n' > "$WORK/f2"
+run --apply "$WORK/f2"; ck "drift/created are not redeployed here" "$OUT" "none"
 ck "and nothing is touched" "$(ups)" ""
 ck "no VM call at all" "$([ -f "$WORK/remote.log" ] && echo called || echo none)" "none"
+
+echo "== a stopped (exited, not one_shot) service is started again, same bounds =="
+reset_vm
+printf 'testvm\tinfra-obs_matomo\tstopped\tmatomo-hybrid\n' > "$WORK/f3"
+run --apply "$WORK/f3"; ck "a stopped service is brought back" "$OUT" "redeployed infra-obs_matomo"
+ck "via exactly one compose up" "$(ups)" "infra-obs_matomo"
+grep -q 'redeployed stopped infra-obs_matomo' "$WORK/alerts" \
+  && ck "the alert says it was stopped" ok ok || ck "the alert says it was stopped" "$(cat "$WORK/alerts" 2>/dev/null)" "a stopped alert"
+reset_vm
+echo "wireguard-mesh " > "$WORK/vm/infra-obs_matomo/holders"
+run --apply "$WORK/f3"; ck "a stopped service behind a port clash is not started" "$OUT" "none"
+ck "and nothing is touched" "$(ups)" ""
 
 echo "== safety skips =="
 reset_vm

@@ -16,7 +16,7 @@
 #
 # WHAT IT DOES, AND THE BOUNDS ON IT
 #
-# Reads the reconcile's findings and, for `absent` findings ONLY, re-runs
+# Reads the reconcile's findings and, for `absent` and `stopped` findings ONLY, re-runs
 # `docker compose up -d` for that service's already-deployed project on its VM:
 #
 #   * AT MOST ONE service per run. The candidates are checked in order and the
@@ -132,12 +132,17 @@ alert() {   # alert <title> <body> — annotation + ntfy
 
 # ── Candidates: absent findings, one per (vm, service dir), in order ─────
 FINDINGS="$(cat)"
-CANDS="$(printf '%s\n' "$FINDINGS" | awk -F'\t' '$3=="absent" && $1!="" && $2!="" { k=$1"\t"$2; if (!(k in s)) { s[k]=1; print k } }')"
+# `stopped` (an exited, non-one_shot container) joins `absent`: restart is "no"
+# fleet-wide, so one failed start (google-workspace-mcp hit a transient :3104
+# bind clash on 2026-10-17) leaves the service down until a human looks, and the
+# same compose up -d --no-recreate that revives an absent project starts an
+# exited container. Same bounds: one per run, never mid-restore, clash-checked.
+CANDS="$(printf '%s\n' "$FINDINGS" | awk -F'\t' '($3=="absent" || $3=="stopped") && $1!="" && $2!="" { k=$1"\t"$2; if (!(k in s)) { s[k]=1; print k"\t"$3 } }')"
 if [ -z "$CANDS" ]; then
-  note "no absent findings — nothing to redeploy"
+  note "no absent or stopped findings — nothing to redeploy"
   echo "none"; exit 0
 fi
-note "absent services: $(printf '%s\n' "$CANDS" | cut -f2 | paste -sd' ' -)"
+note "absent/stopped services: $(printf '%s\n' "$CANDS" | cut -f2 | paste -sd' ' -)"
 
 # ── Restore guard, GitHub side (the VM side runs in each preflight) ──────
 if ! RUNS="$(restore_runs)"; then
@@ -218,7 +223,7 @@ UP
 kv() { printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -1; }
 
 # ── Walk the candidates; act on at most one ──────────────────────────────
-while IFS=$'\t' read -r VM DIR; do
+while IFS=$'\t' read -r VM DIR KIND; do
   [ -n "$VM" ] || continue
   reason="$(jq -r --arg d "$DIR" '.absent_redeploy.exclude[$d] // empty' "$CONFIG")"
   if [ -n "$reason" ]; then
@@ -261,7 +266,7 @@ while IFS=$'\t' read -r VM DIR; do
   fi
   MISSING="$(kv "$PF" IMAGES_MISSING)"
   if [ -n "$MISSING" ]; then
-    alert "reconcile: $DIR absent, not redeployed" "$DIR on $VM is absent and its image is not cached on the VM ($MISSING) — it needs a Ship"
+    alert "reconcile: $DIR $KIND, not redeployed" "$DIR on $VM is $KIND and its image is not cached on the VM ($MISSING) — it needs a Ship"
     continue
   fi
   CLASH=""
@@ -269,7 +274,7 @@ while IFS=$'\t' read -r VM DIR; do
     case " $CNAMES " in *" $h "*) ;; *) CLASH="$CLASH $h" ;; esac
   done
   if [ -n "$CLASH" ]; then
-    alert "reconcile: $DIR absent, port :$PORT taken" "$DIR on $VM is absent and its port :$PORT is held by:$CLASH — not starting it into a clash; re-allocate one of them"
+    alert "reconcile: $DIR $KIND, port :$PORT taken" "$DIR on $VM is $KIND and its port :$PORT is held by:$CLASH — not starting it into a clash; re-allocate one of them"
     continue
   fi
 
@@ -284,16 +289,16 @@ while IFS=$'\t' read -r VM DIR; do
   BAD="$(printf '%s\n' "$OUT" | awk -v os=" $ONESHOT " '$1=="STATE" && $3!="running" && $3!="restarting" && !($3=="exited" && index(os, " "$2" ")) { print $2"="$3 }' | paste -sd' ' -)"
   if [ "$(kv "$OUT" UP_RC)" = "0" ] && [ -z "$BAD" ] && printf '%s\n' "$OUT" | grep -q '^STATE '; then
     note "  $DIR is back: $(printf '%s\n' "$OUT" | awk '$1=="STATE" { print $2"="$3 }' | paste -sd' ' -)"
-    notify "reconcile: redeployed absent $DIR" "$DIR on $VM was absent; the reconcile ran docker compose up -d for it and it is running again."
+    notify "reconcile: redeployed $KIND $DIR" "$DIR on $VM was $KIND; the reconcile ran docker compose up -d for it and it is running again."
     echo "redeployed $DIR"; exit 0
   fi
-  note "::error::absent redeploy of $DIR on $VM did not come up (compose rc=$(kv "$OUT" UP_RC), not running: ${BAD:-unknown})"
-  notify "reconcile: redeploy of absent $DIR FAILED" "$DIR on $VM is absent and docker compose up -d did not bring it back (not running: ${BAD:-unknown}). Needs a human or a Ship."
+  note "::error::$KIND redeploy of $DIR on $VM did not come up (compose rc=$(kv "$OUT" UP_RC), not running: ${BAD:-unknown})"
+  notify "reconcile: redeploy of $KIND $DIR FAILED" "$DIR on $VM is $KIND and docker compose up -d did not bring it back (not running: ${BAD:-unknown}). Needs a human or a Ship."
   echo "failed $DIR"; exit 1
 done <<EOF_CANDS
 $CANDS
 EOF_CANDS
 
-note "no absent service passed the checks — nothing redeployed this run"
+note "no absent/stopped service passed the checks — nothing redeployed this run"
 echo "none"
 exit 0
