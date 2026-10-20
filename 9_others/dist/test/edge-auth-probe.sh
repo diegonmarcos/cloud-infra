@@ -86,5 +86,30 @@ if [ -n "${FLEET_BEARER:-}" ]; then
     "https://mcp.$BASE/c3-infra-mcp/mcp") || code=000
   case "$code" in 200|202) echo "ok	bearer	mcp.$BASE/c3-infra-mcp/mcp	$code	-" ;; *) echo "FAIL	bearer	mcp.$BASE/c3-infra-mcp/mcp	$code	- (fleet bearer rejected)"; fails=$((fails+1)) ;; esac
 fi
+# ── multi-SSO (edge_auth.multi_sso, #1066) ── only probed once the flag is ON in the derived policy.
+# Anonymous browser on BOTH sign-in hosts: the three-button chooser; the broker start routes must send
+# the browser to the provider (never 2xx); a non-allowlisted login is refused by the broker itself (its
+# allowlist is guarded in cloud-u-containers infra-sec_caddy/src/test/test-multi-sso.sh).
+MS_JSON="$ROOT/1_cloud-configs/dist/build-caddy.json"
+if [ "$(jq -r '.edge_auth.multi_sso.enabled // false' "$MS_JSON")" = true ]; then
+  for h in $(jq -r '.edge_auth.multi_sso.hosts[]' "$MS_JSON"); do
+    sleep "${PROBE_PACE:-0.9}"
+    body=$(curl -sS -m 12 -H 'Accept: text/html' "https://$h/") || body=""
+    if printf '%s' "$body" | grep -q 'Sign in with Authelia' && printf '%s' "$body" | grep -q 'Sign in with Google' && printf '%s' "$body" | grep -q 'Sign in with GitHub'; then
+      echo "ok	sso-chooser	$h/	200	-"
+    else echo "FAIL	sso-chooser	$h/	-	- (anonymous browser did not get the three-button page)"; fails=$((fails+1)); fi
+    for pv in google:accounts.google.com github:github.com; do
+      sleep "${PROBE_PACE:-0.9}"
+      loc=$(curl -sS -o /dev/null -m 12 -w '%{http_code} %{redirect_url}' "https://$h/oauth2/${pv%%:*}/start?rd=/") || loc="000 "
+      if [[ "$loc" =~ ^30[1278]\ https://${pv#*:}/ ]]; then echo "ok	sso-start	$h/oauth2/${pv%%:*}/start	${loc%% *}	-"
+      else echo "FAIL	sso-start	$h/oauth2/${pv%%:*}/start	$loc	- (expected a redirect to ${pv#*:})"; fails=$((fails+1)); fi
+    done
+  done
+  sleep "${PROBE_PACE:-0.9}"
+  code=$(curl -sS -o /dev/null -m 12 -w '%{http_code}' -H 'Cookie: _diego_sso=forged' "https://mcp.$BASE/") || code=000
+  case "$code" in 401|403) echo "ok	sso-forged-cookie	mcp.$BASE/	$code	-" ;; *) echo "FAIL	sso-forged-cookie	mcp.$BASE/	$code	- (a forged broker cookie must be refused)"; fails=$((fails+1)) ;; esac
+else
+  echo "info	sso	multi_sso OFF in the derived policy: sign-in probes not run	-	-"
+fi
 echo "-- $total probes, $fails FAIL"
 [ "$fails" -eq 0 ]

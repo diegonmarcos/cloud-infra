@@ -140,6 +140,10 @@ def analyse(site):
 def load_policy(hub_json):
     ea = hub_json.get("edge_auth") or {}
     open_hosts = {e["host"] for e in ea.get("public_open", []) if e.get("scope", "host") == "host"}
+    # multi-SSO (#1066): when the flag is on, the sign-in hosts are the IdP vhost (tier c, like auth.).
+    ms = ea.get("multi_sso") or {}
+    if ms.get("enabled"):
+        open_hosts |= set(ms.get("hosts", []))
     path_open = {}
     ws_hosts = set()
     for e in ea.get("public_open", []):
