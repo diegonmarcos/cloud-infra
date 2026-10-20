@@ -66,7 +66,8 @@ An APK's own `build.json` declares what a signed-in request to its public host l
 | kind | Behaviour |
 |---|---|
 | `container` | Authelia (bearer or session) gates a reverse proxy to that container's HTTP port. Anonymous 302 to the landing page. Also gives the APK `cloud-{name}.app`. |
-| `wasm`, `webapp` | Declared in the manifest, not rendered yet: treated as "no web target". |
+| `wasm` | (#876) Authelia (bearer or session) gates the app's Kotlin/Wasm bundle, served from `caddy_config.url_scheme.wasm_origin` `{upstream, path_prefix}` at `<path_prefix>/<web.portal_slug>/` (the route carries `web.serve_path`). Anonymous 302 to the landing page. Rendered only once `wasm_origin` is declared (an owner deploy decision); until then it is treated as "no web target". Code: `derive/apk-web-route.ts`, tests `derive/apk-web-route.test.ts`. The caddy renderer (cloud-u-containers infra-sec_caddy) must still honour `web.serve_path`. |
+| `webapp` | Declared in the manifest, not rendered yet: treated as "no web target". |
 | absent | `landing_only`: every request, signed in or not, 302s to the landing page. `/login` still hands off to Authelia. |
 
 Seeded now: cloud-mail to `cloud-webmail`, cloud-chat to `mattermost`, cloud-matrix to
