@@ -44,6 +44,10 @@ eval "$FN"
 FN_NEWEST="$(awk '/^lance_newest_manifest\(\) \{/{f=1} f{print} f&&/^\}$/{exit}' "$UPD_SH")"
 [ -n "$FN_NEWEST" ] || { echo "::error::could not extract lance_newest_manifest() from $UPD_SH"; exit 1; }
 eval "$FN_NEWEST"
+# ...and the reader of a manifest's live fragments (#1061), also by name.
+FN_LIVE="$(awk '/^lance_live_refs\(\) \{/{f=1} f{print} f&&/^\}$/{exit}' "$UPD_SH")"
+[ -n "$FN_LIVE" ] || { echo "::error::could not extract lance_live_refs() from $UPD_SH"; exit 1; }
+eval "$FN_LIVE"
 
 WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT
 
@@ -119,6 +123,59 @@ case "$(lance_dangling_tables "$H4")" in
   *)  bad "flagged a dir with no _versions/" ;;
 esac
 
+# ──────────────────────────────────────────────────────────────────
+# 6b. REAL manifests (#1061). A lance manifest file embeds the Transaction that
+#     created it; a compaction (Rewrite) transaction lists the OLD fragments, which
+#     octocode deletes itself right afterwards. Grepping every ".lance" name out of
+#     the bytes read such a healthy table as torn and, from 2026-10-14, refused to
+#     publish cloud-infra-desktop on every scheduled run (pylance: 1 live fragment;
+#     the grep: 8 names; data/: 1 file). The hand-made manifests above carry no
+#     footer, so they exercise the fallback; these carry the real layout:
+#     [transaction][u32 len][Manifest proto][footer: u64 offset, 4 bytes, "LANC"].
+mkreal() { # $1=file $2=live fragment name $3...=names only the embedded transaction lists
+  python3 -I - "$@" <<'PY'
+import struct, sys
+def vi(n):
+    out = b""
+    while True:
+        b = n & 0x7F; n >>= 7
+        out += bytes([b | (0x80 if n else 0)])
+        if not n:
+            return out
+def ld(f, payload):
+    return vi(f << 3 | 2) + vi(len(payload)) + payload
+path, live, stale = sys.argv[1], sys.argv[2], sys.argv[3:]
+txn_frags = b"".join(ld(1, vi(1 << 3) + vi(i) + ld(2, ld(1, n.encode()))) for i, n in enumerate(stale))
+txn = vi(1 << 3) + vi(3103) + ld(2, b"5a8f4830-a4ee-47dd-b51b-b0ab5a20ff73") + ld(104, txn_frags)
+frag = vi(1 << 3) + vi(7) + ld(2, ld(1, live.encode()))
+man = vi(1 << 3) + vi(1) + ld(2, frag) + vi(3 << 3) + vi(3105)
+body = txn + struct.pack("<I", len(man)) + man
+open(path, "wb").write(body + struct.pack("<Q", len(txn)) + b"\0\0\2\0" + b"LANC")
+PY
+}
+OLD1=1010000000101010011111106d4c3142aca8f8591dd8c74674.lance
+OLD2=101001011111101001011101315f764a84ab808964d414e715.lance
+H6="$WORK/real"
+mkdir -p "$H6/r/storage/compacted.lance/_versions" "$H6/r/storage/compacted.lance/data"
+mkreal "$H6/r/storage/compacted.lance/_versions/$V_NEW" "$B" "$OLD1" "$OLD2"
+printf 'DATA' > "$H6/r/storage/compacted.lance/data/$B"
+case "$(lance_live_refs "$H6/r/storage/compacted.lance/_versions/$V_NEW" | tr '\n' ' ')" in
+  "$B ") ok "reads only the live fragment of a real manifest, not the Rewrite's old ones" ;;
+  *) bad "lance_live_refs returned [$(lance_live_refs "$H6/r/storage/compacted.lance/_versions/$V_NEW" | tr '\n' ' ')] for a manifest whose one live fragment is $B" ;;
+esac
+case "$(lance_dangling_tables "$H6")" in
+  "") ok "a compacted table (old fragments gone, only named by its Rewrite) is not flagged" ;;
+  *) bad "flagged a healthy compacted table: its manifest's transaction lists fragments that were cleaned up" ;;
+esac
+H7="$WORK/real-torn"
+mkdir -p "$H7/r/storage/t.lance/_versions" "$H7/r/storage/t.lance/data"
+mkreal "$H7/r/storage/t.lance/_versions/$V_NEW" "$A" "$B"
+printf 'DATA' > "$H7/r/storage/t.lance/data/$B"
+case "$(lance_dangling_tables "$H7")" in
+  *"t.lance"*) ok "a real manifest whose LIVE fragment is absent is still flagged (a stale one on disk does not hide it)" ;;
+  *) bad "missed a real torn table: live fragment absent, only a transaction-listed one present" ;;
+esac
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 7. THE SECOND COPY. cloud-cgc-db-restore-all.sh is `cat`-ed whole onto the box
 #    and run standalone, so it cannot source this function -- it carries its own
@@ -138,6 +195,12 @@ if [ "$FN_RA" = "$FN" ]; then
   ok "the two copies are byte-identical"
 else
   bad "restore-all.sh's copy has DRIFTED from cloud-cgc-db-update.sh's -- one of the two gates is now testing something else"
+fi
+FN_LIVE_RA="$(awk '/^lance_live_refs\(\) \{/{f=1} f{print} f&&/^\}$/{exit}' "$RA_SH")"
+if [ -n "$FN_LIVE_RA" ] && [ "$FN_LIVE_RA" = "$FN_LIVE" ]; then
+  ok "lance_live_refs() is byte-identical in both copies"
+else
+  bad "lance_live_refs() is missing from restore-all.sh or has DRIFTED from cloud-cgc-db-update.sh's"
 fi
 
 # Drive the restore-all copy itself, under its own name, through the production
@@ -418,6 +481,7 @@ for _sc_name in update.sh restore-all.sh; do
   [ -n "$_sc_fn" ] || { bad "$_sc_name: no lance_dangling_tables() to time"; continue; }
   _sc_t0=$(date +%s)
   _sc_out=$(timeout 15 bash -c "$FN_NEWEST
+$FN_LIVE
 $_sc_fn
 lance_dangling_tables \"\$1\"" _ "$SC"); _sc_rc=$?
   _sc_dt=$(( $(date +%s) - _sc_t0 ))

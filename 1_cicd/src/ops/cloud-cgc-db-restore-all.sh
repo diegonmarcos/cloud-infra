@@ -596,6 +596,61 @@ done
 # be self-contained. cgc-db-lance-integrity.test.sh extracts BOTH copies and asserts
 # they are byte-identical, because a re-implementation that drifts is precisely how
 # cgc-db-gate.test.sh passed while the path it mirrored was wrong.
+# The data files a manifest's FRAGMENTS use -- not every name that appears in the file.
+# A lance manifest file also embeds the Transaction that created it, and a compaction
+# (Rewrite) transaction lists the OLD fragments it replaced. octocode removes those
+# files itself right after committing (lance cleanup), so grepping every ".lance" name
+# out of the bytes reads a healthy compacted table as torn: 2026-10-14..20 every
+# scheduled run refused to publish cloud-infra-desktop (graphrag_nodes: the newest
+# manifest names ONE live fragment, pylance agrees, the grep found 8 and data/ held 1;
+# #1061), so its GHCR image never advanced. Real files end in "LANC" and carry the
+# manifest's offset 16 bytes from the end; decode Manifest.fragments[].files[].path
+# with the stdlib only. Anything that is not such a file (or no python3) falls back to
+# the old grep, which can only over-report -- a missing tool must never read as clean.
+lance_live_refs() { # $1 = manifest file -> stdout: one data file name per line
+  python3 -I - "$1" 2>/dev/null <<'PY' || { tr -c '0-9a-f.ln' '\n' < "$1" 2>/dev/null | grep -E '[0-9a-f]{32,}\.lance$'; }
+import struct, sys
+def varint(b, i):
+    r = s = 0
+    while True:
+        c = b[i]; i += 1
+        r |= (c & 0x7F) << s
+        if not c & 0x80:
+            return r, i
+        s += 7
+def fields(b):
+    i = 0
+    while i < len(b):
+        k, i = varint(b, i)
+        w = k >> 3, k & 7
+        if w[1] == 0:
+            v, i = varint(b, i)
+        elif w[1] == 2:
+            n, i = varint(b, i); v = b[i:i + n]; i += n
+        elif w[1] == 1:
+            v = b[i:i + 8]; i += 8
+        elif w[1] == 5:
+            v = b[i:i + 4]; i += 4
+        else:
+            raise ValueError("wire type")
+        yield w[0], v
+raw = open(sys.argv[1], "rb").read()
+if len(raw) < 24 or raw[-4:] != b"LANC":
+    sys.exit(3)
+pos = struct.unpack("<Q", raw[-16:-8])[0]
+n = struct.unpack("<I", raw[pos:pos + 4])[0]
+out = []
+for f, v in fields(raw[pos + 4:pos + 4 + n]):
+    if f == 2:
+        for ff, vv in fields(v):
+            if ff == 2:
+                for df, dv in fields(vv):
+                    if df == 1:
+                        out.append(dv.decode())
+sys.stdout.write("".join(p + "\n" for p in out))
+PY
+}
+
 lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir per line
   _ldt_home="$1"
   for _ldt_t in "$_ldt_home"/*/storage/*.lance; do
@@ -624,8 +679,7 @@ lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir
     { for _ldt_f in "$_ldt_t"/data/*.lance; do
         [ -e "$_ldt_f" ] && printf 'D %s\n' "${_ldt_f##*/}"   # empty data/ leaves the glob unexpanded
       done
-      tr -c '0-9a-f.ln' '\n' < "$_ldt_t/_versions/$_ldt_m" 2>/dev/null \
-        | grep -E '[0-9a-f]{32,}\.lance$' | sed 's/^/R /'
+      lance_live_refs "$_ldt_t/_versions/$_ldt_m" | sed 's/^/R /'
     } | awk '
       $1 == "D" { have[$2] = 1; next }
       # No early `exit` on the first miss: awk must drain its input, or the writers
@@ -650,8 +704,7 @@ if [ -n "$_staging_torn" ]; then
   # without it a refusal on the box cannot be compared with the same image's bytes.
   printf '%s\n' "$_staging_torn" | while IFS= read -r _torn_table; do
     _torn_manifest=$(lance_newest_manifest "$_torn_table")
-    _torn_references=$(tr -c '0-9a-f.ln' '\n' < "$_torn_table/_versions/$_torn_manifest" 2>/dev/null \
-                       | grep -E '[0-9a-f]{32,}\.lance$' | tr '\n' ' ' || true)
+    _torn_references=$(lance_live_refs "$_torn_table/_versions/$_torn_manifest" | tr '\n' ' ' || true)
     echo "::error::[cgc-db-restore-all]   ${_torn_table#"$STAGING"/} newest=$_torn_manifest versions=$(ls "$_torn_table/_versions" 2>/dev/null | wc -l) data=$(ls "$_torn_table/data" 2>/dev/null | wc -l) references=[$_torn_references] data_sample=[$(ls "$_torn_table/data" 2>/dev/null | head -3 | tr '\n' ' ')]"
   done
   echo "::error::[cgc-db-restore-all] a manifest naming an absent fragment is unreadable forever. The volume currently being served is left untouched; fix the GHCR image (cgc-db-update.sh self-heals a torn checkpoint by re-indexing that repo from base) and re-run."
