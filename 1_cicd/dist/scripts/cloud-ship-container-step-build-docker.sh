@@ -785,6 +785,18 @@ NEOF
     _docker_buildx_ok() {
         command -v docker >/dev/null 2>&1 && docker buildx version >/dev/null 2>&1
     }
+    # Registry cache EXPORT (--cache-to) is unsupported by the default `docker`
+    # driver ("Cache export is not supported for the docker driver", every
+    # service on 2026-10-20). Use a dedicated docker-container-driver builder;
+    # if it cannot be created, return 1 so the caller takes the classic path
+    # up front instead of failing a buildx build first.
+    _BUILDX_BUILDER="cloud-cache"
+    _docker_buildx_builder_ok() {
+        docker buildx inspect "$_BUILDX_BUILDER" >/dev/null 2>&1 \
+            || docker buildx create --name "$_BUILDX_BUILDER" --driver docker-container >/dev/null 2>&1 \
+            || return 1
+        docker buildx inspect --bootstrap "$_BUILDX_BUILDER" >/dev/null 2>&1
+    }
 
     # ── Per-arch build+push (runner resolve + local/ssh + push) ───────────
     # Args: <arch> <primary-tag> <binaries-tag>. Single-arch callers pass
@@ -882,7 +894,7 @@ NEOF
 
             _PUSHED_DIGEST=""
             _local_buildx_ok=0
-            _docker_buildx_ok && _local_buildx_ok=1
+            _docker_buildx_ok && _docker_buildx_builder_ok && _local_buildx_ok=1
 
             if [ "$_local_buildx_ok" = 1 ]; then
                 # ── BuildKit registry cache (PLAN-ghcr-artifacts.md item 1) ──
@@ -896,6 +908,7 @@ NEOF
                 # second registry round-trip.
                 _META="$(mktemp)"
                 if docker buildx build \
+                    --builder "$_BUILDX_BUILDER" \
                     --platform "$PLATFORM" \
                     --pull \
                     --cache-from "type=registry,ref=$FULL_IMAGE:buildcache" \

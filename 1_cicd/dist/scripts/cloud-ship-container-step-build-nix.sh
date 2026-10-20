@@ -372,16 +372,16 @@ step_build() {
 # after the render, any TRACKED dist/ file the render modified or dropped means
 # the commit lied about its own output. CI-only — a local build is exactly how
 # a developer refreshes dist/ before committing it.
-# Declared .src-hash input set: tracked *.ts/*.js/Dockerfile/package.json under
-# $1, as paths relative to $1, LC_ALL=C sorted.
+# Declared .src-hash input set: tracked JS/TS source (every extension node
+# loads: ts tsx mts cts js jsx mjs cjs) + Dockerfile/package.json under $1, as paths relative to $1, LC_ALL=C sorted.
 src_hash_file_list() {
     _shf_dir="$1"
     if git -C "$_shf_dir" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        git -C "$_shf_dir" ls-files -z -- '*.ts' '*.js' 'Dockerfile' '**/Dockerfile' 'package.json' '**/package.json' \
+        git -C "$_shf_dir" ls-files -z -- '*.ts' '*.tsx' '*.mts' '*.cts' '*.js' '*.jsx' '*.mjs' '*.cjs' 'Dockerfile' '**/Dockerfile' 'package.json' '**/package.json' \
             | tr '\0' '\n'
     else
         (cd "$_shf_dir" && find . -name node_modules -prune -o \
-            \( -name '*.ts' -o -name '*.js' -o -name 'Dockerfile' -o -name 'package.json' \) -type f -print \
+            \( -name '*.ts' -o -name '*.tsx' -o -name '*.mts' -o -name '*.cts' -o -name '*.js' -o -name '*.jsx' -o -name '*.mjs' -o -name '*.cjs' -o -name 'Dockerfile' -o -name 'package.json' \) -type f -print \
             | sed 's|^\./||')
     fi | { grep -v '/node_modules/\|^node_modules/' || true; } | LC_ALL=C sort -u
 }
