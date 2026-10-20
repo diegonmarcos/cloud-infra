@@ -1870,13 +1870,21 @@ chunk_index_repo() {
     _cr_nn=$(wc -l < "$_cr_o/next" | tr -d ' ')
     _cr_l0=0; [ -n "${LLM_PROXY_LOG:-}" ] && [ -f "$LLM_PROXY_LOG" ] && _cr_l0=$(wc -l < "$LLM_PROXY_LOG" | tr -d ' ')
     _cr_hb=""
+    # Stall watchdog (graphrag only, see chunk_heartbeat): octocode runs in the background so
+    # the heartbeat can find and kill it; a kill it ordered is reported as the window's 124.
+    _cr_pidf="$_cr_o/octocode.pid"; _cr_stalled="$_cr_o/stalled"; rm -f "$_cr_pidf" "$_cr_stalled"
+    _cr_stall_s=0
+    [ "$MANIFEST_PHASE" = "graphrag" ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-20} * 60 ))
     if [ "${CGC_HEARTBEAT_S:-0}" -gt 0 ] 2>/dev/null; then
       : > "$_log"
-      chunk_heartbeat "$_cr_r · chunk $_cr_i" "$_log" "${LLM_PROXY_LOG:-}" "$_cr_l0" "$CGC_HEARTBEAT_S" &
+      chunk_heartbeat "$_cr_r · chunk $_cr_i" "$_log" "${LLM_PROXY_LOG:-}" "$_cr_l0" "$CGC_HEARTBEAT_S" "$_cr_pidf" "$_cr_stall_s" "$_cr_stalled" &
       _cr_hb=$!
     fi
     _cr_t0=$(date +%s); _rc=0
-    ( cd "$_cr_d" && timeout "${_cr_wto}m" octocode index ) >"$_log" 2>&1 || _rc=$?
+    ( cd "$_cr_d" && timeout "${_cr_wto}m" octocode index ) >"$_log" 2>&1 &
+    _cr_op=$!; echo "$_cr_op" > "$_cr_pidf"
+    wait "$_cr_op" || _rc=$?
+    [ -f "$_cr_stalled" ] && _rc=124
     _cr_dt=$(( $(date +%s) - _cr_t0 ))
     if [ -n "$_cr_hb" ]; then kill "$_cr_hb" 2>/dev/null || true; wait "$_cr_hb" 2>/dev/null || true; fi
     chunk_exclude_clear "$_cr_d"

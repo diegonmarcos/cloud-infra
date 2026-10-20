@@ -212,11 +212,26 @@ chunk_llm_summary() {  # $1 call log|""  $2 lines seen before the window  $3 win
   return 0
 }
 
+# Every descendant of $1, deepest first (pgrep -P is procps; present on the hosted runners).
+_hb_tree() {  # $1 pid → stdout: pids
+  for _ht_c in $(pgrep -P "$1" 2>/dev/null); do _hb_tree "$_ht_c"; echo "$_ht_c"; done
+}
+
 # Liveness while one window runs: every $5 s, the window's elapsed minutes, octocode's
 # last numeric progress (never a path -- private repos log here too) and the LLM calls
 # this window has completed. A stall used to be invisible until the slice expired.
-chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen before the window  $5 interval s
-  _hb_t0=$(date +%s)
+#
+# STALL WATCHDOG (#1061, optional $6-$8). cloud-u-android's graphrag windows alternate
+# between 20-30 s (no LLM work) and a hang: "Indexing: 14279/14284 files", 11 LLM calls,
+# then nothing for the whole 90-minute window cap -- no progress line, no further call,
+# nothing sent to the LLM proxy (0 bounded failures), so it is inside octocode, not the
+# network. The cap then kills it, the window's files stay outstanding and three such
+# windows eat a 294-minute slice for +300 files of 21k. A window whose progress line and
+# completed-call count have not moved for $7 seconds (and that has printed a progress line
+# at all, so a slow start is not a stall) is killed here and reported to the caller through
+# the flag file $8, which turns the exit into the same 124 a window timeout gives.
+chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen before the window  $5 interval s  [$6 pid file  $7 stall s  $8 flag file]
+  _hb_t0=$(date +%s); _hb_sig=""; _hb_since=$_hb_t0
   while sleep "$5"; do
     _hb_p=$(tr '\r' '\n' < "$2" 2>/dev/null | grep -oE 'Indexing: [0-9]+/[0-9]+ files|AI analyzing [0-9]+ files for architectural relationships|AI description updates complete|Processing AI batch: [0-9]+ files' | tail -n 1)
     _hb_c=0; _hb_last=""
@@ -225,6 +240,27 @@ chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen 
       [ "$_hb_c" -gt 0 ] && _hb_last=$(tail -n 1 "$3" | jq -r --argjson now "$(date +%s)" '", last call \(($now - .t) | floor)s ago (\(.kind) \(.outcome), \(.ms)ms)"' 2>/dev/null)
     fi
     echo "[cgc-db] $1 heartbeat $(( ( $(date +%s) - _hb_t0 ) / 60 ))m: ${_hb_p:-no progress line yet}; LLM calls done ${_hb_c}${_hb_last}"
+    if [ -n "${8:-}" ] && [ "${7:-0}" -gt 0 ] 2>/dev/null && [ -n "$_hb_p" ]; then
+      if [ "${_hb_p}|${_hb_c}" != "$_hb_sig" ]; then
+        _hb_sig="${_hb_p}|${_hb_c}"; _hb_since=$(date +%s)
+      elif [ $(( $(date +%s) - _hb_since )) -ge "$7" ]; then
+        echo "::warning::[cgc-db] $1 stalled: no progress and no LLM call for $(( ( $(date +%s) - _hb_since ) / 60 ))m at '${_hb_p}' -- killing octocode now instead of waiting for the window cap"
+        : > "$8"
+        _hb_pid=$(cat "$6" 2>/dev/null || true)
+        if [ -n "$_hb_pid" ]; then
+          # The pid is the window's subshell; octocode is its grandchild (subshell -> timeout
+          # -> octocode), so signal every descendant, deepest first, TERM then KILL.
+          _hb_kids=$(_hb_tree "$_hb_pid")
+          # shellcheck disable=SC2086
+          [ -z "$_hb_kids" ] || kill -TERM $_hb_kids 2>/dev/null || true
+          sleep "${CGC_STALL_KILL_GRACE_S:-15}"
+          # shellcheck disable=SC2086
+          [ -z "$_hb_kids" ] || kill -KILL $_hb_kids 2>/dev/null || true
+          kill -TERM "$_hb_pid" 2>/dev/null || true
+        fi
+        return 0
+      fi
+    fi
   done
 }
 
