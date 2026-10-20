@@ -806,6 +806,20 @@ lance_gc_unreferenced_data() { # $1 = octocode home (or staging tree)
   :
 }
 
+# One line per lance table: manifest count, newest manifest name, data-file count.
+# Names and counts only (hashes, no content), so it is safe in a public log. Added
+# for #1061: cloud-infra-desktop's publish gate refuses every scheduled run with a
+# newest manifest naming 8 fragments while data/ holds 1, but the same prune + GC on
+# the same restored image leaves 8 locally, so something between the restore and the
+# gate shrinks data/. These lines show at which step.
+lance_state_summary() { # $1 = octocode home, $2 = label
+  for _lss_t in "$1"/*/storage/*.lance; do
+    [ -d "$_lss_t/_versions" ] || continue
+    echo "[cgc-db] lance state ($2): $(basename "$_lss_t") manifests=$(ls "$_lss_t/_versions" 2>/dev/null | wc -l | tr -d ' ') newest=$(lance_newest_manifest "$_lss_t") data=$(ls "$_lss_t/data" 2>/dev/null | wc -l | tr -d ' ') versions=[$(ls "$_lss_t/_versions" 2>/dev/null | tr '\n' ' ')]"
+  done
+  :
+}
+
 lance_dangling_tables() { # $1 = octocode home -> stdout: one dangling table dir per line
   _ldt_home="$1"
   for _ldt_t in "$_ldt_home"/*/storage/*.lance; do
@@ -875,8 +889,11 @@ checkpoint_publish() {  # $1 = repo local name
     # incremental base, octocode's change-gate sees the table present and never
     # rewrites it, and the run goes green while every consumer query dies. Refuse.
     # set -eu + a bare call site means this return FAILS the job, which is the point.
+    lance_state_summary "$OCTO_HOME" "$1 before prune"
     lance_prune_old_versions "$OCTO_HOME"
+    lance_state_summary "$OCTO_HOME" "$1 after prune"
     lance_gc_unreferenced_data "$OCTO_HOME"
+    lance_state_summary "$OCTO_HOME" "$1 after gc"
     _cp_torn=$(lance_dangling_tables "$OCTO_HOME")
     if [ -n "$_cp_torn" ]; then
       echo "::error::[cgc-db] refusing to publish $1 — dangling lance manifest(s) in this home:"
@@ -1167,8 +1184,10 @@ if [ "${CGC_PACKAGE_MODE:-monolith}" = "per-repo" ]; then
   # reasoning as the CGC_FORCE note above: the metadata tables gate the changed-file
   # set, so the only full-corpus path this octocode has is starting from the shared
   # base. Treat a torn checkpoint as NO checkpoint.
+  lance_state_summary "$OCTO_HOME" "restored, before prune"
   lance_prune_old_versions "$OCTO_HOME"
   lance_gc_unreferenced_data "$OCTO_HOME"
+  lance_state_summary "$OCTO_HOME" "restored, after prune+gc"
   _torn=$(lance_dangling_tables "$OCTO_HOME")
   if [ -n "$_torn" ]; then
     echo "::warning::[cgc-db] torn checkpoint restored from GHCR — dangling lance manifest(s):"
