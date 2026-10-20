@@ -6,27 +6,27 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2937,
+    "files": 2945,
     "by_lang": {
-      "sh": 150,
+      "sh": 151,
       "nix": 169,
-      "py": 862,
-      "ts": 1148,
-      "js": 73,
+      "py": 863,
+      "ts": 1153,
+      "js": 74,
       "rust": 535
     },
     "by_role": {
-      "shell": 140,
+      "shell": 141,
       "nix-module": 17,
       "python": 853,
-      "module": 700,
-      "file": 319,
+      "module": 704,
+      "file": 320,
       "script": 8,
       "flake": 77,
       "compose": 75,
       "entrypoint": 48,
-      "mcp-tool": 113,
-      "workflow-dag": 4,
+      "mcp-tool": 114,
+      "workflow-dag": 5,
       "rust-module": 530,
       "hook": 53
     }
@@ -2521,6 +2521,20 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/jev.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "jevAlertPriority",
+        "JevPriority",
+        "JevAlertState"
+      ],
+      "imports": [],
+      "symbols": [
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+      ]
+    },
+    {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/notify.ts",
       "lang": "ts",
       "role": "module",
@@ -2707,6 +2721,7 @@
         "events",
         "./config.js",
         "./async-ssh.js",
+        "./jev.js",
         "./db.js",
         "./notify.js"
       ],
@@ -3109,6 +3124,18 @@
       "symbols": [
         "findPhotoprismBuildJson()"
       ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/test-jev-alert-priority.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "./code/shared/libs/jev.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_c3-public-api/build.sh",
@@ -5596,6 +5623,20 @@
       ]
     },
     {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/jev.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "jevAlertPriority",
+        "JevPriority",
+        "JevAlertState"
+      ],
+      "imports": [],
+      "symbols": [
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+      ]
+    },
+    {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/notify.ts",
       "lang": "ts",
       "role": "module",
@@ -5782,6 +5823,7 @@
         "events",
         "./config.js",
         "./async-ssh.js",
+        "./jev.js",
         "./db.js",
         "./notify.js"
       ],
@@ -13369,6 +13411,24 @@
       ]
     },
     {
+      "path": "infra-obs_dagu/src/dags/test_jev-call-sites.py",
+      "lang": "py",
+      "role": "workflow-dag",
+      "exports": [
+        "stubs(d, answer)",
+        "run_dag(name, answer)",
+        "main()"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "stubs(d, answer)",
+        "run_dag(name, answer)",
+        "main()"
+      ]
+    },
+    {
       "path": "infra-obs_dagu/src/flake.nix",
       "lang": "nix",
       "role": "flake",
@@ -19443,6 +19503,20 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/jev.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "jevAlertPriority",
+        "JevPriority",
+        "JevAlertState"
+      ],
+      "imports": [],
+      "symbols": [
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/notify.ts",
       "lang": "ts",
       "role": "module",
@@ -19629,6 +19703,7 @@
         "events",
         "./config.js",
         "./async-ssh.js",
+        "./jev.js",
         "./db.js",
         "./notify.js"
       ],
@@ -20906,6 +20981,20 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/jev.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "jevAlertPriority",
+        "JevPriority",
+        "JevAlertState"
+      ],
+      "imports": [],
+      "symbols": [
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/notify.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -21092,6 +21181,7 @@
         "events",
         "./config.js",
         "./async-ssh.js",
+        "./jev.js",
         "./db.js",
         "./notify.js"
       ],
@@ -38846,6 +38936,17 @@
         "node:fs",
         "node:path",
         "./bots/telegram.mjs"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "user-ai_my-ai-api/src/code/test-my-ai-jev-tier.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs"
       ],
       "symbols": []
     },
@@ -72583,6 +72684,7 @@
         "sq()",
         "backup_db()",
         "ensure_writable()",
+        "jev_pick()",
         "cmd_integrity_check()",
         "cmd_integrity_fix()",
         "cmd_dedupe()",
@@ -72602,6 +72704,7 @@
         "sq()",
         "backup_db()",
         "ensure_writable()",
+        "jev_pick()",
         "cmd_integrity_check()",
         "cmd_integrity_fix()",
         "cmd_dedupe()",
@@ -72611,6 +72714,20 @@
         "_resync_msgs_count()",
         "cmd_reseed_inbox_archive()",
         "cmd_all()"
+      ]
+    },
+    {
+      "path": "user-comm_tools-maddy/src/test-jev-fallback.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "ans()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "ans()"
       ]
     },
     {
