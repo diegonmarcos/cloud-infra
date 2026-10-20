@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21731,
+    "files": 21736,
     "by_lang": {
-      "sh": 508,
+      "sh": 509,
       "py": 148,
-      "kotlin": 11363,
+      "kotlin": 11367,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -18,14 +18,14 @@
       "rust": 107
     },
     "by_role": {
-      "shell": 397,
+      "shell": 398,
       "script": 241,
       "java": 634,
       "entrypoint": 23,
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11360,
+      "kotlin": 11364,
       "python": 49,
       "rust-module": 107,
       "file": 2273,
@@ -10926,7 +10926,6 @@
         "isTabbed(section: Sections.Section)",
         "openSectionPage(sectionId: String, pageId: String, args: Bundle? = null)",
         "pageFragment(sectionId: String, pageId: String, args: Bundle? = null)",
-        "webAppsGrid(ctx: android.content.Context, page: Sections.Page)",
         "syncModeForPage(pageId: String)",
         "sectionGrid(section: Sections.Section, title: String)",
         "starActionsOf(section: Sections.Section)",
@@ -11354,6 +11353,7 @@
       "symbols": [
         "pagesFor(sectionId: String, includeHidden: Boolean = false)",
         "factoryFor( sectionId: String, pageId: String, label: String, url: String = \"\", tabs: List<String> = emptyList()",
+        "webAppsGrid(ctx: android.content.Context, page: Sections.Page)",
         "class SectionPages",
         "class Page"
       ]
@@ -19163,6 +19163,7 @@
         "android.view.View",
         "androidx.compose.ui.test.getBoundsInRoot",
         "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.unit.height",
         "com.diegonmarcos.superapp.ui.KitPageHarness",
         "org.junit.Assert.assertEquals",
@@ -80080,6 +80081,26 @@
       ]
     },
     {
+      "path": "ac_cloud-calc/test/test-calc-web.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()",
+        "stage()",
+        "mutant()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()",
+        "stage()",
+        "mutant()"
+      ]
+    },
+    {
       "path": "ac_cloud-calc/test/test-fleet-setup.sh",
       "lang": "sh",
       "role": "shell",
@@ -80095,6 +80116,118 @@
         "bad()",
         "scratch()",
         "plant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/web/build.gradle.kts",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "navResources",
+        "navJson",
+        "genNav",
+        "copyNav"
+      ],
+      "imports": [
+        "groovy.json.JsonOutput",
+        "groovy.json.JsonSlurper",
+        "org.jetbrains.kotlin.gradle.ExperimentalWasmDsl"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-calc/web/src/wasmJsMain/kotlin/com/diegonmarcos/cloudcalc/web/CalcIcons.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.PathFillType",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "androidx.compose.ui.graphics.vector.addPathNodes",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "symbols": [
+        "glyph(name: String, path: String)",
+        "of(name: String)",
+        "class CalcIcons"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/web/src/wasmJsMain/kotlin/com/diegonmarcos/cloudcalc/web/Eval.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "of(expr: String)",
+        "show(v: Double)",
+        "atEnd()",
+        "sum()",
+        "product()",
+        "unary()",
+        "number()",
+        "class Eval",
+        "class Parser"
+      ]
+    },
+    {
+      "path": "ac_cloud-calc/web/src/wasmJsMain/kotlin/com/diegonmarcos/cloudcalc/web/Main.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "main"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.ExperimentalComposeUiApi",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.vector.rememberVectorPainter",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.window.ComposeViewport",
+        "com.diegonmarcos.cloudcalc.web.generated.Res",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
+        "com.diegonmarcos.superapp.bottomnav.NavDecl",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
+        "com.diegonmarcos.superapp.bottomnav.islandEntries",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitEmptyState",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "kotlinx.browser.document",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.contentOrNull"
+      ],
+      "symbols": [
+        "main()",
+        "parseNav(text: String)",
+        "CalcScreen()",
+        "CalcShell(decl: NavDecl)",
+        "press(expr: String, key: String)",
+        "Keypad()"
       ]
     },
     {
