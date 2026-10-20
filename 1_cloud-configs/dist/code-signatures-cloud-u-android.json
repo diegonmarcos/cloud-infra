@@ -6,11 +6,11 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21740,
+    "files": 21750,
     "by_lang": {
-      "sh": 510,
+      "sh": 512,
       "py": 148,
-      "kotlin": 11370,
+      "kotlin": 11378,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -18,14 +18,14 @@
       "rust": 107
     },
     "by_role": {
-      "shell": 399,
+      "shell": 401,
       "script": 241,
       "java": 634,
       "entrypoint": 23,
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11367,
+      "kotlin": 11375,
       "python": 49,
       "rust-module": 107,
       "file": 2273,
@@ -37179,6 +37179,43 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/GateTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GateTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "rig(minLabelled: Int = 2, minPrecision: Double = 0.75, ttl: Long = 0)",
+        "ask(r: Rig, n: Int)",
+        "report(r: Rig, call: String?, label: Any?, app: String = Fixtures.APP, use: String = \"g\")",
+        "aGatedUseIsHeldWithItsCallIdButStillScoredAndJournaled()",
+        "anUngatedUseIsUnchangedAndNowCarriesItsCall()",
+        "enoughLabelledOutcomesAtThePrecisionOpenTheGate()",
+        "tooFewLabelsKeepItClosedWhateverThePrecision()",
+        "theLatestOutcomeOfACallWins()",
+        "aCachedAnswerIsHeldToo()",
+        "anOpenGateServesTheCachedAnswerWithTheCall()",
+        "anOutcomeIsRefusedForTheWrongAppUseOrShape()",
+        "theJournalHoldsNoStateOrLabelContentBeyondTheOption()",
+        "precisionCountsOnlyConfidentAnswersWithAnOutcome()",
+        "aLabelOfAnotherShapeIsNotACountedAnswer()",
+        "aBadGateDeclarationIsRejectedNotServed()",
+        "gated(g: JSONObject?)",
+        "gate(after: List<String>, n: Int, p: Double)",
+        "class GateTest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/decisions-core/src/test/kotlin/com/diegonmarcos/superapp/decisions/core/JournalTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -37400,12 +37437,33 @@
         "run(app: String, name: String, request: JSONObject)",
         "setConsent(caller: String, request: JSONObject)",
         "status(app: String)",
-        "answered(use: UseDecl, results: JSONObject, cached: Boolean)",
+        "outcome(caller: String, request: JSONObject)",
+        "held(app: String, use: UseDecl, call: String)",
+        "picks(results: JSONObject)",
+        "answered(use: UseDecl, results: JSONObject, cached: Boolean, call: String)",
         "refuse(app: String, use: String, decl: UseDecl?, reason: String, latency: Long? = null)",
         "sha256(text: String)",
         "canon(x: Any?)",
         "class Engine",
         "class keys"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/decisions-engine/src/main/java/com/diegonmarcos/superapp/decisions/core/Evidence.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GateDecl",
+        "Evidence"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "precision(lines: List<String>, use: String)",
+        "open(gate: GateDecl, lines: List<String>)",
+        "class GateDecl",
+        "class Evidence"
       ]
     },
     {
@@ -37420,6 +37478,7 @@
       ],
       "symbols": [
         "record(app: String, use: String, outcome: String, extra: JSONObject = JSONObject()",
+        "lines(n: Int)",
         "summary(n: Int)",
         "class Journal"
       ]
@@ -37654,6 +37713,7 @@
       "symbols": [
         "decide(app: String, request: String)",
         "status(app: String)",
+        "outcome(app: String, request: String)",
         "consent(app: String, request: String)",
         "noPolicy()",
         "class Dispatcher"
@@ -37773,6 +37833,7 @@
         "statusIsAnsweredForTheCaller()",
         "consentIsAcceptedFromTheSettingAppOnly()",
         "withoutAPolicyEveryMethodIsNoPolicy()",
+        "outcomeRunsTheEngineForTheCallerTheBinderNamed()",
         "class DispatcherTest"
       ]
     },
@@ -37823,6 +37884,7 @@
       "symbols": [
         "decide(context: Context, use: String, state: Any?, questions: JSONObject)",
         "outcome(context: Context, use: String, state: Any?, questions: JSONObject)",
+        "report(context: Context, use: String, call: String, label: Any)",
         "status(context: Context)",
         "setConsent(context: Context, app: String, use: String, granted: Boolean)",
         "ask(method: String, context: Context, request: JSONObject)",
@@ -37885,6 +37947,7 @@
         "aCachedFlagIsKept()",
         "aRefusalKeepsItsReasonAndNothingElseIsAnAnswer()",
         "theBoundariesOfAProbabilityAreInclusive()",
+        "theCallIdTravelsWithAnAnswerAndWithAHeldNoOpinion()",
         "class VerdictTest"
       ]
     },
@@ -70907,6 +70970,26 @@
       ]
     },
     {
+      "path": "ac_cloud-account/test/test-account-web.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()",
+        "stage()",
+        "mutant()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()",
+        "stage()",
+        "mutant()"
+      ]
+    },
+    {
       "path": "ac_cloud-account/test/test-fleet-setup.sh",
       "lang": "sh",
       "role": "shell",
@@ -70936,6 +71019,98 @@
       "symbols": [
         "check()",
         "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/web/build.gradle.kts",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "navResources",
+        "navJson",
+        "genNav",
+        "copyNav"
+      ],
+      "imports": [
+        "groovy.json.JsonOutput",
+        "groovy.json.JsonSlurper",
+        "org.jetbrains.kotlin.gradle.ExperimentalWasmDsl"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-account/web/src/wasmJsMain/kotlin/com/diegonmarcos/cloudaccount/web/GenericIcons.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.PathFillType",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "androidx.compose.ui.graphics.vector.addPathNodes",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "symbols": [
+        "glyph(name: String, path: String)",
+        "of(name: String)",
+        "class GenericIcons"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/web/src/wasmJsMain/kotlin/com/diegonmarcos/cloudaccount/web/Main.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "main"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.ExperimentalComposeUiApi",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.vector.rememberVectorPainter",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.window.ComposeViewport",
+        "com.diegonmarcos.cloudaccount.web.generated.Res",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
+        "com.diegonmarcos.superapp.bottomnav.NavDecl",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
+        "com.diegonmarcos.superapp.bottomnav.islandEntries",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitEmptyState",
+        "com.diegonmarcos.superapp.uikit.KitCard",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "kotlinx.browser.document",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.contentOrNull",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.jsonPrimitive"
+      ],
+      "symbols": [
+        "main()",
+        "parseNav(text: String)",
+        "NavScreen()",
+        "NavShell(decl: NavDecl)",
+        "MockPage()",
+        "class MockRow"
       ]
     },
     {
@@ -73233,6 +73408,26 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/test/test-browser-web.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()",
+        "stage()",
+        "mutant()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()",
+        "stage()",
+        "mutant()"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/test/test-fleet-setup.sh",
       "lang": "sh",
       "role": "shell",
@@ -73286,6 +73481,98 @@
         "probe(rows)",
         "render(rows)",
         "main(argv)"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/web/build.gradle.kts",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "navResources",
+        "navJson",
+        "genNav",
+        "copyNav"
+      ],
+      "imports": [
+        "groovy.json.JsonOutput",
+        "groovy.json.JsonSlurper",
+        "org.jetbrains.kotlin.gradle.ExperimentalWasmDsl"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "ac_cloud-browser/web/src/wasmJsMain/kotlin/com/diegonmarcos/cloudbrowser/web/GenericIcons.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.PathFillType",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.graphics.vector.ImageVector",
+        "androidx.compose.ui.graphics.vector.addPathNodes",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "symbols": [
+        "glyph(name: String, path: String)",
+        "of(name: String)",
+        "class GenericIcons"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/web/src/wasmJsMain/kotlin/com/diegonmarcos/cloudbrowser/web/Main.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "main"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.ExperimentalComposeUiApi",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.vector.rememberVectorPainter",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.window.ComposeViewport",
+        "com.diegonmarcos.cloudbrowser.web.generated.Res",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
+        "com.diegonmarcos.superapp.bottomnav.NavDecl",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
+        "com.diegonmarcos.superapp.bottomnav.islandEntries",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitEmptyState",
+        "com.diegonmarcos.superapp.uikit.KitCard",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "kotlinx.browser.document",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.contentOrNull",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.jsonPrimitive"
+      ],
+      "symbols": [
+        "main()",
+        "parseNav(text: String)",
+        "NavScreen()",
+        "NavShell(decl: NavDecl)",
+        "MockPage()",
+        "class MockRow"
       ]
     },
     {
