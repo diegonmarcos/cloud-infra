@@ -6,28 +6,28 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2945,
+    "files": 2949,
     "by_lang": {
-      "sh": 151,
-      "nix": 169,
+      "sh": 152,
+      "nix": 171,
       "py": 863,
       "ts": 1153,
       "js": 74,
-      "rust": 535
+      "rust": 536
     },
     "by_role": {
-      "shell": 141,
+      "shell": 142,
       "nix-module": 17,
       "python": 853,
       "module": 704,
       "file": 320,
       "script": 8,
-      "flake": 77,
-      "compose": 75,
+      "flake": 78,
+      "compose": 76,
       "entrypoint": 48,
       "mcp-tool": 114,
       "workflow-dag": 5,
-      "rust-module": 530,
+      "rust-module": 531,
       "hook": 53
     }
   },
@@ -246,6 +246,14 @@
         "tpl",
         "subst",
         "note",
+        "ms",
+        "msOn",
+        "msCookie",
+        "msAuthCk",
+        "msProvs",
+        "msAuthProv",
+        "msNot",
+        "msBlock",
         "mk",
         "entries",
         "openHosts",
@@ -256,6 +264,13 @@
         "passHosts",
         "wsHosts",
         "argsFor",
+        "multiSso",
+        "enabled",
+        "primaryHost",
+        "extraHosts",
+        "providers",
+        "cookie",
+        "autheliaCookie",
         "snippets",
         "isOpen",
         "gateKind",
@@ -2526,12 +2541,17 @@
       "role": "module",
       "exports": [
         "jevAlertPriority",
+        "jevAlertLabel",
+        "jevAlertOutcome",
         "JevPriority",
-        "JevAlertState"
+        "JevAlertState",
+        "JevAlertAnswer"
       ],
       "imports": [],
       "symbols": [
-        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)",
+        "jevAlertLabel(openMs: number)",
+        "jevAlertOutcome(\n  call: string | null,\n  openMs: number,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
       ]
     },
     {
@@ -5628,12 +5648,17 @@
       "role": "module",
       "exports": [
         "jevAlertPriority",
+        "jevAlertLabel",
+        "jevAlertOutcome",
         "JevPriority",
-        "JevAlertState"
+        "JevAlertState",
+        "JevAlertAnswer"
       ],
       "imports": [],
       "symbols": [
-        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)",
+        "jevAlertLabel(openMs: number)",
+        "jevAlertOutcome(\n  call: string | null,\n  openMs: number,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
       ]
     },
     {
@@ -13417,6 +13442,7 @@
       "exports": [
         "stubs(d, answer)",
         "run_dag(name, answer)",
+        "outcome_test(fails)",
         "main()"
       ],
       "imports": [
@@ -13425,6 +13451,7 @@
       "symbols": [
         "stubs(d, answer)",
         "run_dag(name, answer)",
+        "outcome_test(fails)",
         "main()"
       ]
     },
@@ -17739,6 +17766,85 @@
       ]
     },
     {
+      "path": "infra-sec_auth-broker/parked/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "ab",
+        "up",
+        "secretKey",
+        "mk",
+        "image",
+        "container_name",
+        "ports",
+        "volumes",
+        "restart",
+        "environment",
+        "OAUTH2_PROXY_PROVIDER",
+        "OAUTH2_PROXY_CLIENT_ID",
+        "OAUTH2_PROXY_CLIENT_SECRET",
+        "OAUTH2_PROXY_COOKIE_SECRET",
+        "OAUTH2_PROXY_HTTP_ADDRESS",
+        "OAUTH2_PROXY_PROXY_PREFIX",
+        "OAUTH2_PROXY_SCOPE",
+        "OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE",
+        "OAUTH2_PROXY_COOKIE_NAME",
+        "OAUTH2_PROXY_COOKIE_DOMAINS",
+        "OAUTH2_PROXY_WHITELIST_DOMAINS",
+        "OAUTH2_PROXY_COOKIE_EXPIRE",
+        "OAUTH2_PROXY_COOKIE_REFRESH",
+        "OAUTH2_PROXY_COOKIE_SECURE",
+        "OAUTH2_PROXY_COOKIE_SAMESITE",
+        "OAUTH2_PROXY_REVERSE_PROXY",
+        "OAUTH2_PROXY_UPSTREAMS",
+        "OAUTH2_PROXY_SET_XAUTHREQUEST",
+        "OAUTH2_PROXY_SKIP_PROVIDER_BUTTON",
+        "OAUTH2_PROXY_SILENCE_PING_LOGGING",
+        "limits",
+        "reservations",
+        "logging",
+        "services"
+      ]
+    },
+    {
+      "path": "infra-sec_auth-broker/parked/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "owner",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "lib",
+        "allowedEmails",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "title"
+      ]
+    },
+    {
       "path": "infra-sec_authelia/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -18226,6 +18332,7 @@
       ],
       "imports": [],
       "symbols": [
+        "multiSso",
         "services",
         "caddy",
         "image",
@@ -18268,6 +18375,7 @@
         "caddyRoutes",
         "engine",
         "lib",
+        "multiSso",
         "caddyfileText",
         "templates",
         "packages",
@@ -18303,6 +18411,24 @@
         "session",
         "bearerHeaderUp",
         "sessionHeaderUp"
+      ]
+    },
+    {
+      "path": "infra-sec_caddy/src/test/test-multi-sso.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "render()",
+        "req()",
+        "chk()",
+        "check_allow()"
+      ],
+      "imports": [],
+      "symbols": [
+        "render()",
+        "req()",
+        "chk()",
+        "check_allow()"
       ]
     },
     {
@@ -19508,12 +19634,17 @@
       "role": "module",
       "exports": [
         "jevAlertPriority",
+        "jevAlertLabel",
+        "jevAlertOutcome",
         "JevPriority",
-        "JevAlertState"
+        "JevAlertState",
+        "JevAlertAnswer"
       ],
       "imports": [],
       "symbols": [
-        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)",
+        "jevAlertLabel(openMs: number)",
+        "jevAlertOutcome(\n  call: string | null,\n  openMs: number,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
       ]
     },
     {
@@ -20986,12 +21117,17 @@
       "role": "mcp-tool",
       "exports": [
         "jevAlertPriority",
+        "jevAlertLabel",
+        "jevAlertOutcome",
         "JevPriority",
-        "JevAlertState"
+        "JevAlertState",
+        "JevAlertAnswer"
       ],
       "imports": [],
       "symbols": [
-        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
+        "jevAlertPriority(\n  state: JevAlertState,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)",
+        "jevAlertLabel(openMs: number)",
+        "jevAlertOutcome(\n  call: string | null,\n  openMs: number,\n  fetchImpl: typeof fetch = fetch,\n  env: Record<string, string | undefined> = process.env,\n)"
       ]
     },
     {
@@ -72483,6 +72619,8 @@
         "inbox_rows_page",
         "apply_plan",
         "parse_email",
+        "now_secs",
+        "folders_holding_copy",
         "list_mailboxes",
         "cleanup_stale_mailboxes",
         "Plan"
@@ -72517,6 +72655,8 @@
         "inbox_rows_page(\n    conn: &Connection,\n    inbox_id: i64,\n    after_msg_id: i64,\n    limit: i64,\n)",
         "apply_plan(\n    conn: &mut Connection,\n    inbox_id: i64,\n    user_id: i64,\n    plans: &[Plan],\n    all_scanned_ids: &[i64],\n)",
         "parse_email(cached_header: &[u8])",
+        "now_secs()",
+        "folders_holding_copy(conn: &Connection, inbox_id: i64, user_id: i64, msg_id: i64)",
         "list_mailboxes(conn: &Connection, user_id: i64)",
         "cleanup_stale_mailboxes(\n    conn: &mut Connection,\n    user_id: i64,\n    inbox_id: i64,\n    valid: &std::collections::HashSet<String>,\n)"
       ]
@@ -72527,6 +72667,7 @@
       "role": "rust-module",
       "exports": [
         "from_cached_header_json",
+        "header",
         "from_domain",
         "matches",
         "Email"
@@ -72541,6 +72682,7 @@
       "symbols": [
         "from_cached_header_json(bytes: &[u8])",
         "header_joined(&self, name: &str)",
+        "header(&self, name: &str)",
         "header_exists(&self, name: &str)",
         "from_domain(&self)",
         "matches(email: &Email, node: &PredicateNode)",
@@ -72552,6 +72694,67 @@
         "from_domain_suffix_atom()",
         "header_contains_atom_case_insensitive_header_name()",
         "combinators()"
+      ]
+    },
+    {
+      "path": "user-comm_tools-maddy/src/crate/src/jev.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "candidates",
+        "refine",
+        "parse_advice",
+        "request_body",
+        "post",
+        "from_env",
+        "pending_path",
+        "load_pending",
+        "save_pending",
+        "observed_label",
+        "send_outcome",
+        "Advice",
+        "Advisor",
+        "Sidecar",
+        "Pending"
+      ],
+      "imports": [
+        "crate::email::Email",
+        "crate::rules::",
+        "serde::",
+        "serde_json::",
+        "std::io::",
+        "std::net::",
+        "std::time::Duration",
+        "super::",
+        "std::net::TcpListener"
+      ],
+      "symbols": [
+        "advise(&self, email: &Email, candidates: &[String])",
+        "candidates(rules: &Rules)",
+        "refine(\n    rules: &Rules,\n    email: &Email,\n    folder: &str,\n    advisor: Option<&dyn Advisor>,\n    cands: &[String],\n    asked: &mut usize,\n    cap: usize,\n)",
+        "parse_advice(body: &str, cands: &[String])",
+        "request_body(email: &Email, cands: &[String])",
+        "post(base: &str, path: &str, body: &str, timeout: Duration)",
+        "from_env()",
+        "advise(&self, email: &Email, cands: &[String])",
+        "pending_path(db_path: &str)",
+        "load_pending(path: &str)",
+        "save_pending(path: &str, list: &[Pending])",
+        "observed_label(holding: &[String], cands: &[String])",
+        "send_outcome(base: &str, call: &str, label: &str, timeout: Duration)",
+        "rules()",
+        "email(from: &str, subject: &str)",
+        "advise(&self, _: &Email, _: &[String])",
+        "fixed(pick: Option<&str>, call: Option<&str>, unreachable: bool)",
+        "candidates_are_the_declared_sender_folders_without_the_fallback_or_auth()",
+        "no_opinion_is_the_rules_answer_for_every_kind_of_silence()",
+        "a_matched_message_is_never_sent_anywhere()",
+        "a_confident_declared_pick_refiles_a_fallback_row_and_reports_its_call()",
+        "the_per_run_cap_and_an_unreachable_sidecar_stop_the_asking()",
+        "parse_advice_only_trusts_a_confident_offered_pick()",
+        "the_request_carries_headers_only()",
+        "the_observed_label_is_where_the_user_left_the_message()",
+        "post_reaches_a_sidecar_and_fails_quietly_without_one()"
       ]
     },
     {
@@ -72568,6 +72771,7 @@
       "symbols": [
         "valid_folder_names(rules: &Rules)",
         "one_run(db_path: &str, rules_path: &str, rules: &Rules)",
+        "settle_jev_outcomes(db_path: &str, rules: &Rules, conn: &rusqlite::Connection, inbox_id: i64, user_id: i64)",
         "auth_backfill_mode()",
         "auth_backfill(\n    db_path: &str,\n    rules_path: &str,\n    rules: &Rules,\n    conn: &mut rusqlite::Connection,\n    inbox_id: i64,\n    user_id: i64,\n)",
         "main()"

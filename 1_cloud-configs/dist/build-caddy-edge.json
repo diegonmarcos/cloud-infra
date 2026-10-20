@@ -136,6 +136,31 @@
     "ntfy_token_pattern": "^Bearer tk_"
   },
   "edge_auth": {
+    "multi_sso": {
+      "_doc": "MULTI-SSO (#1066). ONE flag. enabled=false (today) renders byte-identical Caddyfiles (guard: src/test/test-multi-sso.sh). enabled=true: the auth vhost also answers every host in `hosts` (account.diegonmarcos.com; DNS is covered by the wildcard record, TLS is on-demand), serves the three-button chooser on GET / for a browser with no Authelia session, proxies /oauth2/<provider>/* to the auth broker (oauth2-proxy, infra-sec_auth-broker, on oci-apps over the mesh), and the shared edge gate accepts a broker session cookie as a third credential beside the fleet Bearer and the Authelia session. The broker only admits `allowed_emails`. To turn on: create the Google and GitHub OAuth clients, put their ids and secrets in infra-sec_auth-broker/src/secrets.yaml (sops), activate the broker service (infra-sec_auth-broker/README.md), then set enabled=true.",
+      "enabled": false,
+      "primary_host": "auth.diegonmarcos.com",
+      "hosts": [
+        "auth.diegonmarcos.com",
+        "account.diegonmarcos.com"
+      ],
+      "cookie_name": "_diego_sso",
+      "authelia_cookie": "authelia_session",
+      "providers": [
+        {
+          "id": "google",
+          "label": "Google",
+          "upstream": "10.0.0.6:4180",
+          "prefix": "/oauth2/google"
+        },
+        {
+          "id": "github",
+          "label": "GitHub",
+          "upstream": "10.0.0.6:4181",
+          "prefix": "/oauth2/github"
+        }
+      ]
+    },
     "_doc": "THE edge auth policy, one list, three tiers. Every public URL is exactly one of: (a) private -- mesh/WireGuard only (route wg_only:true, or a *.app/.db/s3 name), answered 403 to any non-mesh source and never served by the public edge (caddy-public); (b) public-protected -- the DEFAULT for anything public: the shared (edge_auth) snippet requires `Authorization: Bearer <fleet token>` (introspect-proxy) OR a valid Authelia session cookie, else 401 (API / non-browser) or 302 to auth. (browser); (c) public-open -- anonymous allowed, ONLY what is listed in public_open / technical below, each with a reason. Adding a host to public_open is the only way to make something anonymous; add more entries here. The CI guard (cloud-infra 9_others/test/edge-auth-gate.test.sh) fails on a public site that is in no tier, in two tiers, or open without an entry here. Rendered by _shared/edge-auth.nix into BOTH Caddyfiles (hub infra-sec_caddy, edge infra-sec_caddy-public); the derive copies this block into build-caddy.json and build-caddy-edge.json.",
     "public_open": [
       {
@@ -547,6 +572,17 @@
       "landing_only": true,
       "landing": "https://diegonmarcos.github.io/c__Cloud/",
       "apk": "cloud-nav",
+      "web": {
+        "_doc": "#876 Cloud Nav as a Kotlin/Wasm page (web/ is its own gradle root; the shared libs' pure-Compose sources arrive through the ab_cloud-libs-shared/web composite). Rendered into 1_cicd/src/cicd/ship-cloud-nav-wasm.yml by the workflow generator: `./gradlew wasmJsBrowserDistribution` in `dir`, tested by test/test-nav-web.sh, `build/dist/wasmJs/productionExecutable` zipped to `artifact` and attached to the rolling release as `gh_asset`. A mocked shell: the island and tab strips are ui.bottom_nav / ui.sections as the Android shell reads them, one page has mock data, the rest say they live in the Android app. The APK's own ship ignores this directory.",
+        "dir": "web",
+        "host": "ubuntu-latest",
+        "artifact": "Cloud-Nav.wasm.zip",
+        "gh_asset": "Cloud-Nav.wasm.zip",
+        "portal_slug": "cloud-nav",
+        "entry": "index.html",
+        "tester": "test-nav-web.sh",
+        "size_budget_mb": 20
+      },
       "comment": "APK cloud-nav: no web target, landing redirect"
     },
     {
