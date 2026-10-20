@@ -1,0 +1,111 @@
+{
+  "_schema": "fleet-assets/v1",
+  "_doc": "THE ONE hand-authored declaration of the fleet facts that no other file carries: who the providers are (account / plan / cost source / console links), the electronics that are not mesh peers, what the peers run and do, the non-bucket storage backends, and the domain's registration. It deliberately restates NOTHING that is declared elsewhere: VMs, IPs, WireGuard IPs, regions and disks are READ from config.json (via the consolidated export), the S3 buckets from the consolidated `storage`, the devices that are mesh peers from superapp-users.json (users.<u>.peers, whose wg_client resolves to the WireGuard row), and the zone's DNS records from c_vps/ba-clo_cloudflare/src/terraform.json. Consumers: cloud-u-android ac_cloud-c3 data/gen_fleet_slice.py (the Infra section's Providers / VMs / Storage / Electronics / Domains pages). A fact added here is a DATA edit; no code names it.",
+  "providers": [
+    {
+      "id": "oci",
+      "label": "Oracle Cloud",
+      "vpss": "oci",
+      "account_from": "storage_namespace",
+      "cost": { "live": "/cloud/oci/costs" },
+      "links": [{ "label": "Console", "url": "https://cloud.oracle.com" }]
+    },
+    {
+      "id": "gcloud",
+      "label": "Google Cloud",
+      "vpss": "gcloud",
+      "account_from": "gcp_project",
+      "cost": { "live": "/cloud/gcp/costs" },
+      "links": [{ "label": "Console", "url": "https://console.cloud.google.com" }]
+    },
+    {
+      "id": "hetzner",
+      "label": "Hetzner",
+      "vpss": "hetzner",
+      "use": "Terraform folder only (c_vps/vps_hetzner); no server is declared",
+      "links": [{ "label": "Console", "url": "https://console.hetzner.cloud" }]
+    },
+    {
+      "id": "aws",
+      "label": "Amazon Web Services",
+      "vpss": "aws",
+      "use": "SES mail sending and verification records; no EC2 instance is active",
+      "links": [{ "label": "Console", "url": "https://console.aws.amazon.com" }]
+    },
+    {
+      "id": "cloudflare",
+      "label": "Cloudflare",
+      "account_from": "cf_account_id",
+      "plan": "Free",
+      "cost": { "amount": 0, "currency": "USD", "note": "Cloudflare Free Plan (subscription price 0, read 2026-10-20)" },
+      "use": "Registrar, DNS zone, Email Routing, Tunnel, Workers",
+      "links": [
+        { "label": "Dashboard", "url": "https://dash.cloudflare.com" },
+        { "label": "Registrar", "url": "https://dash.cloudflare.com/?to=/:account/domains/registrations" }
+      ]
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "account_from": "owner_github",
+      "use": "Source repositories, Actions runners (x86), GHCR images, Releases",
+      "links": [{ "label": "Profile", "url": "https://github.com/diegonmarcos" }]
+    },
+    {
+      "id": "vast-ai",
+      "label": "Vast.ai",
+      "vpss": "vast-ai",
+      "links": [{ "label": "Console", "url": "https://cloud.vast.ai" }]
+    },
+    {
+      "id": "nvidia",
+      "label": "NVIDIA",
+      "vpss": "nvidia-llm-api",
+      "use": "Hosted LLM API (build.nvidia.com)",
+      "links": [{ "label": "Build", "url": "https://build.nvidia.com" }]
+    },
+    {
+      "id": "resend",
+      "label": "Resend",
+      "vpss": "resend",
+      "use": "Transactional mail API (c_vps/vps_resend)",
+      "links": [{ "label": "Site", "url": "https://resend.com" }]
+    }
+  ],
+  "_doc_electronics": "Mesh peers are NOT redeclared: `peer` names a key of superapp-users.json users.*.peers, which already carries the label, kind and wg_client (-> the WireGuard IPs). Only what that file lacks is declared here: the OS and the role. A device that is not a mesh peer (no WireGuard identity) is declared in full with `id`, `label`, `kind`. No tablet is declared: none is evidenced anywhere in the fleet declarations.",
+  "electronics": [
+    { "peer": "surface-8-pro", "os": "NixOS", "role": "Workstation: development laptop, mesh client" },
+    { "peer": "samsung-s21plus", "os": "Android", "role": "Primary phone: Termux host, mesh client" },
+    { "peer": "samsung-a37", "os": "Android", "role": "Second phone: mesh client" },
+    {
+      "id": "garmin-fenix-8-pro",
+      "label": "Garmin fenix 8 Pro 47mm",
+      "kind": "smartwatch",
+      "os": "Garmin Connect IQ",
+      "role": "Watch-face target (c_devices/garmin-watchface); no mesh identity"
+    }
+  ],
+  "storage_backends": [
+    {
+      "id": "google-drive",
+      "label": "Google Drive",
+      "provider": "Google Workspace",
+      "url": "https://drive.google.com",
+      "role": "Personal cloud drive reached through cloud-drive-mcp / google-workspace-mcp"
+    }
+  ],
+  "domains": [
+    {
+      "name": "diegonmarcos.com",
+      "registrar": "Cloudflare",
+      "admin": "Cloudflare",
+      "zone_from": "terraform",
+      "renewal_paid": "2026-10",
+      "expires": "2027-11-17",
+      "next_renewal": "2027-11-17",
+      "auto_renew": true,
+      "nameservers": ["burt.ns.cloudflare.com", "phoenix.ns.cloudflare.com"],
+      "verified": "Cloudflare registrar API GET /accounts/{account}/registrar/domains/diegonmarcos.com on 2026-10-20 (expires_at, auto_renew, current_registrar, name_servers); the domain was transferred to Cloudflare on 2026-10-18 and the renewal year was paid in October 2026"
+    }
+  ]
+}
