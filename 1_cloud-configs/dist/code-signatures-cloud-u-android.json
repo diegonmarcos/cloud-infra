@@ -6,29 +6,29 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21662,
+    "files": 21719,
     "by_lang": {
-      "sh": 500,
-      "py": 145,
-      "kotlin": 11325,
+      "sh": 507,
+      "py": 147,
+      "kotlin": 11355,
       "java": 635,
       "ts": 8461,
       "nix": 31,
-      "js": 476,
-      "rust": 89
+      "js": 478,
+      "rust": 105
     },
     "by_role": {
-      "shell": 389,
+      "shell": 396,
       "script": 241,
       "java": 634,
       "entrypoint": 23,
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11322,
-      "python": 46,
-      "rust-module": 89,
-      "file": 2271,
+      "kotlin": 11352,
+      "python": 48,
+      "rust-module": 105,
+      "file": 2273,
       "hook": 150,
       "nix-module": 4,
       "mcp-tool": 53
@@ -7137,6 +7137,7 @@
         "invalidateCache()",
         "warmUp(ctx: Context)",
         "snapshot(ctx: Context)",
+        "listsPackage(pkg: String, allowed: Set<String>?)",
         "collectLaunchableAppsStatic(ctx: Context)",
         "class PhoneAppsFragment",
         "class SmartRendered",
@@ -7961,6 +7962,62 @@
         "delete(uri: Uri, s: String?, a: Array<out String>?)",
         "update(uri: Uri, v: ContentValues?, s: String?, a: Array<out String>?)",
         "class FleetBearerProvider"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/cloud/FleetDiagnostics.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetDiagnostics"
+      ],
+      "imports": [
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "parseArg(arg: String?)",
+        "answer(method: String, arg: String?, src: Source)",
+        "fail(why: String)",
+        "json(text: String)",
+        "slimAbout(aboutJson: String)",
+        "clampTail(text: String)",
+        "class FleetDiagnostics",
+        "class Source",
+        "class Answer"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/cloud/FleetDiagnosticsProvider.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetDiagnosticsProvider"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.content.pm.PackageManager",
+        "android.database.Cursor",
+        "android.net.Uri",
+        "android.os.Binder",
+        "android.os.Bundle",
+        "android.os.Process",
+        "com.diegonmarcos.superapp.configs.Diagnostics",
+        "com.diegonmarcos.superapp.core.FleetConfig",
+        "com.diegonmarcos.superapp.devcontrol.DevControlServer",
+        "com.diegonmarcos.superapp.devtools.LogPipe"
+      ],
+      "symbols": [
+        "onCreate()",
+        "call(method: String, arg: String?, extras: Bundle?)",
+        "refuse(why: String)",
+        "query(uri: Uri, p: Array<out String>?, s: String?, a: Array<out String>?, o: String?)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, s: String?, a: Array<out String>?)",
+        "update(uri: Uri, v: ContentValues?, s: String?, a: Array<out String>?)",
+        "class the",
+        "class FleetDiagnosticsProvider"
       ]
     },
     {
@@ -11796,6 +11853,27 @@
         "onPostScroll( consumed: androidx.compose.ui.geometry.Offset, available: androidx.compose.ui.geometry.Offset, source: androidx.compose.ui.input.nestedscroll.NestedScrollSource, )",
         "onPreFling(available: androidx.compose.ui.unit.Velocity)",
         "class WebPageFragment"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/WebserverLaunch.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebserverLaunch"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.net.Uri",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.updater.Fleet"
+      ],
+      "symbols": [
+        "fleetPackage(fleetId: String, manifestB64: String = BuildConfig.CONSTELLATION_FLEET_B64)",
+        "open(ctx: Context)",
+        "class WebserverLaunch",
+        "class Opened"
       ]
     },
     {
@@ -16898,6 +16976,26 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/PhoneAppsListsOwnPackageTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PhoneAppsListsOwnPackageTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "ownPackageIsListedWithoutProfileFilter()",
+        "ownPackageIsListedAmongOthers()",
+        "ownPackageIsListedWhenWhitelisted()",
+        "profileWhitelistStillCuts()",
+        "class PhoneAppsListsOwnPackageTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/apps/RecentAppsComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -17910,6 +18008,29 @@
       "symbols": [
         "anyContainer()",
         "class ContainerSheetComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/cloud/FleetDiagnosticsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetDiagnosticsTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "repoFile(rel: String)",
+        "class FleetDiagnosticsTest"
       ]
     },
     {
@@ -19057,6 +19178,31 @@
         "webViewOf(root: View)",
         "shown(id: String)",
         "class WebPagesLoadTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/WebserverTileTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebserverTileTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Intent",
+        "android.content.pm.PackageInfo",
+        "androidx.test.core.app.ApplicationProvider",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class WebserverTileTest"
       ]
     },
     {
@@ -21564,61 +21710,62 @@
         "ok()",
         "bad()",
         "codeof()",
-        "fnof()",
-        "lines_ok()",
+        "memof()",
+        "topof()",
+        "ways_ok()",
         "amut()",
         "file_ok()",
         "f2mut()",
         "oauth_free()",
         "masked_row_blank()",
-        "draws_no_secret()",
-        "shown_ok()",
+        "pages_mask_ok()",
         "mask_leaks()",
-        "tabs_ok()",
+        "cmut()",
         "drift_decl_ok()",
         "engine_ok()",
         "actions_ok()",
         "api_ok()",
         "dm()",
         "pat_clean()",
-        "connect_tail_ok()",
-        "pills_ok()",
+        "epm()",
+        "tiles_ok()",
         "gh_ok()",
         "gmut()",
-        "vault_leg_ok()",
+        "land_ok()",
+        "vmut()",
         "schema_rows_cover()",
         "schema_code_ok()",
         "schema_drift()",
-        "fmut()",
-        "union_ok()"
+        "fmut()"
       ],
       "imports": [],
       "symbols": [
         "ok()",
         "bad()",
         "codeof()",
-        "fnof()",
-        "lines_ok()",
+        "memof()",
+        "topof()",
+        "ways_ok()",
         "amut()",
         "file_ok()",
         "f2mut()",
         "oauth_free()",
         "masked_row_blank()",
-        "draws_no_secret()",
-        "shown_ok()",
+        "pages_mask_ok()",
         "mask_leaks()",
-        "tabs_ok()",
+        "cmut()",
         "drift_decl_ok()",
         "engine_ok()",
         "actions_ok()",
         "api_ok()",
         "dm()",
         "pat_clean()",
-        "connect_tail_ok()",
-        "pills_ok()",
+        "epm()",
+        "tiles_ok()",
         "gh_ok()",
         "gmut()",
-        "vault_leg_ok()",
+        "land_ok()",
+        "vmut()",
         "schema_rows_cover()",
         "schema_code_ok()",
         "schema_drift()",
@@ -22705,6 +22852,38 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/test/test-launcher-entry-and-all-apps.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-launcher-icon-own.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/test/test-launcher-presets.sh",
       "lang": "sh",
       "role": "shell",
@@ -23185,6 +23364,7 @@
         "hasnt()",
         "codeof()",
         "hasnt_code()",
+        "hasnt_acct()",
         "name_is_account()",
         "tab_order_ok()",
         "wg_has_externals()",
@@ -23199,6 +23379,7 @@
         "hasnt()",
         "codeof()",
         "hasnt_code()",
+        "hasnt_acct()",
         "name_is_account()",
         "tab_order_ok()",
         "wg_has_externals()",
@@ -23235,13 +23416,15 @@
       "exports": [
         "ok()",
         "bad()",
-        "codeof()"
+        "codeof()",
+        "memof()"
       ],
       "imports": [],
       "symbols": [
         "ok()",
         "bad()",
-        "codeof()"
+        "codeof()",
+        "memof()"
       ]
     },
     {
@@ -24499,6 +24682,7 @@
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.text.KeyboardOptions",
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material3.AlertDialog",
         "androidx.compose.material3.MaterialTheme",
@@ -24518,13 +24702,12 @@
         "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.text.input.KeyboardCapitalization",
         "androidx.compose.ui.text.input.PasswordVisualTransformation",
         "androidx.compose.ui.text.style.TextOverflow",
         "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.cloudlib.auth.SignIn",
-        "com.diegonmarcos.cloudlib.auth.SignInHost",
-        "com.diegonmarcos.cloudlib.auth.SignInResult",
-        "com.diegonmarcos.cloudlib.auth.SignInWays"
+        "com.diegonmarcos.cloudlib.auth.SignInHost"
       ],
       "symbols": [
         "way(kind: String)",
@@ -24892,6 +25075,8 @@
         "giteaToken(ctx: Context, token: String)",
         "importFile(ctx: Context, text: String)",
         "signedIn(ctx: Context, result: SignInResult)",
+        "orphanAddress(ctx: Context)",
+        "linkOrphan(ctx: Context, address: String)",
         "extractSshKey(text: String)",
         "copySensitive(ctx: Context, label: String, text: String)",
         "class ConnectWays",
@@ -32383,6 +32568,7 @@
         "start(url: String, userAgent: String?, referer: String?, contentDisposition: String?, mime: String?, dir: String, cookieHeader: (String)",
         "enqueue(url: String, userAgent: String?, contentDisposition: String?, mime: String?, dir: String, cookieHeader: (String)",
         "status(id: Long)",
+        "uriOf(id: Long)",
         "clear()",
         "bytes()",
         "removeAllFiles()",
@@ -33185,11 +33371,12 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "BrowserTabGrid"
+        "BrowserTabGrid",
+        "TabCardA11y",
+        "TopCropImageView"
       ],
       "imports": [
         "android.content.Context",
-        "android.graphics.BitmapFactory",
         "android.graphics.Color",
         "android.graphics.Typeface",
         "android.graphics.drawable.GradientDrawable",
@@ -33236,7 +33423,12 @@
         "bindHeader(v: View, row: BrowserGridRow.GroupHeader)",
         "cardView(ctx: Context)",
         "bindCard(v: View, tab: BrowserTab)",
+        "showSnapshot(bmp: android.graphics.Bitmap?)",
         "dp(ctx: Context, v: Int)",
+        "setFrame(l: Int, t: Int, r: Int, b: Int)",
+        "setImageBitmap(bm: android.graphics.Bitmap?)",
+        "setImageDrawable(d: android.graphics.drawable.Drawable?)",
+        "applyTopCrop()",
         "class BrowserTabGrid",
         "class DragCallback",
         "class Adapter",
@@ -33712,7 +33904,8 @@
         "android.provider.MediaStore",
         "android.webkit.MimeTypeMap",
         "androidx.core.content.FileProvider",
-        "java.io.File"
+        "java.io.File",
+        "com.diegonmarcos.superapp.browser.MhtmlIntent"
       ],
       "symbols": [
         "publish(ctx: Context, j: DlJob)",
@@ -33747,6 +33940,7 @@
         "android.os.Handler",
         "android.os.Looper",
         "android.webkit.URLUtil",
+        "com.diegonmarcos.superapp.browser.MhtmlIntent",
         "java.io.File",
         "java.util.UUID",
         "java.util.concurrent.ConcurrentHashMap",
@@ -33969,6 +34163,48 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/MhtmlOpen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MhtmlIntent",
+        "MhtmlOpener"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.Intent",
+        "android.net.Uri",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.provider.OpenableColumns",
+        "java.io.File",
+        "java.security.MessageDigest"
+      ],
+      "symbols": [
+        "fileName(uriOrName: String?)",
+        "isMhtmlName(uriOrName: String?)",
+        "isMhtmlMime(mime: String?)",
+        "isMhtmlFileUrl(url: String?)",
+        "source(action: String?, data: String?, stream: String?, mime: String?)",
+        "cacheName(displayName: String?, uri: String)",
+        "downloadMime(name: String?, mime: String?)",
+        "allowsFile(url: String?)",
+        "open(intent: Intent?, done: (String?)",
+        "openUri(uri: Uri, done: (String?)",
+        "openUri(src: MhtmlIntent.Source, mime: String?, done: (String?)",
+        "copy(uri: Uri)",
+        "prune(keep: File)",
+        "class MhtmlIntent",
+        "class Source",
+        "class Load",
+        "class Copy",
+        "class Plain",
+        "class None",
+        "class stays",
+        "class MhtmlOpener"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/OfflineSites.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -34159,6 +34395,42 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/PrivateNames.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PrivateNames"
+      ],
+      "imports": [
+        "java.net.DatagramPacket",
+        "java.net.DatagramSocket",
+        "java.net.InetAddress",
+        "java.util.concurrent.Executors"
+      ],
+      "symbols": [
+        "nameOf(url: String)",
+        "matches(url: String)",
+        "resolve(url: String, lookup: (String)",
+        "resolveAsync(url: String, done: (Result)",
+        "rewrite(url: String, ip: String, port: Int)",
+        "isLoopbackLiteral(host: String)",
+        "isLoopbackAddress(ip: String)",
+        "buildQuery(id: Int, name: String)",
+        "parseAnswer(b: ByteArray, len: Int, id: Int)",
+        "u16(i: Int)",
+        "lookupA(host: String, port: Int, name: String, timeoutMs: Int)",
+        "errorPage(f: Result.Fail)",
+        "esc(s: String)",
+        "parse(o: org.json.JSONObject?)",
+        "class holds",
+        "class PrivateNames",
+        "class Result",
+        "class Ok",
+        "class Fail",
+        "class IN"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/ScrapeEngine.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -34214,6 +34486,54 @@
         "bind(wv: WebView, name: String?)",
         "cookies(name: String?)",
         "class TabProfile"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/browser/src/main/java/com/diegonmarcos/superapp/browser/TabThumbnails.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IncognitoThumbs",
+        "TabThumbConfig",
+        "TabThumbnails"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.graphics.Bitmap",
+        "android.graphics.BitmapFactory",
+        "android.graphics.Canvas",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.util.LruCache",
+        "android.view.View",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.security.MessageDigest",
+        "java.util.concurrent.Executor",
+        "java.util.concurrent.Executors"
+      ],
+      "symbols": [
+        "parse(o: JSONObject?)",
+        "sizeOf(key: String, value: Bitmap)",
+        "put(id: String, bmp: Bitmap, incognito: Boolean = false)",
+        "cached(id: String)",
+        "get(id: String)",
+        "load(id: String, cb: (Bitmap?)",
+        "loadIcon(path: String, cb: (Bitmap?)",
+        "delete(id: String)",
+        "clear()",
+        "capture(v: View, id: String, incognito: Boolean)",
+        "fileOf(id: String)",
+        "write(id: String, bmp: Bitmap)",
+        "webp()",
+        "trimDisk()",
+        "key(id: String)",
+        "shared(ctx: Context, config: TabThumbConfig)",
+        "sharedOrNull()",
+        "class IncognitoThumbs",
+        "class TabThumbConfig",
+        "class TabThumbnails"
       ]
     },
     {
@@ -39070,6 +39390,362 @@
         "wifiOnly_directOnWifi_blocksCell_noImplicitVpn()",
         "incomingOnly_blocksInboundAllowsOutbound()",
         "class FirewallFlowPolicyTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/build.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "std::path::",
+        "std::"
+      ],
+      "symbols": [
+        "main()",
+        "template(cjs: &str, func: &str)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/api.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "jerr",
+        "resolve_in_root",
+        "ls",
+        "read",
+        "search",
+        "lib"
+      ],
+      "imports": [
+        "crate::http::",
+        "crate::render::",
+        "crate::Ctx",
+        "std::collections::HashSet",
+        "std::fs",
+        "std::os::unix::fs::MetadataExt",
+        "std::path::",
+        "std::time::",
+        "they"
+      ],
+      "symbols": [
+        "jerr(status: u16, msg: &str)",
+        "resolve_in_root(root: &Path, url_path: &str)",
+        "ls(ctx: &Ctx, req: &Req)",
+        "read(ctx: &Ctx, req: &Req)",
+        "search(ctx: &Ctx, req: &Req)",
+        "lib(name: &str)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/files.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "page_files",
+        "mime_for"
+      ],
+      "imports": [
+        "crate::api::resolve_in_root",
+        "crate::http::",
+        "crate::render::",
+        "crate::Ctx",
+        "std::fs",
+        "std::path::Path",
+        "std::io::"
+      ],
+      "symbols": [
+        "not_found()",
+        "ancestor_fallback(ctx: &Ctx, url_path: &str)",
+        "sniff_text(head: &[u8])",
+        "page_files(ctx: &Ctx, req: &Req)",
+        "mime_for(path: &Path)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/http.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "q",
+        "header",
+        "bytes",
+        "stream",
+        "json",
+        "html",
+        "text",
+        "with",
+        "pct_decode",
+        "parse_request",
+        "host_of",
+        "listen",
+        "Req",
+        "Resp"
+      ],
+      "imports": [
+        "std::io::",
+        "std::net::",
+        "std::sync::Arc",
+        "std::time::"
+      ],
+      "symbols": [
+        "q(&self, key: &str)",
+        "header(&self, name: &str)",
+        "bytes(status: u16, ctype: &'static str, body: Vec<u8>)",
+        "stream(status: u16, ctype: &'static str, file: std::fs::File, len: u64)",
+        "json(status: u16, body: String)",
+        "html(body: String)",
+        "text(status: u16, body: &str)",
+        "with(mut self, k: &str, v: &str)",
+        "len(&self)",
+        "reason(status: u16)",
+        "pct_decode(s: &str, form: bool)",
+        "parse_request(head: &str)",
+        "host_of(v: &str)",
+        "serve(handler: &Handler, mut stream: TcpStream, port: u16)",
+        "listen(listener: TcpListener, handler: Arc<Handler>)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/lib.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "handle",
+        "handler",
+        "start",
+        "Ctx",
+        "Config"
+      ],
+      "imports": [
+        "http::",
+        "std::net::",
+        "std::path::PathBuf",
+        "std::sync::Arc"
+      ],
+      "symbols": [
+        "host_allowed(ctx: &Ctx, host: &str)",
+        "handle(ctx: &Ctx, req: &Req)",
+        "handler(cfg: &Config)",
+        "start(cfg: Config)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/main.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "main()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/render.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "jstr",
+        "esc_html",
+        "pct_encode",
+        "safe_json_for_script",
+        "breadcrumb",
+        "href_of",
+        "markdown_page",
+        "name",
+        "structured_page",
+        "browse_page",
+        "inject_eruda",
+        "inject_base",
+        "rewrite_fallback_paths",
+        "Structured"
+      ],
+      "imports": [],
+      "symbols": [
+        "jstr(s: &str)",
+        "esc_html(s: &str)",
+        "pct_encode(seg: &str)",
+        "safe_json_for_script(s: &str)",
+        "breadcrumb(url_path: &str)",
+        "href_of(url_path: &str)",
+        "fill(tpl: &str, vals: &[(&str, String)",
+        "markdown_page(url_path: &str, md: &str)",
+        "name(self)",
+        "structured_page(url_path: &str, raw: &str, kind: Structured)",
+        "browse_page(init_path: &str)",
+        "inject_eruda(html: &str)",
+        "inject_base(html: &str, dir_url: &str)",
+        "rewrite_fallback_paths(html: &str, project_dir: &str)"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/sha256.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "sha256_hex"
+      ],
+      "imports": [],
+      "symbols": [
+        "sha256_hex(data: &[u8])"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/sync.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "src()"
+      ],
+      "imports": [],
+      "symbols": [
+        "src()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/tests/common/mod.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "text",
+        "call",
+        "get",
+        "get_html",
+        "fixture_root",
+        "serve",
+        "linux_repo",
+        "Got"
+      ],
+      "imports": [
+        "fleet_webserver::",
+        "std::io::",
+        "std::net::",
+        "std::path::"
+      ],
+      "symbols": [
+        "text(&self)",
+        "call(port: u16, method: &str, target: &str, extra: &str)",
+        "dechunk(b: &[u8])",
+        "get(port: u16, target: &str)",
+        "get_html(port: u16, target: &str)",
+        "fixture_root(tag: &str)",
+        "serve(root: &Path)",
+        "linux_repo()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/tests/contract.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "common::",
+        "std::io::"
+      ],
+      "symbols": [
+        "root_is_the_linux_frontend_and_nothing_else()",
+        "ls_contract()",
+        "read_contract()",
+        "search_contract()",
+        "viewer_pages_and_raw()",
+        "lib_assets_are_served_and_only_those()",
+        "the_root_is_a_wall()",
+        "only_get_and_head_and_only_known_hosts()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/tests/parity.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "common::",
+        "std::net::",
+        "std::process::",
+        "std::time::"
+      ],
+      "symbols": [
+        "drop(&mut self)",
+        "start_node(root: &std::path::Path)",
+        "norm(s: String)",
+        "sorted_json_rows(s: &str)",
+        "ours_equals_the_linux_server()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/tests/vendor.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "fleet_webserver::sha256::sha256_hex",
+        "std::fs",
+        "std::path::PathBuf",
+        "fleet_webserver::render",
+        "fleet_webserver::render::"
+      ],
+      "symbols": [
+        "vendor()",
+        "sha256_matches_the_reference_vectors()",
+        "bundled_frontend_hash_equals_the_linux_repos_copy()",
+        "the_binary_embeds_exactly_the_vendored_bytes()",
+        "nothing_is_downloaded_at_runtime()",
+        "the_versions_we_print_are_the_versions_we_ship()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/vendor/my-webserver.cjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:http",
+        "node:fs/promises",
+        "node:path",
+        "node:os",
+        "node:child_process",
+        "node:crypto",
+        "node:fs",
+        "node:process",
+        "node:sea"
+      ],
+      "symbols": [
+        "getLibAsset(libFile)",
+        "resolveInRoot(p)",
+        "resolveConfiguredRoot(p)",
+        "loadWriteToken()",
+        "resolveWritable(p)",
+        "fmtBytes(n)",
+        "safeJsonForScript(value)",
+        "guessMime(ext, content)",
+        "dirListing(urlPath, entries)",
+        "markdownPage(urlPath, mdContent)",
+        "findAncestorFallback(rootFsDir, urlPath)",
+        "rewriteFallbackAbsolutePaths(html, projectUrlDir)",
+        "breadcrumb(urlPath)",
+        "structuredPage(urlPath, rawContent, format)",
+        "escHtml(s)",
+        "prettyKey(k)",
+        "copyToClipboard(btn, text)",
+        "renderValue(val, depth)",
+        "renderArrayTable(arr, depth)",
+        "makeSortable(table)",
+        "renderKVTable(obj, depth)",
+        "sizeOf(v)",
+        "addCount(summary, v)",
+        "renderObjectSections(container, obj)",
+        "renderData(container, data)",
+        "applyFilter(q)",
+        "serveBrowse(res, initPath)",
+        "checkMutationAllowed(req)",
+        "readJsonBody(req)",
+        "runGit(args, cwd)",
+        "logRequest(req, res, ctx)",
+        "spent()",
+        "walk(dir, rel)",
+        "startupBanner()",
+        "shutdown(sig)"
       ]
     },
     {
@@ -68349,6 +69025,27 @@
       "symbols": []
     },
     {
+      "path": "ab_cloud-terminal-store/webserver-ui-check.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "die(msg)",
+        "ok(msg)",
+        "get(url, timeout=60)",
+        "main()"
+      ],
+      "imports": [
+        "argparse",
+        "urllib.parse"
+      ],
+      "symbols": [
+        "die(msg)",
+        "ok(msg)",
+        "get(url, timeout=60)",
+        "main()"
+      ]
+    },
+    {
       "path": "ac_c3-morpheus/app/src/main/java/com/diegonmarcos/morpheus/MainActivity.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -70344,6 +71041,7 @@
         "com.diegonmarcos.superapp.bottomnav.PageTabs",
         "com.diegonmarcos.superapp.browser.BrowserHostFragment",
         "com.diegonmarcos.superapp.browser.BrowserSearchPageHost",
+        "com.diegonmarcos.superapp.browser.MhtmlOpener",
         "com.diegonmarcos.superapp.uikit.CloudKitTheme",
         "com.diegonmarcos.superapp.uikit.KitFragmentHost",
         "com.diegonmarcos.superapp.uikit.KitFragmentHostState",
@@ -70354,6 +71052,7 @@
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
+        "show(openUrl: String?)",
         "Island()",
         "openSection(id: String)",
         "openConfigsPage(id: String)",
@@ -71526,6 +72225,36 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserPrivateNamesTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserPrivateNamesTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.BrowserConfig",
+        "com.diegonmarcos.superapp.browser.PrivateNames",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File",
+        "java.net.DatagramPacket",
+        "java.net.DatagramSocket",
+        "java.net.InetAddress"
+      ],
+      "symbols": [
+        "json(rel: String)",
+        "shipped()",
+        "baked()",
+        "answerFor(q: ByteArray, ip: ByteArray, id: Int = ((q[0].toInt()",
+        "class BrowserPrivateNamesTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserProfileTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -71726,6 +72455,52 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserTabSnapshotUiTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BrowserTabSnapshotUiTest"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.ComponentName",
+        "android.graphics.Bitmap",
+        "android.graphics.drawable.BitmapDrawable",
+        "android.os.Looper",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.ImageView",
+        "com.diegonmarcos.superapp.browser.BrowserGridRow",
+        "com.diegonmarcos.superapp.browser.BrowserTab",
+        "com.diegonmarcos.superapp.browser.BrowserTabGrid",
+        "com.diegonmarcos.superapp.browser.TabCardA11y",
+        "com.diegonmarcos.superapp.browser.TabThumbConfig",
+        "com.diegonmarcos.superapp.browser.TabThumbnails",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertSame",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.TemporaryFolder",
+        "org.junit.runner.RunWith",
+        "org.robolectric.Robolectric",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.util.concurrent.Executor"
+      ],
+      "symbols": [
+        "tab(id: String)",
+        "grid(thumbs: TabThumbnails, vararg tabs: BrowserTab)",
+        "described(root: View, text: String)",
+        "class BrowserTabSnapshotUiTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/BrowserTabStateTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -71873,6 +72648,28 @@
       ]
     },
     {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/MhtmlOpenTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MhtmlOpenTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.browser.MhtmlIntent",
+        "com.diegonmarcos.superapp.browser.MhtmlIntent.Source",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "filters(action: String)",
+        "class MhtmlOpenTest"
+      ]
+    },
+    {
       "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/PageTopicsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -71945,6 +72742,42 @@
       ],
       "symbols": [
         "class PasskeySupportTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-browser/app/src/test/java/com/diegonmarcos/cloudbrowser/TabThumbnailsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TabThumbnailsTest"
+      ],
+      "imports": [
+        "android.graphics.Bitmap",
+        "com.diegonmarcos.superapp.browser.BrowserConfig",
+        "com.diegonmarcos.superapp.browser.IncognitoThumbs",
+        "com.diegonmarcos.superapp.browser.TabThumbConfig",
+        "com.diegonmarcos.superapp.browser.TabThumbnails",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.TemporaryFolder",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File",
+        "java.util.concurrent.Executor"
+      ],
+      "symbols": [
+        "bmp()",
+        "cache(cfg: TabThumbConfig = TabThumbConfig(memoryKb = 64, diskKb = 1024)",
+        "files(dir: File = File(tmp.root, \"tabs\")",
+        "class TabThumbnailsTest"
       ]
     },
     {
@@ -72425,33 +73258,92 @@
       ]
     },
     {
-      "path": "ac_cloud-c3-webserver/server/src/about.rs",
+      "path": "ac_cloud-c3-webserver/server/build.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "serde_json::Value",
+        "std::path::",
+        "std::"
+      ],
+      "symbols": [
+        "read(p: &Path)",
+        "main()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/server/examples/demo.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "std::io::Write"
+      ],
+      "symbols": [
+        "main()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/server/src/diag.rs",
       "lang": "rust",
       "role": "rust-module",
       "exports": [
-        "fmt_bytes",
-        "groups"
+        "set_source",
+        "set_opener",
+        "open",
+        "page",
+        "api_about",
+        "api_logcat",
+        "api_diagnose"
       ],
       "imports": [
         "crate::",
-        "std::fs",
-        "std::process::Command",
+        "fleet_webserver::render::jstr",
+        "std::sync::OnceLock",
         "super::"
       ],
       "symbols": [
-        "row(rows: &mut Rows, k: &str, v: impl Into<String>)",
-        "read(path: &str)",
-        "dash(v: Option<String>)",
-        "fmt_bytes(n: u64)",
-        "fmt_secs(s: u64)",
-        "getprops()",
-        "meminfo_kb(text: &str, key: &str)",
-        "disk(path: &str)",
-        "disk_rows(rows: &mut Rows, label: &str, path: &str)",
-        "groups(ctx: &Ctx)",
-        "utc_string(secs: u64)",
-        "bytes_and_dates()",
-        "every_group_is_a_declared_macro_and_every_section_has_rows()"
+        "set_source(f: Box<Source>)",
+        "set_opener(f: Box<Opener>)",
+        "open(url: &str)",
+        "page(_ctx: &Ctx, _req: &Req)",
+        "answer(ctx: &Ctx, method: &str, arg: &str)",
+        "api_about(ctx: &Ctx, _req: &Req)",
+        "api_logcat(ctx: &Ctx, req: &Req)",
+        "api_diagnose(ctx: &Ctx, _req: &Req)",
+        "the_page_reads_only_the_three_diag_apis_and_loads_nothing_remote()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/server/src/dns.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "respond",
+        "query_a",
+        "start"
+      ],
+      "imports": [
+        "it",
+        "crate::serving",
+        "std::net::",
+        "super::"
+      ],
+      "symbols": [
+        "question(q: &[u8])",
+        "respond(q: &[u8], names: &[&str], answer: Ipv4Addr, ttl: u32)",
+        "query_a(id: u16, name: &str)",
+        "start()",
+        "rcode(r: &[u8])",
+        "ancount(r: &[u8])",
+        "each_declared_name_resolves_to_loopback()",
+        "the_declared_names_are_the_four_and_only_the_four()",
+        "case_and_trailing_dot_do_not_matter()",
+        "every_other_name_is_refused_never_answered()",
+        "other_record_types_of_our_names_are_nodata()",
+        "junk_is_dropped_or_formerr()",
+        "it_answers_over_a_real_udp_socket()"
       ]
     },
     {
@@ -72459,99 +73351,79 @@
       "lang": "rust",
       "role": "rust-module",
       "exports": [
-        "q",
-        "bytes",
-        "json",
-        "html",
-        "text",
-        "handle",
+        "handle_diag",
         "start",
         "Ctx",
-        "Req",
-        "Resp"
+        "Config"
       ],
       "imports": [
-        "std::io::",
+        "fleet_webserver::http::",
+        "fleet_webserver::render::jstr",
         "std::net::",
-        "std::path::PathBuf",
-        "std::time::",
-        "super::"
+        "std::sync::Arc",
+        "std::time::Instant",
+        "super::",
+        "std::io::"
       ],
       "symbols": [
-        "q(&self, key: &str)",
-        "bytes(status: u16, ctype: &'static str, body: Vec<u8>)",
-        "json(status: u16, body: String)",
-        "html(body: String)",
-        "text(status: u16, body: &str)",
-        "reason(status: u16)",
-        "pct_decode(s: &str, form: bool)",
-        "parse_request(head: &str)",
-        "handle(ctx: &Ctx, req: &Req)",
-        "serve(ctx: &Ctx, mut stream: TcpStream)",
-        "start(port: u16, root: &str)",
-        "temp_root()",
-        "start(root: PathBuf)",
-        "get(port: u16, target: &str)",
-        "get_method(port: u16, method: &str, target: &str)",
-        "end_to_end_every_declared_route_answers()",
-        "a_route_added_to_the_table_shows_in_the_json_and_a_removed_one_does_not()",
-        "request_parsing()"
+        "private_names()",
+        "handle_diag(ctx: &Ctx, req: &Req)",
+        "start(cfg: Config)",
+        "diag_get(path: &str, host: &str)",
+        "diagnostics_listener_serves_diagnostics_only()",
+        "the_drive_is_the_shared_server()",
+        "jstr_is_the_shared_one()"
       ]
     },
     {
-      "path": "ac_cloud-c3-webserver/server/src/routes.rs",
+      "path": "ac_cloud-c3-webserver/server/src/serving.rs",
       "lang": "rust",
       "role": "rust-module",
       "exports": [
-        "find",
-        "check_table",
-        "jstr",
-        "routes_json",
-        "routes_json_of",
-        "resolve_in_root",
-        "esc_html",
-        "mime_for",
-        "pct_encode",
-        "Kind",
-        "Route"
+        "name",
+        "url_ip",
+        "url_name",
+        "parse",
+        "get",
+        "by_id",
+        "names",
+        "is_up",
+        "json",
+        "Role",
+        "Endpoint",
+        "Dns",
+        "Serving"
       ],
       "imports": [
-        "crate::",
-        "std::collections::HashSet",
-        "std::fs",
-        "std::os::unix::fs::MetadataExt",
-        "std::path::",
-        "std::time::",
-        "a",
-        "they",
+        "fleet_webserver::render::jstr",
+        "serde_json::Value",
+        "std::net::",
+        "std::sync::OnceLock",
+        "std::time::Duration",
+        "fleet_webserver::render::",
         "super::"
       ],
       "symbols": [
-        "find(path: &str)",
-        "check_table()",
-        "jstr(s: &str)",
-        "jerr(status: u16, msg: &str)",
-        "routes_json()",
-        "page_shell(_ctx: &Ctx, _req: &Req)",
-        "api_routes(_ctx: &Ctx, _req: &Req)",
-        "api_health(ctx: &Ctx, _req: &Req)",
-        "api_config(ctx: &Ctx, _req: &Req)",
-        "api_about(ctx: &Ctx, _req: &Req)",
-        "resolve_in_root(root: &Path, url_path: &str)",
-        "api_ls(ctx: &Ctx, req: &Req)",
-        "api_read(ctx: &Ctx, req: &Req)",
-        "api_search(ctx: &Ctx, req: &Req)",
-        "esc_html(s: &str)",
-        "mime_for(path: &Path)",
-        "page_files(ctx: &Ctx, req: &Req)",
-        "pct_encode(seg: &str)",
-        "table_is_well_formed()",
-        "every_declared_path_dispatches_to_itself()",
-        "routes_json_lists_exactly_the_table()",
-        "the_five_tabs_in_order_with_home_centre()",
-        "resolve_refuses_escape()",
-        "dump_routes_json()",
-        "json_strings_escape()"
+        "name(self)",
+        "url_ip(&self)",
+        "url_name(&self)",
+        "s(v: &Value, key: &str)",
+        "port(v: &Value, what: &str)",
+        "parse(text: &str)",
+        "get()",
+        "by_id(id: &str)",
+        "names()",
+        "is_up(port: u16)",
+        "bundled_json()",
+        "json(live: bool)",
+        "mutated(f: impl Fn(&mut Value)",
+        "the_shipped_declaration_is_valid_and_is_the_four_names()",
+        "the_source_declaration_holds_no_port_and_the_resolved_ports_are_the_owners()",
+        "ports_must_stay_unique()",
+        "names_must_stay_unique_exact_and_under_app()",
+        "the_listeners_and_the_map_must_agree()",
+        "dns_is_loopback_only()",
+        "json_has_a_row_per_endpoint()"
       ]
     },
     {
@@ -72647,6 +73519,27 @@
       ]
     },
     {
+      "path": "ac_cloud-c3-webserver/src-tauri/src/bridge.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "install"
+      ],
+      "imports": [
+        "jni::objects::",
+        "jni::",
+        "std::sync::OnceLock"
+      ],
+      "symbols": [
+        "install(window: &tauri::WebviewWindow)",
+        "take_exception(env: &mut JNIEnv)",
+        "bundle_string(env: &mut JNIEnv, bundle: &JObject, key: &str)",
+        "read_bridge(method: &str, arg: &str)",
+        "friendly(e: &str, authority: &str)",
+        "open_in_browser(url: &str)"
+      ]
+    },
+    {
       "path": "ac_cloud-c3-webserver/src-tauri/src/lib.rs",
       "lang": "rust",
       "role": "rust-module",
@@ -72663,18 +73556,17 @@
       ]
     },
     {
-      "path": "ac_cloud-c3-webserver/test/test-c3-webserver-about-mirror.sh",
-      "lang": "sh",
-      "role": "shell",
-      "exports": [
-        "mirror()",
-        "plant()"
+      "path": "ac_cloud-c3-webserver/test/render-a37.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:os",
+        "node:path"
       ],
-      "imports": [],
-      "symbols": [
-        "mirror()",
-        "plant()"
-      ]
+      "symbols": []
     },
     {
       "path": "ac_cloud-c3-webserver/test/test-c3-webserver-no-kotlin.sh",
@@ -72691,6 +73583,117 @@
       ]
     },
     {
+      "path": "ac_cloud-c3-webserver/test/test-c3-webserver-ports.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "check()",
+        "mutate()",
+        "bjset()",
+        "m_dup_port()",
+        "m_dup_name()",
+        "m_com_name()",
+        "m_wild_name()",
+        "m_dns53()",
+        "m_dns_public()",
+        "m_dns_answer()",
+        "m_dns_on_ep()",
+        "m_drive_path()",
+        "m_diag_path()",
+        "m_literal_same()",
+        "m_literal_drift()",
+        "m_stray_port()",
+        "m_owner_unset()",
+        "m_owner_string()",
+        "m_owner_missing()",
+        "m_no_port_from()",
+        "m_buildrs_lenient()",
+        "m_raw_compiled()",
+        "m_gradle_lenient()",
+        "m_gradle_noresolve()",
+        "m_two_drives()",
+        "m_pin_drift()",
+        "m_pin_title()",
+        "m_second_copy()"
+      ],
+      "imports": [
+        "test-localhost-ports.sh"
+      ],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "check()",
+        "mutate()",
+        "bjset()",
+        "m_dup_port()",
+        "m_dup_name()",
+        "m_com_name()",
+        "m_wild_name()",
+        "m_dns53()",
+        "m_dns_public()",
+        "m_dns_answer()",
+        "m_dns_on_ep()",
+        "m_drive_path()",
+        "m_diag_path()",
+        "m_literal_same()",
+        "m_literal_drift()",
+        "m_stray_port()",
+        "m_owner_unset()",
+        "m_owner_string()",
+        "m_owner_missing()",
+        "m_no_port_from()",
+        "m_buildrs_lenient()",
+        "m_raw_compiled()",
+        "m_gradle_lenient()",
+        "m_gradle_noresolve()",
+        "m_two_drives()",
+        "m_pin_drift()",
+        "m_pin_title()",
+        "m_second_copy()",
+        "m_gradle_nobake()",
+        "m_typed_name()",
+        "m_typed_port()",
+        "m_provider_authority()",
+        "m_client_not_loopback()",
+        "m_client_any_answer()",
+        "m_client_system()",
+        "m_host_unrouted()",
+        "m_dns_answers_all()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/test/test-c3-webserver-render.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "find_chrome()",
+        "cleanup()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "find_chrome()",
+        "cleanup()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/test/test-c3-webserver-shared.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()"
+      ]
+    },
+    {
       "path": "ac_cloud-c3-webserver/test/test-c3-webserver.sh",
       "lang": "sh",
       "role": "shell",
@@ -72698,56 +73701,40 @@
         "pass()",
         "fail()",
         "t1()",
-        "t2()",
-        "t3()",
         "t4()",
         "t5()",
         "t6()",
-        "nav_of()",
-        "t7()",
         "mutate()",
-        "m_route_outside()",
-        "m_nav_hardcoded()",
         "m_placeholder()",
+        "m_custom_page()",
+        "m_route_in_lib()",
+        "m_own_renderer()",
+        "m_drop_shared_dep()",
         "m_no_legacy_packaging()",
         "m_old_asset()",
-        "m_drop_home_tab()",
-        "m_view_orphan()",
-        "m_render_drops_route()",
         "m_rust_port()",
         "m_window_before_bind()",
-        "m_identifier_drift()",
-        "m_about_no_back_link()",
-        "m_copy_all_drops_rows()",
-        "m_json_drops_tab()"
+        "m_identifier_drift()"
       ],
       "imports": [],
       "symbols": [
         "pass()",
         "fail()",
         "t1()",
-        "t2()",
-        "t3()",
         "t4()",
         "t5()",
         "t6()",
-        "nav_of()",
-        "t7()",
         "mutate()",
-        "m_route_outside()",
-        "m_nav_hardcoded()",
         "m_placeholder()",
+        "m_custom_page()",
+        "m_route_in_lib()",
+        "m_own_renderer()",
+        "m_drop_shared_dep()",
         "m_no_legacy_packaging()",
         "m_old_asset()",
-        "m_drop_home_tab()",
-        "m_view_orphan()",
-        "m_render_drops_route()",
         "m_rust_port()",
         "m_window_before_bind()",
-        "m_identifier_drift()",
-        "m_about_no_back_link()",
-        "m_copy_all_drops_rows()",
-        "m_json_drops_tab()"
+        "m_identifier_drift()"
       ]
     },
     {
@@ -73958,6 +74945,26 @@
       ]
     },
     {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/RoutesExport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RoutesExport"
+      ],
+      "imports": [],
+      "symbols": [
+        "grid(shown: List<RoutesTableModel.Row>, light: (RoutesTableModel.Row)",
+        "csvField(s: String)",
+        "csv(grid: List<List<String>>)",
+        "tsvField(s: String)",
+        "tsv(grid: List<List<String>>)",
+        "mdField(s: String)",
+        "markdown(grid: List<List<String>>)",
+        "line(r: List<String>)",
+        "class RoutesExport"
+      ]
+    },
+    {
       "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/RoutesProbe.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -74012,7 +75019,11 @@
       ],
       "imports": [
         "android.content.ClipData",
+        "android.content.Intent",
+        "android.net.Uri",
         "androidx.activity.compose.BackHandler",
+        "androidx.activity.compose.rememberLauncherForActivityResult",
+        "androidx.activity.result.contract.ActivityResultContracts",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.shape.CircleShape",
         "androidx.compose.foundation.verticalScroll",
@@ -74046,11 +75057,7 @@
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.Row",
-        "androidx.compose.foundation.layout.fillMaxSize",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.height",
-        "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.layout.width"
+        "androidx.compose.foundation.layout.fillMaxSize"
       ],
       "symbols": [
         "light(i: Int)",
@@ -74069,7 +75076,9 @@
         "lightColor(l: ProbeModel.Light)",
         "LightSheet( row: RoutesTableModel.Row, probe: ProbeModel.RowProbe?, light: ProbeModel.Light, canRetest: Boolean, onRetest: ()",
         "DeclarationPage(row: RoutesTableModel.Row, decl: JsonObject?, onBack: ()",
-        "copyToClipboard(ctx: Context, text: String)",
+        "copyToClipboard(ctx: Context, text: String, toast: String = \"Copied\")",
+        "shareText(ctx: Context, text: String, mime: String)",
+        "saveAndShareCsv(ctx: Context, uri: Uri, csv: String)",
         "SearchBox(query: String, onQuery: (String)",
         "ChipRow(label: String, chips: @Composable ()",
         "Chip(label: String, selected: Boolean, tag: String, onClick: ()",
@@ -74410,6 +75419,25 @@
       ]
     },
     {
+      "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/RoutesExportTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RoutesExportTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudc3.pages.ProbeModel",
+        "com.diegonmarcos.cloudc3.pages.RoutesExport",
+        "com.diegonmarcos.cloudc3.pages.RoutesTableModel",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "row(name: String, auth: String = \"woauth\", vm: String = \"vm-a\", pub: String = \"$name.example.com\", cat: String = \"app\")",
+        "class RoutesExportTest"
+      ]
+    },
+    {
       "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/RoutesTableComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -74431,6 +75459,8 @@
         "androidx.compose.ui.test.longClick",
         "androidx.compose.ui.test.onAllNodesWithTag",
         "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performScrollToIndex",
+        "androidx.compose.ui.test.assertIsDisplayed",
         "androidx.compose.ui.test.performTouchInput",
         "androidx.compose.ui.test.performTextClearance",
         "androidx.compose.ui.test.performTextInput",
@@ -155684,6 +156714,51 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/configs/WebserverPage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebserverLaunch",
+        "WebserverPage"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.clouddrive.DriveActions",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
+        "com.diegonmarcos.clouddrive.ui.DriveTags",
+        "com.diegonmarcos.clouddrive.ui.Pill",
+        "com.diegonmarcos.clouddrive.ui.PillRow",
+        "com.diegonmarcos.clouddrive.ui.StatusLight"
+      ],
+      "symbols": [
+        "component(d: Declarations.WebserverDecl)",
+        "intent(d: Declarations.WebserverDecl)",
+        "installed(ctx: Context, d: Declarations.WebserverDecl)",
+        "open(ctx: Context, d: Declarations.WebserverDecl)",
+        "WebserverPage(actions: DriveActions, modifier: Modifier = Modifier)",
+        "class WebserverLaunch"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/DataMigration.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -155801,6 +156876,7 @@
       "imports": [
         "com.diegonmarcos.superapp.bottomnav.NavDecl",
         "com.diegonmarcos.superapp.bottomnav.NavPage",
+        "com.diegonmarcos.superapp.bottomnav.TopBarDecl",
         "java.util.Base64",
         "kotlinx.serialization.json.Json",
         "kotlinx.serialization.json.JsonArray",
@@ -155828,6 +156904,7 @@
         "rowAction(id: String)",
         "cloneUrl(repo: GitRepoDecl)",
         "decode(b64: String)",
+        "parseWebserver(text: String)",
         "element(text: String)",
         "str(key: String, default: String = \"\")",
         "bool(key: String, default: Boolean = false)",
@@ -155850,8 +156927,7 @@
         "parseMirrorJobs(text: String)",
         "parseRemotes(text: String)",
         "parseRcloneJobs(text: String)",
-        "parseAuthCredentialIds(text: String)",
-        "parseAuthApplies(text: String)"
+        "parseAuthCredentialIds(text: String)"
       ]
     },
     {
@@ -156042,6 +157118,45 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/ArchiveExtractor.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ArchiveExtractor"
+      ],
+      "imports": [
+        "com.github.junrar.Archive",
+        "java.io.BufferedInputStream",
+        "java.io.File",
+        "java.io.FileInputStream",
+        "java.io.FileOutputStream",
+        "java.io.IOException",
+        "java.io.InputStream",
+        "java.io.OutputStream",
+        "java.util.zip.GZIPInputStream",
+        "java.util.zip.ZipFile",
+        "org.apache.commons.compress.archivers.sevenz.SevenZFile",
+        "org.apache.commons.compress.archivers.tar.TarArchiveInputStream",
+        "org.apache.commons.compress.compressors.xz.XZCompressorInputStream"
+      ],
+      "symbols": [
+        "kindOf(name: String)",
+        "defaultFolderName(name: String)",
+        "copyTo(out: OutputStream)",
+        "visit(item: Item, source: Source)",
+        "extract( archive: File, destination: File, progress: FileOps.Progress, cancelled: ()",
+        "write(b: Int)",
+        "write(b: ByteArray, off: Int, len: Int)",
+        "walk(archive: File, kind: Kind, visitor: Visitor)",
+        "class ArchiveExtractor",
+        "class Kind",
+        "class Result",
+        "class Item",
+        "class Source",
+        "class Visitor"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/ArchiveFs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -156058,6 +157173,161 @@
         "prefixesOf(selected: Collection<Location.Archive>)",
         "isArchiveName(name: String, archiveExtensions: Set<String>)",
         "class ArchiveFs"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/convert/Converter.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Converter",
+        "ConverterRegistry"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.files.FileOps",
+        "java.io.File",
+        "java.io.IOException"
+      ],
+      "symbols": [
+        "accepts(extension: String)",
+        "convert(source: File, destDir: File, progress: FileOps.Progress, cancelled: ()",
+        "forName(fileName: String)",
+        "plus(converter: Converter)",
+        "class Converter",
+        "class ConverterRegistry"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/convert/Converters.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Converters",
+        "MhtmlToHtml",
+        "MarkdownToHtml",
+        "JsonPretty",
+        "ImageConverter",
+        "TextToPdf"
+      ],
+      "imports": [
+        "android.graphics.Bitmap",
+        "android.graphics.BitmapFactory",
+        "android.graphics.Canvas",
+        "android.graphics.Color",
+        "android.graphics.Matrix",
+        "android.media.ExifInterface",
+        "android.os.Build",
+        "com.diegonmarcos.clouddrive.files.FileOps",
+        "java.io.BufferedOutputStream",
+        "java.io.File",
+        "java.io.FileOutputStream",
+        "java.io.IOException",
+        "kotlinx.serialization.ExperimentalSerializationApi",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonElement"
+      ],
+      "symbols": [
+        "output(source: File, dir: File, suffix: String, ext: String)",
+        "readText(source: File)",
+        "accepts(extension: String)",
+        "convert(source: File, destDir: File, progress: FileOps.Progress, cancelled: ()",
+        "pretty(text: String)",
+        "format()",
+        "upright(bitmap: Bitmap, source: File)",
+        "lines(text: String, markdown: Boolean)",
+        "plain(s: String)",
+        "class Converters",
+        "class MhtmlToHtml",
+        "class MarkdownToHtml",
+        "class JsonPretty",
+        "class ImageConverter",
+        "class TextToPdf"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/convert/Markdown.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Markdown"
+      ],
+      "imports": [],
+      "symbols": [
+        "toHtml(src: String, title: String)",
+        "escape(s: String)",
+        "render(src: String)",
+        "blocks(lines: List<String>)",
+        "flush()",
+        "list(lines: List<String>, from: Int, out: StringBuilder)",
+        "indentOf(s: String)",
+        "cells(row: String)",
+        "table(lines: List<String>, from: Int, out: StringBuilder)",
+        "safeUrl(u: String)",
+        "inline(text: String)",
+        "class Markdown"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/convert/Mhtml.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Mhtml"
+      ],
+      "imports": [
+        "java.io.ByteArrayOutputStream",
+        "java.io.File",
+        "java.io.IOException",
+        "java.net.URI",
+        "java.nio.charset.Charset",
+        "java.util.Base64"
+      ],
+      "symbols": [
+        "parse(raw: ByteArray)",
+        "entity(text: String, start: Int, end: Int, out: MutableList<Part>, depth: Int)",
+        "split(text: String, bs: Int, be: Int, boundary: String)",
+        "parseHeaders(block: String)",
+        "param(header: String?, name: String)",
+        "decode(slice: String, encoding: String)",
+        "quotedPrintable(s: String)",
+        "hexPair(s: String, at: Int)",
+        "isMainType(t: String)",
+        "charsetOf(p: Part)",
+        "convert(raw: ByteArray, htmlFile: File, assetsDir: File)",
+        "fileNameFor(p: Part, index: Int)",
+        "uniqueName(used: MutableSet<String>, wanted: String)",
+        "withUtf8Meta(html: String)",
+        "rewrite(text: String, base: String?, byId: Map<String, String>, byLocation: Map<String, String>, prefix: String)",
+        "target(ref: String)",
+        "resolve(base: String?, ref: String)",
+        "stripFragment(url: String)",
+        "percentDecode(s: String)",
+        "class Mhtml",
+        "class Part",
+        "class Output"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/convert/PdfWriter.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PdfWriter"
+      ],
+      "imports": [
+        "java.io.OutputStream",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "pages(lines: List<Line>)",
+        "write(lines: List<Line>, out: OutputStream, cancelled: ()",
+        "put(s: String)",
+        "obj(n: Int, body: String)",
+        "num(f: Float)",
+        "wrap(text: String, width: Int)",
+        "escape(s: String)",
+        "class PdfWriter",
+        "class Line"
       ]
     },
     {
@@ -156094,6 +157364,49 @@
       ],
       "symbols": [
         "ExplorerScreen( page: String?, onPageConsumed: ()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/FileActionDialogs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnzipDialog",
+        "ConvertDialog"
+      ],
+      "imports": [
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.files.convert.Converter",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
+        "java.io.File"
+      ],
+      "symbols": [
+        "UnzipDialog(entry: FileOps.Entry, defaultDest: String, onDismiss: ()",
+        "FolderBrowser(path: String, onPick: (String)",
+        "BrowserRow(text: String, onClick: ()",
+        "ConvertDialog(entry: FileOps.Entry, converters: List<Converter>, onDismiss: ()"
       ]
     },
     {
@@ -156218,6 +157531,8 @@
         "deleteSelection(id: PaneId)",
         "zipSelection(id: PaneId, archiveName: String)",
         "extractHere(entry: FileOps.Entry)",
+        "unzip(entry: FileOps.Entry, destPath: String)",
+        "convert(entry: FileOps.Entry, converter: com.diegonmarcos.clouddrive.files.convert.Converter)",
         "convertPdf(entry: FileOps.Entry, target: String)",
         "createFolder(id: PaneId, name: String)",
         "createFile(id: PaneId, name: String)",
@@ -156231,9 +157546,7 @@
         "closeDuplicates()",
         "openProperties(entry: FileOps.Entry)",
         "closeProperties()",
-        "visibleEntries(pane: PaneState, entries: List<FileOps.Entry>, filters: List<Declarations.FilterDecl>)",
-        "class FilesController",
-        "class Listing"
+        "visibleEntries(pane: PaneState, entries: List<FileOps.Entry>, filters: List<Declarations.FilterDecl>)"
       ]
     },
     {
@@ -156367,6 +157680,8 @@
         "class BulkRename",
         "class Duplicates",
         "class ConvertPdf",
+        "class Unzip",
+        "class Convert",
         "class Places",
         "class EntryAction",
         "class TreeRow"
@@ -156431,6 +157746,19 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/MimeTypes.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MimeTypes"
+      ],
+      "imports": [],
+      "symbols": [
+        "forName(fileName: String, system: (String)",
+        "class MimeTypes"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/PathFormatter.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -156478,6 +157806,22 @@
         "class Places",
         "class Kind",
         "class Place"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/RowMenu.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RowMenu"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.files.convert.ConverterRegistry"
+      ],
+      "symbols": [
+        "itemsFor(name: String, isDirectory: Boolean, isLocal: Boolean, registry: ConverterRegistry)",
+        "class RowMenu",
+        "class Item"
       ]
     },
     {
@@ -157008,8 +158352,8 @@
         "androidx.compose.foundation.text.KeyboardOptions",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.automirrored.filled.ArrowBack",
-        "androidx.compose.material.icons.filled.Close",
-        "androidx.compose.material.icons.filled.DarkMode"
+        "androidx.compose.material.icons.automirrored.filled.Toc",
+        "androidx.compose.material.icons.filled.Close"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
@@ -157925,6 +159269,7 @@
         "androidx.compose.animation.togetherWith",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.windowInsetsPadding",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.LaunchedEffect",
         "androidx.compose.runtime.getValue",
@@ -157936,8 +159281,11 @@
         "androidx.compose.ui.res.stringResource",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.superapp.bottomnav.AppTopBarScaffold",
         "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
-        "com.diegonmarcos.superapp.bottomnav.islandEntries"
+        "com.diegonmarcos.superapp.bottomnav.appTopBarLabels",
+        "com.diegonmarcos.superapp.bottomnav.islandEntries",
+        "com.diegonmarcos.superapp.bottomnav.rememberAccountLauncher"
       ],
       "symbols": [
         "DriveShell(select: String? = null, onSelected: ()"
@@ -158456,6 +159804,7 @@
         "tabsDeclareTheOwnersNavOrder()",
         "everyDeclaredIconIsInTheCatalog()",
         "configsPages()",
+        "webserverAndTopBarDeclarations()",
         "syncPagesAndPeriods()",
         "volumesAreReachableUnderExplorerCloud()",
         "volumesDeclaresTheFourClassesAndTheirRules()",
@@ -158470,6 +159819,112 @@
         "blankAndBrokenInputParseToEmpty()",
         "class DeclarationsTest",
         "class is"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/files/ArchiveExtractorTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ArchiveExtractorTest"
+      ],
+      "imports": [
+        "java.io.ByteArrayOutputStream",
+        "java.io.File",
+        "java.io.FileOutputStream",
+        "java.io.IOException",
+        "java.nio.file.Files",
+        "java.util.zip.GZIPOutputStream",
+        "java.util.zip.ZipEntry",
+        "java.util.zip.ZipOutputStream",
+        "org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry",
+        "org.apache.commons.compress.archivers.sevenz.SevenZOutputFile",
+        "org.apache.commons.compress.archivers.tar.TarArchiveEntry",
+        "org.apache.commons.compress.archivers.tar.TarArchiveOutputStream",
+        "org.apache.commons.compress.archivers.tar.TarConstants",
+        "org.apache.commons.compress.compressors.xz.XZCompressorOutputStream",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assert.fail",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "tmp()",
+        "zip(file: File, entries: List<Pair<String, String>>)",
+        "tarBytes(entries: List<Pair<String, String>>, symlink: Pair<String, String>? = null)",
+        "extract(archive: File, dest: File, cancelled: ()",
+        "zipRoundTripWithNestedFoldersAndProgress()",
+        "zipSlipIsRejectedWholeAndNothingIsWritten()",
+        "tarSlipIsRejectedToo()",
+        "sevenZipSlipIsRejectedToo()",
+        "tarTarGzAndTarXzRoundTrip()",
+        "sevenZRoundTrip()",
+        "linksInATarAreSkippedNeverCreated()",
+        "cancelRemovesWhatWasWrittenAndNotEnoughSpaceIsRefusedUpFront()",
+        "kindsAndTheDefaultSiblingFolderName()",
+        "class ArchiveExtractorTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/files/convert/MhtmlConverterTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MhtmlConverterTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.files.FileOps",
+        "java.io.File",
+        "java.io.IOException",
+        "java.nio.file.Files",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assert.fail",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "tmp()",
+        "refsOf(text: String)",
+        "parsesEveryPartAndDecodesTheirBodies()",
+        "writesTheHtmlAndAnAssetsFolderWithWorkingRelativeLinks()",
+        "twoPartsWithOneNameBothSurviveAndEachLinkPointsAtItsOwn()",
+        "theStylesheetPointsAtItsSiblingByARelativeName()",
+        "theConverterNeverOverwritesAndReportsWhatItWrote()",
+        "aFileThatIsNotMhtmlFailsCleanlyAndLeavesNothingBehind()",
+        "aSinglePartPageNeedsNoAssetsFolder()",
+        "markdownBecomesHtmlAndCannotInjectATag()",
+        "jsonIsPrettyPrintedWithKeyOrderKept()",
+        "class MhtmlConverterTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/files/convert/PdfWriterTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PdfWriterTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.files.FileOps",
+        "java.io.ByteArrayOutputStream",
+        "java.io.File",
+        "java.nio.file.Files",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "render(lines: List<PdfWriter.Line>)",
+        "theFileIsAWellFormedPdfWithCorrectXrefOffsets()",
+        "longTextFlowsOntoMorePagesAndWrapsAtTheMargin()",
+        "anEmptyDocumentIsStillOneValidPage()",
+        "markdownBecomesSizedHeadingsAndBulletsAndTxtIsSetAsWritten()",
+        "theConverterWritesAPdfBesideTheSourceAndNeverOverwrites()",
+        "class PdfWriterTest"
       ]
     },
     {
@@ -158563,6 +160018,36 @@
         "rcloneMountCopiesTheRemoteSpec()",
         "archiveFolderAndMultiSelection()",
         "class PathFormatterTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/files/RowMenuTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RowMenuTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.files.convert.Converter",
+        "com.diegonmarcos.clouddrive.files.convert.ConverterRegistry",
+        "java.io.File",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "items(name: String, registry: ConverterRegistry = default, dir: Boolean = false, local: Boolean = true)",
+        "accepts(extension: String)",
+        "convert(source: File, destDir: File, progress: FileOps.Progress, cancelled: ()",
+        "convertAppearsOnlyWhereTheRegistryHasAConverter()",
+        "anEmptyRegistryRemovesConvertEverywhere()",
+        "aNewConverterPlugsInWithoutTouchingTheMenu()",
+        "unzipAppearsOnlyForExtractableTypes()",
+        "folderAndNonLocalRowsGetNoneOfThem()",
+        "theDefaultRegistryOffersWhatTheTaskNames()",
+        "openWithGetsTheTypeTheFileReallyIs()",
+        "class RowMenuTest",
+        "class Fake"
       ]
     },
     {
@@ -158979,6 +160464,65 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/ui/DriveScreenshotTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveScreenshotTest"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.os.Looper",
+        "android.view.View",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithText",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.clouddrive.DriveActions",
+        "com.diegonmarcos.clouddrive.DrivePrefs",
+        "com.diegonmarcos.clouddrive.backups.MirrorRunner",
+        "com.diegonmarcos.clouddrive.configs.ConfigsScreen",
+        "com.diegonmarcos.superapp.bottomnav.TopBarTags",
+        "java.io.File",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.SupervisorJob",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "requestStorageAccess()",
+        "requestTreeGrant()",
+        "openEngine(engine: String, target: String, url: String)",
+        "openImage(path: String, siblings: List<String>)",
+        "openPdf(path: String)",
+        "openWith(path: String)",
+        "share(paths: List<String>)",
+        "shareText(title: String, text: String)",
+        "copyText(text: String)",
+        "openUrl(url: String)",
+        "launchApp(packageName: String, fallbackUrl: String)",
+        "openAuthProfile(pkg: String, target: String, extra: String)",
+        "class DriveScreenshotTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/ui/DriveShellTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -158996,6 +160540,7 @@
         "androidx.compose.ui.test.onAllNodesWithTag",
         "androidx.compose.ui.test.onFirst",
         "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.assertCountEquals",
         "androidx.compose.ui.test.onNodeWithText",
         "androidx.compose.ui.test.performClick",
         "androidx.compose.ui.test.performTouchInput",
@@ -159007,24 +160552,24 @@
         "com.diegonmarcos.clouddrive.files.FilesScreen",
         "com.diegonmarcos.clouddrive.files.FilesUiState",
         "com.diegonmarcos.clouddrive.files.Location",
+        "com.diegonmarcos.clouddrive.configs.WebserverLaunch",
+        "com.diegonmarcos.clouddrive.configs.WebserverPage",
+        "com.diegonmarcos.superapp.bottomnav.AccountLaunch",
         "com.diegonmarcos.superapp.bottomnav.BottomNavTags",
+        "com.diegonmarcos.superapp.bottomnav.TopBarTags",
         "java.io.File",
         "java.nio.file.Files",
         "kotlinx.coroutines.CoroutineScope",
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.SupervisorJob",
+        "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertTrue",
         "org.junit.Rule",
         "org.junit.Test",
         "org.junit.rules.RuleChain",
         "org.junit.rules.TestRule",
         "org.junit.runner.RunWith",
-        "org.junit.runners.model.Statement",
-        "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.RuntimeEnvironment",
-        "org.robolectric.Shadows.shadowOf",
-        "org.robolectric.annotation.Config",
-        "org.robolectric.annotation.GraphicsMode"
+        "org.junit.runners.model.Statement"
       ],
       "symbols": [
         "evaluate()",
@@ -159895,6 +161440,30 @@
         "v2b()",
         "v3()",
         "m_screen()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-webserver-section.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "w1()",
+        "w2()",
+        "w3()",
+        "w4()",
+        "w5()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "w1()",
+        "w2()",
+        "w3()",
+        "w4()",
+        "w5()"
       ]
     },
     {
@@ -339897,6 +341466,7 @@
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "load_flakes_decl(src: Path = FLAKES_SRC)",
         "flake_home(app_id: str)",
+        "webserver_files()",
         "extras_files(extras_decl: dict)",
         "render_flakes(decl: dict, app_id: str, pin: str, nod_rev: str, attrs, login_shell: str,\n                  nix_system: str, extras_attrs, extras_decl: dict, src: Path = FLAKES_SRC)",
         "android_host_files(decl: dict, src: Path = FLAKES_SRC)",
@@ -339917,8 +341487,7 @@
         "render_local_webserver(build_json: Path)",
         "patch_bin_login_webserver(bin_login: str, app_id: str, profile_link: str, rendered: str)",
         "cut_output(rel: str)",
-        "extras_refs(expr: str, pin: str, nix_system: str, attrs)",
-        "run(cmd)"
+        "extras_refs(expr: str, pin: str, nix_system: str, attrs)"
       ],
       "imports": [
         "pathlib",
@@ -339941,6 +341510,7 @@
         "env_target_unreachable(env_rel, existing, new_files, new_executables)",
         "load_flakes_decl(src: Path = FLAKES_SRC)",
         "flake_home(app_id: str)",
+        "webserver_files()",
         "extras_files(extras_decl: dict)",
         "render_flakes(decl: dict, app_id: str, pin: str, nod_rev: str, attrs, login_shell: str,\n                  nix_system: str, extras_attrs, extras_decl: dict, src: Path = FLAKES_SRC)",
         "android_host_files(decl: dict, src: Path = FLAKES_SRC)",
@@ -340029,10 +341599,9 @@
         "buildPhase",
         "installCheckPhase",
         "newer",
-        "my-webserver",
-        "ws",
-        "wsFill",
-        "libs"
+        "fleet-webserver",
+        "filter",
+        "doCheck"
       ]
     },
     {
@@ -460146,7 +461715,8 @@
         "fetch()"
       ],
       "imports": [
-        "aa_cloud-superapp/test/test-app-names-pattern.sh"
+        "aa_cloud-superapp/test/test-app-names-pattern.sh",
+        "aa_cloud-superapp/test/test-launcher-labels.sh"
       ],
       "symbols": [
         "ok()",
@@ -463256,6 +464826,7 @@
         "AccessPage",
         "PAGE_MESH",
         "PAGE_IPC",
+        "PAGE_IDENTITY",
         "PAGE_ANDROID",
         "PAGE_CLOUD"
       ],
@@ -463481,6 +465052,7 @@
         "androidx.compose.material.icons.filled.Cloud",
         "androidx.compose.material.icons.filled.PhoneAndroid",
         "androidx.compose.material.icons.filled.RssFeed",
+        "androidx.compose.material.icons.filled.Search",
         "androidx.compose.material.icons.filled.Security",
         "androidx.compose.material.icons.filled.Settings",
         "androidx.compose.ui.graphics.vector.ImageVector",
@@ -463497,8 +465069,7 @@
         "com.diegonmarcos.superapp.bottomnav.islandEntries",
         "com.diegonmarcos.superapp.bottomnav.rememberAccountLauncher",
         "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
-        "androidx.appcompat.app.AppCompatActivity",
-        "androidx.fragment.compose.AndroidFragment"
+        "androidx.appcompat.app.AppCompatActivity"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
@@ -463723,6 +465294,24 @@
       ]
     },
     {
+      "path": "ac_cloud-store/test/store-identity-guard.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "files(root, exts)",
+        "code(path)",
+        "has_key(o)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "files(root, exts)",
+        "code(path)",
+        "has_key(o)"
+      ]
+    },
+    {
       "path": "ac_cloud-store/test/test-fleet-pass-one-owner.sh",
       "lang": "sh",
       "role": "shell",
@@ -463822,6 +465411,24 @@
       "symbols": [
         "check()",
         "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/test/test-store-identity-page.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "ok()",
+        "bad()",
+        "mirror()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "ok()",
+        "bad()",
+        "mirror()"
       ]
     },
     {
