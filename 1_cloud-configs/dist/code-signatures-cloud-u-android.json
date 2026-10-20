@@ -6,28 +6,28 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21719,
+    "files": 21731,
     "by_lang": {
-      "sh": 507,
-      "py": 147,
-      "kotlin": 11355,
+      "sh": 508,
+      "py": 148,
+      "kotlin": 11363,
       "java": 635,
       "ts": 8461,
       "nix": 31,
       "js": 478,
-      "rust": 105
+      "rust": 107
     },
     "by_role": {
-      "shell": 396,
+      "shell": 397,
       "script": 241,
       "java": 634,
       "entrypoint": 23,
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11352,
-      "python": 48,
-      "rust-module": 105,
+      "kotlin": 11360,
+      "python": 49,
+      "rust-module": 107,
       "file": 2273,
       "hook": 150,
       "nix-module": 4,
@@ -117,6 +117,7 @@
         "shared_libs(root)",
         "module_map(root, app)",
         "included(root, app)",
+        "cargo_libs(root)",
         "by_reference(root, app, libs)",
         "analyse(root, app, edges=None, libs=None)",
         "inputs(root, app, edges=None, libs=None)",
@@ -136,6 +137,7 @@
         "shared_libs(root)",
         "module_map(root, app)",
         "included(root, app)",
+        "cargo_libs(root)",
         "by_reference(root, app, libs)",
         "analyse(root, app, edges=None, libs=None)",
         "inputs(root, app, edges=None, libs=None)",
@@ -2430,6 +2432,7 @@
         "shared_libs(root)",
         "module_map(root, app)",
         "included(root, app)",
+        "cargo_libs(root)",
         "by_reference(root, app, libs)",
         "analyse(root, app, edges=None, libs=None)",
         "inputs(root, app, edges=None, libs=None)",
@@ -2449,6 +2452,7 @@
         "shared_libs(root)",
         "module_map(root, app)",
         "included(root, app)",
+        "cargo_libs(root)",
         "by_reference(root, app, libs)",
         "analyse(root, app, edges=None, libs=None)",
         "inputs(root, app, edges=None, libs=None)",
@@ -6776,8 +6780,6 @@
       "symbols": [
         "sh(cmd: String)",
         "tearDown()",
-        "a_webAppsRenders()",
-        "b_webAppsRendersAtNight()",
         "c_linktreeRenders()",
         "export(name: String)",
         "resumed()",
@@ -10924,6 +10926,7 @@
         "isTabbed(section: Sections.Section)",
         "openSectionPage(sectionId: String, pageId: String, args: Bundle? = null)",
         "pageFragment(sectionId: String, pageId: String, args: Bundle? = null)",
+        "webAppsGrid(ctx: android.content.Context, page: Sections.Page)",
         "syncModeForPage(pageId: String)",
         "sectionGrid(section: Sections.Section, title: String)",
         "starActionsOf(section: Sections.Section)",
@@ -19144,6 +19147,38 @@
       "symbols": [
         "webViewIn(v: android.view.View)",
         "class WebAndTabsComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/WebAppsGridFitTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WebAppsGridFitTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.ui.test.getBoundsInRoot",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.height",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "guard(name: String, fontScale: Float)",
+        "hasWeb(v: View)",
+        "class WebAppsGridFitTest"
       ]
     },
     {
@@ -28346,6 +28381,8 @@
         "org.json.JSONObject"
       ],
       "symbols": [
+        "retryMessage(lastStatus: String?)",
+        "waitingText(lastStatus: String?)",
         "parse(o: JSONObject)",
         "load(ctx: Context)",
         "decide(p: Pending, now: Long, installed: String, failed: Boolean, sessionAlive: Boolean, timeoutMs: Long, settleMs: Long = SETTLE_MS)",
@@ -33372,67 +33409,72 @@
       "role": "kotlin",
       "exports": [
         "BrowserTabGrid",
-        "TabCardA11y",
-        "TopCropImageView"
+        "TAB_SNAPSHOT_SCALE",
+        "TAB_SNAPSHOT_ALIGN",
+        "TabCardA11y"
       ],
       "imports": [
-        "android.content.Context",
-        "android.graphics.Color",
-        "android.graphics.Typeface",
-        "android.graphics.drawable.GradientDrawable",
-        "android.view.Gravity",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.FrameLayout",
-        "android.widget.ImageView",
-        "android.widget.LinearLayout",
-        "android.widget.TextView",
-        "androidx.recyclerview.widget.GridLayoutManager",
-        "androidx.recyclerview.widget.ItemTouchHelper",
-        "androidx.recyclerview.widget.RecyclerView",
-        "java.io.File"
+        "androidx.compose.foundation.Image",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress",
+        "androidx.compose.foundation.gestures.detectHorizontalDragGestures",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.lazy.grid.GridCells",
+        "androidx.compose.foundation.lazy.grid.GridItemSpan",
+        "androidx.compose.foundation.lazy.grid.LazyGridState",
+        "androidx.compose.foundation.lazy.grid.LazyVerticalGrid",
+        "androidx.compose.foundation.lazy.grid.items",
+        "androidx.compose.foundation.lazy.grid.rememberLazyGridState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableFloatStateOf",
+        "androidx.compose.runtime.mutableStateListOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberUpdatedState",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.asImageBitmap",
+        "androidx.compose.ui.graphics.graphicsLayer"
       ],
       "symbols": [
-        "getSpanSize(position: Int)",
-        "onInterceptTouchEvent(rv: RecyclerView, e: android.view.MotionEvent)",
-        "onTouchEvent(rv: RecyclerView, e: android.view.MotionEvent)",
-        "onRequestDisallowInterceptTouchEvent(disallow: Boolean)",
-        "submit(rows: List<BrowserGridRow>)",
-        "getSwipeThreshold(vh: RecyclerView.ViewHolder)",
-        "isLongPressDragEnabled()",
-        "getMovementFlags(rv: RecyclerView, vh: RecyclerView.ViewHolder)",
-        "onSelectedChanged(vh: RecyclerView.ViewHolder?, actionState: Int)",
-        "canDropOver( rv: RecyclerView, cur: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder, )",
-        "onChildDraw( c: android.graphics.Canvas, rv: RecyclerView, vh: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean, )",
-        "setHighlight(v: View?, on: Boolean)",
-        "onMove( rv: RecyclerView, vh: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder, )",
-        "onSwiped(vh: RecyclerView.ViewHolder, direction: Int)",
-        "clearView(rv: RecyclerView, vh: RecyclerView.ViewHolder)",
-        "rowAt(pos: Int)",
-        "submit(next: List<BrowserGridRow>)",
+        "BrowserTabGrid( rows: List<BrowserGridRow>, onOpen: (BrowserTab)",
+        "gridKey()",
+        "indexOf(key: String)",
         "visibleTabUrls()",
         "tabByKey(key: String)",
         "tabIndex(pos: Int)",
         "canMove(from: Int, to: Int)",
         "move(from: Int, to: Int)",
-        "getItemCount()",
-        "getItemViewType(position: Int)",
-        "onCreateViewHolder(parent: ViewGroup, viewType: Int)",
-        "onBindViewHolder(holder: Holder, position: Int)",
-        "headerView(ctx: Context)",
-        "bindHeader(v: View, row: BrowserGridRow.GroupHeader)",
-        "cardView(ctx: Context)",
-        "bindCard(v: View, tab: BrowserTab)",
-        "showSnapshot(bmp: android.graphics.Bitmap?)",
-        "dp(ctx: Context, v: Int)",
-        "setFrame(l: Int, t: Int, r: Int, b: Int)",
-        "setImageBitmap(bm: android.graphics.Bitmap?)",
-        "setImageDrawable(d: android.graphics.drawable.Drawable?)",
-        "applyTopCrop()",
-        "class BrowserTabGrid",
-        "class DragCallback",
-        "class Adapter",
-        "class Holder"
+        "order()",
+        "begin(k: String)",
+        "move(delta: Offset)",
+        "finish(onReorder: (List<String>)",
+        "cancel()",
+        "shiftOf(k: String)",
+        "GroupHeaderRow( row: BrowserGridRow.GroupHeader, groupColors: ()",
+        "TabCardItem( tab: BrowserTab, thumbs: TabThumbnails?, groupColors: ()",
+        "class TabGridModel",
+        "class TabDrag",
+        "class TabCardA11y"
       ]
     },
     {
@@ -39514,6 +39556,7 @@
       "exports": [
         "handle",
         "handler",
+        "handler_with",
         "start",
         "Ctx",
         "Config"
@@ -39528,6 +39571,7 @@
         "host_allowed(ctx: &Ctx, host: &str)",
         "handle(ctx: &Ctx, req: &Req)",
         "handler(cfg: &Config)",
+        "handler_with(cfg: &Config, write: write::WriteCfg)",
         "start(cfg: Config)"
       ]
     },
@@ -39589,6 +39633,56 @@
       "imports": [],
       "symbols": [
         "sha256_hex(data: &[u8])"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/src/write.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "disabled",
+        "from_env",
+        "new",
+        "write",
+        "b64_decode",
+        "parse_object",
+        "WriteCfg"
+      ],
+      "imports": [
+        "crate::api::jerr",
+        "crate::http::",
+        "crate::render::jstr",
+        "std::fs",
+        "std::path::",
+        "POST",
+        "super::"
+      ],
+      "symbols": [
+        "disabled()",
+        "from_env(served_root: &Path)",
+        "normalize(p: &Path)",
+        "real_or_lexical(p: &Path)",
+        "configured_root(root: &Path, entry: &str)",
+        "resolve_writable(root: &Path, roots: &[PathBuf], url_path: &str)",
+        "token_matches(provided: &str, expected: &str)",
+        "origin_host(o: &str)",
+        "write(root: &Path, w: &WriteCfg, req: &Req)",
+        "b64_decode(s: &str)",
+        "parse_object(body: &[u8])",
+        "peek(&self)",
+        "next(&mut self)",
+        "eat(&mut self, c: u8)",
+        "ws(&mut self)",
+        "hex4(&mut self)",
+        "string(&mut self)",
+        "skip_value(&mut self)",
+        "obj(s: &str)",
+        "reads_string_members_and_skips_the_rest()",
+        "decodes_escapes_and_surrogate_pairs()",
+        "empty_body_is_an_empty_object_and_garbage_is_refused()",
+        "base64_standard_urlsafe_padding_and_whitespace()",
+        "token_comparison_needs_equal_length_and_bytes()",
+        "origin_hosts()"
       ]
     },
     {
@@ -39692,6 +39786,43 @@
         "the_binary_embeds_exactly_the_vendored_bytes()",
         "nothing_is_downloaded_at_runtime()",
         "the_versions_we_print_are_the_versions_we_ship()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/fleet-webserver/tests/write.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [],
+      "imports": [
+        "fleet_webserver::write::WriteCfg",
+        "fleet_webserver::",
+        "std::fs",
+        "std::io::",
+        "std::net::",
+        "std::path::"
+      ],
+      "symbols": [
+        "tmp(tag: &str)",
+        "serve(tag: &str, enabled: bool, roots: &[&str], token: &str)",
+        "raw(port: u16, head_extra: &str, body: &str, declared_len: Option<usize>, method: &str)",
+        "post(s: &Srv, headers: &str, body: &str)",
+        "get(s: &Srv, target: &str)",
+        "read(p: &Path)",
+        "off_by_default()",
+        "enabled_with_no_roots_writes_nothing()",
+        "a_write_root_outside_the_served_root_is_dropped()",
+        "an_absolute_entry_outside_the_root_reads_as_root_relative_like_linux()",
+        "only_post_is_accepted()",
+        "csrf_header_content_type_and_origin_are_required()",
+        "no_token_configured_means_no_writes()",
+        "a_wrong_or_missing_token_is_refused_and_the_right_one_writes()",
+        "json_escapes_binary_b64_and_new_directories()",
+        "the_body_must_name_a_path_and_exactly_one_payload()",
+        "writes_stay_inside_the_allowlist()",
+        "a_symlink_cannot_carry_a_write_out_of_the_root_or_the_write_root()",
+        "an_oversized_body_is_refused_before_it_is_read()",
+        "a_write_is_visible_to_the_read_api_and_reading_needs_no_token()",
+        "the_ui_and_the_other_routes_are_untouched()"
       ]
     },
     {
@@ -66923,6 +67054,9 @@
         "note(ctx: Context, pkg: String, stage: String, message: String)",
         "noteOf(ctx: Context, pkg: String)",
         "clearNote(ctx: Context, pkg: String)",
+        "installerStatus(ctx: Context, pkg: String, text: String)",
+        "installerStatusOf(ctx: Context, pkg: String)",
+        "clearInstallerStatus(ctx: Context, pkg: String)",
         "record(apk: File)",
         "drop(apk: File)",
         "recordFile(apk: File)",
@@ -66949,10 +67083,7 @@
         "signingFlags()",
         "certOf(pi: PackageInfo)",
         "archiveCert(ctx: Context, apk: File)",
-        "hex(b: ByteArray)",
-        "class the",
-        "class ApkCache",
-        "class header"
+        "hex(b: ByteArray)"
       ]
     },
     {
@@ -72462,14 +72593,28 @@
         "BrowserTabSnapshotUiTest"
       ],
       "imports": [
-        "android.app.Activity",
         "android.content.ComponentName",
         "android.graphics.Bitmap",
-        "android.graphics.drawable.BitmapDrawable",
-        "android.os.Looper",
-        "android.view.View",
-        "android.view.ViewGroup",
-        "android.widget.ImageView",
+        "android.graphics.Color",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.toPixelMap",
+        "androidx.compose.ui.layout.ContentScale",
+        "androidx.compose.ui.test.captureToImage",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithContentDescription",
+        "androidx.compose.ui.test.onNodeWithContentDescription",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performTouchInput",
+        "androidx.compose.ui.test.swipeLeft",
+        "androidx.compose.ui.test.center",
+        "androidx.compose.ui.test.down",
+        "androidx.compose.ui.test.moveBy",
+        "androidx.compose.ui.test.up",
+        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.superapp.browser.BrowserGridRow",
         "com.diegonmarcos.superapp.browser.BrowserTab",
         "com.diegonmarcos.superapp.browser.BrowserTabGrid",
@@ -72477,26 +72622,24 @@
         "com.diegonmarcos.superapp.browser.TabThumbConfig",
         "com.diegonmarcos.superapp.browser.TabThumbnails",
         "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertNotNull",
-        "org.junit.Assert.assertNull",
-        "org.junit.Assert.assertSame",
         "org.junit.Assert.assertTrue",
         "org.junit.Rule",
         "org.junit.Test",
+        "org.junit.rules.RuleChain",
         "org.junit.rules.TemporaryFolder",
+        "org.junit.rules.TestRule",
         "org.junit.runner.RunWith",
-        "org.robolectric.Robolectric",
+        "org.junit.runners.model.Statement",
         "org.robolectric.RobolectricTestRunner",
         "org.robolectric.RuntimeEnvironment",
-        "org.robolectric.Shadows.shadowOf",
-        "org.robolectric.annotation.Config",
-        "org.robolectric.annotation.GraphicsMode",
-        "java.util.concurrent.Executor"
+        "org.robolectric.Shadows.shadowOf"
       ],
       "symbols": [
-        "tab(id: String)",
-        "grid(thumbs: TabThumbnails, vararg tabs: BrowserTab)",
-        "described(root: View, text: String)",
+        "evaluate()",
+        "tab(id: String, group: String = \"\", pinned: Boolean = false)",
+        "show( thumbs: TabThumbnails?, rows: List<BrowserGridRow>, onSwipeClose: (BrowserTab)",
+        "cards(vararg tabs: BrowserTab)",
+        "count(desc: String)",
         "class BrowserTabSnapshotUiTest"
       ]
     },
@@ -74563,7 +74706,6 @@
       ],
       "symbols": [
         "stackTopology()",
-        "stackInfra()",
         "stackObservability()",
         "tileColumns()",
         "decode(b64: String)",
@@ -74626,6 +74768,7 @@
         "com.diegonmarcos.superapp.bottomnav.NavPage",
         "com.diegonmarcos.superapp.bottomnav.NavSection",
         "com.diegonmarcos.superapp.bottomnav.TopBarDecl",
+        "com.diegonmarcos.cloudc3.pages.FleetModel",
         "com.diegonmarcos.cloudc3.pages.RoutesTableModel",
         "java.util.Base64",
         "kotlinx.serialization.json.Json",
@@ -74877,6 +75020,168 @@
         "l(vararg p: Pair<String, String>)",
         "class DeclarationModel",
         "class Section"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/FleetLive.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetLive",
+        "ApiFleetLive",
+        "FleetLiveState"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.StatFs",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "com.diegonmarcos.cloudc3.cloud.OpsClient",
+        "com.diegonmarcos.superapp.ops.dagu.DaguPrefs",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.async",
+        "kotlinx.coroutines.awaitAll",
+        "kotlinx.coroutines.coroutineScope",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "get(path: String)",
+        "thisPhoneStorage()",
+        "gb(b: Long)",
+        "refresh(slice: FleetModel.Slice, src: FleetLive)",
+        "class FleetLive",
+        "class Result",
+        "class Body",
+        "class Failed",
+        "class ApiFleetLive",
+        "class FleetLiveState"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/FleetModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetModel"
+      ],
+      "imports": [
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.booleanOrNull",
+        "kotlinx.serialization.json.contentOrNull",
+        "kotlinx.serialization.json.doubleOrNull",
+        "kotlinx.serialization.json.intOrNull"
+      ],
+      "symbols": [
+        "provider(id: String)",
+        "vmsOf(providerId: String)",
+        "parse(text: String)",
+        "record(o: JsonObject)",
+        "storageRows(s: Slice, live: Map<String, DiskUsage> = emptyMap()",
+        "vmSpec(v: Vm)",
+        "vmNet(v: Vm)",
+        "kindLabel(kind: String)",
+        "daysUntil(date: String, today: java.time.LocalDate)",
+        "costLine(p: Provider, live: String?, why: String?)",
+        "line()",
+        "parseDisks(body: String)",
+        "parseCostTotal(body: String)",
+        "formatMoney(amount: Double, currency: String)",
+        "declaredCost(c: Cost?)",
+        "parseLiveDns(body: String)",
+        "recordsOf(d: Domain, group: String)",
+        "otherGroups(d: Domain)",
+        "str(key: String)",
+        "int(key: String)",
+        "dbl(key: String)",
+        "bool(key: String)",
+        "obj(key: String)",
+        "objs(key: String)",
+        "strs(key: String)",
+        "class FleetModel",
+        "class Link",
+        "class Cost",
+        "class Provider",
+        "class Vm",
+        "class Bucket",
+        "class Backend",
+        "class Device",
+        "class DnsRecord",
+        "class Domain",
+        "class Slice",
+        "class StorageRow",
+        "class DiskUsage"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/main/java/com/diegonmarcos/cloudc3/pages/InfraPages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InfraSections",
+        "InfraTags",
+        "InfraSectionScreen",
+        "ProvidersScreen",
+        "MachinesScreen",
+        "StorageScreen",
+        "ElectronicsScreen",
+        "DomainsScreen",
+        "InfraSectionFragment"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalUriHandler",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.cloudc3.Declarations",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.KitDensity",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "screen(section: String)",
+        "row(section: String, id: String)",
+        "head(section: String, id: String)",
+        "InfraSectionScreen(section: String, slice: FleetModel.Slice, live: FleetLiveState, today: LocalDate = LocalDate.now()",
+        "ProvidersScreen(slice: FleetModel.Slice, live: FleetLiveState)",
+        "MachinesScreen(slice: FleetModel.Slice)",
+        "StorageScreen(slice: FleetModel.Slice, live: FleetLiveState)",
+        "ElectronicsScreen(slice: FleetModel.Slice)",
+        "DomainsScreen(slice: FleetModel.Slice, live: FleetLiveState, today: LocalDate = LocalDate.now()",
+        "LiveDnsBlock(live: FleetLiveState)",
+        "Page(section: String, summary: String, content: @Composable ()",
+        "GroupHeader(tag: String, title: String)",
+        "DenseRow(tag: String, title: String, accent: String, lines: List<String>, links: List<FleetModel.Link> = emptyList()",
+        "palette()",
+        "Content()",
+        "newInstance(section: String)",
+        "class InfraSections",
+        "class InfraTags",
+        "class InfraSectionFragment"
       ]
     },
     {
@@ -75394,6 +75699,104 @@
       ]
     },
     {
+      "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/FleetFixtures.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetFixtures"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudc3.pages.FleetModel",
+        "java.io.File",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.jsonPrimitive",
+        "org.junit.Assert.assertTrue"
+      ],
+      "symbols": [
+        "moduleDir()",
+        "sliceText()",
+        "slice()",
+        "rawSlice()",
+        "dbContainerNames()",
+        "class FleetFixtures"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/FleetModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "FleetModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudc3.pages.FleetModel",
+        "java.time.LocalDate",
+        "kotlinx.serialization.json.jsonArray",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.jsonPrimitive",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class FleetModelTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/InfraScreensComposeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "InfraScreensComposeTest"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.assertTextContains",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithText",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.onNodeWithText",
+        "com.diegonmarcos.cloudc3.pages.FleetLiveState",
+        "com.diegonmarcos.cloudc3.pages.FleetModel",
+        "com.diegonmarcos.cloudc3.pages.InfraSectionScreen",
+        "com.diegonmarcos.cloudc3.pages.InfraSections",
+        "com.diegonmarcos.cloudc3.pages.InfraTags",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "java.time.LocalDate",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "show(section: String, live: FleetLiveState = FleetLiveState()",
+        "row(section: String, id: String)",
+        "class InfraScreensComposeTest"
+      ]
+    },
+    {
       "path": "ac_cloud-c3/app/src/test/java/com/diegonmarcos/cloudc3/ProbeModelTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -75625,6 +76028,26 @@
       ]
     },
     {
+      "path": "ac_cloud-c3/data/gen_fleet_slice.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "load(arg, key)",
+        "build(cons, zone, assets, users)",
+        "zone_records(domain, z, sts)",
+        "main()"
+      ],
+      "imports": [
+        "argparse"
+      ],
+      "symbols": [
+        "load(arg, key)",
+        "build(cons, zone, assets, users)",
+        "zone_records(domain, z, sts)",
+        "main()"
+      ]
+    },
+    {
       "path": "ac_cloud-c3/data/gen_infra_slice.py",
       "lang": "py",
       "role": "python",
@@ -75764,6 +76187,60 @@
         "m_dead_anchor()",
         "m_orphan_page()",
         "m_drop_module()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3/test/test-c3-infra.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "mutate()",
+        "pyjson()",
+        "m_api_page()",
+        "m_stack_back()",
+        "m_arm_dropped()",
+        "m_db_in_slice()",
+        "m_dbs_group()",
+        "m_db_in_kotlin()",
+        "m_ip_in_kotlin()",
+        "m_vm_in_json()",
+        "m_data_file()",
+        "m_no_bake()",
+        "m_no_dmarc()",
+        "m_own_http()",
+        "m_gen_ip()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "t1()",
+        "t2()",
+        "t3()",
+        "t4()",
+        "t5()",
+        "mutate()",
+        "pyjson()",
+        "m_api_page()",
+        "m_stack_back()",
+        "m_arm_dropped()",
+        "m_db_in_slice()",
+        "m_dbs_group()",
+        "m_db_in_kotlin()",
+        "m_ip_in_kotlin()",
+        "m_vm_in_json()",
+        "m_data_file()",
+        "m_no_bake()",
+        "m_no_dmarc()",
+        "m_own_http()",
+        "m_gen_ip()"
       ]
     },
     {
@@ -198176,6 +198653,7 @@
       ],
       "symbols": [
         "openHermesAi(context: Context)",
+        "openAgents(context: Context)",
         "openWorkflows(context: Context)"
       ]
     },
@@ -198215,6 +198693,7 @@
         "androidx.compose.material.icons.automirrored.filled.Send",
         "androidx.compose.material.icons.filled.AccountTree",
         "androidx.compose.material.icons.filled.Create",
+        "androidx.compose.material.icons.filled.Hub",
         "androidx.compose.material.icons.filled.Person",
         "androidx.compose.material.icons.filled.RssFeed",
         "androidx.compose.material.icons.filled.Schedule",
@@ -198225,8 +198704,7 @@
         "androidx.compose.material.icons.filled.Star",
         "androidx.compose.material3.AssistChip",
         "androidx.compose.material3.HorizontalDivider",
-        "app.sterna.ui.components.Icon",
-        "androidx.compose.material3.MaterialTheme"
+        "app.sterna.ui.components.Icon"
       ],
       "symbols": [
         "HomeScreen( onBack: ()",
@@ -213852,6 +214330,8 @@
       "symbols": [
         "source()",
         "renderableHtml()",
+        "withHttpsLinks()",
+        "upgradeHttpsOnlyLinks(s: String)",
         "of(id: String, name: String, source: String)",
         "class StoredSignature"
       ]
@@ -217656,6 +218136,27 @@
       "symbols": [
         "account(id: String, on: Boolean = false)",
         "class ShowOnlySubscribedFoldersTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/core/data/src/test/kotlin/app/sterna/core/data/account/SignatureHttpsLinksTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SignatureHttpsLinksTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertSame",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "storedSignatureReadsBackAsHttps()",
+        "legacyPairReadsBackAsHttps()",
+        "editorSaveAndImportProduceHttps()",
+        "otherLinksAndLookalikeHostsAreUntouched()",
+        "class SignatureHttpsLinksTest"
       ]
     },
     {
