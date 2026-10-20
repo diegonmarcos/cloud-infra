@@ -283,17 +283,17 @@ while IFS=$'\t' read -r VM DIR KIND; do
     echo "would-redeploy $DIR"; exit 0
   fi
 
-  note "  redeploying $DIR on $VM: docker compose up -d --no-recreate in $RP"
+  note "  redeploying $DIR on $VM: docker compose up -d --no-recreate --no-build in $RP"
   OUT="$(up_script "$RP" "$CF" "$CNAMES" "$SETTLE" | remote "$VM")" || true
   printf '%s\n' "$OUT" | grep -v '^STATE \|^UP_RC=' >&2 || true
   BAD="$(printf '%s\n' "$OUT" | awk -v os=" $ONESHOT " '$1=="STATE" && $3!="running" && $3!="restarting" && !($3=="exited" && index(os, " "$2" ")) { print $2"="$3 }' | paste -sd' ' -)"
   if [ "$(kv "$OUT" UP_RC)" = "0" ] && [ -z "$BAD" ] && printf '%s\n' "$OUT" | grep -q '^STATE '; then
     note "  $DIR is back: $(printf '%s\n' "$OUT" | awk '$1=="STATE" { print $2"="$3 }' | paste -sd' ' -)"
-    notify "reconcile: redeployed $KIND $DIR" "$DIR on $VM was $KIND; the reconcile ran docker compose up -d for it and it is running again."
+    notify "reconcile: redeployed $KIND $DIR" "$DIR on $VM was $KIND; the reconcile ran compose up for it and it is running again."
     echo "redeployed $DIR"; exit 0
   fi
   note "::error::$KIND redeploy of $DIR on $VM did not come up (compose rc=$(kv "$OUT" UP_RC), not running: ${BAD:-unknown})"
-  notify "reconcile: redeploy of $KIND $DIR FAILED" "$DIR on $VM is $KIND and docker compose up -d did not bring it back (not running: ${BAD:-unknown}). Needs a human or a Ship."
+  notify "reconcile: redeploy of $KIND $DIR FAILED" "$DIR on $VM is $KIND and compose up did not bring it back (not running: ${BAD:-unknown}). Needs a human or a Ship."
   echo "failed $DIR"; exit 1
 done <<EOF_CANDS
 $CANDS
