@@ -115,19 +115,26 @@ import {
 # nothing live or in state touched until that plan shows zero changes.
 # =============================================================================
 
+# "" = off, "true" = every component, or a comma list of: fallback, cert, gateway, posture
 variable "zt_adopt_settings" {
-  type    = bool
-  default = false
+  type    = string
+  default = ""
 }
 
 locals {
-  zt_set_on = (local.zt_n == 1) && (var.zt_adopt_settings || try(local.zt_ad.settings_enabled, false))
-  zt_set_n  = local.zt_set_on ? 1 : 0
-  zt_set_imp = { for i in range(local.zt_set_n) : tostring(i) => i }
+  zt_set_sel  = var.zt_adopt_settings == "true" || try(local.zt_ad.settings_enabled, false) ? ["fallback", "cert", "gateway", "posture"] : compact(split(",", var.zt_adopt_settings))
+  zt_fb_n     = (local.zt_n == 1 && contains(local.zt_set_sel, "fallback")) ? 1 : 0
+  zt_cert_n   = (local.zt_n == 1 && (contains(local.zt_set_sel, "cert") || contains(local.zt_set_sel, "gateway"))) ? 1 : 0
+  zt_gw_n     = (local.zt_n == 1 && contains(local.zt_set_sel, "gateway")) ? 1 : 0
+  zt_post_n   = (local.zt_n == 1 && contains(local.zt_set_sel, "posture")) ? 1 : 0
+  zt_fb_imp   = { for i in range(local.zt_fb_n) : tostring(i) => i }
+  zt_cert_imp = { for i in range(local.zt_cert_n) : tostring(i) => i }
+  zt_gw_imp   = { for i in range(local.zt_gw_n) : tostring(i) => i }
+  zt_post_imp = { for i in range(local.zt_post_n) : tostring(i) => i }
 }
 
 resource "cloudflare_zero_trust_local_fallback_domain" "zt_fallback" {
-  count      = local.zt_set_n
+  count      = local.zt_fb_n
   account_id = local.config.account_id
   dynamic "domains" {
     for_each = local.zt_ad.fallback_domains
@@ -138,13 +145,13 @@ resource "cloudflare_zero_trust_local_fallback_domain" "zt_fallback" {
 }
 
 import {
-  for_each = local.zt_set_imp
+  for_each = local.zt_fb_imp
   to       = cloudflare_zero_trust_local_fallback_domain.zt_fallback[each.value]
-  id       = local.config.account_id
+  id       = "${local.config.account_id}/default"
 }
 
 resource "cloudflare_zero_trust_gateway_certificate" "zt_gateway_ca" {
-  count           = local.zt_set_n
+  count           = local.zt_cert_n
   account_id      = local.config.account_id
   gateway_managed = true
   activate        = true
@@ -152,13 +159,13 @@ resource "cloudflare_zero_trust_gateway_certificate" "zt_gateway_ca" {
 }
 
 import {
-  for_each = local.zt_set_imp
+  for_each = local.zt_cert_imp
   to       = cloudflare_zero_trust_gateway_certificate.zt_gateway_ca[each.value]
   id       = "${local.config.account_id}/${local.zt_ad.gateway_certificate_id}"
 }
 
 resource "cloudflare_zero_trust_gateway_settings" "zt_gateway" {
-  count                = local.zt_set_n
+  count                = local.zt_gw_n
   account_id           = local.config.account_id
   tls_decrypt_enabled  = false
   certificate {
@@ -177,14 +184,14 @@ resource "cloudflare_zero_trust_gateway_settings" "zt_gateway" {
 }
 
 import {
-  for_each = local.zt_set_imp
+  for_each = local.zt_gw_imp
   to       = cloudflare_zero_trust_gateway_settings.zt_gateway[each.value]
   id       = local.config.account_id
 }
 
 # Built-in posture rules (created by Cloudflare when the org was created).
 resource "cloudflare_zero_trust_device_posture_rule" "zt_posture_gateway" {
-  count      = local.zt_set_n
+  count      = local.zt_post_n
   account_id = local.config.account_id
   type       = "gateway"
   name       = "Gateway"
@@ -192,13 +199,13 @@ resource "cloudflare_zero_trust_device_posture_rule" "zt_posture_gateway" {
 }
 
 import {
-  for_each = local.zt_set_imp
+  for_each = local.zt_post_imp
   to       = cloudflare_zero_trust_device_posture_rule.zt_posture_gateway[each.value]
   id       = "${local.config.account_id}/${local.zt_ad.posture_rule_ids.gateway}"
 }
 
 resource "cloudflare_zero_trust_device_posture_rule" "zt_posture_warp" {
-  count      = local.zt_set_n
+  count      = local.zt_post_n
   account_id = local.config.account_id
   type       = "warp"
   name       = "WARP"
@@ -206,7 +213,7 @@ resource "cloudflare_zero_trust_device_posture_rule" "zt_posture_warp" {
 }
 
 import {
-  for_each = local.zt_set_imp
+  for_each = local.zt_post_imp
   to       = cloudflare_zero_trust_device_posture_rule.zt_posture_warp[each.value]
   id       = "${local.config.account_id}/${local.zt_ad.posture_rule_ids.warp}"
 }
