@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21923,
+    "files": 21950,
     "by_lang": {
       "js": 481,
-      "sh": 534,
-      "py": 148,
-      "kotlin": 11526,
+      "sh": 536,
+      "py": 150,
+      "kotlin": 11549,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -19,14 +19,14 @@
     },
     "by_role": {
       "file": 2275,
-      "shell": 423,
-      "script": 241,
+      "shell": 424,
+      "script": 244,
       "java": 634,
       "entrypoint": 23,
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11523,
+      "kotlin": 11546,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -1576,6 +1576,31 @@
         "declaring_apps(repo, cfg)",
         "kotlin_files(repo, app, cfg)",
         "app_findings(repo, cfg, app, top_bar, build)",
+        "main(argv)"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-unison-pin-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "load(path)",
+        "pin_problems(pin, root)",
+        "compare(peer_json, pin, where)",
+        "check(root, peers_root, require)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "load(path)",
+        "pin_problems(pin, root)",
+        "compare(peer_json, pin, where)",
+        "check(root, peers_root, require)",
         "main(argv)"
       ]
     },
@@ -3913,6 +3938,31 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-unison-pin-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "load(path)",
+        "pin_problems(pin, root)",
+        "compare(peer_json, pin, where)",
+        "check(root, peers_root, require)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "load(path)",
+        "pin_problems(pin, root)",
+        "compare(peer_json, pin, where)",
+        "check(root, peers_root, require)",
+        "main(argv)"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-update-ack-guard.py",
       "lang": "py",
       "role": "script",
@@ -5793,6 +5843,28 @@
       "imports": [],
       "symbols": [
         "build_and_run()",
+        "mutate()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/unison-pin-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "ok()",
+        "fail()",
+        "fresh()",
+        "run()",
+        "expect_fail()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "fail()",
+        "fresh()",
+        "run()",
+        "expect_fail()",
         "mutate()"
       ]
     },
@@ -26078,7 +26150,9 @@
       "symbols": [
         "row(family: String)",
         "action(family: String, what: String)",
-        "all()",
+        "key(family: String)",
+        "get(family: String)",
+        "all(families: Collection<String>)",
         "record(family: String, identity: String)",
         "forget(family: String)",
         "activityOrNull()",
@@ -66148,10 +66222,13 @@
         "methodNames()",
         "dispatch(method: String, request: String)",
         "calls()",
+        "unison()",
+        "unisonInfo(rclone: String)",
         "call(method: String?, request: String?)",
         "methods()",
         "onBind(intent: Intent?)",
         "calls(context: Context)",
+        "unison(context: Context)",
         "build(context: Context)",
         "childEnv()",
         "class RcloneEngineService",
@@ -66184,6 +66261,98 @@
         "class RcloneExec",
         "class Result",
         "class Job"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/UnisonCalls.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "backupDir(profile: String)",
+        "start(req: JSONObject)",
+        "poll(req: JSONObject)",
+        "cancel(req: JSONObject)",
+        "keepCopy(req: JSONObject)",
+        "strings(a: JSONArray?)",
+        "fail(why: String)",
+        "conflictName(file: File, suffix: String)",
+        "class UnisonCalls"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/UnisonExec.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "java.io.File",
+        "java.util.UUID",
+        "java.util.concurrent.ConcurrentHashMap",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "add(line: String)",
+        "read(cursor: Int, limit: Int = POLL_LINES)",
+        "finish(code: Int, back: Boolean)",
+        "cancel()",
+        "job(id: String)",
+        "forget(id: String)",
+        "running(profile: String)",
+        "archiveFiles(dir: File)",
+        "clearStale()",
+        "snapshot()",
+        "rollback()",
+        "writeProfile(name: String, text: String)",
+        "start(run: Run)",
+        "class UnisonExec",
+        "class Job",
+        "class Run",
+        "class Bridged"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/UnisonPolicy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "pathRefusal(p: String)",
+        "nameRefusal(name: String)",
+        "refusal(extra: List<String>, roots: List<String>)",
+        "class UnisonPolicy"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/main/java/com/diegonmarcos/cloudlib/rclone/engine/UnisonSshBridge.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "net.schmizz.sshj.SSHClient",
+        "net.schmizz.sshj.common.SecurityUtils",
+        "net.schmizz.sshj.transport.verification.HostKeyVerifier",
+        "java.io.File",
+        "java.io.IOException",
+        "java.net.InetAddress",
+        "java.net.ServerSocket",
+        "java.net.Socket",
+        "java.security.PublicKey"
+      ],
+      "symbols": [
+        "verify(hostname: String, port: Int, key: PublicKey)",
+        "findExistingAlgorithms(hostname: String, port: Int)",
+        "open(t: SshTarget, knownHosts: File)",
+        "pump(name: String, from: java.io.InputStream, to: java.io.OutputStream, onEnd: ()",
+        "class SshTarget",
+        "class UnisonSshBridge",
+        "class TofuVerifier"
       ]
     },
     {
@@ -66224,6 +66393,80 @@
         "aMissingBinaryIsNamedNotCrashed()",
         "infoNamesTheVersionAndTheGrant()",
         "class RcloneExecTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/test/java/com/diegonmarcos/cloudlib/rclone/engine/UnisonExecTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonExecTest"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "java.io.File",
+        "java.nio.file.Files",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "setUp()",
+        "exec(binary: File = fake)",
+        "calls(access: Boolean = true, exec: UnisonExec = exec()",
+        "start(c: UnisonCalls, profile: String, text: String = \"root = /a\\nroot = /b\\n\", extra: List<String> = emptyList()",
+        "finish(c: UnisonCalls, id: String)",
+        "policyAllowsOnlyTheScopedResolutionFlags()",
+        "profileNamesAreFileNamesOnly()",
+        "theEngineRefusesAProfileThatNamesACommand()",
+        "refusalsAreSentencesAndNoProcessStarts()",
+        "aCleanRunStreamsItsLinesAndEndsOkAndKeepsTheNewArchive()",
+        "aSkippedRunEndsWithExitOneAndItsArchiveIsKept()",
+        "aFatalRunPutsTheArchivesBackAsTheyWere()",
+        "aCancelledRunPutsTheArchivesBackAndEndsMinusTwo()",
+        "staleLocksAndTempFilesOfAKilledRunAreClearedButArchivesAndProfilesAreNot()",
+        "aProfileNamedLikeAnArchiveIsNotMistakenForOne()",
+        "theProfileIsWrittenForTheRunWithBackupsFilledInAndDeletedAfter()",
+        "theAllowedFlagsReachTheBinaryAfterTheFixedOnes()",
+        "onePairRunsOnceAtATimeAndOthersQueue()",
+        "anUnknownJobIsASentence()",
+        "theBridgePortIsFilledIntoProfileAndFlagsAndTheBridgeClosesAfterTheRun()",
+        "aBridgeThatCannotConnectEndsTheRunWithItsSentenceAndRestoresTheArchives()",
+        "sshNeedsAHostAndAUser()",
+        "keepBothCopiesTheBackupBesideTheKeptFileAndNeverOverwrites()",
+        "copy()",
+        "keepBothRefusesWhenNoBackupWasKeptOrThePathEscapes()",
+        "conflictNamesKeepTheExtensionAndSkipExistingFiles()",
+        "class UnisonExecTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone-engine/src/test/java/com/diegonmarcos/cloudlib/rclone/engine/UnisonPinTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonPinTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "theVersionAndTheOcamlAreOneExactRelease()",
+        "everyAbiPinsATarballAndABinaryByHashAndCarriesTheVersionInItsUrl()",
+        "theBinaryIsStaticAndNamedSoTheInstallerExtractsIt()",
+        "theArm64BinaryIsTheOneThisRepositoryBuilds()",
+        "everyPeerIsNamedByRepoAndPath()",
+        "class UnisonPinTest"
       ]
     },
     {
@@ -66305,6 +66548,10 @@
         "jobStart(request: JSONObject)",
         "jobPoll(request: JSONObject)",
         "jobCancel(request: JSONObject)",
+        "unisonStart(request: JSONObject)",
+        "unisonPoll(request: JSONObject)",
+        "unisonCancel(request: JSONObject)",
+        "unisonKeepCopy(request: JSONObject)",
         "close()",
         "ask(method: String, request: JSONObject)",
         "onServiceConnected(name: ComponentName?, binder: IBinder?)",
@@ -66491,9 +66738,142 @@
         "jobStart(request: JSONObject)",
         "jobPoll(request: JSONObject)",
         "jobCancel(request: JSONObject)",
+        "unisonStart(request: JSONObject)",
+        "unisonPoll(request: JSONObject)",
+        "unisonCancel(request: JSONObject)",
+        "unisonKeepCopy(request: JSONObject)",
         "close()",
         "class RcloneTransport",
         "class Session"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonConfig.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonConfig"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "str(k: String, d: String = \"\")",
+        "boolOr(k: String, d: Boolean)",
+        "intOrNull(k: String)",
+        "parse(text: String)",
+        "bad(why: String)",
+        "class UnisonConfig",
+        "class Peer",
+        "class Ssh",
+        "class Local",
+        "class Pair",
+        "class Declared"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonOutput.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonOutput"
+      ],
+      "imports": [],
+      "symbols": [
+        "headline()",
+        "parse(lines: List<String>, rc: Int, rolledBack: Boolean = false)",
+        "isNoise(line: String)",
+        "display(line: String)",
+        "class UnisonOutput",
+        "class Conflict",
+        "class Failure",
+        "class Summary",
+        "class Result"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonProfile.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonProfile"
+      ],
+      "imports": [],
+      "symbols": [
+        "rootB(pair: UnisonConfig.Pair)",
+        "roots(pair: UnisonConfig.Pair)",
+        "generate(pair: UnisonConfig.Pair)",
+        "class UnisonProfile"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonResolve.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonResolve"
+      ],
+      "imports": [],
+      "symbols": [
+        "plan(pair: UnisonConfig.Pair, path: String, choice: Choice, stamp: String)",
+        "describe(pair: UnisonConfig.Pair, choice: Choice)",
+        "class UnisonResolve",
+        "class Choice",
+        "class Plan"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonRunner.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonRunner"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.rclone.RcloneTransport",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.IOException",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.atomic.AtomicBoolean"
+      ],
+      "symbols": [
+        "cancel()",
+        "await()",
+        "unavailable()",
+        "requestFor(pair: UnisonConfig.Pair, extra: List<String>)",
+        "sync(pair: UnisonConfig.Pair, onLine: (String)",
+        "execute(pair: UnisonConfig.Pair, extra: List<String>, onLine: (String)",
+        "refused(why: String)",
+        "resolve(pair: UnisonConfig.Pair, path: String, choice: UnisonResolve.Choice, onLine: (String)",
+        "class UnisonRunner",
+        "class SshAccess",
+        "class Handle"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/main/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonState.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonStateStore"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.io.File"
+      ],
+      "symbols": [
+        "load()",
+        "get(id: String)",
+        "put(s: PairState)",
+        "resolved(id: String, path: String)",
+        "retain(ids: Set<String>)",
+        "write(all: Map<String, PairState>)",
+        "list(a: JSONArray?)",
+        "class UnisonStateStore",
+        "class PairState"
       ]
     },
     {
@@ -66576,6 +66956,197 @@
         "aStagingRefusalEndsTheJobWithItsSentenceAndNeverCallsTheEngine()",
         "class RcloneRunnerTest",
         "class Fake"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonConfigTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonConfigTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "decl(pair: String, defaults: String = \"{}\", ignore: String = \"[]\")",
+        "aValidSshPairParsesWithTheDeclaredDefaults()",
+        "aPairsOwnIgnoreRulesExtendTheSharedOnesWithoutDuplicates()",
+        "aScheduleAndTheMeteredRuleAreDeclaredPerPair()",
+        "aLocalToLocalPairIsAllowed()",
+        "refused(pair: String, defaults: String = \"{}\", ignore: String = \"[]\", needle: String)",
+        "aHostThatIsNotAMeshNameIsRefused()",
+        "anAutomaticWinnerWithoutBackupIsASilentOverwriteAndIsRefused()",
+        "badValuesAreRefusedEachNamingTheirField()",
+        "oneBadPairNeverHidesTheOthersAndDuplicatesAreRefused()",
+        "anEmptyDeclarationIsAValidPhone()",
+        "class UnisonConfigTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonOutputTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonOutputTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "everySkippedItemIsAConflictWithItsReason()",
+        "aCleanRunHasNoConflictsAndIsOk()",
+        "failuresAreKeptApartFromConflicts()",
+        "aPathWithSpacesAndParenthesesIsReadWhole()",
+        "aFatalErrorIsNamedAndIsNeverOk()",
+        "aCancelledRunSaysSoAndThatTheArchivesWereRestored()",
+        "aRunThatNeverStartedSaysWhy()",
+        "theProgressTickerIsNoiseInTheLogButRealLinesSurvive()",
+        "class UnisonOutputTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonProfileTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonProfileTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "pair(extra: String = \"\", root: String = \"\"\"{\"host\":\"oci-apps.app\",\"user\":\"diego\",\"path\":\"/srv/sync/docs\"}\"\"\", defaults: String = \"{}\")",
+        "lines(p: UnisonConfig.Pair)",
+        "anSshPairBridgesTheSecondRootThroughALoopbackSocketWithAnAbsolutePathDoubleSlash()",
+        "aRelativePeerPathUsesASingleSlash()",
+        "aLocalPeerIsItsPlainPath()",
+        "theDeclaredIgnoreRulesAndOptionsLandVerbatim()",
+        "androidSharedStorageNeverSyncsPermissionsAndAMassDeletionIsAlwaysConfirmed()",
+        "noPolicyMeansNoPreferLineSoEveryConflictAsks()",
+        "policiesMapOntoPreferAndAlwaysKeepBackups()",
+        "backupsGoToTheEnginesCentralDirAndAreCapped()",
+        "theProfileNeverNamesACommandOrALogFile()",
+        "theProfileSaysItIsGeneratedAndFromWhichPair()",
+        "rootsAreWhatThePreferValuesAreCheckedAgainst()",
+        "generationIsDeterministic()",
+        "class UnisonProfileTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonResolveTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonResolveTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "flag(extra: List<String>, name: String)",
+        "keepAPrefersThePhonesRootForOnePathOnly()",
+        "keepBPrefersTheOtherSide()",
+        "keepBothKeepsTheOtherSidesNameAndCopiesThePhonesVersionBesideIt()",
+        "everyChoiceKeepsABackupOfWhatItReplaces_neverASilentOverwrite()",
+        "theBigDeletionConfirmationIsRelaxedOnlyInsideAScopedRun()",
+        "everyChoiceDescribesItsConsequenceToTheUser()",
+        "class UnisonResolveTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonRunnerTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonRunnerTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.rclone.RcloneTransport",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.IOException",
+        "java.util.concurrent.CopyOnWriteArrayList",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "unavailable()",
+        "session()",
+        "run(request: JSONObject)",
+        "outChunk(request: JSONObject)",
+        "jobStart(request: JSONObject)",
+        "jobPoll(request: JSONObject)",
+        "jobCancel(request: JSONObject)",
+        "unisonStart(request: JSONObject)",
+        "unisonPoll(request: JSONObject)",
+        "unisonCancel(request: JSONObject)",
+        "unisonKeepCopy(request: JSONObject)",
+        "close()",
+        "runSync(t: Fake, p: UnisonConfig.Pair = pair, ssh: (UnisonConfig.Pair)",
+        "aSyncSendsTheGeneratedProfileTheRootsAndTheSshLegAndSurfacesConflicts()",
+        "aLocalPairSendsNoSshLeg()",
+        "noncredentialsMeansASentenceAndNoEngineCall()",
+        "anAbsentEngineIsASentenceNeverAnException()",
+        "anEngineThatPredatesUnisonTellsTheUserToUpdateIt()",
+        "anEngineRefusalIsKeptAsItsOwnSentence()",
+        "anInterruptedRunReportsThatTheArchivesWereRestored()",
+        "theLogCarriesReadableLinesNotTheProgressTicker()",
+        "cancelAsksTheEngineToStopTheRunAndTheResultIsMarkedCancelled()",
+        "resolve(t: Fake, c: UnisonResolve.Choice)",
+        "keepAAndKeepBAreOneScopedRunAndAskForNoCopy()",
+        "keepBothAsksTheEngineToCopyThePhonesVersionBesideTheKeptFile()",
+        "aFailedKeepBothCopyIsAFailureLineNeverASilentLoss()",
+        "keepBothDoesNotCopyWhenTheScopedRunItselfFailed()",
+        "class UnisonRunnerTest",
+        "class Fake"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/rclone/src/test/java/com/diegonmarcos/cloudlib/rclone/unison/UnisonStateStoreTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonStateStoreTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File",
+        "java.nio.file.Files"
+      ],
+      "symbols": [
+        "state(id: String = \"docs\", conflicts: List<String> = listOf(\"a.txt\")",
+        "aStateSurvivesAReopen()",
+        "resolvingAConflictRemovesOnlyThatPath()",
+        "theLogIsBoundedToItsLastLines()",
+        "pairsNoLongerDeclaredLoseTheirState()",
+        "aCorruptFileReadsAsEmptyNotACrash()",
+        "aLeftoverTempFileFromAKilledWriteDoesNotHideTheLastGoodFile()",
+        "class UnisonStateStoreTest"
       ]
     },
     {
@@ -73288,13 +73859,8 @@
         "AuthProvidersTest"
       ],
       "imports": [
-        "android.content.Context",
-        "androidx.test.core.app.ApplicationProvider",
-        "com.diegonmarcos.cloudlib.auth.ProviderStatus",
-        "com.diegonmarcos.cloudlib.auth.SignIn",
         "com.diegonmarcos.superapp.profile.AuthProviderLog",
         "org.junit.Assert.assertEquals",
-        "org.junit.Assert.assertFalse",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
         "org.junit.runner.RunWith",
@@ -73302,7 +73868,6 @@
       ],
       "symbols": [
         "theProvidersPageIsTheFirstLeafOfAuthenticationProviders()",
-        "fourFamiliesComeFromTheOneDeclaration()",
         "theLogKeepsAnIdentityPerFamilyAndNothingElse()",
         "class AuthProvidersTest"
       ]
@@ -163554,6 +164119,122 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/UnisonCoordinator.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonCoordinator"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.clouddrive.DrivePrefs",
+        "com.diegonmarcos.clouddrive.UnisonSyncWorker",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonConfig",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonOutput",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonResolve",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonRunner",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonStateStore",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.update",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "refresh()",
+        "enabled(pair: UnisonConfig.Pair)",
+        "setEnabled(pair: UnisonConfig.Pair, on: Boolean)",
+        "isRunning(id: String)",
+        "line(id: String)",
+        "ended(id: String)",
+        "syncNow(pair: UnisonConfig.Pair)",
+        "resolve(pair: UnisonConfig.Pair, path: String, choice: UnisonResolve.Choice)",
+        "cancel(pair: UnisonConfig.Pair)",
+        "class UnisonCoordinator"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/UnisonScreens.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "unisonSection"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.lazy.LazyListScope",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.PlayArrow",
+        "androidx.compose.material.icons.filled.Stop",
+        "androidx.compose.material.icons.filled.Sync",
+        "androidx.compose.material3.LinearProgressIndicator",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
+        "com.diegonmarcos.clouddrive.ui.DriveTags",
+        "com.diegonmarcos.clouddrive.ui.EmptyState",
+        "com.diegonmarcos.clouddrive.ui.Hairline",
+        "com.diegonmarcos.clouddrive.ui.Pill",
+        "com.diegonmarcos.clouddrive.ui.PillRow",
+        "com.diegonmarcos.clouddrive.ui.SectionHeader",
+        "com.diegonmarcos.clouddrive.ui.StatusLight",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonConfig",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonResolve",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonStateStore",
+        "java.text.DateFormat",
+        "java.util.Date"
+      ],
+      "symbols": [
+        "unisonSection( coordinator: UnisonCoordinator, states: Map<String, UnisonStateStore.PairState>, live: Map<String, List<String>>, unavailable: String?, onMessage: (String)",
+        "UnisonPairCard( coordinator: UnisonCoordinator, pair: UnisonConfig.Pair, state: UnisonStateStore.PairState?, live: List<String>?, engineReady: Boolean, onMessage: (String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/UnisonSyncer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonSyncer"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.cloudlib.mounts.MountCredentialStore",
+        "com.diegonmarcos.cloudlib.mounts.MountStore",
+        "com.diegonmarcos.cloudlib.mounts.MountType",
+        "com.diegonmarcos.cloudlib.rclone.RcloneLink",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonConfig",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonOutput",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonResolve",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonRunner",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonStateStore",
+        "java.io.File",
+        "java.util.concurrent.CopyOnWriteArrayList"
+      ],
+      "symbols": [
+        "accessFor(pair: UnisonConfig.Pair)",
+        "start(pair: UnisonConfig.Pair, trigger: String, onLine: (String)",
+        "sync(pair: UnisonConfig.Pair, trigger: String, onLine: (String)",
+        "startResolve(pair: UnisonConfig.Pair, path: String, choice: UnisonResolve.Choice, onLine: (String)",
+        "remember(pair: UnisonConfig.Pair, trigger: String, result: UnisonOutput.Result, log: List<String>)",
+        "class UnisonSyncer"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/ui/Chrome.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -163804,6 +164485,33 @@
         "StatusLightRow(state: StatusLight.State, rowLabel: String, modifier: Modifier = Modifier)",
         "class StatusLight",
         "class State"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/UnisonSyncWorker.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonSyncWorker"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.util.Log",
+        "androidx.work.Constraints",
+        "androidx.work.ExistingPeriodicWorkPolicy",
+        "androidx.work.NetworkType",
+        "androidx.work.PeriodicWorkRequestBuilder",
+        "androidx.work.WorkManager",
+        "androidx.work.Worker",
+        "androidx.work.WorkerParameters",
+        "com.diegonmarcos.clouddrive.sync.SyncSchedule",
+        "com.diegonmarcos.clouddrive.sync.UnisonSyncer",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "doWork()",
+        "schedule(context: Context)",
+        "class UnisonSyncWorker"
       ]
     },
     {
@@ -164949,6 +165657,37 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/UnisonDeclarationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnisonDeclarationTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.UnisonSyncWorker",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonConfig",
+        "com.diegonmarcos.cloudlib.rclone.unison.UnisonProfile",
+        "java.io.File",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "theShippedDeclarationParsesWithNoProblem()",
+        "everyShippedPairGeneratesAProfileFromTheDeclarationAlone()",
+        "theShippedReferencePairNeverResolvesAConflictOnItsOwn()",
+        "noProfileFileIsShippedByHand()",
+        "theVersionIsNotRestatedHere()",
+        "due(last: Long, now: Long, unmetered: Boolean?, requireUnmetered: Boolean = pair.requireUnmetered, minutes: Int? = 60)",
+        "aPairWithAScheduleIsDueOnlyAfterItsOwnPeriodAndOnAnAllowedNetwork()",
+        "aPairWithNoScheduleIsNeverDue()",
+        "class UnisonDeclarationTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/ui/DriveScreenshotTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -165917,6 +166656,30 @@
         "fail()",
         "g2()",
         "g6()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/test/test-drive-unison.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "n1()",
+        "n2()",
+        "n3()",
+        "n4()",
+        "mut()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "n1()",
+        "n2()",
+        "n3()",
+        "n4()",
+        "mut()"
       ]
     },
     {
