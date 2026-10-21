@@ -39,7 +39,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
-| auth.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| auth.diegonmarcos.com, account.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
 
 ## Hub (caddy, gcp-proxy): sites
@@ -97,11 +97,14 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | contacts.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | crowdsec.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | db.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| git.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | `http://` | a (loopback / mesh-bound listener) | not reachable off-mesh | - |
 | ide.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | languagetool.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | messenger.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| notes-sync.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| notes.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | photos.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | proxy.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | rss.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
@@ -152,7 +155,6 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | cloud-writer.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/openpgpkey/*` `/.well-known/jmap` |
-| git.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/*/*/info/refs` `/*/*/git-upload-pack` `/*/*/git-receive-pack` `/api/v1/*` |
 | jmap.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | mail.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | mails.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
@@ -161,12 +163,10 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` |
 | mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/mta-sts.txt` |
 | nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| notes-sync.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| notes.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | playlist.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
-| auth.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| auth.diegonmarcos.com, account.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | 229 x `*.app` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
 | 13 x `*.db` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
@@ -186,11 +186,9 @@ A tier-b host's gate runs before any of these; the inner column is the *addition
 | api.diegonmarcos.com | `/pub/ready` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/pub/analytics/*` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/c3-services-api/*` | b | mesh only (wg_only) |
-| api.diegonmarcos.com | `/me/*` | b | Bearer OR Authelia (mkProtected) |
-| api.diegonmarcos.com | `/me/health` | b | formerly anonymous (public_paths); now behind the gate |
-| api.diegonmarcos.com | `/git/*` | b | Bearer OR Authelia (mkProtected) |
+| api.diegonmarcos.com | `/git/*` | b | mesh only (wg_only) |
 | api.diegonmarcos.com | `/git/health` | b | formerly anonymous (public_paths); now behind the gate |
-| api.diegonmarcos.com | `/scrappers/*` | b | Bearer OR Authelia (mkProtected) |
+| api.diegonmarcos.com | `/scrappers/*` | b | mesh only (wg_only) |
 | api.diegonmarcos.com | `/scrappers/health` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/scrappers/openapi.json` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/fin-api/*` | b | mesh only (wg_only) |

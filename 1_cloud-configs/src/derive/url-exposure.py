@@ -108,7 +108,7 @@ def analyse(site):
         if len(p) >= 2 and p[0] == "import" and p[1] in GATES:
             gate = p[1]
             gate_paths = p[2:]
-    # WG / mesh guard: a matcher naming `not remote_ip` answered by `respond ... 403`
+    # WG / mesh guard: a matcher naming `not remote_ip` answered by `respond ... 403` or `error ... 403` (the latter reaches the shared handle_errors fallback redirect)
     guard, exempt = None, []
     lines = site["lines"]
     for i, (d, t) in enumerate(lines):
@@ -126,7 +126,7 @@ def analyse(site):
                 for b in body:
                     if b.startswith("not path"):
                         exempt += b.split()[2:]
-    responds = any(d == 1 and t.startswith("respond " + (guard or "@@")) and "403" in t for d, t in lines) if guard else False
+    responds = any(d == 1 and re.match(r"(respond|error) " + re.escape(guard or "@@") + r"\b", t) and "403" in t for d, t in lines) if guard else False
     if guard and not responds:
         guard = None
     bare_redir = [t for t in kids if t.startswith("redir ")]
