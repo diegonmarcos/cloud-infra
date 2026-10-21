@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21860,
+    "files": 21866,
     "by_lang": {
-      "js": 480,
-      "sh": 530,
+      "js": 481,
+      "sh": 531,
       "py": 148,
-      "kotlin": 11468,
+      "kotlin": 11472,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -19,14 +19,14 @@
     },
     "by_role": {
       "file": 2275,
-      "shell": 419,
+      "shell": 420,
       "script": 241,
       "java": 634,
       "entrypoint": 23,
-      "module": 6413,
+      "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11465,
+      "kotlin": 11469,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -10688,7 +10688,6 @@
         "GroupTitle(text: String)",
         "TileStrip(tiles: List<Sections.AggTile>, click: (String)",
         "TileCell(tile: Sections.AggTile, click: (String)",
-        "TileCellBody(tile: Sections.AggTile, click: (String)",
         "class GroupedTilesFragment",
         "class BelowFold"
       ]
@@ -41249,6 +41248,7 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
+        "GitTransports",
         "GitEngine",
         "init",
         "clone"
@@ -41258,9 +41258,11 @@
         "java.io.File"
       ],
       "symbols": [
+        "forDir(context: Context, dir: File)",
         "GitEngine(context: Context, workTree: File)",
         "init(context: Context, dir: File)",
-        "clone(context: Context, url: String, dir: File, auth: GitAuth = GitAuth.None, depth: Int = 0)"
+        "clone(context: Context, url: String, dir: File, auth: GitAuth = GitAuth.None, depth: Int = 0)",
+        "class GitTransports"
       ]
     },
     {
@@ -65225,6 +65227,7 @@
         "_nuke()",
         "_selected()",
         "sync_one()",
+        "_derive_list()",
         "refresh_list()"
       ],
       "imports": [],
@@ -65233,6 +65236,7 @@
         "_nuke()",
         "_selected()",
         "sync_one()",
+        "_derive_list()",
         "refresh_list()"
       ]
     },
@@ -65509,26 +65513,6 @@
       ]
     },
     {
-      "path": "ab_cloud-libs-shared/libs/shared-store/src/main/java/com/diegonmarcos/cloudlib/sharedstore/ExecCopier.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "ExecCopier"
-      ],
-      "imports": [
-        "android.content.Context",
-        "com.diegonmarcos.cloudlib.sharedstore.StoreExec.Companion.q"
-      ],
-      "symbols": [
-        "guest(p: String)",
-        "copy(from: String, to: String, replace: Boolean)",
-        "remove(path: String)",
-        "copyScript(from: String, to: String, replace: Boolean)",
-        "removeScript(path: String)",
-        "class ExecCopier"
-      ]
-    },
-    {
       "path": "ab_cloud-libs-shared/libs/shared-store/src/main/java/com/diegonmarcos/cloudlib/sharedstore/StoreAccess.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -65579,29 +65563,6 @@
         "guestWrap(script: String)",
         "class StoreExec",
         "class Result"
-      ]
-    },
-    {
-      "path": "ab_cloud-libs-shared/libs/shared-store/src/main/java/com/diegonmarcos/cloudlib/sharedstore/StoreLegs.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "StoreLegs"
-      ],
-      "imports": [
-        "java.io.File"
-      ],
-      "symbols": [
-        "copy(from: String, to: String, replace: Boolean)",
-        "remove(path: String)",
-        "plan(args: List<String>, tag: String)",
-        "refusal(args: List<String>)",
-        "pull(plan: Plan)",
-        "finish(plan: Plan, rc: Int)",
-        "class StoreLegs",
-        "class Copier",
-        "class Plan",
-        "class FileCopier"
       ]
     },
     {
@@ -159567,6 +159528,8 @@
         "matches(isDirectory: Boolean, mimeType: String, extension: String)",
         "rowAction(id: String)",
         "cloneUrl(repo: GitRepoDecl)",
+        "byGithub(github: String)",
+        "cloneable(github: String)",
         "decode(b64: String)",
         "parseWebserver(text: String)",
         "element(text: String)",
@@ -159587,11 +159550,9 @@
         "parseSyncRules(text: String)",
         "parseApps(text: String)",
         "parseConnections(text: String)",
-        "parseGitFamily(text: String)",
-        "parseMirrorJobs(text: String)",
-        "parseRemotes(text: String)",
-        "parseRcloneJobs(text: String)",
-        "parseAuthCredentialIds(text: String)"
+        "parseRepoSot(text: String)",
+        "restrictToRegistry(family: GitFamilyDecl, sot: RepoSotDecl)",
+        "parseGitFamily(text: String)"
       ]
     },
     {
@@ -161238,6 +161199,28 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/ExecCopier.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExecCopier"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec.Companion.q",
+        "com.diegonmarcos.cloudlib.sharedstore.StorePaths"
+      ],
+      "symbols": [
+        "guest(p: String)",
+        "copy(from: String, to: String, replace: Boolean)",
+        "remove(path: String)",
+        "copyScript(from: String, to: String, replace: Boolean)",
+        "removeScript(path: String)",
+        "class ExecCopier"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/FleetGit.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -161683,9 +161666,7 @@
       "imports": [
         "android.content.Context",
         "com.diegonmarcos.cloudlib.rclone.RcloneRunner",
-        "com.diegonmarcos.cloudlib.sharedstore.ExecCopier",
         "com.diegonmarcos.cloudlib.sharedstore.StoreAccess",
-        "com.diegonmarcos.cloudlib.sharedstore.StoreLegs",
         "com.diegonmarcos.cloudlib.sharedstore.StorePaths",
         "java.util.UUID"
       ],
@@ -161723,6 +161704,30 @@
         "sync(ctx: Context, dir: File, message: String, name: String, email: String, rebase: Boolean, token: String)",
         "isRepository(ctx: Context, dir: File)",
         "class StoreGit"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/StoreLegs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreLegs"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.sharedstore.StorePaths",
+        "java.io.File"
+      ],
+      "symbols": [
+        "copy(from: String, to: String, replace: Boolean)",
+        "remove(path: String)",
+        "plan(args: List<String>, tag: String)",
+        "refusal(args: List<String>)",
+        "pull(plan: Plan)",
+        "finish(plan: Plan, rc: Int)",
+        "class StoreLegs",
+        "class Copier",
+        "class Plan",
+        "class FileCopier"
       ]
     },
     {
@@ -161854,6 +161859,85 @@
         "class NeedsPermission",
         "class NoService",
         "class Refused"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/TermuxGitTransport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TermuxGitTransport"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.os.Looper",
+        "com.diegonmarcos.cloudlib.gitsync.GitBranchInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitCommitInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitEngine",
+        "com.diegonmarcos.cloudlib.gitsync.GitOpResult",
+        "com.diegonmarcos.cloudlib.gitsync.GitRemoteInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitTransport",
+        "com.diegonmarcos.cloudlib.gitsync.GitTransports",
+        "com.diegonmarcos.cloudlib.gitsync.GitWire",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreAccess",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec",
+        "com.diegonmarcos.cloudlib.sharedstore.StorePaths",
+        "kotlinx.serialization.KSerializer",
+        "kotlinx.serialization.builtins.ListSerializer",
+        "org.json.JSONObject",
+        "java.io.File",
+        "java.io.IOException"
+      ],
+      "symbols": [
+        "unavailable()",
+        "session()",
+        "git(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "close()",
+        "fail(why: String)",
+        "enc(s: KSerializer<T>, v: T)",
+        "ok(result: String)",
+        "answer(req: JSONObject)",
+        "inStore(dir: File)",
+        "install(ctx: Context)",
+        "class TermuxGitTransport"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/TermuxGitWire.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TermuxGitWire"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.gitsync.GitBranchInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitChange",
+        "com.diegonmarcos.cloudlib.gitsync.GitCommitInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitFileStatus",
+        "com.diegonmarcos.cloudlib.gitsync.GitRemoteInfo",
+        "com.diegonmarcos.cloudlib.gitsync.GitStatusSnapshot",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec.Companion.q",
+        "org.json.JSONObject",
+        "java.util.Base64"
+      ],
+      "symbols": [
+        "safe(p: String)",
+        "sha(s: String)",
+        "authHeader(auth: JSONObject?)",
+        "g(dir: String, args: String)",
+        "hdr(dir: String, args: String)",
+        "gAuthed(dir: String, args: String)",
+        "paths(a: JSONObject)",
+        "plan(verb: String, dir: String, a: JSONObject, auth: JSONObject?)",
+        "ok(s: String, net: Boolean = false, stdin: String = \"\")",
+        "change(c: Char)",
+        "parseStatus(out: String)",
+        "parseLog(out: String)",
+        "parseBranches(out: String)",
+        "parseRemotes(out: String)",
+        "class TermuxGitWire",
+        "class Plan"
       ]
     },
     {
@@ -162868,6 +162952,42 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/RepoSotTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RepoSotTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "java.security.MessageDigest",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.boolean",
+        "kotlinx.serialization.json.jsonArray",
+        "kotlinx.serialization.json.jsonObject",
+        "kotlinx.serialization.json.jsonPrimitive",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner"
+      ],
+      "symbols": [
+        "baked()",
+        "theCopyIsThePinnedOne()",
+        "everyFamilyRepositoryIsListedAndCreated()",
+        "pendingRepositoriesAreDeclaredAndNeverCloneable()",
+        "renamesComeFromTheRegistry()",
+        "blankAndBrokenRegistryParseToEmptyAndListNothing()",
+        "libsReposMirrorUsesTheSameCopy()",
+        "class RepoSotTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/SeedReportTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -163106,8 +163226,6 @@
         "com.diegonmarcos.clouddrive.JobPathMigration",
         "com.diegonmarcos.cloudlib.rclone.RcloneJob",
         "com.diegonmarcos.cloudlib.rclone.RcloneJobStore",
-        "com.diegonmarcos.cloudlib.sharedstore.ExecCopier",
-        "com.diegonmarcos.cloudlib.sharedstore.StoreLegs",
         "com.diegonmarcos.cloudlib.sharedstore.StorePaths",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertFalse",
@@ -163183,6 +163301,39 @@
         "decide(installed: Boolean, granted: Boolean, resolves: Boolean, op: String = Declarations.GIT_OP_CLONE)",
         "t_mutated(action: String)",
         "class TerminalGitTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/TermuxGitWireTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TermuxGitWireTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.gitsync.GitChange",
+        "com.diegonmarcos.cloudlib.gitsync.GitEngine",
+        "com.diegonmarcos.cloudlib.gitsync.GitStatusSnapshot",
+        "com.diegonmarcos.cloudlib.gitsync.GitTransport",
+        "com.diegonmarcos.cloudlib.gitsync.GitWire",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "plan(verb: String, args: JSONObject = JSONObject()",
+        "unavailable()",
+        "session()",
+        "git(request: JSONObject)",
+        "chunk(request: JSONObject)",
+        "close()",
+        "class TermuxGitWireTest"
       ]
     },
     {
@@ -164021,6 +164172,22 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/test/test-drive-repos-sot.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "fetch_registry()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "fetch_registry()"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/test/test-drive-seed-and-migration.sh",
       "lang": "sh",
       "role": "shell",
@@ -164248,6 +164415,19 @@
         "bad()",
         "scratch()",
         "plant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/tools/gen-drive-git-repos.js",
+      "lang": "js",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "fs",
+        "path"
+      ],
+      "symbols": [
+        "generate()"
       ]
     },
     {
