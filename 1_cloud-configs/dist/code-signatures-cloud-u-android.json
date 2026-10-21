@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21950,
+    "files": 21954,
     "by_lang": {
       "js": 481,
       "sh": 536,
       "py": 150,
-      "kotlin": 11549,
+      "kotlin": 11553,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11546,
+      "kotlin": 11550,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -67460,6 +67460,7 @@
         "java.io.File"
       ],
       "symbols": [
+        "ownerPackage()",
         "userId()",
         "root()",
         "gitRoot()",
@@ -162739,6 +162740,26 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/LegacyImport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LegacyImport"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.sync.StoreLegs",
+        "java.io.File"
+      ],
+      "symbols": [
+        "line()",
+        "plan(legacyGit: File, storeGit: File, isRepository: (File)",
+        "run(items: List<Item>, copier: StoreLegs.Copier, isRepository: (File)",
+        "class LegacyImport",
+        "class Item",
+        "class Outcome"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/MainActivity.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -163278,7 +163299,8 @@
       "role": "kotlin",
       "exports": [
         "SeedOutcome",
-        "SeedReport"
+        "SeedReport",
+        "SeedPolicy"
       ],
       "imports": [],
       "symbols": [
@@ -163287,9 +163309,14 @@
         "lines()",
         "text()",
         "withoutStorage(names: List<String>, hasStorage: Boolean)",
+        "withoutStore(names: List<String>, why: String)",
         "pending(declared: Int, unmetered: Boolean)",
+        "decide(report: SeedReport, pass: Int)",
+        "stopped(report: SeedReport, pass: Int)",
         "class SeedOutcome",
-        "class SeedReport"
+        "class SeedReport",
+        "class SeedPolicy",
+        "class Next"
       ]
     },
     {
@@ -163340,6 +163367,26 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/StoreReady.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreReady"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreAccess",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec",
+        "com.diegonmarcos.cloudlib.sharedstore.StorePaths"
+      ],
+      "symbols": [
+        "verify(attempts: Int = ATTEMPTS, pauseMs: Long = PAUSE_MS, sleep: (Long)",
+        "probe(ctx: Context)",
+        "wake(ctx: Context)",
+        "class StoreReady"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/StoreSeed.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -163367,6 +163414,7 @@
       ],
       "symbols": [
         "doWork()",
+        "conclude(report: SeedReport)",
         "authDemanded(why: String)",
         "reportFile(context: Context)",
         "lastReport(context: Context)",
@@ -163999,8 +164047,8 @@
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.EmptyState",
         "com.diegonmarcos.clouddrive.ui.IconCatalog",
-        "com.diegonmarcos.clouddrive.ui.Pill",
-        "com.diegonmarcos.clouddrive.ui.ToolbarIsland"
+        "com.diegonmarcos.clouddrive.ui.IslandAction",
+        "com.diegonmarcos.clouddrive.StoreReady"
       ],
       "symbols": [
         "SyncScreen( git: GitSyncCoordinator, rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, page: String? = null, onPageConsumed: ()",
@@ -164906,6 +164954,7 @@
         "volumesDeclaresTheFourClassesAndTheirRules()",
         "syncRulesMapOntoOneRcloneJob()",
         "filesDeclaresTwoSectionsAndEveryPlaceNamesOne()",
+        "theTerminalFilesystemIsADeclaredRootBesideEmulated()",
         "filesPlacesFiltersAndSort()",
         "filesDeclaresTheCopyPathRowAction()",
         "filterRulesMatchAsDeclared()",
@@ -165144,6 +165193,37 @@
         "openWithGetsTheTypeTheFileReallyIs()",
         "class RowMenuTest",
         "class Fake"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/LegacyImportTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LegacyImportTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.sync.StoreLegs",
+        "java.io.File",
+        "java.nio.file.Files",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "setUp()",
+        "tearDown()",
+        "clone(parent: File, name: String, complete: Boolean = true)",
+        "anEmptyStoreIsFilledFromTheLegacyClonesAndTheLegacyIsKept()",
+        "runningItAgainImportsNothing()",
+        "aHuskIsNotImportedAndAnExistingStoreCloneIsNotTouched()",
+        "aFailedCopyIsReportedNotSwallowedAndDoesNotStopTheRest()",
+        "copy(from: String, to: String, replace: Boolean)",
+        "remove(path: String)",
+        "class LegacyImportTest"
       ]
     },
     {
@@ -165397,6 +165477,31 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/StoreReadyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreReadyTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "readyOnTheFirstAnswerAsksOnce()",
+        "aStoreThatComesUpLateIsAcceptedWithinTheBound()",
+        "aProbeThatNeverSucceedsIsBoundedAndSurfacesTheReason()",
+        "aThrowingProbeIsAReasonNotACrash()",
+        "anUnreachableStoreStopsAfterTheBudgetInsteadOfRetryingForever()",
+        "theStoppedReportNamesTheRepositoriesTheCauseAndTheWayOut()",
+        "everyResumableKindIsBoundedNotJustTheStore()",
+        "aCompleteOrBlockedPassIsDoneAtAnyPass()",
+        "class StoreReadyTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/FleetGitPagingTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -165532,6 +165637,8 @@
         "glanceOfNeverLeavesATerminalStatusReading()",
         "autoPullOnlyOnWifiWhenOn()",
         "pullsRideTheOneDeclaredCredential()",
+        "aRepositoryOnlyTheRoutedProbeCanSeeIsStillRead()",
+        "aDirectoryNobodyCallsARepositoryIsNotCloned()",
         "class GitStatusReaderTest"
       ]
     },
@@ -476050,17 +476157,22 @@
         "fallback()",
         "wipe_rootfs()",
         "storage_link()",
-        "storage_unlink()"
+        "storage_unlink()",
+        "legacy_store_merge()",
+        "legacy_store_migrate()"
       ],
       "imports": [
         "install-in-rootfs.sh",
+        "test/test-shared-store.sh",
         "$HERE/cloud-store/local-webserver.sh"
       ],
       "symbols": [
         "fallback()",
         "wipe_rootfs()",
         "storage_link()",
-        "storage_unlink()"
+        "storage_unlink()",
+        "legacy_store_merge()",
+        "legacy_store_migrate()"
       ]
     },
     {
@@ -481203,12 +481315,16 @@
       "role": "shell",
       "exports": [
         "ok()",
-        "bad()"
+        "bad()",
+        "mig()"
       ],
-      "imports": [],
+      "imports": [
+        "$W8/termux.sh"
+      ],
       "symbols": [
         "ok()",
-        "bad()"
+        "bad()",
+        "mig()"
       ]
     },
     {
