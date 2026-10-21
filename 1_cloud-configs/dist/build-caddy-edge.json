@@ -351,23 +351,6 @@
   ],
   "public_routes": [
     {
-      "domain": "git.diegonmarcos.com",
-      "upstream": "10.0.0.6:3002",
-      "landing": "https://diegonmarcos.github.io/c__Cloud/",
-      "strip_authorization": true,
-      "identity": {
-        "header": "X-WEBAUTH-USER",
-        "bearer": {
-          "claude-admin": "diego"
-        },
-        "session": {
-          "me@diegonmarcos.com": "diego"
-        },
-        "_doc": "Which gitea user each identity the edge validated acts as (gitea reverse-proxy authentication). `bearer` is keyed by the fleet client_id introspect-proxy returns in X-Auth-User; `session` by the Authelia username forward_auth returns in Remote-User — the cloud-drive app reaches gitea with the Authelia session cookie, never a bearer, so without that row the phone could not see a private repo. The hub caddy strips any inbound `header` before forward_auth, sets it only from these tables, and answers 403 for a validated identity that has no row: an unmapped client never falls through to anonymous or to a default user. `diego` is the only human gitea account and owns every repo. Add a row here, not anywhere else."
-      },
-      "comment": "Self-hosted Git service"
-    },
-    {
       "domain": "vpn.diegonmarcos.com",
       "upstream": "10.0.0.1:8080",
       "auth": "none",
@@ -388,18 +371,6 @@
       "upstream": "10.0.0.6:8008",
       "auth": "none",
       "comment": "Continuwuity Matrix homeserver (maintained conduwuit fork, Rust/RocksDB) — central hub for chat bridges. Federation enabled via .well-known delegation over :443."
-    },
-    {
-      "domain": "notes-sync.diegonmarcos.com",
-      "upstream": "10.0.0.6:8098",
-      "landing": "https://diegonmarcos.github.io/c__Cloud/",
-      "comment": "Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync)."
-    },
-    {
-      "domain": "notes.diegonmarcos.com",
-      "upstream": "10.0.0.6:8097",
-      "landing": "https://diegonmarcos.github.io/c__Cloud/",
-      "comment": "Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web)."
     },
     {
       "domain": "cloud-account.diegonmarcos.com",
@@ -915,6 +886,7 @@
           "public_paths": [
             "/git/health"
           ],
+          "wg_only": true,
           "comment": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back."
         },
         {

@@ -403,6 +403,7 @@
       "domain": "git.diegonmarcos.com",
       "upstream": "10.0.0.6:3002",
       "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "wg_only": true,
       "strip_authorization": true,
       "identity": {
         "header": "X-WEBAUTH-USER",
@@ -530,12 +531,14 @@
       "domain": "notes-sync.diegonmarcos.com",
       "upstream": "10.0.0.6:8098",
       "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "wg_only": true,
       "comment": "Cloud Notes sync server: Yjs documents (Hocuspocus) and the HTTP delta API at notes-sync.diegonmarcos.com behind the edge gate (fleet Bearer or Authelia). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-sync)."
     },
     {
       "domain": "notes.diegonmarcos.com",
       "upstream": "10.0.0.6:8097",
       "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "wg_only": true,
       "comment": "Cloud Notes web: the AFFiNE-based notes app (Miro + Notion + Obsidian) served as static files at notes.diegonmarcos.com behind the edge gate (Authelia 2FA or fleet Bearer). Built by cloud-u-android ship-cloud-notes.yml (ghcr.io/diegonmarcos/cloud-notes-web)."
     },
     {
@@ -1469,6 +1472,7 @@
           "public_paths": [
             "/git/health"
           ],
+          "wg_only": true,
           "comment": "Git Proxy API — Authelia-fronted read path to GitHub so the phone holds NO GitHub credential (#647, route 3 of #646's fallback chain). The caller authenticates to US with the Authelia bearer it already has; this service holds the GitHub token server-side and streams the result back."
         },
         {
