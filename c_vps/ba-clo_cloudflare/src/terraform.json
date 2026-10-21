@@ -211,6 +211,8 @@
     "_doc": "Cloudflare One (Zero Trust) — PRIMARY auth + network edge, Authelia stays the FALLBACK. Design: a0_docs/eng-specs/cloudflare-zero-trust.md. Rendered by zero-trust.tf. Phase 1 = tunnel + cloudflared on oci-apps (always on) + ONE pilot Access app, ONE service token, ONE Gateway private-DNS override (gated by org_enabled). No existing hostname is touched in phase 1.",
     "_org_enabled_doc": "false until the owner enables Zero Trust on the account (dashboard → Zero Trust → pick team name → Free plan). The 2026-10-14 probe returned access.api.error.not_enabled. While false, ONLY the tunnel (no public hostname, catch-all 404) is created — nothing is exposed. Flip to true, then run the cf-zero-trust workflow [zt:plan] → [zt:apply] → [zt:verify].",
     "org_enabled": true,
+    "_tunnel_ingress_doc": "false = tunnel fleet-edge keeps only the catch-all 404 (pilot apply is pure creates). true adds the spec-zt ingress rule: one in-place update of cloudflare_zero_trust_tunnel_cloudflared_config.zt_fleet; rollback = set false and re-apply.",
+    "tunnel_ingress": false,
     "team_name": "diegonmarcos",
     "tunnel": {
       "name": "fleet-edge",

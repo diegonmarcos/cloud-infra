@@ -46,7 +46,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "zt_fleet" {
   config {
     # Public hostnames exist only once Access is in front of them.
     dynamic "ingress_rule" {
-      for_each = local.zt_on ? [local.zt.pilot_app] : []
+      for_each = (local.zt_on && try(local.zt.tunnel_ingress, false)) ? [local.zt.pilot_app] : []
       content {
         hostname = ingress_rule.value.hostname
         service  = ingress_rule.value.service
