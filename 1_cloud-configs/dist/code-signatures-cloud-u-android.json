@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21866,
+    "files": 21874,
     "by_lang": {
       "js": 481,
       "sh": 531,
       "py": 148,
-      "kotlin": 11472,
+      "kotlin": 11480,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11469,
+      "kotlin": 11477,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -1648,12 +1648,14 @@
         "rendered_subtree(first_line, value)",
         "cmd_check(build, wireguard)",
         "cmd_derive(build, wireguard, path, write)",
+        "cmd_dns(build)",
         "main(argv)",
         "class DistError",
         "class DeriveError"
       ],
       "imports": [
         "difflib",
+        "ipaddress",
         "json",
         "os",
         "sys",
@@ -1674,6 +1676,7 @@
         "rendered_subtree(first_line, value)",
         "cmd_check(build, wireguard)",
         "cmd_derive(build, wireguard, path, write)",
+        "cmd_dns(build)",
         "main(argv)",
         "class DistError",
         "class DeriveError"
@@ -3978,12 +3981,14 @@
         "rendered_subtree(first_line, value)",
         "cmd_check(build, wireguard)",
         "cmd_derive(build, wireguard, path, write)",
+        "cmd_dns(build)",
         "main(argv)",
         "class DistError",
         "class DeriveError"
       ],
       "imports": [
         "difflib",
+        "ipaddress",
         "json",
         "os",
         "sys",
@@ -4004,6 +4009,7 @@
         "rendered_subtree(first_line, value)",
         "cmd_check(build, wireguard)",
         "cmd_derive(build, wireguard, path, write)",
+        "cmd_dns(build)",
         "main(argv)",
         "class DistError",
         "class DeriveError"
@@ -10040,6 +10046,7 @@
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.Spacer",
         "androidx.compose.foundation.layout.fillMaxWidth",
@@ -10070,8 +10077,7 @@
         "androidx.compose.ui.platform.LocalView",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.painterResource",
-        "androidx.compose.ui.text.font.FontWeight",
-        "androidx.compose.ui.text.style.TextAlign"
+        "androidx.compose.ui.text.font.FontWeight"
       ],
       "symbols": [
         "declares(id: String)",
@@ -10096,6 +10102,7 @@
         "CloudGrid(cols: Int, tiles: List<CloudTile>, actions: PageActions)",
         "CloudTileCell(t: CloudTile, actions: PageActions, modifier: Modifier)",
         "FilterRow(state: AggregatorState)",
+        "ConfigSection( state: AggregatorState, hasFilters: Boolean, bottom: List<IndexedValue<Sections.StackPanel>>, anchors: PageAnchors, actions: PageActions, )",
         "class PageAnchors",
         "class PageActions",
         "class CloudTile"
@@ -10170,6 +10177,7 @@
         "kotlinx.coroutines.launch"
       ],
       "symbols": [
+        "toggleConfigOpen()",
         "selection(id: String, fallback: String)",
         "yesNo(id: String)",
         "selected(filter: Sections.StackFilter)",
@@ -10208,8 +10216,7 @@
         "visible(panel: Sections.StackPanel)",
         "sourceLabel()",
         "isOpen(index: Int, panel: Sections.StackPanel)",
-        "toggleAllCollapsed()",
-        "class AggregatorState"
+        "toggleAllCollapsed()"
       ]
     },
     {
@@ -10440,6 +10447,55 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/BadgeCards.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
+        "com.diegonmarcos.superapp.notificationcenter.NotifyGroups",
+        "com.diegonmarcos.superapp.ui.Haptics"
+      ],
+      "symbols": [
+        "card(id: String)",
+        "progress(id: String)",
+        "orderedBadges(ctx: android.content.Context)",
+        "BadgeCards()",
+        "accentOf(d: BadgeCardData.Data)",
+        "BadgeCard(d: BadgeCardData.Data)",
+        "class BadgeCardTags"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/BoardsPanels.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -10494,9 +10550,11 @@
         "BoardLoading()",
         "BoardUnavailable(board: String, r: Read.Unavailable, fix: KitAction? = null)",
         "installFix(onOpen: (String)",
-        "BoardInboxBody(epoch: Int, onOpen: (String)",
-        "InboxGroupCard(g: InboxGroup, now: Long, onOpen: (String)",
-        "InboxRow(item: InboxItem, now: Long, onOpen: (String)",
+        "itemId(i: InboxItem)",
+        "boxKey(pkg: String)",
+        "BoardInboxBody(state: AggregatorState, onOpen: (String)",
+        "InboxGroupCard(state: AggregatorState, g: InboxGroup, now: Long, onOpen: (String)",
+        "InboxRow(state: AggregatorState, item: InboxItem, now: Long, onOpen: (String)",
         "openItem(item: InboxItem, onOpen: (String)",
         "AppGlyph(icon: ImageBitmap?, label: String)",
         "BoardStepsBody(epoch: Int, onOpen: (String)",
@@ -11183,6 +11241,60 @@
         "fanGesture(sectionId: String, items: List<Pair<String, Pair<Int, String>>>)",
         "awaitLiftOrDrift(id: PointerId, start: Offset, slop: Float)",
         "class LauncherToolbarFx"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/NotifActions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "android.widget.Toast",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.text.BasicTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.composed",
+        "androidx.compose.ui.graphics.graphicsLayer",
+        "androidx.compose.ui.input.pointer.pointerInput",
+        "androidx.compose.ui.layout.onSizeChanged",
+        "androidx.compose.foundation.gestures.detectHorizontalDragGestures",
+        "kotlinx.coroutines.launch",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.SolidColor",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalView",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.TextStyle",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.notificationcenter.ReplyActions",
+        "com.diegonmarcos.superapp.ui.Haptics"
+      ],
+      "symbols": [
+        "tag(action: String, key: String)",
+        "NotifActionRow( key: String, onRead: ()",
+        "ActionPill(label: String, tag: String, description: String, modifier: Modifier, enabled: Boolean = true, onClick: ()",
+        "rowSwipe(key: Any, onRight: ()",
+        "class NotifActions"
       ]
     },
     {
@@ -13806,6 +13918,32 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeCardData.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BadgeCardData"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.PendingIntent",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.IntentFilter",
+        "android.os.BatteryManager",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "read(ctx: Context, b: BadgeDeclaration.Badge)",
+        "data(headline: String, sub: String, progress: Float?, lines: List<Line>)",
+        "batteryLevel(ctx: Context)",
+        "ago(ms: Long)",
+        "class BadgeCardData",
+        "class Line",
+        "class Data"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeClick.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13874,6 +14012,7 @@
         "class BadgeDeclaration",
         "class Option",
         "class Instrument",
+        "class Card",
         "class Badge",
         "class Group"
       ]
@@ -14569,6 +14708,28 @@
         "clear(ctx: Context)",
         "class PhoneNotificationStore",
         "class Entry"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/ReplyActions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ReplyActions"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.RemoteInput",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "java.util.concurrent.ConcurrentHashMap"
+      ],
+      "symbols": [
+        "capture(key: String, n: Notification)",
+        "has(key: String?)",
+        "send(ctx: Context, key: String?, text: String)",
+        "class ReplyActions"
       ]
     },
     {
@@ -18726,6 +18887,7 @@
         "restore()",
         "waitFor(tag: String)",
         "waitForText(text: String)",
+        "inboxState()",
         "class BoardsTest",
         "class Fake"
       ]
@@ -19024,6 +19186,110 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifActionsGuardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NotifActionsGuardTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assertHasClickAction",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "view(key: String, vararg rows: NotifRow)",
+        "class NotifActionsGuardTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifStyleGuardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NotifStyleGuardTest"
+      ],
+      "imports": [
+        "androidx.compose.ui.graphics.toArgb",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "spec()",
+        "hex(c: androidx.compose.ui.graphics.Color)",
+        "class NotifStyleGuardTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifyFixtures.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration"
+      ],
+      "symbols": [
+        "badge(b: BadgeDeclaration.Badge)",
+        "d(headline: String, sub: String, progress: Float? = null, lines: List<BadgeCardData.Line> = emptyList()",
+        "l(a: String, v: String)",
+        "install()",
+        "uninstall()",
+        "class NotifyFixtures"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifyPageGuardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NotifyPageGuardTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.getUnclippedBoundsInRoot",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performScrollTo",
+        "androidx.compose.ui.unit.Dp",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.core.NotificationStore",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "seed()",
+        "restore()",
+        "top(tag: String)",
+        "bottom(tag: String)",
+        "class NotifyPageGuardTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifyScreenTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -19042,6 +19308,7 @@
         "androidx.compose.ui.test.onNodeWithTag",
         "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.test.performScrollTo",
+        "androidx.compose.ui.test.performClick",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.superapp.core.NotificationStore",
         "com.diegonmarcos.superapp.ui.KitPageHarness",
