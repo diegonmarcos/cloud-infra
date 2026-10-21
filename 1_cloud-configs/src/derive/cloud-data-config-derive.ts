@@ -10,6 +10,7 @@ import { resolve, join } from "path";
 // Reused (not re-read from dist/) so the SuperApp artifact embeds the SAME
 // wg-mesh/v1 snapshot the mesh deriver emits, computed from the same SoT.
 import { build as buildMeshSnapshot } from "./derive-mesh-snapshot.js";
+import { apkWebRoute } from "./apk-web-route.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Paths
@@ -1194,23 +1195,14 @@ function deriveCaddy(c: any): DerivedFile[] {
       if (usedHosts.has(host)) throw new Error(`APK host ${host} collides with an existing vhost`);
       usedHosts.add(host);
       const web = app.web ?? null;
-      let upstream: string | undefined;
-      if (web?.kind === "container") {
-        upstream = containerUpstream(web.target);
-        if (!upstream) throw new Error(`APK ${name} declares web container '${web.target}' but no HTTP container of that name exists`);
-      }
-      // wasm / webapp targets are declared in the manifest but not rendered yet:
-      // like an APK with no web target, they redirect to the landing page.
-      dedupedRoutes.push({
-        domain: host,
-        ...(upstream ? { upstream } : { landing_only: true }),
-        landing: landingOf(name),
-        apk: name,
-        ...(web ? { web } : {}),
-        comment: upstream ? `APK ${name}: web target container ${web.target}` : `APK ${name}: no web target, landing redirect`,
+      // #876: container and wasm targets are Authelia-gated (apk-web-route.ts); wasm renders only
+      // once url_scheme.wasm_origin is declared, otherwise it stays a landing redirect.
+      const { route, privateUpstream } = apkWebRoute(app, {
+        host, landing: landingOf(name), containerUpstream, wasmOrigin: urlScheme.wasm_origin ?? null,
       });
+      dedupedRoutes.push(route);
       let priv: string | null = null;
-      if (upstream) { priv = `${name}.app`; addPrivate(priv, upstream, "apk"); }
+      if (privateUpstream) { priv = `${name}.app`; addPrivate(priv, privateUpstream, "apk"); }
       apkHosts.push({ host, apk: name, web_kind: web?.kind ?? null, private: priv });
     }
 
