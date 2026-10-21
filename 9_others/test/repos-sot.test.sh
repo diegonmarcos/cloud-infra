@@ -26,7 +26,10 @@ GH='(.url|sub("^.*[/:]";"")|sub("\\.git$";""))'
 
 jq -e '._schema=="cloud-repos/v1" and (.repos|length)>5 and (([.repos[].name]|length) == ([.repos[].name]|unique|length))' "$SOT" >/dev/null 2>&1 \
   && ok "S1a repos.sot.json is a valid cloud-repos/v1 registry" || bad "S1a repos.sot.json invalid"
-if curl -fsSL --max-time 20 "$URL" -o "$T/live.json" 2>/dev/null && jq -e . "$T/live.json" >/dev/null 2>&1; then
+# raw.githubusercontent.com is CDN-cached for minutes after a push: ask the contents API (always fresh) first.
+API="$(printf '%s' "$URL" | sed -E 's#^https://raw.githubusercontent.com/([^/]+)/([^/]+)/(.+)/([^/]+)$#https://api.github.com/repos/\1/\2/contents/\4?ref=\3#')"
+if { curl -fsSL --max-time 20 -H 'Accept: application/vnd.github.raw' ${GITHUB_TOKEN:+-H "Authorization: Bearer $GITHUB_TOKEN"} "$API" -o "$T/live.json" 2>/dev/null \
+     || curl -fsSL --max-time 20 "$URL" -o "$T/live.json" 2>/dev/null; } && jq -e . "$T/live.json" >/dev/null 2>&1; then
   cmp -s "$T/live.json" "$SOT" && ok "S1b copy = $URL" || bad "S1b repos.sot.json DRIFTED from $URL (run git-repos-master ./clone.sh --sync)"
 else
   echo "INFO S1b $URL not reachable from here; live comparison not made"
