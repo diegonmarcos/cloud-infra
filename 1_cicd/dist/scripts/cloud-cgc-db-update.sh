@@ -1887,7 +1887,7 @@ chunk_index_repo() {
     # the heartbeat can find and kill it; a kill it ordered is reported as the window's 124.
     _cr_pidf="$_cr_o/octocode.pid"; _cr_stalled="$_cr_o/stalled"; rm -f "$_cr_pidf" "$_cr_stalled"
     _cr_stall_s=0
-    [ "$MANIFEST_PHASE" = "graphrag" ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-20} * 60 ))
+    [ "$MANIFEST_PHASE" = "graphrag" ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-10} * 60 ))
     if [ "${CGC_HEARTBEAT_S:-0}" -gt 0 ] 2>/dev/null; then
       : > "$_log"
       chunk_heartbeat "$_cr_r · chunk $_cr_i" "$_log" "${LLM_PROXY_LOG:-}" "$_cr_l0" "$CGC_HEARTBEAT_S" "$_cr_pidf" "$_cr_stall_s" "$_cr_stalled" &

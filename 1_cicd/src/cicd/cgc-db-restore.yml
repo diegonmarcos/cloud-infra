@@ -183,6 +183,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
+          # accept a short sha (7-39 hex): resolve it to the full one on cloud-u-containers_cgc
+          if printf '%s' "$REF" | grep -Eq '^[0-9a-f]{7,39}$'; then
+            REF=$(gh api "repos/diegonmarcos/cloud-u-containers_cgc/commits/$REF" --jq .sha) || { echo "::error::cgc_ref cannot be resolved"; exit 1; }
+          fi
           printf '%s' "$REF" | grep -Eq '^[0-9a-f]{40}$' || { echo "::error::cgc_ref '$REF' is not a 40-hex commit sha"; exit 1; }
           ST=$(gh api "repos/diegonmarcos/cloud-u-containers_cgc/compare/$REF...main" -q .status 2>/dev/null || echo error)
           case "$ST" in

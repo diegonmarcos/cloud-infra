@@ -264,6 +264,15 @@ chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen 
           # The pid is the window's subshell; octocode is its grandchild (subshell -> timeout
           # -> octocode), so signal every descendant, deepest first, TERM then KILL.
           _hb_kids=$(_hb_tree "$_hb_pid")
+          # Evidence for the next reader (#1061): which file the hung octocode holds open, its
+          # CPU/thread state and its last log lines, printed BEFORE the kill.
+          echo "[cgc-db] $1 stall diagnostics: octocode log tail:"
+          tr '\r' '\n' < "$2" 2>/dev/null | tail -n 12 | cut -c1-300
+          for _hb_k in $_hb_kids; do
+            [ -d "/proc/$_hb_k" ] || continue
+            echo "[cgc-db] $1 stall pid $_hb_k $(cat /proc/$_hb_k/comm 2>/dev/null) state=$(awk '/^State:/{print $2}' /proc/$_hb_k/status 2>/dev/null) threads=$(awk '/^Threads:/{print $2}' /proc/$_hb_k/status 2>/dev/null) wchan=$(cat /proc/$_hb_k/wchan 2>/dev/null) cpu_ticks=$(awk '{print $14+$15}' /proc/$_hb_k/stat 2>/dev/null)"
+            ls -l /proc/$_hb_k/fd 2>/dev/null | awk '{print $NF}' | grep -E '^/(repos|home|tmp)' | grep -v -E 'octocode/|\.lance|/dev/' | sort -u | head -n 10 | sed "s|^|[cgc-db] $1 stall open file: |"
+          done
           # shellcheck disable=SC2086
           [ -z "$_hb_kids" ] || kill -TERM $_hb_kids 2>/dev/null || true
           sleep "${CGC_STALL_KILL_GRACE_S:-15}"
