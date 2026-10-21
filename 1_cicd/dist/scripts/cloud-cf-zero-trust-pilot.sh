@@ -211,7 +211,7 @@ do_apply() {
   reconcile_orphan_tunnel
   do_plan
   cd "$TF_DIR"
-  mapfile -t TARGETS < <(jq -r '.resource_changes[] | select(.change.actions != ["no-op"]) | .address' tfplan.json | grep -E "$ZT_ADDR_RE" || true)
+  mapfile -t TARGETS < <(jq -r '.resource_changes[] | select(.change.actions != ["no-op"] or .change.importing != null) | .address' tfplan.json | grep -E "$ZT_ADDR_RE" || true)  # imports (state-only, actions no-op) are targeted too; an import that also shows a change is refused below
   [ "${#TARGETS[@]}" -gt 0 ] || { echo "no zero-trust changes to apply"; tf_cleanup; return 0; }
   BAD="$(jq -r --arg re "$ZT_ADDR_RE" --arg ok "$ZT_UPDATE_OK" '.resource_changes[] | select((.address|test($re)) and .change.actions != ["create"] and .change.actions != ["no-op"] and (.address != $ok or .change.actions != ["update"])) | "\(.change.actions|join("+")) \(.address)"' tfplan.json)"
   if [ -n "$BAD" ]; then echo "REFUSING: non-create change on a zero-trust address:"; echo "$BAD"; tf_cleanup; return 1; fi
