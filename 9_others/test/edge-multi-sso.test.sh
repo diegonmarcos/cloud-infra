@@ -21,7 +21,7 @@ on="$(echo "$hub_ms" | jq -r '.enabled // false')"
 count(){ grep -c -E -- "$1" "$2" || true; }
 if [ "$on" = false ]; then
   for c in "$HUB_C" "$EDGE_C"; do
-    for pat in '@ea_broker' '_diego_sso' '(^|[^-A-Za-z0-9])account\.diegonmarcos\.com' '/oauth2/' 'sso-chooser'; do
+    for pat in '@ea_broker' '_diego_sso' '(^|[^-A-Za-z0-9])account\.diegonmarcos\.com' '/oauth2/' 'sso-chooser' 'Cf-Access-Jwt-Assertion' '@ea_cfaccess'; do
       [ "$(count "$pat" "$c")" = 0 ] || bad "multi_sso is OFF but ${c#$ROOT/} still carries '$pat'"
     done
   done
@@ -37,6 +37,14 @@ else
     grep -q -E -- "sni .*(^| )${h//./\\.}" "$EDGE_C" || bad "edge Caddyfile does not terminate $h"
   done
   grep -q 'sso-chooser' "$HUB_C" || bad "chooser route missing from the hub"
+  if [ "$(echo "$hub_ms" | jq -r '.cloudflare_access.enabled // false')" = true ]; then
+    for c in "$HUB_C" "$EDGE_C"; do
+      [ "$(count 'forward_auth @ea_cfaccess' "$c")" = 3 ] || bad "${c#$ROOT/}: Cloudflare Access branch missing from a gate snippet"
+      [ "$(count '/cf-auth' "$c")" = 3 ] || bad "${c#$ROOT/}: Cloudflare Access branch must call the broker cf-auth"
+    done
+  else
+    for c in "$HUB_C" "$EDGE_C"; do [ "$(count '@ea_cfaccess' "$c")" = 0 ] || bad "cloudflare_access is off but ${c#$ROOT/} carries its branch"; done
+  fi
   [ "$(echo "$hub_ms" | jq -r '.allowed_emails // empty')" = "" ] || bad "allowlist must live ONLY in the broker build.json"
   [ "$fail" = 0 ] && echo "ok: multi_sso ON -> broker branch, hosts and routes rendered in both Caddyfiles"
 fi

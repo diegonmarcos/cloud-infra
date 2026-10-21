@@ -205,3 +205,9 @@ output "zt_service_token_client_secret" {
 output "zt_dns_location_doh_subdomain" {
   value = local.zt_on ? cloudflare_zero_trust_dns_location.zt_fleet[0].doh_subdomain : ""
 }
+
+# AUD tag of the pilot Access app. Public (it is in every Access JWT); the auth broker pins it in
+# cloud-u-containers infra-sec_auth-broker/build.json auth_broker.cloudflare_access.aud (#1083).
+output "zt_pilot_aud" {
+  value = local.zt_on ? cloudflare_zero_trust_access_application.zt_pilot[0].aud : ""
+}
