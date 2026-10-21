@@ -6,18 +6,19 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21853,
+    "files": 21860,
     "by_lang": {
+      "js": 480,
       "sh": 530,
       "py": 148,
-      "kotlin": 11463,
+      "kotlin": 11468,
       "java": 635,
       "ts": 8461,
       "nix": 31,
-      "js": 478,
       "rust": 107
     },
     "by_role": {
+      "file": 2275,
       "shell": 419,
       "script": 241,
       "java": 634,
@@ -25,16 +26,30 @@
       "module": 6413,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11460,
+      "kotlin": 11465,
       "python": 49,
       "rust-module": 107,
-      "file": 2273,
       "hook": 150,
       "nix-module": 4,
       "mcp-tool": 53
     }
   },
   "files": [
+    {
+      "path": ".claude/mcp-connect.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:child_process",
+        "node:path"
+      ],
+      "symbols": [
+        "meshReachable(url)",
+        "bearer()",
+        "send(msg)"
+      ]
+    },
     {
       "path": ".github/actions/gradle-cache-hygiene/gradle-shim.sh",
       "lang": "sh",
@@ -2348,6 +2363,21 @@
         "step_build_fork()",
         "step_publish_fork()",
         "_oci_pull_blob()"
+      ]
+    },
+    {
+      "path": "0_apps/src/claude/mcp-connect.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:child_process",
+        "node:path"
+      ],
+      "symbols": [
+        "meshReachable(url)",
+        "bearer()",
+        "send(msg)"
       ]
     },
     {
@@ -6780,13 +6810,16 @@
       "symbols": [
         "sh(cmd: String)",
         "tearDown()",
+        "a_webAppsEmbedRenders()",
+        "b_webAppsEmbedRendersAtNight()",
         "c_linktreeRenders()",
         "export(name: String)",
         "resumed()",
         "clearPrompt()",
         "findWeb(v: View)",
         "js(w: WebView, expr: String)",
-        "check(name: String, target: String, night: Boolean)",
+        "check(name: String, target: String, night: Boolean, embed: Boolean = false)",
+        "num(expr: String)",
         "class WebPagesRenderTest"
       ]
     },
@@ -7326,7 +7359,6 @@
         "com.diegonmarcos.superapp.launcher.AppInstall",
         "com.diegonmarcos.superapp.launcher.AppLongPressMenu",
         "com.diegonmarcos.superapp.launcher.Sections",
-        "com.diegonmarcos.superapp.launcher.TileSeparator",
         "com.diegonmarcos.superapp.ui.LauncherPalette",
         "com.diegonmarcos.superapp.ui.snack",
         "com.diegonmarcos.superapp.R",
@@ -7359,7 +7391,8 @@
         "androidx.compose.foundation.lazy.LazyListScope",
         "androidx.compose.foundation.lazy.LazyRow",
         "androidx.compose.foundation.lazy.items",
-        "androidx.compose.foundation.shape.RoundedCornerShape"
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Icon"
       ],
       "symbols": [
         "onCreate(savedInstanceState: android.os.Bundle?)",
@@ -10620,6 +10653,7 @@
         "android.content.Context",
         "android.os.Bundle",
         "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.PaddingValues",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -10638,8 +10672,7 @@
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.produceState",
         "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.setValue",
-        "androidx.compose.ui.Alignment"
+        "androidx.compose.runtime.setValue"
       ],
       "symbols": [
         "palette()",
@@ -10655,6 +10688,7 @@
         "GroupTitle(text: String)",
         "TileStrip(tiles: List<Sections.AggTile>, click: (String)",
         "TileCell(tile: Sections.AggTile, click: (String)",
+        "TileCellBody(tile: Sections.AggTile, click: (String)",
         "class GroupedTilesFragment",
         "class BelowFold"
       ]
@@ -11072,6 +11106,7 @@
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.offset",
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.wrapContentHeight",
@@ -11091,14 +11126,13 @@
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.painterResource",
         "androidx.compose.ui.semantics.clearAndSetSemantics",
+        "androidx.compose.ui.semantics.testTag",
         "androidx.compose.ui.text.style.TextAlign",
         "androidx.compose.ui.text.style.TextOverflow",
         "androidx.compose.ui.unit.Dp",
         "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.unit.sp",
-        "com.diegonmarcos.superapp.extinstall.extInstallRing",
-        "com.diegonmarcos.superapp.settings.GridColumns",
-        "com.diegonmarcos.superapp.ui.Haptics"
+        "com.diegonmarcos.superapp.extinstall.extInstallRing"
       ],
       "symbols": [
         "tileIconDp(widthPx: Int, density: Float, cols: Int, pageDp: Int, chromeDp: Int)",
@@ -11108,7 +11142,8 @@
         "largestIconDp()",
         "count()",
         "clear()",
-        "TileSeparator(text: String, modifier: Modifier = Modifier)",
+        "tileSepTag(id: String)",
+        "TileDivider(tag: String, iconCentreY: Dp, edgeShift: Dp, modifier: Modifier = Modifier)",
         "TileGroupHeader(text: String, modifier: Modifier = Modifier, compact: Boolean = false)",
         "TileSubgroupHeader(text: String, modifier: Modifier = Modifier, compact: Boolean = false)",
         "tileTag(id: String)",
@@ -11353,7 +11388,6 @@
       "symbols": [
         "pagesFor(sectionId: String, includeHidden: Boolean = false)",
         "factoryFor( sectionId: String, pageId: String, label: String, url: String = \"\", tabs: List<String> = emptyList()",
-        "webAppsGrid(ctx: android.content.Context, page: Sections.Page)",
         "class SectionPages",
         "class Page"
       ]
@@ -11752,6 +11786,7 @@
         "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "androidx.annotation.DrawableRes",
         "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.IntrinsicSize",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.Column",
@@ -11767,6 +11802,7 @@
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
@@ -11790,57 +11826,6 @@
         "class Header",
         "class SubHeader",
         "class TileRow"
-      ]
-    },
-    {
-      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/WebAppsGridFragment.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "WebAppsGridFragment"
-      ],
-      "imports": [
-        "androidx.compose.foundation.background",
-        "androidx.compose.foundation.clickable",
-        "androidx.compose.foundation.layout.BoxWithConstraints",
-        "androidx.compose.foundation.layout.Box",
-        "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.Row",
-        "androidx.compose.foundation.layout.fillMaxSize",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.height",
-        "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.layout.size",
-        "androidx.compose.foundation.shape.RoundedCornerShape",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.Text",
-        "androidx.compose.runtime.Composable",
-        "androidx.compose.ui.Alignment",
-        "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.draw.clip",
-        "androidx.compose.ui.platform.LocalDensity",
-        "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.res.painterResource",
-        "androidx.compose.ui.text.style.TextAlign",
-        "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.Dp",
-        "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.sp",
-        "androidx.core.os.bundleOf",
-        "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.ui.LauncherPalette",
-        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
-        "com.diegonmarcos.superapp.uikit.LocalKitPalette",
-        "kotlin.math.ceil",
-        "kotlin.math.max",
-        "kotlin.math.min"
-      ],
-      "symbols": [
-        "palette()",
-        "Content()",
-        "layout(wDp: Float, hDp: Float, n: Int)",
-        "newInstance(tiles: List<TileGridFragment.Tile>)",
-        "class WebAppsGridFragment"
       ]
     },
     {
@@ -15231,7 +15216,7 @@
         "liveScopes()",
         "fetchLive(q: String)",
         "setLive(q: String, r: LiveResult)",
-        "setSuggestion(s: com.diegonmarcos.superapp.decisions.link.Advice.Suggestion?)",
+        "markSuggestion(s: com.diegonmarcos.superapp.decisions.link.Advice.Suggestion?)",
         "sections()",
         "notices()",
         "SearchBox(c: SearchController, placeholder: String, onGo: ()",
@@ -19247,6 +19232,43 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/TileSeparatorAlignTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TileSeparatorAlignTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.ui.test.getBoundsInRoot",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.DpRect",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "png(name: String)",
+        "bounds(tag: String)",
+        "cy()",
+        "check(name: String, seps: Map<String, String>)",
+        "strip(id: String, sep: Boolean = false)",
+        "class TileSeparatorAlignTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/TileSizeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -19301,40 +19323,27 @@
       ]
     },
     {
-      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/WebAppsGridFitTest.kt",
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/WebAppsEmbedTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "WebAppsGridFitTest"
+        "WebAppsEmbedTest"
       ],
       "imports": [
         "android.app.Application",
-        "android.graphics.Bitmap",
-        "android.graphics.Canvas",
-        "android.view.View",
-        "androidx.compose.ui.test.assertCountEquals",
-        "androidx.compose.ui.test.getBoundsInRoot",
-        "androidx.compose.ui.test.hasScrollAction",
-        "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
-        "kotlin.math.max",
         "androidx.compose.ui.test.onNodeWithTag",
-        "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.width",
+        "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
         "com.diegonmarcos.superapp.ui.KitPageHarness",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
         "org.junit.runner.RunWith",
         "org.robolectric.RobolectricTestRunner",
-        "org.robolectric.RuntimeEnvironment",
-        "org.robolectric.annotation.Config",
-        "org.robolectric.annotation.GraphicsMode",
-        "java.io.File"
+        "org.robolectric.annotation.Config"
       ],
       "symbols": [
-        "guard(name: String, fontScale: Float)",
-        "hasWeb(v: View)",
-        "class WebAppsGridFitTest"
+        "webViewIn(v: android.view.View)",
+        "class WebAppsEmbedTest"
       ]
     },
     {
@@ -27670,6 +27679,7 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
         "com.diegonmarcos.superapp.uikit.KitCard",
         "com.diegonmarcos.superapp.uikit.KitComposeFragment",
         "com.diegonmarcos.superapp.uikit.KitDensity",
@@ -27696,6 +27706,7 @@
         "problem(m: Member, g: Group?, seen: Seen, live: Map<String, Seen>)",
         "summary(rows: List<Row>)",
         "FleetIdentityPage(registry: FleetIdentity.Registry? = null, live: Map<String, FleetIdentity.Seen>? = null)",
+        "IdentityBody(rows: List<FleetIdentity.Row>, reg: FleetIdentity.Registry)",
         "palette()",
         "Content()",
         "class FleetIdentity",
@@ -65026,12 +65037,17 @@
         "obscure(secret: String)",
         "test(remoteName: String)",
         "start(job: RcloneJob, onStats: (RcloneStats)",
+        "refusal(args: List<String>)",
+        "begin(args: List<String>)",
+        "startArgs(jobArgs: List<String>, onStats: (RcloneStats)",
         "refused(why: String?)",
         "line(line: String, onStats: (RcloneStats)",
         "download(remotePath: String, name: String)",
         "class is",
         "class RcloneRunner",
-        "class Handle"
+        "class Handle",
+        "class LegStaging",
+        "class Staged"
       ]
     },
     {
@@ -65192,6 +65208,10 @@
         "aJobIsPolledToItsEndWithStatsLinesExitAndTheRewrittenConfig()",
         "cancellingTellsTheEngineAndEndsWithTheCancelledCode()",
         "anEngineThatRefusesAJobEndsItInsteadOfThrowing()",
+        "aStagedJobRunsTheStagedArgsAndCopiesBackOnlyAfterAnExitOfZero()",
+        "refusal(args: List<String>)",
+        "begin(args: List<String>)",
+        "aStagingRefusalEndsTheJobWithItsSentenceAndNeverCallsTheEngine()",
         "class RcloneRunnerTest",
         "class Fake"
       ]
@@ -65489,6 +65509,26 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/shared-store/src/main/java/com/diegonmarcos/cloudlib/sharedstore/ExecCopier.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExecCopier"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec.Companion.q"
+      ],
+      "symbols": [
+        "guest(p: String)",
+        "copy(from: String, to: String, replace: Boolean)",
+        "remove(path: String)",
+        "copyScript(from: String, to: String, replace: Boolean)",
+        "removeScript(path: String)",
+        "class ExecCopier"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/shared-store/src/main/java/com/diegonmarcos/cloudlib/sharedstore/StoreAccess.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -65542,6 +65582,29 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/shared-store/src/main/java/com/diegonmarcos/cloudlib/sharedstore/StoreLegs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreLegs"
+      ],
+      "imports": [
+        "java.io.File"
+      ],
+      "symbols": [
+        "copy(from: String, to: String, replace: Boolean)",
+        "remove(path: String)",
+        "plan(args: List<String>, tag: String)",
+        "refusal(args: List<String>)",
+        "pull(plan: Plan)",
+        "finish(plan: Plan, rc: Int)",
+        "class StoreLegs",
+        "class Copier",
+        "class Plan",
+        "class FileCopier"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/shared-store/src/main/java/com/diegonmarcos/cloudlib/sharedstore/StorePaths.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -65554,6 +65617,10 @@
         "guestPath(hostPath: String, userId: Int)",
         "migrateLegacy(path: String, userId: Int)",
         "isLegacy(path: String, userId: Int)",
+        "stagingRoot(userId: Int)",
+        "inStore(path: String, userId: Int)",
+        "stagePath(path: String, userId: Int, tag: String)",
+        "viaOwner(mode: Mode)",
         "decide(myUid: Int, ownerUid: Int?, storeAccessible: Boolean, execGranted: Boolean)",
         "class StorePaths",
         "class Mode"
@@ -159261,7 +159328,8 @@
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.Pill",
         "com.diegonmarcos.clouddrive.ui.PillRow",
-        "com.diegonmarcos.clouddrive.ui.StatusLight"
+        "com.diegonmarcos.clouddrive.ui.StatusLight",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellPage"
       ],
       "symbols": [
         "OthersPage(prefs: DrivePrefs, actions: DriveActions, rcloneVersion: String?, modifier: Modifier = Modifier)",
@@ -160525,6 +160593,7 @@
         "java.io.File"
       ],
       "symbols": [
+        "migrateJobs(store: RcloneJobStore, rule: (String)",
         "run(ctx: Context)",
         "class JobPathMigration",
         "class Report"
@@ -161602,6 +161671,30 @@
         "RcloneSyncScreen(coordinator: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onMessage: (String)",
         "MountsSyncScreen( coordinator: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, onMessage: (String)",
         "ConnectionRow(c: Declarations.ConnectionDecl)"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/RcloneStoreLegs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RcloneStoreLegs"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudlib.rclone.RcloneRunner",
+        "com.diegonmarcos.cloudlib.sharedstore.ExecCopier",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreAccess",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreLegs",
+        "com.diegonmarcos.cloudlib.sharedstore.StorePaths",
+        "java.util.UUID"
+      ],
+      "symbols": [
+        "install(ctx: Context)",
+        "legs()",
+        "refusal(args: List<String>)",
+        "begin(args: List<String>)",
+        "class RcloneStoreLegs"
       ]
     },
     {
@@ -163000,6 +163093,37 @@
         "autoPullOnlyOnWifiWhenOn()",
         "pullsRideTheOneDeclaredCredential()",
         "class GitStatusReaderTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/StoreLegsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StoreLegsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.JobPathMigration",
+        "com.diegonmarcos.cloudlib.rclone.RcloneJob",
+        "com.diegonmarcos.cloudlib.rclone.RcloneJobStore",
+        "com.diegonmarcos.cloudlib.sharedstore.ExecCopier",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreLegs",
+        "com.diegonmarcos.cloudlib.sharedstore.StorePaths",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.TemporaryFolder",
+        "java.io.File"
+      ],
+      "symbols": [
+        "copy(from: String, to: String, replace: Boolean)",
+        "remove(path: String)",
+        "class StoreLegsTest",
+        "class Rec"
       ]
     },
     {
@@ -201566,6 +201690,7 @@
       ],
       "symbols": [
         "promote(rows: List<T>, suggestedId: String?, idOf: (T)",
+        "promoteInPlace(rows: MutableList<T>, suggestedId: String?, idOf: (T)",
         "valid(pick: String?, offered: Collection<String>)",
         "state(from: String, subject: String)",
         "questions(offered: List<Pair<String, String>>)",
@@ -211050,6 +211175,7 @@
       "symbols": [
         "noSuggestionIsTheSameListInstance()",
         "aSuggestionMovesOneRowToTheFrontAndKeepsTheRest()",
+        "promoteInPlaceTouchesTheListOnlyForARealSuggestion()",
         "onlyAnOfferedFolderIsAccepted()",
         "theStateIsHeadersOnly()",
         "theQuestionOffersExactlyThePickersFolders()",
@@ -229879,6 +230005,7 @@
         "intercept(chain: Interceptor.Chain)",
         "of(wwwAuthenticate: List<String>, contentType: String?)",
         "kind(t: Throwable)",
+        "syncMessage(t: Throwable)",
         "describe(t: Throwable)",
         "class GatewayCookies",
         "class GatewayFleetTokens",
@@ -230763,6 +230890,11 @@
         "setUp()",
         "tearDown()",
         "fetchSession_parsesAccountAndSendsBasicAuth()",
+        "sessionFailure(auth: JmapAuth, response: MockResponse)",
+        "session401_basic_fromTheEdge_isToldAsTheGate()",
+        "session401_basic_fromStalwart_tellsTheOwnerToRenewTheAppPassword()",
+        "session401_bearer_fromStalwart_andFromTheEdge()",
+        "syncMessage_leavesOtherFailuresToTheirOwnText()",
         "fetchSession_reAuthenticatesAfterCrossHostRedirect()",
         "dispatch(request: RecordedRequest)",
         "fetchSession_reAuthenticatesWhenACrossHostRedirectAnswersAnAnonymousSession()",
@@ -230792,12 +230924,7 @@
         "getVacationResponse_parsesSingleton()",
         "getVacationResponse_nullAndNoCallWhenCapabilityAbsent()",
         "setVacationResponse_sendsFieldsAndSucceeds()",
-        "setVacationResponse_throwsOnNotUpdated()",
-        "vacationSession()",
-        "getQuotas_parsesList()",
-        "getQuotas_emptyAndNoCallWhenCapabilityAbsent()",
-        "sendEmail_returnsTheCreatedEmailId()",
-        "send(submissionGet: MockResponse)"
+        "setVacationResponse_throwsOnNotUpdated()"
       ]
     },
     {
@@ -468550,6 +468677,41 @@
       "symbols": [
         "StoreDrawer( nav: NavDecl, selected: String, currentPage: String?, onSection: (String)",
         "Eyebrow(text: String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/app/src/test/java/com/diegonmarcos/cloudstore/AccessPageTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AccessPageTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "androidx.compose.material3.Surface",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.superapp.appstore.FleetIdentity",
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "evaluate()",
+        "class AccessPageTest"
       ]
     },
     {
