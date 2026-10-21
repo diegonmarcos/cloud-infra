@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21919,
+    "files": 21923,
     "by_lang": {
       "js": 481,
       "sh": 534,
       "py": 148,
-      "kotlin": 11522,
+      "kotlin": 11526,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11519,
+      "kotlin": 11523,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -26025,6 +26025,73 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AuthProvidersPage.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AuthProvidersTags",
+        "AuthProviderLog",
+        "AuthProvidersPage"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.Context",
+        "android.content.ContextWrapper",
+        "android.content.Intent",
+        "android.net.ConnectivityManager",
+        "android.net.NetworkCapabilities",
+        "android.net.Uri",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.FilledTonalButton",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateMapOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.cloudlib.auth.ProviderStatus",
+        "com.diegonmarcos.cloudlib.auth.ProviderStatus.State",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.cloudlib.auth.SignInHost",
+        "com.diegonmarcos.cloudlib.auth.SignInResult",
+        "com.diegonmarcos.cloudlib.auth.SignInWays",
+        "com.diegonmarcos.superapp.settings.ConfigsPrefs",
+        "com.diegonmarcos.superapp.uikit.KitAction",
+        "com.diegonmarcos.superapp.uikit.KitActionBar",
+        "com.diegonmarcos.superapp.uikit.KitState",
+        "com.diegonmarcos.superapp.uikit.KitStatusBanner",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "row(family: String)",
+        "action(family: String, what: String)",
+        "all()",
+        "record(family: String, identity: String)",
+        "forget(family: String)",
+        "activityOrNull()",
+        "vpnActive(ctx: Context)",
+        "stateOf(s: State)",
+        "openUrl(ctx: Context, url: String)",
+        "AuthProvidersPage()",
+        "onSignedIn(result: SignInResult)",
+        "class AuthProvidersTags",
+        "class AuthProviderLog"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/ConnectWays.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -30282,6 +30349,31 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/ProviderStatus.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProviderStatus"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "families(providers: List<SignIn.Provider>)",
+        "label(ways: List<SignIn.Provider>)",
+        "rows(providers: List<SignIn.Provider>, s: Signals)",
+        "parseProbe(code: Int, body: String)",
+        "probe(url: String, timeoutMs: Int = 4000)",
+        "class ProviderStatus",
+        "class State",
+        "class Probe",
+        "class Signals",
+        "class Row"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/auth/src/main/java/com/diegonmarcos/cloudlib/auth/SignIn.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -30539,6 +30631,32 @@
         "withNothingDeclaredTheWordingIsTheBareError()",
         "theParserReadsTheDeclaredTable()",
         "class GrantRemedyTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/auth/src/test/java/com/diegonmarcos/cloudlib/auth/ProviderStatusTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ProviderStatusTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.auth.ProviderStatus.Probe",
+        "com.diegonmarcos.cloudlib.auth.ProviderStatus.Signals",
+        "com.diegonmarcos.cloudlib.auth.ProviderStatus.State",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "android.app.Application"
+      ],
+      "symbols": [
+        "rows(s: Signals = Signals()",
+        "class ProviderStatusTest"
       ]
     },
     {
@@ -73160,6 +73278,33 @@
         "theBundleCipherIsDeterministicInNothing()",
         "aSetupPassLeavesTheConnectionsSectionIntact()",
         "class AccountVaultTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/app/src/test/java/com/diegonmarcos/cloudaccount/AuthProvidersTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AuthProvidersTest"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.cloudlib.auth.ProviderStatus",
+        "com.diegonmarcos.cloudlib.auth.SignIn",
+        "com.diegonmarcos.superapp.profile.AuthProviderLog",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner"
+      ],
+      "symbols": [
+        "theProvidersPageIsTheFirstLeafOfAuthenticationProviders()",
+        "fourFamiliesComeFromTheOneDeclaration()",
+        "theLogKeepsAnIdentityPerFamilyAndNothingElse()",
+        "class AuthProvidersTest"
       ]
     },
     {
