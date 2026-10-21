@@ -239,9 +239,20 @@ chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen 
       _hb_c=$(( $(wc -l < "$3" | tr -d ' ') - $4 ))
       [ "$_hb_c" -gt 0 ] && _hb_last=$(tail -n 1 "$3" | jq -r --argjson now "$(date +%s)" '", last call \(($now - .t) | floor)s ago (\(.kind) \(.outcome), \(.ms)ms)"' 2>/dev/null)
     fi
-    echo "[cgc-db] $1 heartbeat $(( ( $(date +%s) - _hb_t0 ) / 60 ))m: ${_hb_p:-no progress line yet}; LLM calls done ${_hb_c}${_hb_last}"
+    # CPU of the window's process tree since the last beat (clock ticks, 100/s): a window that
+    # is computing (relationship pass over the done set) shows load, a deadlock shows none.
+    _hb_cpu=0
+    if [ -n "${6:-}" ] && [ -f "$6" ]; then
+      for _hb_k in $(cat "$6" 2>/dev/null) $(_hb_tree "$(cat "$6" 2>/dev/null)"); do
+        [ -r "/proc/$_hb_k/stat" ] && _hb_cpu=$(( _hb_cpu + $(awk '{print $14+$15}' /proc/$_hb_k/stat 2>/dev/null || echo 0) ))
+      done
+    fi
+    _hb_dcpu=$(( _hb_cpu - ${_hb_cpu0:-$_hb_cpu} )); _hb_cpu0=$_hb_cpu
+    echo "[cgc-db] $1 heartbeat $(( ( $(date +%s) - _hb_t0 ) / 60 ))m: ${_hb_p:-no progress line yet}; LLM calls done ${_hb_c}${_hb_last}; cpu $(( _hb_dcpu / $5 ))% of a core"
     if [ -n "${8:-}" ] && [ "${7:-0}" -gt 0 ] 2>/dev/null && [ -n "$_hb_p" ]; then
-      if [ "${_hb_p}|${_hb_c}" != "$_hb_sig" ]; then
+      # A window burning CPU (>= 20% of a core over the beat) is working, not stalled: only
+      # progress, an LLM call or CPU keeps it alive; the window cap still bounds a livelock.
+      if [ "${_hb_p}|${_hb_c}" != "$_hb_sig" ] || [ "$_hb_dcpu" -ge $(( $5 * 20 )) ]; then
         _hb_sig="${_hb_p}|${_hb_c}"; _hb_since=$(date +%s)
       elif [ $(( $(date +%s) - _hb_since )) -ge "$7" ]; then
         echo "::warning::[cgc-db] $1 stalled: no progress and no LLM call for $(( ( $(date +%s) - _hb_since ) / 60 ))m at '${_hb_p}' -- killing octocode now instead of waiting for the window cap"

@@ -1904,10 +1904,18 @@ chunk_index_repo() {
     _cr_llm=0
     chunk_llm_summary "${LLM_PROXY_LOG:-}" "$_cr_l0" "$_cr_dt" "$_cr_nn" "$_cr_r · chunk $_cr_i (rc=$_rc)" "$_cr_o" || _cr_llm=$?
     if [ "$_rc" = "124" ]; then
+      if [ -f "$_cr_stalled" ]; then
+        # A stall kill says nothing about the window's size: halving after each one walked
+        # cloud-u-android's graphrag chunk down to the 100-file floor, where every window
+        # paid the same fixed silent phase for +100 files (#1061). Keep the size and rate.
+        cp "$_cr_o/state0" "$_cr_sf_stage"
+        echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i stalled — chunk size kept at $_cr_n (a stall is not a size problem); this window's files stay outstanding"
+      else
       _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
       # The rate was too optimistic: double it so the next sized window is half as big.
       jq --argjson n "$_cr_n" '.chunk = $n | if (.ms_per_file // 0) > 0 then .ms_per_file *= 2 else . end' "$_cr_o/state0" > "$_cr_sf_stage"
       echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i did not finish in ${_cr_wto}m — chunk size halved to $_cr_n; this window's files stay outstanding"
+      fi
       # A window killed at its own cap (graphrag) leaves the rest of the slice: go on in
       # this job with the halved window. The top of the loop stops when too little is left.
       [ "$_cr_wto" -lt "$_cr_slice" ] && [ "$_cr_llm" != "3" ] && continue
