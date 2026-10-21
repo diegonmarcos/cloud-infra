@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 330,
-    "edges": 455,
+    "nodes": 333,
+    "edges": 459,
     "by_table": {
       "vm": 4,
-      "service": 78,
-      "container": 94,
+      "service": 79,
+      "container": 95,
       "domain": 45,
       "repo": 3,
-      "module": 78,
+      "module": 79,
       "package": 28
     }
   },
@@ -1343,6 +1343,32 @@
         "image": "ghcr.io/diegonmarcos/introspect-proxy:latest",
         "role": "app",
         "port": 4182,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "mcp_oauth",
+      "key": "service:mcp_oauth",
+      "properties": {
+        "name": "mcp-oauth",
+        "category": "sec",
+        "description": "MCP OAuth 2.1 authorization server for mcp.diegonmarcos.com (option 31.1, WIP, NOT approved): RFC 8414/9728 discovery, RFC 7591 DCR, /authorize behind Authelia, PKCE S256 /token, opaque tokens introspected by introspect-proxy",
+        "domain": null,
+        "port": 4183,
+        "vm": "gcp-proxy",
+        "folder": "infra-sec_mcp-oauth"
+      }
+    },
+    {
+      "table": "container",
+      "id": "mcp_oauth",
+      "key": "container:mcp_oauth",
+      "properties": {
+        "name": "mcp-oauth",
+        "image": "ghcr.io/diegonmarcos/mcp-oauth:latest",
+        "role": "app",
+        "port": 4183,
         "public": false
       }
     },
@@ -3193,6 +3219,17 @@
     },
     {
       "table": "module",
+      "id": "infra_sec_mcp_oauth",
+      "key": "module:infra_sec_mcp_oauth",
+      "properties": {
+        "name": "infra-sec_mcp-oauth",
+        "repo": "cloud",
+        "category": "sec",
+        "service": "mcp-oauth"
+      }
+    },
+    {
+      "table": "module",
       "id": "user_ai_cloud_cgc_pub_mcp",
       "key": "module:user_ai_cloud_cgc_pub_mcp",
       "properties": {
@@ -4665,6 +4702,22 @@
       "from": "service:introspect_proxy",
       "to": "container:introspect_proxy",
       "key": "service:introspect_proxy->runs_container->container:introspect_proxy",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:mcp_oauth",
+      "to": "vm:gcp_proxy",
+      "key": "service:mcp_oauth->hosted_on->vm:gcp_proxy",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:mcp_oauth",
+      "to": "container:mcp_oauth",
+      "key": "service:mcp_oauth->runs_container->container:mcp_oauth",
       "properties": {
         "role": "app"
       }
@@ -6694,6 +6747,20 @@
       "from": "module:infra_sec_introspect_proxy",
       "to": "service:introspect_proxy",
       "key": "module:infra_sec_introspect_proxy->implements->service:introspect_proxy",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_sec_mcp_oauth",
+      "to": "repo:cloud",
+      "key": "module:infra_sec_mcp_oauth->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_sec_mcp_oauth",
+      "to": "service:mcp_oauth",
+      "key": "module:infra_sec_mcp_oauth->implements->service:mcp_oauth",
       "properties": {}
     },
     {

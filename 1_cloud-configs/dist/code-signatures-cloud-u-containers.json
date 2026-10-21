@@ -6,25 +6,25 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2964,
+    "files": 2973,
     "by_lang": {
-      "sh": 154,
-      "nix": 173,
-      "py": 863,
+      "sh": 157,
+      "nix": 177,
+      "py": 865,
       "ts": 1157,
       "js": 81,
       "rust": 536
     },
     "by_role": {
-      "shell": 144,
-      "nix-module": 17,
-      "python": 853,
+      "shell": 147,
+      "nix-module": 19,
+      "python": 854,
       "module": 707,
       "file": 327,
       "script": 8,
-      "flake": 79,
-      "compose": 77,
-      "entrypoint": 48,
+      "flake": 80,
+      "compose": 78,
+      "entrypoint": 49,
       "mcp-tool": 115,
       "workflow-dag": 5,
       "rust-module": 531,
@@ -583,6 +583,23 @@
         "portEnv",
         "valueOf",
         "allEnvs"
+      ]
+    },
+    {
+      "path": "_shared/mcp-oauth.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [],
+      "imports": [],
+      "symbols": [
+        "openFor",
+        "declared",
+        "wanted",
+        "missing",
+        "paths",
+        "proxy",
+        "deny",
+        "block"
       ]
     },
     {
@@ -18389,7 +18406,9 @@
       ],
       "imports": [
         "../../_shared/edge-auth.nix",
-        "../_shared/edge-auth.nix"
+        "../../_shared/mcp-oauth.nix",
+        "../_shared/edge-auth.nix",
+        "../_shared/mcp-oauth.nix"
       ],
       "symbols": [
         "readTpl",
@@ -18417,6 +18436,8 @@
         "ea",
         "edgeAuth",
         "autheliaUpstream",
+        "mo",
+        "cfg",
         "eh",
         "codesExpr",
         "handleErrors",
@@ -18429,9 +18450,7 @@
         "global",
         "odt",
         "globalsBlock",
-        "ghPages",
-        "ghPagesDomainLists",
-        "ghPagesDomains"
+        "ghPages"
       ]
     },
     {
@@ -18550,8 +18569,10 @@
       ],
       "imports": [
         "../../_shared/edge-auth.nix",
+        "../../_shared/mcp-oauth.nix",
         "./identity.nix",
         "../_shared/edge-auth.nix",
+        "../_shared/mcp-oauth.nix",
         "identity.nix"
       ],
       "symbols": [
@@ -18587,14 +18608,14 @@
         "bearer",
         "ea",
         "edgeAuth",
+        "mo",
+        "cfg",
         "meshGuard",
         "handleErrorsBody",
         "eh",
         "codesExpr",
         "errPath",
-        "edgeErrorsSnippet",
-        "handleErrors",
-        "protectedTpl"
+        "edgeErrorsSnippet"
       ]
     },
     {
@@ -18716,6 +18737,30 @@
         "req()",
         "chk()",
         "check_allow()"
+      ]
+    },
+    {
+      "path": "infra-sec_caddy/test/test-wasm-serve-path.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "render()",
+        "renderold()",
+        "vhost()",
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "render()",
+        "renderold()",
+        "vhost()",
+        "check()",
+        "mutate()"
       ]
     },
     {
@@ -18865,6 +18910,7 @@
       "role": "entrypoint",
       "exports": [
         "get_jwks_client()",
+        "mcp_oauth_auth(token)",
         "auth()",
         "health()"
       ],
@@ -18877,6 +18923,8 @@
       ],
       "symbols": [
         "get_jwks_client()",
+        "_mcp_introspect(token)",
+        "mcp_oauth_auth(token)",
         "auth()",
         "health()"
       ]
@@ -18949,6 +18997,285 @@
         "baseImage",
         "apt",
         "title"
+      ]
+    },
+    {
+      "path": "infra-sec_mcp-oauth/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "infra-sec_mcp-oauth/src/code/main.py",
+      "lang": "py",
+      "role": "entrypoint",
+      "exports": [
+        "db()",
+        "q(sql, args=()",
+        "h(s)",
+        "now()",
+        "gc()",
+        "oauth_error(err, desc, status=400)",
+        "redirect_allowed(uri)",
+        "resource_for(svc)",
+        "as_metadata()",
+        "pr_metadata(svc)",
+        "json_nostore(obj, status=200)",
+        "form_sig(fields)",
+        "client_auth(form)",
+        "mint_pair(client_id, sub, scope, resource, family=None)",
+        "well_known_as(svc=None)",
+        "well_known_pr(svc=None)",
+        "register(svc=None)",
+        "authorize_get(svc=None)",
+        "authorize_post(svc=None)",
+        "pkce_ok(verifier, challenge)",
+        "token(svc=None)",
+        "lookup_access(tok)",
+        "introspect()",
+        "revoke()",
+        "health()"
+      ],
+      "imports": [
+        "urllib.parse",
+        "flask",
+        "base64",
+        "hashlib",
+        "hmac",
+        "html",
+        "json",
+        "logging",
+        "os",
+        "re",
+        "secrets",
+        "sqlite3",
+        "threading",
+        "time"
+      ],
+      "symbols": [
+        "db()",
+        "q(sql, args=()",
+        "h(s)",
+        "now()",
+        "gc()",
+        "oauth_error(err, desc, status=400)",
+        "redirect_allowed(uri)",
+        "resource_for(svc)",
+        "as_metadata()",
+        "pr_metadata(svc)",
+        "json_nostore(obj, status=200)",
+        "form_sig(fields)",
+        "client_auth(form)",
+        "mint_pair(client_id, sub, scope, resource, family=None)",
+        "well_known_as(svc=None)",
+        "well_known_pr(svc=None)",
+        "register(svc=None)",
+        "_authz_check(params)",
+        "authorize_get(svc=None)",
+        "authorize_post(svc=None)",
+        "pkce_ok(verifier, challenge)",
+        "token(svc=None)",
+        "lookup_access(tok)",
+        "introspect()",
+        "revoke()",
+        "health()"
+      ]
+    },
+    {
+      "path": "infra-sec_mcp-oauth/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "binariesImage",
+        "bind",
+        "services",
+        "mcp-oauth",
+        "image",
+        "container_name",
+        "network_mode",
+        "command",
+        "env_file",
+        "volumes",
+        "environment",
+        "ISSUER",
+        "DB_PATH",
+        "ALLOWED_USERS",
+        "PORT",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period"
+      ]
+    },
+    {
+      "path": "infra-sec_mcp-oauth/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "Type",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "infra-sec_mcp-oauth/src/test/caddy-render.nix",
+      "lang": "nix",
+      "role": "nix-module",
+      "exports": [
+        "root",
+        "cfgOverride"
+      ],
+      "imports": [],
+      "symbols": [
+        "lib",
+        "bj",
+        "cc",
+        "mo",
+        "cfg",
+        "off"
+      ]
+    },
+    {
+      "path": "infra-sec_mcp-oauth/src/test/probe-mcp-oauth.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()",
+        "code()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()",
+        "code()"
+      ]
+    },
+    {
+      "path": "infra-sec_mcp-oauth/src/test/test_mcp_oauth.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "srv(monkeypatch)",
+        "pkce()",
+        "register(c, uris=(CB,)",
+        "get_code(m, c, cid, challenge, user=\"diego\", state=\"xyz\", ruri=CB)",
+        "test_metadata(srv)",
+        "test_register_ok_and_localhost(srv)",
+        "test_register_rejects_redirect(srv, uri)",
+        "test_register_confidential_client(srv)",
+        "test_register_bad_body(srv)",
+        "test_authorize_requires_authelia_session(srv)",
+        "test_authorize_requires_s256(srv)",
+        "test_authorize_unregistered_redirect_never_redirects(srv)",
+        "test_authorize_tampered_form(srv)",
+        "test_deny(srv)",
+        "test_full_flow_and_introspection(srv)",
+        "test_pkce_wrong_verifier(srv)",
+        "test_code_bound_to_client(srv)",
+        "test_confidential_client_needs_secret(srv)",
+        "test_expired_access_token_inactive(srv, monkeypatch)",
+        "test_unsupported_grant(srv)",
+        "test_introspect_proxy_accepts_minted_token(srv, monkeypatch)"
+      ],
+      "imports": [
+        "urllib.parse",
+        "base64",
+        "hashlib",
+        "importlib",
+        "os",
+        "secrets",
+        "sys",
+        "tempfile",
+        "pytest"
+      ],
+      "symbols": [
+        "srv(monkeypatch)",
+        "pkce()",
+        "register(c, uris=(CB,)",
+        "get_code(m, c, cid, challenge, user=\"diego\", state=\"xyz\", ruri=CB)",
+        "test_metadata(srv)",
+        "test_register_ok_and_localhost(srv)",
+        "test_register_rejects_redirect(srv, uri)",
+        "test_register_confidential_client(srv)",
+        "test_register_bad_body(srv)",
+        "test_authorize_requires_authelia_session(srv)",
+        "test_authorize_requires_s256(srv)",
+        "test_authorize_unregistered_redirect_never_redirects(srv)",
+        "test_authorize_tampered_form(srv)",
+        "test_deny(srv)",
+        "test_full_flow_and_introspection(srv)",
+        "test_pkce_wrong_verifier(srv)",
+        "test_code_bound_to_client(srv)",
+        "test_confidential_client_needs_secret(srv)",
+        "test_expired_access_token_inactive(srv, monkeypatch)",
+        "test_unsupported_grant(srv)",
+        "test_introspect_proxy_accepts_minted_token(srv, monkeypatch)"
       ]
     },
     {
