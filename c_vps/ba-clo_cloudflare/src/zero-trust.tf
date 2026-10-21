@@ -144,6 +144,22 @@ resource "cloudflare_zero_trust_dns_location" "zt_fleet" {
   name           = local.zt.private_dns.location_name
   client_default = false
   ecs_support    = false
+  # The v4 provider sends endpoints=[] when the block is absent and the API
+  # answers "empty endpoint": declare them (DoH only; no IP/DoT exposure).
+  endpoints {
+    doh {
+      enabled = true
+    }
+    dot {
+      enabled = false
+    }
+    ipv4 {
+      enabled = false
+    }
+    ipv6 {
+      enabled = false
+    }
+  }
 }
 
 resource "cloudflare_zero_trust_gateway_policy" "zt_private_dns" {
