@@ -625,6 +625,14 @@
       "comment": "c3 container cloud-mattermost-mcp (mesh-only; cloud-mattermost-mcp-http-3102.app)"
     },
     {
+      "domain": "c3-cloud-me-api.diegonmarcos.com",
+      "upstream": "10.0.0.4:8124",
+      "auth": "none",
+      "wg_only": true,
+      "container": "cloud-me-api",
+      "comment": "c3 container cloud-me-api (mesh-only; cloud-me-api-http-8124.app)"
+    },
+    {
       "domain": "c3-cloud-services-mcp.diegonmarcos.com",
       "upstream": "10.0.0.6:3101",
       "auth": "none",
@@ -1451,6 +1459,14 @@
           "comment": "C3 Services REST API — service API gateway Fastify API"
         },
         {
+          "base_path": "/me",
+          "upstream": "10.0.0.4:8124",
+          "public_paths": [
+            "/me/health"
+          ],
+          "comment": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063)."
+        },
+        {
           "base_path": "/git",
           "upstream": "10.0.0.4:8123",
           "public_paths": [
@@ -1795,6 +1811,11 @@
       "private_name": "cloud.mattermost-mcp.app"
     },
     {
+      "service": "cloud-me-api.app",
+      "upstream": "10.0.0.4:8124",
+      "private_name": "cloud.cloud-me-api.app"
+    },
+    {
       "service": "c3-services-mcp.app",
       "upstream": "10.0.0.6:3101",
       "private_name": "cloud.c3-services-mcp.app"
@@ -2051,6 +2072,12 @@
       "service": "cloud.mattermost-mcp.app",
       "upstream": "10.0.0.6:3102",
       "alias_of": "mattermost-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-me-api.app",
+      "upstream": "10.0.0.4:8124",
+      "alias_of": "cloud-me-api.app",
       "source": "internal_routes"
     },
     {
@@ -2456,6 +2483,12 @@
       "source": "url_scheme"
     },
     {
+      "service": "c3-cloud-me-api.app",
+      "upstream": "10.0.0.4:8124",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
       "service": "c3-cloud-services-mcp.app",
       "upstream": "10.0.0.6:3101",
       "scheme": "c3",
@@ -2806,6 +2839,11 @@
         "host": "c3-cloud-mattermost-mcp.diegonmarcos.com",
         "container": "cloud-mattermost-mcp",
         "private": "c3-cloud-mattermost-mcp.app"
+      },
+      {
+        "host": "c3-cloud-me-api.diegonmarcos.com",
+        "container": "cloud-me-api",
+        "private": "c3-cloud-me-api.app"
       },
       {
         "host": "c3-cloud-services-mcp.diegonmarcos.com",
@@ -3547,6 +3585,27 @@
       "port": 3102,
       "protocol": "http",
       "upstream": "10.0.0.6:3102",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "cloud-me-api.app",
+      "redirect_to": "https://cloud-me-api-http-8124.app",
+      "container": "cloud-me-api",
+      "container_key": "app",
+      "svc": "cloud-me-api",
+      "vm": "oci-E2-f_1"
+    },
+    {
+      "kind": "canonical",
+      "service": "cloud-me-api-http-8124.app",
+      "container": "cloud-me-api",
+      "container_key": "app",
+      "svc": "cloud-me-api",
+      "vm": "oci-E2-f_1",
+      "port": 8124,
+      "protocol": "http",
+      "upstream": "10.0.0.4:8124",
       "source": "containers.app.port"
     },
     {
@@ -4809,6 +4868,16 @@
     },
     {
       "host": "api.diegonmarcos.com",
+      "path": "/me",
+      "upstream": "10.0.0.4:8124",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063)."
+    },
+    {
+      "host": "api.diegonmarcos.com",
       "path": "/git",
       "upstream": "10.0.0.4:8123",
       "kind": "reverse_proxy",
@@ -5170,6 +5239,16 @@
       "zone": "com",
       "service": null,
       "notes": "c3 container cloud-mattermost-mcp (mesh-only; cloud-mattermost-mcp-http-3102.app)"
+    },
+    {
+      "host": "c3-cloud-me-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.4:8124",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container cloud-me-api (mesh-only; cloud-me-api-http-8124.app)"
     },
     {
       "host": "c3-cloud-services-mcp.diegonmarcos.com",
@@ -6084,6 +6163,16 @@
       "notes": null
     },
     {
+      "host": "cloud-me-api.app",
+      "path": null,
+      "upstream": "10.0.0.4:8124",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "c3-services-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3101",
@@ -6583,6 +6672,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "cloud-mattermost-mcp",
+      "notes": null
+    },
+    {
+      "host": "cloud-me-api-http-8124.app",
+      "path": null,
+      "upstream": "10.0.0.4:8124",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "cloud-me-api",
       "notes": null
     },
     {

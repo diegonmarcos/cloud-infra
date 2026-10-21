@@ -311,6 +311,31 @@
         "sdk": "@modelcontextprotocol/sdk@^1.12.0"
       }
     },
+    "cloud-me-api": {
+      "ip": "10.0.0.4",
+      "ports": {
+        "app": 8124
+      },
+      "vm": "oci-analytics",
+      "healthcheck": "/health",
+      "domain": "api.diegonmarcos.com/me",
+      "description": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063).",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/me",
+        "api_url": "https://api.diegonmarcos.com/me/me",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/me",
+        "endpoint_count": 5,
+        "display_name": "Cloud Me API",
+        "description": "Authenticated read-only access to declared datasets and config files of the owner's private cloud-me-* repos. Deploy keys stay server-side; secret-looking files are never served.",
+        "auth": "mixed"
+      }
+    },
     "cloud-services-mcp": {
       "ip": "10.0.0.6",
       "ports": {

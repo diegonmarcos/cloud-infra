@@ -6,24 +6,24 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2955,
+    "files": 2964,
     "by_lang": {
-      "sh": 153,
-      "nix": 171,
+      "sh": 154,
+      "nix": 173,
       "py": 863,
       "ts": 1157,
-      "js": 75,
+      "js": 81,
       "rust": 536
     },
     "by_role": {
-      "shell": 143,
+      "shell": 144,
       "nix-module": 17,
       "python": 853,
       "module": 707,
-      "file": 321,
+      "file": 327,
       "script": 8,
-      "flake": 78,
-      "compose": 76,
+      "flake": 79,
+      "compose": 77,
       "entrypoint": 48,
       "mcp-tool": 115,
       "workflow-dag": 5,
@@ -7128,6 +7128,242 @@
         "baseImage",
         "apt",
         "title"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/build.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ],
+      "imports": [],
+      "symbols": [
+        "get_config()",
+        "get_config_array()",
+        "get_lifecycle()",
+        "detect_layout()",
+        "rewrite_compose_image_refs()",
+        "log()",
+        "log_warn()",
+        "log_error()",
+        "declared_container_names()",
+        "ssh_with_retry()",
+        "ssh_run_detached()",
+        "rsync_with_retry()",
+        "_ship_build_phase()"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/code/authz.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "decideAuth",
+        "decideSession",
+        "scopesOf",
+        "SCHEME"
+      ],
+      "imports": [],
+      "symbols": [
+        "of (header, verifier)",
+        "decideAuth(authHeader, verify, requiredScope)",
+        "decideSession(cookie, verify, users)",
+        "scopesOf(claims)",
+        "refuse(status, code, error)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/code/contract.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "loadRuntime",
+        "localPath"
+      ],
+      "imports": [
+        "node:fs"
+      ],
+      "symbols": [
+        "loadRuntime(buildJsonPath)",
+        "localPath(declaredPath, basePath)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/code/index.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:http",
+        "node:fs",
+        "node:path",
+        "node:url",
+        "./authz.mjs",
+        "./contract.mjs",
+        "./router.mjs",
+        "./store.mjs"
+      ],
+      "symbols": [
+        "findBuildJson()",
+        "fetchJwks()",
+        "verifyAutheliaBearer(token)",
+        "verifyAutheliaSession(cookie, method, path)",
+        "corsOrigin(origin)",
+        "corsHeaders(req)",
+        "sendJson(res, status, obj, req)",
+        "fromError(res, err, req)",
+        "serve(req, res, url)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/code/router.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "toRegex",
+        "paramNames",
+        "buildTable",
+        "match"
+      ],
+      "imports": [
+        "./contract.mjs"
+      ],
+      "symbols": [
+        "toRegex(local)",
+        "paramNames(local)",
+        "buildTable(runtime, handlers)",
+        "match(table, method, path)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/code/store.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "redactSecrets",
+        "cleanPath",
+        "makeGate",
+        "createStore"
+      ],
+      "imports": [
+        "node:child_process",
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "redactSecrets(value, secrets)",
+        "cleanPath(p)",
+        "makeGate(files)",
+        "git(args, { cwd, env, timeout })",
+        "createStore(o)",
+        "sync(repo)",
+        "read(repoName, relRaw)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "svc",
+        "app",
+        "binariesImage",
+        "myIp",
+        "port",
+        "services",
+        "cloud-me-api",
+        "image",
+        "container_name",
+        "network_mode",
+        "env_file",
+        "environment",
+        "BIND_HOST",
+        "PORT",
+        "NODE_ENV",
+        "volumes",
+        "tmpfs",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/test-cloud-me-api.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:child_process",
+        "node:http",
+        "node:crypto",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "node:url",
+        "./code/contract.mjs",
+        "./code/router.mjs",
+        "./code/store.mjs",
+        "./code/authz.mjs"
+      ],
+      "symbols": [
+        "mkRepo(name, files, links = {})"
       ]
     },
     {

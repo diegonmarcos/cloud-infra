@@ -51,6 +51,7 @@
       "containers": [
         "alerts-api",
         "c3-public-api",
+        "cloud-me-api",
         "git-proxy-api",
         "unbound-dns64",
         "caddy-public"
@@ -655,6 +656,12 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "cloud-mattermost-mcp"
+      },
+      {
+        "name": "cloud-me-api.app",
+        "type": "A",
+        "value": "10.0.0.4",
+        "service": "cloud-me-api"
       },
       {
         "name": "c3-services-mcp.app",
@@ -1681,6 +1688,86 @@
         "app": 3102
       },
       "flake": "infra-api_cloud-mattermost-mcp"
+    },
+    "cloud-me-api": {
+      "category": "app",
+      "vm": "oci-E2-f_1",
+      "folder": "infra-api_cloud-me-api",
+      "description": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063).",
+      "domain": "api.diegonmarcos.com/me",
+      "port": 8124,
+      "dns": "cloud-me-api.app",
+      "upstream": "10.0.0.4:8124",
+      "containers": {
+        "app": {
+          "container_name": "cloud-me-api",
+          "image": "ghcr.io/diegonmarcos/cloud-me-api:latest",
+          "port": 8124,
+          "port_env": "PORT",
+          "dns": "cloud-me-api.app",
+          "public": true,
+          "proxy": {
+            "auth": "two_factor",
+            "type": "path",
+            "parent_domain": "api.diegonmarcos.com",
+            "base_path": "/me",
+            "public_paths": [
+              "/me/health"
+            ]
+          },
+          "healthcheck": "/health",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "cloud-me-api"
+      ],
+      "all_ports": [
+        "8124"
+      ],
+      "all_dns": [
+        "cloud-me-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "_doc": "auth=two_factor is the Caddy mkProtected block: Bearer -> forward_auth introspect-proxy, with the interactive Authelia session as the non-bearer fallback. Only /me/health is pre-auth (public_paths), and it answers {status,service} and nothing about the repos. Everything else, including /me/config/*, is never reachable unauthenticated, and the service verifies the credential itself too (direct mesh dials have no edge gate).",
+        "primary": {
+          "wg_only": false,
+          "auth": "two_factor",
+          "type": "path",
+          "parent_domain": "api.diegonmarcos.com",
+          "base_path": "/me",
+          "public_paths": [
+            "/me/health"
+          ]
+        }
+      },
+      "declared_ports": {
+        "app": 8124
+      },
+      "health": {
+        "path": "/me/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "flake": "infra-api_cloud-me-api"
     },
     "cloud-services-mcp": {
       "category": "obs",

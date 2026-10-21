@@ -26,6 +26,10 @@
       "url": "https://api.diegonmarcos.com/c3-services-api/health"
     },
     {
+      "service": "cloud-me-api",
+      "url": "https://api.diegonmarcos.com/me/health"
+    },
+    {
       "service": "git-proxy-api",
       "url": "https://api.diegonmarcos.com/git/health"
     },
@@ -158,6 +162,10 @@
     {
       "service": "c3-services-api",
       "domain": "api.diegonmarcos.com/c3-services-api"
+    },
+    {
+      "service": "cloud-me-api",
+      "domain": "api.diegonmarcos.com/me"
     },
     {
       "service": "git-proxy-api",
@@ -300,6 +308,10 @@
     {
       "service": "c3-services-api",
       "domain": "api.diegonmarcos.com/c3-services-api"
+    },
+    {
+      "service": "cloud-me-api",
+      "domain": "api.diegonmarcos.com/me"
     },
     {
       "service": "git-proxy-api",
@@ -572,6 +584,19 @@
         "app": 3102
       },
       "health": null
+    },
+    "cloud-me-api": {
+      "name": "cloud-me-api",
+      "vm": "oci-E2-f_1",
+      "domain": "api.diegonmarcos.com/me",
+      "enabled": true,
+      "category": "app",
+      "ports": {
+        "app": 8124
+      },
+      "health": {
+        "path": "/me/health"
+      }
     },
     "cloud-services-mcp": {
       "name": "cloud-services-mcp",
@@ -1548,6 +1573,15 @@
       "dns": "mattermost-mcp.app"
     },
     {
+      "service": "cloud-me-api",
+      "dns": "cloud-me-api.app"
+    },
+    {
+      "service": "cloud-me-api",
+      "container": "app",
+      "dns": "cloud-me-api.app"
+    },
+    {
       "service": "cloud-services-mcp",
       "dns": "c3-services-mcp.app"
     },
@@ -2180,6 +2214,7 @@
         "services": [
           "alerts-api",
           "c3-public-api",
+          "cloud-me-api",
           "git-proxy-api",
           "unbound-dns64",
           "caddy-public"
@@ -2407,6 +2442,19 @@
           "app": 3102
         },
         "health": null
+      },
+      "cloud-me-api": {
+        "name": "cloud-me-api",
+        "vm": "oci-E2-f_1",
+        "domain": "api.diegonmarcos.com/me",
+        "enabled": true,
+        "category": "app",
+        "ports": {
+          "app": 8124
+        },
+        "health": {
+          "path": "/me/health"
+        }
       },
       "cloud-services-mcp": {
         "name": "cloud-services-mcp",

@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 326,
-    "edges": 449,
+    "nodes": 330,
+    "edges": 455,
     "by_table": {
       "vm": 4,
-      "service": 77,
-      "container": 93,
-      "domain": 44,
+      "service": 78,
+      "container": 94,
+      "domain": 45,
       "repo": 3,
-      "module": 77,
+      "module": 78,
       "package": 28
     }
   },
@@ -375,6 +375,32 @@
         "image": "ghcr.io/diegonmarcos/cloud-mattermost-mcp:latest",
         "role": "app",
         "port": 3102,
+        "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "cloud_me_api",
+      "key": "service:cloud_me_api",
+      "properties": {
+        "name": "cloud-me-api",
+        "category": "app",
+        "description": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063).",
+        "domain": "api.diegonmarcos.com/me",
+        "port": 8124,
+        "vm": "oci-analytics",
+        "folder": "infra-api_cloud-me-api"
+      }
+    },
+    {
+      "table": "container",
+      "id": "cloud_me_api",
+      "key": "container:cloud_me_api",
+      "properties": {
+        "name": "cloud-me-api",
+        "image": "ghcr.io/diegonmarcos/cloud-me-api:latest",
+        "role": "app",
+        "port": 8124,
         "public": true
       }
     },
@@ -2362,6 +2388,14 @@
     },
     {
       "table": "domain",
+      "id": "api_diegonmarcos_com/me",
+      "key": "domain:api_diegonmarcos_com/me",
+      "properties": {
+        "fqdn": "api.diegonmarcos.com/me"
+      }
+    },
+    {
+      "table": "domain",
       "id": "api_diegonmarcos_com/git",
       "key": "domain:api_diegonmarcos_com/git",
       "properties": {
@@ -2781,6 +2815,17 @@
         "repo": "cloud",
         "category": "app",
         "service": "cloud-mattermost-mcp"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_api_cloud_me_api",
+      "key": "module:infra_api_cloud_me_api",
+      "properties": {
+        "name": "infra-api_cloud-me-api",
+        "repo": "cloud",
+        "category": "app",
+        "service": "cloud-me-api"
       }
     },
     {
@@ -4030,6 +4075,22 @@
       "from": "service:cloud_mattermost_mcp",
       "to": "container:cloud_mattermost_mcp",
       "key": "service:cloud_mattermost_mcp->runs_container->container:cloud_mattermost_mcp",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:cloud_me_api",
+      "to": "vm:oci_analytics",
+      "key": "service:cloud_me_api->hosted_on->vm:oci_analytics",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:cloud_me_api",
+      "to": "container:cloud_me_api",
+      "key": "service:cloud_me_api->runs_container->container:cloud_me_api",
       "properties": {
         "role": "app"
       }
@@ -5293,6 +5354,15 @@
     },
     {
       "table": "proxied_by",
+      "from": "service:cloud_me_api",
+      "to": "service:caddy",
+      "key": "service:cloud_me_api->proxied_by->service:caddy",
+      "properties": {
+        "domain": "api.diegonmarcos.com/me"
+      }
+    },
+    {
+      "table": "proxied_by",
       "from": "service:cloud_superapp_mcp",
       "to": "service:caddy",
       "key": "service:cloud_superapp_mcp->proxied_by->service:caddy",
@@ -5707,6 +5777,13 @@
       "from": "domain:mcp_diegonmarcos_com",
       "to": "service:cloud_mail_mcp",
       "key": "domain:mcp_diegonmarcos_com->routes_to->service:cloud_mail_mcp",
+      "properties": {}
+    },
+    {
+      "table": "routes_to",
+      "from": "domain:api_diegonmarcos_com/me",
+      "to": "service:cloud_me_api",
+      "key": "domain:api_diegonmarcos_com/me->routes_to->service:cloud_me_api",
       "properties": {}
     },
     {
@@ -6141,6 +6218,20 @@
       "from": "module:infra_api_cloud_mattermost_mcp",
       "to": "service:cloud_mattermost_mcp",
       "key": "module:infra_api_cloud_mattermost_mcp->implements->service:cloud_mattermost_mcp",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_api_cloud_me_api",
+      "to": "repo:cloud",
+      "key": "module:infra_api_cloud_me_api->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_api_cloud_me_api",
+      "to": "service:cloud_me_api",
+      "key": "module:infra_api_cloud_me_api->implements->service:cloud_me_api",
       "properties": {}
     },
     {
