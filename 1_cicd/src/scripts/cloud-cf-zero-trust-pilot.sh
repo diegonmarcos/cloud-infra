@@ -36,6 +36,9 @@ echo "::add-mask::$CLOUDFLARE_API_KEY"
 # Addresses this pilot is allowed to CREATE. Anything else in the plan is
 # reported and left alone (it belongs to the regular ship-terraform flow).
 ZT_ADDR_RE='^(cloudflare_zero_trust_[a-z_]+\.zt_|random_bytes\.zt_|cloudflare_record\.zt_)'
+# The ONE address allowed an in-place UPDATE (tunnel ingress rules, #994 step 2).
+# Everything else stays create-only; a destroy or replace of it is still refused.
+ZT_UPDATE_OK='cloudflare_zero_trust_tunnel_cloudflared_config.zt_fleet'
 
 cf() { # cf <path> → JSON body (never echoed raw by callers)
   curl -sS --max-time 30 -H "X-Auth-Email: $CLOUDFLARE_EMAIL" -H "X-Auth-Key: $CLOUDFLARE_API_KEY" \
@@ -195,12 +198,12 @@ do_apply() {
   cd "$TF_DIR"
   mapfile -t TARGETS < <(jq -r '.resource_changes[] | select(.change.actions != ["no-op"]) | .address' tfplan.json | grep -E "$ZT_ADDR_RE" || true)
   [ "${#TARGETS[@]}" -gt 0 ] || { echo "no zero-trust changes to apply"; tf_cleanup; return 0; }
-  BAD="$(jq -r --arg re "$ZT_ADDR_RE" '.resource_changes[] | select((.address|test($re)) and .change.actions != ["create"] and .change.actions != ["no-op"]) | "\(.change.actions|join("+")) \(.address)"' tfplan.json)"
+  BAD="$(jq -r --arg re "$ZT_ADDR_RE" --arg ok "$ZT_UPDATE_OK" '.resource_changes[] | select((.address|test($re)) and .change.actions != ["create"] and .change.actions != ["no-op"] and (.address != $ok or .change.actions != ["update"])) | "\(.change.actions|join("+")) \(.address)"' tfplan.json)"
   if [ -n "$BAD" ]; then echo "REFUSING: non-create change on a zero-trust address:"; echo "$BAD"; tf_cleanup; return 1; fi
-  echo "── applying ${#TARGETS[@]} pure-create zero-trust resources (-target) ──"
+  echo "── applying ${#TARGETS[@]} zero-trust resources (creates; update only on zt_fleet) (-target) ──"
   TARGET_ARGS=(); for t in "${TARGETS[@]}"; do TARGET_ARGS+=("-target=$t"); done
   terraform plan -input=false -no-color "${TARGET_ARGS[@]}" -out=tfplan > plan.txt 2>&1 || { plan_summary; tf_cleanup; return 1; }
-  terraform show -json tfplan | jq -e '[.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["create"])] | length == 0' >/dev/null \
+  terraform show -json tfplan | jq -e --arg ok "$ZT_UPDATE_OK" '[.resource_changes[] | select(.change.actions != ["no-op"] and .change.actions != ["create"] and (.address != $ok or .change.actions != ["update"]))] | length == 0' >/dev/null \
     || { echo "REFUSING: targeted plan contains non-create actions"; tf_cleanup; return 1; }
   plan_summary
   APPLY_RC=0; terraform apply -input=false -no-color -auto-approve tfplan > apply.txt 2>&1 || APPLY_RC=$?
