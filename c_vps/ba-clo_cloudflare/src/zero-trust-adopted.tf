@@ -167,22 +167,10 @@ import {
 }
 
 resource "cloudflare_zero_trust_gateway_settings" "zt_gateway" {
-  count                = local.zt_gw_n
-  account_id           = local.config.account_id
-  tls_decrypt_enabled  = false
-  certificate {
-    id = cloudflare_zero_trust_gateway_certificate.zt_gateway_ca[0].id
-  }
-  proxy {
-    tcp              = true
-    udp              = true
-    root_ca          = false
-    virtual_ip       = true
-    disable_for_time = 0
-  }
-  # Everything else is unset live (antivirus, block page, logging, fips, ...): the
-  # provider models those as blocks and would plan empty-block updates every run.
-  lifecycle { ignore_changes = [antivirus, block_page, body_scanning, extended_email_matching, fips, logging, payload_log, ssh_session_log, activity_log_enabled, protocol_detection_enabled, non_identity_browser_isolation_enabled, url_browser_isolation_enabled, custom_certificate] }
+  count               = local.zt_gw_n
+  account_id          = local.config.account_id
+  tls_decrypt_enabled = false
+  lifecycle { ignore_changes = all }
 }
 
 import {
