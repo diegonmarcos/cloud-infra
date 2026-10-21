@@ -248,11 +248,40 @@ do_verify() {
   fi
 }
 
+# drift: fail when the live Cloudflare One account differs from the repo (#994).
+# (1) any zero-trust address with a pending change in the plan = live != code;
+# (2) a live object of a managed type that terraform state does not hold =
+#     created on the server only (dashboard/API) and therefore not in code.
+# Nothing is changed. Prints addresses and counts only.
+do_drift() {
+  do_plan || { tf_cleanup; return 1; }
+  cd "$TF_DIR"
+  DRIFT=0
+  CH="$(jq -r --arg re "$ZT_ADDR_RE" '.resource_changes[] | select((.address|test($re)) and .change.actions != ["no-op"]) | "\(.change.actions|join("+")) \(.address)"' tfplan.json)"
+  if [ -n "$CH" ]; then echo "DRIFT: zero-trust resources differ from the live account:"; echo "$CH"; DRIFT=1; fi
+  terraform state list > state.txt 2>/dev/null || true
+  for spec in "access/apps?per_page=100|cloudflare_zero_trust_access_application" \
+              "access/identity_providers|cloudflare_zero_trust_access_identity_provider" \
+              "access/service_tokens?per_page=100|cloudflare_zero_trust_access_service_token" \
+              "gateway/rules|cloudflare_zero_trust_gateway_policy" \
+              "gateway/locations|cloudflare_zero_trust_dns_location"; do
+    path="${spec%%|*}"; typ="${spec##*|}"
+    live="$(cf "/accounts/$ACCT/$path" | jq '.result | length')"
+    held="$(grep -c "^$typ\." state.txt || true)"
+    echo "  live $typ=$live state=$held"
+    if [ "$live" != "$held" ]; then echo "DRIFT: $typ has $live live object(s) but terraform holds $held (server-only objects are not in code)"; DRIFT=1; fi
+  done
+  rm -f state.txt
+  tf_cleanup
+  [ "$DRIFT" -eq 0 ] && echo "no drift: live Cloudflare One == repo" || return 1
+}
+
 case "$MODE" in
   probe)  do_probe ;;
   plan)   do_probe; do_plan; tf_cleanup ;;
   apply)  do_apply ;;
   verify) do_probe; do_verify ;;
   export) do_export ;;
-  *) echo "usage: $0 probe|plan|apply|verify|export" >&2; exit 2 ;;
+  drift)  do_probe; do_drift ;;
+  *) echo "usage: $0 probe|plan|apply|verify|export|drift" >&2; exit 2 ;;
 esac

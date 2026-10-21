@@ -28,10 +28,13 @@ on:
       - "c_vps/ba-clo_cloudflare/src/**"
       - "1_cicd/src/scripts/cloud-cf-zero-trust-pilot.sh"
       - ".github/workflows/cf-zero-trust.yml"
+  schedule:
+    # Daily drift guard: fails (red run + notification) when live Cloudflare One != repo.
+    - cron: "17 5 * * *"
   workflow_dispatch:
     inputs:
       mode:
-        description: "probe | plan | apply | verify | export"
+        description: "probe | plan | apply | verify | export | drift"
         required: true
         default: "plan"
         type: string
@@ -59,12 +62,14 @@ jobs:
         id: mode
         env:
           MSG: ${{ github.event.head_commit.message }}
+          EVENT: ${{ github.event_name }}
           INPUT_MODE: ${{ inputs.mode }}
         run: |
           set -eu
           MODE="${INPUT_MODE:-}"
+          [ "${EVENT:-}" = schedule ] && MODE=drift
           if [ -z "$MODE" ]; then
-            MODE=$(printf '%s' "${MSG:-}" | grep -oE '\[zt:(probe|plan|apply|verify|export)\]' | head -1 | sed -E 's/\[zt:(.*)\]/\1/' || true)
+            MODE=$(printf '%s' "${MSG:-}" | grep -oE '\[zt:(probe|plan|apply|verify|export|drift)\]' | head -1 | sed -E 's/\[zt:(.*)\]/\1/' || true)
           fi
           echo "mode=${MODE:-probe}" >> "$GITHUB_OUTPUT"
           echo "mode: ${MODE:-probe}"
