@@ -136,6 +136,8 @@ locals {
 resource "cloudflare_zero_trust_local_fallback_domain" "zt_fallback" {
   count      = local.zt_fb_n
   account_id = local.config.account_id
+  # policy_id is not returned for the default profile; import leaves it unset.
+  lifecycle { ignore_changes = [policy_id] }
   dynamic "domains" {
     for_each = local.zt_ad.fallback_domains
     content {
