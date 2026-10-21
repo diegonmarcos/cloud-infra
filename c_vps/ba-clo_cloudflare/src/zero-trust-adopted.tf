@@ -20,6 +20,9 @@ resource "cloudflare_zero_trust_access_organization" "zt_org" {
   account_id  = local.config.account_id
   name        = local.zt_ad.org.name
   auth_domain = local.zt_ad.org.auth_domain
+  # live login_design is {} and no custom pages: the provider models both as blocks
+  # and would plan an empty-block update every run.
+  lifecycle { ignore_changes = [login_design, custom_pages] }
 }
 
 import {
@@ -72,6 +75,8 @@ resource "cloudflare_zero_trust_split_tunnel" "zt_warp_exclude" {
   count      = local.zt_n
   account_id = local.config.account_id
   mode       = "exclude"
+  # policy_id is not returned for the default profile; import leaves it unset.
+  lifecycle { ignore_changes = [policy_id] }
   dynamic "tunnels" {
     for_each = local.zt_split_exclude
     content {
@@ -92,8 +97,8 @@ resource "cloudflare_zero_trust_tunnel_cloudflared" "zt_smtp_proxy" {
   secret     = random_bytes.zt_tunnel_secret.base64
   config_src = "cloudflare"
   # The tunnel password is write-only on the API: it can never be read back, so
-  # it is not managed (a diff here would otherwise force replacing a tunnel).
-  lifecycle { ignore_changes = [secret] }
+  # it is not managed (a diff on secret or config_src would otherwise force replacing the tunnel).
+  lifecycle { ignore_changes = [secret, config_src] }
 }
 
 import {
