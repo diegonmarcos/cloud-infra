@@ -624,9 +624,10 @@
         "wireguard-mesh-ws-tunnel",
         "authelia",
         "caddy",
-        "introspect-proxy"
+        "introspect-proxy",
+        "mcp-oauth"
       ],
-      "container_count": 8
+      "container_count": 9
     },
     "gcp-L4-e_0": {
       "ip": "34.66.107.117",
@@ -6045,6 +6046,26 @@
             }
           ]
         },
+        "mcp_oauth": {
+          "_doc": "WIP option 31.1 (branch wip/mcp-oauth, NOT approved). MCP OAuth authorization server (infra-sec_mcp-oauth) routes on mcp.diegonmarcos.com, rendered by _shared/mcp-oauth.nix into BOTH Caddyfiles. Every path here must already be in edge_auth.public_open for this host (the render asserts it). authorize_paths additionally require an Authelia session via forward_auth. The derive (cloud-infra) must copy this block into build-caddy.json and build-caddy-edge.json; until it does, nothing renders.",
+          "host": "mcp.diegonmarcos.com",
+          "upstream": "10.0.0.1:4183",
+          "open_paths": [
+            "/.well-known/oauth-protected-resource*",
+            "/.well-known/oauth-authorization-server*",
+            "/.well-known/openid-configuration*",
+            "/register",
+            "/token",
+            "/*/.well-known/oauth-protected-resource*",
+            "/*/.well-known/oauth-authorization-server*",
+            "/*/register",
+            "/*/token"
+          ],
+          "authorize_paths": [
+            "/authorize",
+            "/*/authorize"
+          ]
+        },
         "auth": {
           "authelia_uri": "/api/authz/forward-auth",
           "authelia_copy": [
@@ -6604,6 +6625,92 @@
         "display_name": "JWT Introspection Proxy",
         "description": "Validates bearer JWT tokens locally using Authelia JWKS public keys for Caddy forward_auth.",
         "auth": "bearer"
+      }
+    },
+    "mcp-oauth": {
+      "category": "sec",
+      "vm": "gcp-E2-f_0",
+      "folder": "infra-sec_mcp-oauth",
+      "description": "MCP OAuth 2.1 authorization server for mcp.diegonmarcos.com (option 31.1, WIP, NOT approved): RFC 8414/9728 discovery, RFC 7591 DCR, /authorize behind Authelia, PKCE S256 /token, opaque tokens introspected by introspect-proxy",
+      "enabled": true,
+      "flake": "infra-sec_mcp-oauth",
+      "port": 4183,
+      "dns": "mcp-oauth.app",
+      "upstream": "10.0.0.1:4183",
+      "containers": {
+        "app": {
+          "container_name": "mcp-oauth",
+          "image": "ghcr.io/diegonmarcos/mcp-oauth:latest",
+          "port": 4183,
+          "port_env": null,
+          "dns": "mcp-oauth.app",
+          "public": false,
+          "proxy": null,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "volumes": [
+            "./data:/data"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "mcp-oauth"
+      ],
+      "all_ports": [
+        "4183"
+      ],
+      "all_dns": [
+        "mcp-oauth.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 4183
+      },
+      "health": {
+        "path": "/health"
+      },
+      "_status": "WIP on branch wip/mcp-oauth. Owner has not chosen option 31.1. Do not merge to main: a push to main dispatches cloud-infra Ship for every touched service.",
+      "bind_host": "10.0.0.1",
+      "resources": {
+        "mem_reservation": "16M",
+        "mem_limit": "128M"
+      },
+      "tests": {
+        "unit": {
+          "cmd": "python3 -m pip install -q flask==3.0.0 'PyJWT[crypto]==2.9.0' pytest && python3 -m pytest -q -p no:cacheprovider test",
+          "cwd": "src"
+        },
+        "caddy-render": {
+          "cmd": "bash test/test-caddy-render.sh",
+          "cwd": "src"
+        }
+      },
+      "api": {
+        "has_api": true,
+        "has_web_ui": false,
+        "api_path": "/",
+        "api_url": null,
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/",
+        "endpoint_count": 9,
+        "display_name": "MCP OAuth Authorization Server",
+        "description": "OAuth 2.1 AS for MCP connectors (claude.ai, claude.com, localhost). Public paths are exactly the mcp.diegonmarcos.com entry of caddy_config.edge_auth.public_open; /introspect is mesh-only.",
+        "auth": "oauth2"
       }
     },
     "cloud-cgc-pub-mcp": {

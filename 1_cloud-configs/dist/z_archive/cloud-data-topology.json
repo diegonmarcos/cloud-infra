@@ -188,7 +188,8 @@
         "authelia-redis",
         "postlite-authelia",
         "caddy",
-        "introspect-proxy"
+        "introspect-proxy",
+        "mcp-oauth"
       ],
       "ports": [],
       "networks": [],
@@ -818,6 +819,12 @@
         "type": "A",
         "value": "10.0.0.1",
         "service": "introspect-proxy"
+      },
+      {
+        "name": "mcp-oauth.app",
+        "type": "A",
+        "value": "10.0.0.1",
+        "service": "mcp-oauth"
       },
       {
         "name": "cloud-cgc-pub-mcp.app",
@@ -4256,6 +4263,60 @@
         "path": "/health"
       },
       "flake": "infra-sec_introspect-proxy"
+    },
+    "mcp-oauth": {
+      "category": "sec",
+      "vm": "gcp-E2-f_0",
+      "folder": "infra-sec_mcp-oauth",
+      "description": "MCP OAuth 2.1 authorization server for mcp.diegonmarcos.com (option 31.1, WIP, NOT approved): RFC 8414/9728 discovery, RFC 7591 DCR, /authorize behind Authelia, PKCE S256 /token, opaque tokens introspected by introspect-proxy",
+      "port": 4183,
+      "dns": "mcp-oauth.app",
+      "upstream": "10.0.0.1:4183",
+      "containers": {
+        "app": {
+          "container_name": "mcp-oauth",
+          "image": "ghcr.io/diegonmarcos/mcp-oauth:latest",
+          "port": 4183,
+          "port_env": null,
+          "dns": "mcp-oauth.app",
+          "public": false,
+          "proxy": null,
+          "healthcheck": "/health",
+          "monitoring": null,
+          "volumes": [
+            "./data:/data"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "mcp-oauth"
+      ],
+      "all_ports": [
+        "4183"
+      ],
+      "all_dns": [
+        "mcp-oauth.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "app": 4183
+      },
+      "health": {
+        "path": "/health"
+      },
+      "flake": "infra-sec_mcp-oauth"
     },
     "cloud-cgc-pub-mcp": {
       "category": "obs",
