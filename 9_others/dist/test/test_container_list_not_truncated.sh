@@ -148,14 +148,19 @@ if [ -d "$ROOT/a_solutions" ]; then
     done
     check "no build.json carries a non-object in containers{}" "$(echo "$bad" | tr -d ' ')" ""
 
-    # The regression itself, pinned by name. postlite's compose runs 8
-    # containers; it DECLARES the 7 it owns, and postlite-authelia is declared
+    # The regression itself, pinned by name. postlite's compose runs 4
+    # containers (the four sqlite-* ones that could never start were dropped,
+    # cloud-u-containers 79c36a8a); it DECLARES the 3 it owns, and
+    # postlite-authelia is declared
     # by its owner infra-sec_authelia ("the owner declares, the catalogue only
-    # points"). Before the fix the engine saw 3.
+    # points"). Before the fix the engine saw only the entries before the note string.
     POSTLITE="$ROOT/a_solutions/infra-db_postlite/build.json"
     if [ -f "$POSTLITE" ]; then
         n=$(declared_container_names "$POSTLITE" 2>/dev/null | grep -c .)
-        check "postlite resolves every container it declares" "$n" "7"
+        # compared with the map's own key count, not a literal: a literal that
+        # equals the buggy truncated count (it was also 3) would pin nothing.
+        want=$(jq -r '.containers | length' "$POSTLITE")
+        check "postlite resolves every container it declares" "$n" "$want"
         check "postlite-authelia is declared by its owner" \
           "$(declared_container_names "$ROOT/a_solutions/infra-sec_authelia/build.json" 2>/dev/null \
              | grep -c '^postlite-authelia$')" "1"

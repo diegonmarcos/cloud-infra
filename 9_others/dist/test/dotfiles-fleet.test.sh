@@ -86,13 +86,43 @@ expect C9 1 'FAIL: --require-all' -- run --require-all --check
 echo '{"targets":{}}' > "$S/manifest.json"
 expect C10 1 'no fleet.repos' -- run --check
 
+# C11: the CI fetcher must fetch a public repo that has NO ci_skip. Its TSV used
+# an empty field for "no skip"; read with IFS=<tab> collapses it, the path list
+# slid into `skip`, and every public repo was reported "ci_skip" — L1 checked
+# 0 repos and passed for weeks. git is stubbed: no network.
+mkdir -p "$T/stub"; printf '#!/bin/sh\n[ "$1" = clone ] && for a; do d="$a"; done && mkdir -p "$d"; exit 0\n' > "$T/stub/git"; chmod +x "$T/stub/git"
+echo '{"targets":{"claude":".claude"},"root_targets":{},"fleet":{"repos":[{"dir":"p1","github":"p1","private":false},{"dir":"p2","github":"p2","private":false,"ci_skip":"why"},{"dir":"v","github":"v","private":true}]}}' > "$S/manifest.json"
+out="$(PATH="$T/stub:$PATH" sh "$ROOT/9_others/src/fetch-fleet-public.sh" "$S/manifest.json" "$T/fetched" 2>&1)"
+grep -q 'p1 fetched' <<<"$out" && grep -q 'p2 skipped (ci_skip' <<<"$out" && grep -q 'v skipped (private' <<<"$out" && ok "C11 fetcher: public→fetched, ci_skip→skipped, private→skipped" || { bad "C11 fetcher misclassifies repos"; echo "$out" | sed 's/^/    /'; }
+
+# C12 (#760): scope "public" — a repo that owns its own .claude/.mcp.json and
+# module copy (cloud-infra-desktop) takes ONLY the public gates, and the CI
+# fetcher asks GitHub for only those paths.
+P="$T/pub"; mkdir -p "$P/src" "$P/dist/claude" "$P/dist/githooks" "$P/dist/root" "$P/base/pp/.claude" "$P/base/pp/0_apps/src/root"
+echo shared > "$P/dist/claude/helper.sh"; echo gate > "$P/dist/githooks/history-gate"; echo '{"shared":1}' > "$P/dist/root/mcp.json"
+echo own > "$P/base/pp/.claude/helper.sh"; echo '{"own":1}' > "$P/base/pp/0_apps/src/root/mcp.json"
+cat > "$P/src/manifest.json" <<'J'
+{"targets":{"claude":".claude"},"root_targets":{"mcp.json":".mcp.json"},"public_targets":{"githooks":".githooks"},
+ "fleet":{"repos":[{"dir":"pp","github":"pp","private":false,"scope":"public"}],"root_files":["mcp.json"],
+          "module_mirrors":[{"from":"root","to":"0_apps/src/root","only":["mcp.json"]}]}}
+J
+git init -q "$P/base/pp"
+sh "$FLEET" "$P/src" "$P/dist" "$P/base" >/dev/null 2>&1
+[ "$(cat "$P/base/pp/.githooks/history-gate" 2>/dev/null)" = gate ] && ok "C12a scope public: public gate emitted" || bad "C12a scope public: gate not emitted"
+[ "$(cat "$P/base/pp/.claude/helper.sh")" = own ] && [ ! -e "$P/base/pp/.mcp.json" ] && [ "$(cat "$P/base/pp/0_apps/src/root/mcp.json")" = '{"own":1}' ] \
+    && ok "C12b scope public: own .claude, .mcp.json and module copy untouched" || bad "C12b scope public: shared dotfiles overwrote the repo's own"
+printf '#!/bin/sh\necho "$*" >> "%s/gitargs"\n[ "$1" = clone ] && for a; do d="$a"; done && mkdir -p "$d"; exit 0\n' "$P" > "$T/stub/git"
+PATH="$T/stub:$PATH" sh "$ROOT/9_others/src/fetch-fleet-public.sh" "$P/src/manifest.json" "$P/fetched" >/dev/null 2>&1
+sp=$(grep 'sparse-checkout set' "$P/gitargs" 2>/dev/null)
+grep -q '/.githooks/' <<<"$sp" && ! grep -qE '/\.claude/|/\.mcp\.json|0_apps' <<<"$sp" && ok "C12c fetcher: scope public fetches only the public paths" || { bad "C12c fetcher paths wrong"; echo "    $sp"; }
+
 # ── part 2: the real declaration ───────────────────────────────────────────
 M="$ROOT/0_apps/src/manifest.json"
 n=$(jq '.fleet.repos|length' "$M"); u=$(jq '[.fleet.repos[].dir]|unique|length' "$M")
 [ "$n" -gt 1 ] && [ "$n" = "$u" ] && ok "R1 fleet lists $n distinct repos" || bad "R1 fleet repos missing/duplicated ($n/$u)"
 missing=$(jq -r --slurpfile g "$ROOT/1_cloud-configs/src/inputs/github-repos.json" '[.fleet.repos[].github] - [$g[0].repos[].name] | join(",")' "$M")
 [ -z "$missing" ] && ok "R2 every fleet repo exists on GitHub" || bad "R2 not on GitHub: $missing"
-cmp -s "$ROOT/1_cloud-configs/dist/mcp.json" "$ROOT/0_apps/dist/dotfiles/root/mcp.json" && ok "R3 shipped .mcp.json IS the deriver's output" || bad "R3 0_apps/dist/dotfiles/root/mcp.json differs from 1_cloud-configs/dist/mcp.json — run build.sh dotfiles"
+cmp -s "$ROOT/1_cloud-configs/dist/mcp.project.json" "$ROOT/0_apps/dist/dotfiles/root/mcp.json" && ok "R3 shipped .mcp.json IS the deriver's output" || bad "R3 0_apps/dist/dotfiles/root/mcp.json differs from 1_cloud-configs/dist/mcp.project.json — run build.sh dotfiles"
 jq -e '.mcpServers|has("cloud-infra-mcp") and has("cloud-services-mcp") and (length>=11)' "$ROOT/0_apps/dist/dotfiles/root/mcp.json" >/dev/null && ok "R4 shipped .mcp.json has the full list incl. cloud-infra-mcp" || bad "R4 shipped .mcp.json lacks cloud-infra-mcp/cloud-services-mcp or has <11 servers"
 [ -x "$ROOT/0_apps/dist/dotfiles/claude/mcp-auth-headers.sh" ] && ok "R5 the headersHelper ships with the dotfiles" || bad "R5 mcp-auth-headers.sh missing/not executable in dist"
 

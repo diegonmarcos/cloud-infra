@@ -98,6 +98,10 @@ jobs:
         run: bash 9_others/test/test_no_retired_service_refs.sh
       - name: Phase 13 — every flake.nix has a committed flake.lock
         run: bash 9_others/test/test_flake_lock_present.sh
+      # Owner decision 31: MCP clients go mesh-first, else public + bearer.
+      # No .mcp.json entry may be a bare http url (that falls back to OAuth/DCR).
+      - name: Phase 14b — every MCP entry is mesh-first launcher or bearer http (no OAuth-only)
+        run: bash 9_others/test/test_mcp_json_no_oauth_only.sh
       - name: Phase 14 — proxied_mcps children resolve to real services
         run: bash 9_others/test/test_proxied_mcps_resolution.sh
       - name: Phase 15 — engine layout detection works pre-build

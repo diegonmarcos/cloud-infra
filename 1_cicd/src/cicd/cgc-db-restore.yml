@@ -11,7 +11,7 @@
 # │       cgc-db.yml here is still enabled (it restores itself). │
 # │  The box pulls base + per-repo images from GHCR into the     │
 # │  surface's volume (pub: octocode_db, public repos only; pvt: │
-# │  octocode_db_pvt, every repo), swaps it under the MCP        │
+# │  octocode_db_pvt, private repos only), swaps it under the MCP        │
 # │  container and refreshes ONLY that surface's kg-store.       │
 # │                                                              │
 # │  It lives HERE, not with the pipeline, because it needs the  │
@@ -32,7 +32,7 @@ on:
   workflow_dispatch:
     inputs:
       surfaces:
-        description: "Which surface to restore: pub (cloud-cgc-pub-mcp, public repos only) or pvt (cloud-cgc-pvt-mcp, every repo)."
+        description: "Which surface to restore: pub (cloud-cgc-pub-mcp, public repos only) or pvt (cloud-cgc-pvt-mcp, private repos only)."
         required: true
         type: choice
         options:
@@ -409,11 +409,19 @@ jobs:
                 VOL=$(jq -r '.runtime.octocode.db_volume' "$BJ")
                 CTR=$(jq -r '.containers.app.container_name' "$BJ")
                 INCPRIV=0
+                SURF_REPOS="$REPOS"
                 ;;
               pvt)
                 VOL=$(jq -r '.runtime.octocode.pvt_db_volume // empty' "$BJ")
                 CTR=$(jq -r '.containers.pvt.container_name // empty' "$BJ")
                 INCPRIV=1
+                # ONLY the private repos (#996): the public indexes are served by the
+                # pub surface, and a full copy here cost ~6.5 GB of the oci-apps root.
+                SURF_REPOS="$PRIV"
+                if [ -z "$SURF_REPOS" ]; then
+                  echo "[cgc-db] no private repos declared — skipping pvt restore"
+                  continue
+                fi
                 # Absent keys = no private surface declared yet. Skip quietly rather
                 # than failing the propagation of the public one.
                 if [ -z "$VOL" ] || [ -z "$CTR" ]; then
@@ -482,7 +490,7 @@ jobs:
             CGC_PUBLIC_DB_VOLUME='$PUBVOL' \
             CGC_INCLUDE_PRIVATE='$INCPRIV' \
             CGC_DB_OWNER='10001:999' \
-            CGC_INDEX_REPOS='$REPOS' \
+            CGC_INDEX_REPOS='$SURF_REPOS' \
             CGC_PRIVATE_REPOS='$PRIV' \
             MCP_CONTAINER='$CTR' \
             sh -c 'sh /tmp/cgc-restore-all.sh > $LOG 2>&1; echo \$? > $RCF' \

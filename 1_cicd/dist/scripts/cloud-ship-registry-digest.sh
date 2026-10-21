@@ -4,7 +4,7 @@
 # ║                                                                  ║
 # ║   GENERATED FILE — DO NOT EDIT                                   ║
 # ║                                                                  ║
-# ║   Source : cloud-ship-registry-digest.sh
+# ║   Source : 1_cicd/src/scripts/cloud-ship-registry-digest.sh
 # ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
 # ║   Rebuild: ./9_others/build.sh
 # ║                                                                  ║
@@ -24,7 +24,7 @@
 #
 # Three of the fleet's packages are PRIVATE and linked to their own source
 # repos, not to cloud-infra: kg-store-binaries, session-memory-binaries and
-# cf-worker-http-to-wg-public-bridge-binaries. ghcr.io issues no anonymous pull
+# (until its retirement, removed 2026-10-17) the cf-worker bridge. ghcr.io issues no anonymous pull
 # token for them and refuses this repo's GITHUB_TOKEN, so every sweep reported
 # them `undecidable`. Measured 2026-09-16, all three were in fact perfectly
 # in-sync — the engine simply could not see them. An undecidable service is an
