@@ -54,6 +54,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | c3-cloud-infra-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-mail-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-mattermost-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-me-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-notes-sync.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-notes-web.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-services-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
@@ -167,7 +168,7 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
 | auth.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
-| 225 x `*.app` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
+| 229 x `*.app` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
 | 13 x `*.db` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
 
 ## Routes inside a host
@@ -185,6 +186,8 @@ A tier-b host's gate runs before any of these; the inner column is the *addition
 | api.diegonmarcos.com | `/pub/ready` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/pub/analytics/*` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/c3-services-api/*` | b | mesh only (wg_only) |
+| api.diegonmarcos.com | `/me/*` | b | Bearer OR Authelia (mkProtected) |
+| api.diegonmarcos.com | `/me/health` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/git/*` | b | Bearer OR Authelia (mkProtected) |
 | api.diegonmarcos.com | `/git/health` | b | formerly anonymous (public_paths); now behind the gate |
 | api.diegonmarcos.com | `/scrappers/*` | b | Bearer OR Authelia (mkProtected) |
