@@ -270,7 +270,9 @@ do_drift() {
               "gateway/locations|cloudflare_zero_trust_dns_location" \
               "teamnet/virtual_networks?is_deleted=false|cloudflare_zero_trust_tunnel_virtual_network" \
               "cfd_tunnel?is_deleted=false&per_page=100|cloudflare_zero_trust_tunnel_cloudflared" \
-              "teamnet/routes?is_deleted=false|cloudflare_zero_trust_tunnel_route"; do
+              "teamnet/routes?is_deleted=false|cloudflare_zero_trust_tunnel_route" \
+              "devices/posture|cloudflare_zero_trust_device_posture_rule" \
+              "gateway/certificates|cloudflare_zero_trust_gateway_certificate"; do
     path="${spec%%|*}"; typ="${spec##*|}"
     live="$(cf "/accounts/$ACCT/$path" | jq '.result | length')"
     held="$(grep -c "^$typ\." state.txt || true)"
