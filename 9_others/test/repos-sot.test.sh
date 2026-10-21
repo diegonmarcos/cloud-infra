@@ -6,7 +6,7 @@
 #       (checked when the network answers; offline is reported, S2-S6 still run)
 #   S2  a fleet.repos[] entry (0_apps/src/manifest.json) is not in the registry, is pending_creation,
 #       or disagrees about private
-#   S3  a pending_creation repo (cloud-webapps, cloud-me-containers) is already on GitHub (flip its status),
+#   S3  a pending_creation repo (cloud-webapps, cloud-me-containers) is already on GitHub (flip its status),  or a repo once declared pending (cloud-webapps, cloud-me-containers) leaves the registry,
 #       or is in the fleet manifest
 #   S4  a GitHub repo of the fetched inventory (github-repos.json) is neither registered nor in unregistered_ok
 #   S5  a live registry repo is missing from the inventory, or the old name of a rename is still used as a
@@ -46,8 +46,8 @@ out=$(jq -r --slurpfile s "$SOT" '[$s[0].repos[]|'"$GH"'] as $g | .fleet.repos[]
 
 # S3 pending vs reality
 pend=$(jq -r '.repos[]|select(.status=="pending_creation")|'"$GH" "$SOT")
-[ -n "$pend" ] && ok "S3a the registry declares pending_creation repos: $(echo $pend)" || bad "S3a no pending_creation repo declared (cloud-webapps, cloud-me-containers expected)"
-for p in cloud-webapps cloud-me-containers; do grep -qx "$p" <<<"$pend" || bad "S3b $p must be pending_creation until it exists"; done
+[ -n "$pend" ] && ok "S3a the registry declares pending_creation repos: $(echo $pend)" || ok "S3a no pending_creation repo declared (all registered repos exist)"
+for p in cloud-webapps cloud-me-containers; do jq -e --arg p "$p" '[.repos[].name]|index($p)' "$SOT" >/dev/null 2>&1 || bad "S3b $p must stay registered (pending_creation until it exists, then plain)"; done
 bad3=""
 for p in $pend; do
   jq -e --arg p "$p" '[.repos[].name]|index($p)' "$INV" >/dev/null 2>&1 && bad3="$bad3 $p(on GitHub: drop its status)"
