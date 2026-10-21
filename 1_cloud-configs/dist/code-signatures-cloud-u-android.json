@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21875,
+    "files": 21881,
     "by_lang": {
       "js": 481,
       "sh": 531,
       "py": 148,
-      "kotlin": 11481,
+      "kotlin": 11487,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11478,
+      "kotlin": 11484,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -10604,6 +10604,44 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/ConfigsFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsFragment"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.search.SearchEntry",
+        "com.diegonmarcos.superapp.search.SearchFrame",
+        "com.diegonmarcos.superapp.search.SearchSession",
+        "com.diegonmarcos.superapp.ui.LauncherPalette",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "android.os.Bundle",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.PaddingValues",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.core.os.bundleOf"
+      ],
+      "symbols": [
+        "palette()",
+        "Content()",
+        "tryHandleBack()",
+        "onDestroyView()",
+        "groups(ids: Array<String>, labels: Array<String>, icons: IntArray, groups: Array<String>, subs: Array<String>)",
+        "flush()",
+        "newInstance(tiles: List<TileGridFragment.Tile>)",
+        "ConfigsPage(runs: List<ConfigsFragment.Run>, click: (String)",
+        "class ConfigsFragment",
+        "class Run"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/DetailPlaceholderFragment.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -12278,6 +12316,68 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/CloudflareWarp.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudflareWarp",
+        "CfKeyStore"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "com.wireguard.crypto.KeyPair",
+        "org.json.JSONObject",
+        "java.net.HttpURLConnection",
+        "java.net.URL",
+        "java.text.SimpleDateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.TimeZone"
+      ],
+      "symbols": [
+        "parse(o: JSONObject?)",
+        "call(req: HttpReq)",
+        "baseHeaders(w: Decl.Warp)",
+        "tos(now: Long)",
+        "registerRequest(d: Decl, publicKey: String, installId: String, now: Long, accessJwt: String = \"\")",
+        "deleteRequest(d: Decl, id: String, token: String)",
+        "parseRegistration(json: String)",
+        "warpConf(d: Decl, privateKey: String, r: Registration)",
+        "oneConf(d: Decl, privateKey: String, r: Registration)",
+        "oneState(d: Decl, enrolled: Boolean)",
+        "oneLoginUrl(d: Decl)",
+        "parseCallback(d: Decl, uri: String)",
+        "warp()",
+        "forgetWarp()",
+        "enrolOne(token: String)",
+        "reg(p: String)",
+        "save(p: String, priv: String, r: CloudflareWarp.Registration)",
+        "warpRegistration()",
+        "warpPrivateKey()",
+        "saveWarp(priv: String, r: CloudflareWarp.Registration)",
+        "clearWarp()",
+        "oneRegistration()",
+        "onePrivateKey()",
+        "saveOne(priv: String, r: CloudflareWarp.Registration)",
+        "class CloudflareWarp",
+        "class Decl",
+        "class Warp",
+        "class One",
+        "class HttpReq",
+        "class HttpRes",
+        "class CfHttp",
+        "class Registration",
+        "class addresses",
+        "class OneState",
+        "class Client",
+        "class UrlHttp",
+        "class slot",
+        "class CfKeyStore",
+        "class key"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/DataBadgeModel.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -12606,6 +12706,8 @@
         "com.diegonmarcos.superapp.BuildConfig",
         "com.diegonmarcos.superapp.firewall.FirewallController",
         "com.diegonmarcos.superapp.network.AccountMesh",
+        "com.diegonmarcos.superapp.network.CfKeyStore",
+        "com.diegonmarcos.superapp.network.CloudflareWarp",
         "com.diegonmarcos.superapp.network.FleetDns",
         "com.diegonmarcos.superapp.network.MeshTransport",
         "com.diegonmarcos.superapp.network.WgState",
@@ -12686,7 +12788,7 @@
         "com.diegonmarcos.superapp.R"
       ],
       "symbols": [
-        "MeshControlsPage(store: MeshStore, modifier: Modifier = Modifier)",
+        "MeshControlsPage(store: MeshStore, modifier: Modifier = Modifier, embedded: Boolean = false)",
         "remember0(f: ()",
         "ControlRow(store: MeshStore, c: MeshDecl.Control, seeds: Map<String, String>)",
         "class private"
@@ -12707,6 +12809,8 @@
       ],
       "symbols": [
         "control(id: String)",
+        "tab(id: String?)",
+        "tabOf(pageId: String)",
         "page(id: String?)",
         "parse(json: String)",
         "seeds()",
@@ -12714,6 +12818,7 @@
         "class MeshDecl",
         "class Control",
         "class Page",
+        "class Tab",
         "class Decl"
       ]
     },
@@ -12758,7 +12863,7 @@
         "com.diegonmarcos.superapp.R"
       ],
       "symbols": [
-        "MeshLogPage(store: MeshStore, modifier: Modifier = Modifier)"
+        "MeshLogPage(store: MeshStore, modifier: Modifier = Modifier, embedded: Boolean = false)"
       ]
     },
     {
@@ -12874,7 +12979,7 @@
         "com.diegonmarcos.superapp.launcher.Sections"
       ],
       "symbols": [
-        "MeshPeersPage(store: MeshStore, modifier: Modifier = Modifier)",
+        "MeshPeersPage(store: MeshStore, modifier: Modifier = Modifier, embedded: Boolean = false)",
         "PeerRow(store: MeshStore, s: MeshSnapshot, p: PeerLive, index: Int, expanded: Boolean, toggle: ()",
         "PeerDetail(store: MeshStore, p: PeerLive, index: Int)",
         "save(n: PeerCfg)",
@@ -12888,6 +12993,7 @@
       "exports": [
         "MeshPort",
         "MeshHost",
+        "CfView",
         "TransportView",
         "ProbeLine"
       ],
@@ -12976,7 +13082,8 @@
         "com.google.zxing.qrcode.decoder.ErrorCorrectionLevel"
       ],
       "symbols": [
-        "MeshProfilesPage(store: MeshStore, modifier: Modifier = Modifier)",
+        "MeshProfilesPage(store: MeshStore, modifier: Modifier = Modifier, embedded: Boolean = false)",
+        "CloudflareBlock(store: MeshStore)",
         "ProfileRow(store: MeshStore, profile: WireGuardProfiles.Profile)",
         "DiffPanel(store: MeshStore, id: String, stored: String?)",
         "qrPayload(text: String)",
@@ -13013,7 +13120,7 @@
         "com.diegonmarcos.superapp.R"
       ],
       "symbols": [
-        "MeshRoutesPage(store: MeshStore, modifier: Modifier = Modifier)",
+        "MeshRoutesPage(store: MeshStore, modifier: Modifier = Modifier, embedded: Boolean = false)",
         "kindWord(k: RouteKind)",
         "ExcludedApps(store: MeshStore, c: MeshDecl.Control)",
         "write(list: List<String>)",
@@ -13026,10 +13133,13 @@
       "role": "kotlin",
       "exports": [
         "MeshScreen",
+        "MeshSection",
         "MeshTicker"
       ],
       "imports": [
         "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.foundation.rememberScrollState",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
@@ -13055,6 +13165,7 @@
       ],
       "symbols": [
         "MeshScreen(store: MeshStore, modifier: Modifier = Modifier, ticker: Boolean = true)",
+        "MeshSection(id: String, store: MeshStore)",
         "MeshNotice(store: MeshStore)",
         "MeshTicker(store: MeshStore)"
       ]
@@ -13082,11 +13193,12 @@
         "com.diegonmarcos.superapp.R"
       ],
       "symbols": [
-        "MeshStatusPage(store: MeshStore, modifier: Modifier = Modifier)",
+        "MeshStatusPage(store: MeshStore, modifier: Modifier = Modifier, embedded: Boolean = false)",
         "StatusRow(id: String, store: MeshStore, s: MeshSnapshot)",
         "probeVerdict(ok: Boolean?)",
         "handshakeText(ageS: Long?, up: Boolean, engine: Boolean)",
-        "healthWord(h: Health)"
+        "healthWord(h: Health)",
+        "oneStateText(store: MeshStore)"
       ]
     },
     {
@@ -13142,7 +13254,8 @@
         "SwitchLine",
         "ChoiceLine",
         "MField",
-        "FieldLine"
+        "FieldLine",
+        "pageBody"
       ],
       "imports": [
         "androidx.compose.foundation.background",
@@ -13158,7 +13271,9 @@
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.width",
+        "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
         "androidx.compose.foundation.shape.CircleShape",
         "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.foundation.text.BasicTextField",
@@ -13182,12 +13297,11 @@
         "androidx.compose.ui.semantics.Role",
         "androidx.compose.ui.semantics.contentDescription",
         "androidx.compose.ui.semantics.disabled",
-        "androidx.compose.ui.semantics.role",
-        "androidx.compose.ui.semantics.semantics",
-        "androidx.compose.ui.semantics.selected"
+        "androidx.compose.ui.semantics.role"
       ],
       "symbols": [
         "page(id: String)",
+        "tab(id: String)",
         "control(id: String)",
         "row(id: String)",
         "peer(i: Int)",
@@ -13206,6 +13320,7 @@
         "MField( value: String, onCommit: (String)",
         "commit()",
         "FieldLine(label: String, modifier: Modifier = Modifier, content: @Composable ()",
+        "pageBody(embedded: Boolean)",
         "class MeshTags",
         "class MeshRoles"
       ]
@@ -13765,6 +13880,7 @@
         "paste()",
         "openVpnSettings()",
         "openAccount()",
+        "openCustomTab(url: String)",
         "importConf()",
         "exportConf()",
         "exportProfiles()",
@@ -13803,6 +13919,8 @@
         "profiles()",
         "saveProfiles(profiles: Map<String, String>)",
         "activateProfile(name: String)",
+        "applyCloudflare(name: String, conf: String, keys: CfKeyStore)",
+        "leaveCloudflare(keys: CfKeyStore)",
         "peers()",
         "savePeers(peers: List<PeerData>)",
         "derivedInterfacePublicKey()",
@@ -13819,6 +13937,7 @@
         "class WireGuardPrefs",
         "class in",
         "class key",
+        "class slot",
         "class public",
         "class PeerData"
       ]
@@ -15471,6 +15590,7 @@
         "commands()",
         "cloudApps(scopeId: String)",
         "phoneApps(scopeId: String, ctx: Context)",
+        "configsOnly(scopeId: String)",
         "cloudConfigs(scopeId: String, ctx: Context)",
         "class SuperappSearchIndex",
         "class Source"
@@ -18968,12 +19088,14 @@
         "android.graphics.Bitmap",
         "android.graphics.Canvas",
         "android.view.View",
+        "androidx.compose.ui.test.assertIsDisplayed",
         "androidx.compose.ui.test.getBoundsInRoot",
         "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.unit.height",
         "androidx.compose.ui.unit.width",
-        "androidx.compose.ui.unit.dp",
         "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
         "org.junit.runner.RunWith",
@@ -18984,9 +19106,39 @@
         "java.io.File"
       ],
       "symbols": [
-        "configsGrid(title: String = \"Configs\")",
-        "guard(name: String, fontScale: Float, title: String = \"Configs\")",
-        "class ConfigsIconSizeTest"
+        "configsPage()",
+        "guard(name: String, fontScale: Float)",
+        "tiles(ctx: android.content.Context)",
+        "class ConfigsIconSizeTest",
+        "class ConfigsPageFixture"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/ConfigsSharesAppsDesignTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsSharesAppsDesignTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.getBoundsInRoot",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.height",
+        "androidx.compose.ui.unit.width",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "code(name: String)",
+        "class ConfigsSharesAppsDesignTest"
       ]
     },
     {
@@ -19355,6 +19507,38 @@
       "symbols": [
         "anyKeyWithSamples()",
         "class PageContentComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/PageTopInsetTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PageTopInsetTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.view.ContextThemeWrapper",
+        "android.view.View",
+        "androidx.compose.ui.semantics.SemanticsProperties",
+        "androidx.compose.ui.semantics.getOrNull",
+        "androidx.compose.ui.test.SemanticsMatcher",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File"
+      ],
+      "symbols": [
+        "topRowBottomDp()",
+        "container()",
+        "host(page: Fragment)",
+        "assertBelowTopRow(name: String, page: Fragment)",
+        "class PageTopInsetTest"
       ]
     },
     {
@@ -19818,6 +20002,36 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/CloudflareWarpTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudflareWarpTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "com.diegonmarcos.superapp.network.mesh.MeshDecl",
+        "com.wireguard.config.Config",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertThrows",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.BufferedReader",
+        "java.io.StringReader"
+      ],
+      "symbols": [
+        "plainStore()",
+        "class CloudflareWarpTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/DataBadgeModelTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20049,7 +20263,9 @@
       "imports": [
         "android.app.Application",
         "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.assertIsNotEnabled",
         "androidx.compose.ui.test.assertTextContains",
+        "androidx.compose.ui.test.hasAnyAncestor",
         "androidx.compose.ui.test.hasTestTag",
         "androidx.compose.ui.test.hasText",
         "androidx.compose.ui.test.onFirst",
@@ -21231,6 +21447,31 @@
       ],
       "symbols": [
         "class RssFeedPlanTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/search/ConfigsSearchTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsSearchTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.launcher.Sections",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "hitsFor(scope: SearchScope)",
+        "controller()",
+        "class ConfigsSearchTest",
+        "class Fake"
       ]
     },
     {
@@ -65744,12 +65985,15 @@
         "com.diegonmarcos.superapp.search.SearchKinds.BROWSER_FAV",
         "com.diegonmarcos.superapp.search.SearchKinds.BROWSER_HISTORY",
         "com.diegonmarcos.superapp.search.SearchKinds.BROWSER_WEB",
+        "com.diegonmarcos.superapp.search.SearchKinds.APP_ALL",
         "com.diegonmarcos.superapp.search.SearchKinds.CLOUD_APPS",
         "com.diegonmarcos.superapp.search.SearchKinds.CLOUD_CONFIGS",
+        "com.diegonmarcos.superapp.search.SearchKinds.CONFIGS",
         "com.diegonmarcos.superapp.search.SearchKinds.PHONE_APPS",
         "com.diegonmarcos.superapp.search.SearchKinds.PHONE_CONFIGS"
       ],
       "symbols": [
+        "scopesOf(declared: List<SearchScope>)",
         "defaults(scopes: List<SearchScope>)",
         "selection(scopes: List<SearchScope>, saved: Set<String>?)",
         "class SearchEntry"
