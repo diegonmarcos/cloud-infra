@@ -110,6 +110,11 @@ jobs:
           # in one of its jobs (cgc-db-index.yml's restore-all) has no runs of
           # its own — its jobs run under the caller's run id, which is the id
           # that has to be cancelled.
+          # jq program: start time of the oldest in-progress job that can hold the group, or
+          # nothing. Index/gating jobs of the cgc-db family (names start phase/coalesce/guard
+          # and do not mention restore) never hold it. Tested by
+          # 9_others/test/unjam-spares-index-jobs.test.sh, which extracts this line.
+          WG_JOB_FILTER='[(.jobs // [])[] | select(.status == "in_progress") | select(((.name | test("^(phase|coalesce|guard)")) and ((.name | test("restore")) | not)) | not) | .started_at] | sort | first // empty'
           WG_WORKFLOWS="ship.yml ship-reconcile.yml cgc-db.yml cgc-db-restore.yml cgc-db-propagate.yml ship-cgc-db-seed.yml ship-home-manager.yml cloud-health-reports.yml cloud-health-reports-x86-gha.yml health_mail_full.yml"
 
           # ── Pass 1: graceful cancel every stale run, remembering the ids ──
@@ -129,6 +134,21 @@ jobs:
             # run_started_at is when the run actually began, not when it queued.
             while read -r id started; do
               [ -n "$id" ] || continue
+              # The RUN is not what holds ship-wg-runner, a JOB is. cgc-db.yml's index jobs
+              # (phase / coalesce / guard) run for hours OUTSIDE the group and nothing but this
+              # script cancels them: run 39636567781 lost hours of cloud-u-android graphrag
+              # when the whole run was cancelled at 5 minutes old (#1061). So age the run by
+              # its oldest in-progress job that can hold the group, and leave a run alone
+              # while only index/gating jobs are running.
+              jobs=$(gh_api "$api/actions/runs/$id/jobs?filter=latest&per_page=100")
+              if [ "$(echo "$jobs" | jq 'has("jobs")')" = "true" ]; then
+                wgstart=$(echo "$jobs" | jq -r "$WG_JOB_FILTER")
+                if [ -z "$wgstart" ]; then
+                  echo "  leaving run $id (only index/gating jobs in progress: outside ship-wg-runner)"
+                  continue
+                fi
+                started="$wgstart"
+              fi
               age=$(( (now - $(date -u -d "$started" +%s)) / 60 ))
               if [ "$age" -ge "$STALE_MINUTES" ]; then
                 echo "  cancelling run $id (in_progress ${age}m)"
