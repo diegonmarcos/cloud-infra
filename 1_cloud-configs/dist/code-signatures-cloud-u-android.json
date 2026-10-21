@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21881,
+    "files": 21896,
     "by_lang": {
       "js": 481,
-      "sh": 531,
+      "sh": 532,
       "py": 148,
-      "kotlin": 11487,
+      "kotlin": 11501,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -19,14 +19,14 @@
     },
     "by_role": {
       "file": 2275,
-      "shell": 420,
+      "shell": 421,
       "script": 241,
       "java": 634,
       "entrypoint": 23,
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11484,
+      "kotlin": 11498,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -10947,8 +10947,6 @@
         "HomeGroupedFragment"
       ],
       "imports": [
-        "com.diegonmarcos.superapp.settings.GridColumns",
-        "com.diegonmarcos.superapp.settings.redrawOnGridColumns",
         "com.diegonmarcos.superapp.R",
         "com.diegonmarcos.superapp.system.ModePrefs",
         "com.diegonmarcos.superapp.ui.LauncherPalette",
@@ -10956,27 +10954,18 @@
         "android.content.Context",
         "android.os.Bundle",
         "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.Row",
-        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.PaddingValues",
         "androidx.compose.foundation.layout.fillMaxSize",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.padding",
-        "androidx.compose.foundation.rememberScrollState",
-        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.foundation.lazy.LazyColumn",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.remember",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.platform.LocalContext",
-        "androidx.compose.ui.platform.testTag",
-        "androidx.compose.ui.unit.dp"
+        "androidx.compose.ui.platform.LocalContext"
       ],
       "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
         "palette()",
         "Content()",
-        "TileGroupHeaderPlain(title: String)",
         "newInstance()",
-        "headerTag(title: String)",
         "buckets(ctx: Context)",
         "resolveTileIcon(tile: Sections.HomeTile)",
         "class HomeGroupedFragment",
@@ -19124,6 +19113,7 @@
         "android.app.Application",
         "androidx.compose.ui.test.getBoundsInRoot",
         "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onFirst",
         "androidx.compose.ui.test.onNodeWithTag",
         "androidx.compose.ui.unit.height",
         "androidx.compose.ui.unit.width",
@@ -44916,6 +44906,20 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/keyboard/clipboard/AutocompletePanel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutocompletePanel"
+      ],
+      "imports": [],
+      "symbols": [
+        "request()",
+        "consume()",
+        "class AutocompletePanel"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/keyboard/clipboard/ClipboardHistoryView.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -44948,6 +44952,7 @@
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid",
+        "androidx.compose.foundation.lazy.LazyColumn",
         "androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells",
         "androidx.compose.foundation.lazy.staggeredgrid.items",
         "androidx.compose.foundation.rememberScrollState",
@@ -44961,14 +44966,17 @@
         "androidx.compose.material3.Text",
         "androidx.compose.material3.rememberSwipeToDismissBoxState",
         "androidx.compose.runtime.Composable",
-        "androidx.compose.runtime.LaunchedEffect",
-        "androidx.compose.runtime.getValue"
+        "androidx.compose.runtime.LaunchedEffect"
       ],
       "symbols": [
         "palette()",
         "Body()",
         "dp(px: Int)",
         "Tabs(m: ClipboardHistoryManager, keyText: Int, fontFamily: FontFamily?)",
+        "showAutocomplete()",
+        "unlockedNow()",
+        "AutocompleteList(look: Look, keyBackground: Drawable?, textColor: Color, fontFamily: FontFamily?)",
+        "useAutocomplete(item: AutocompleteItem, copy: Boolean)",
         "SearchBox(keyBackground: Drawable?, textColor: Color, fontFamily: FontFamily?)",
         "ClipCard( m: ClipboardHistoryManager, entry: ClipboardHistoryEntry, look: Look, keyBackground: Drawable?, textColor: Color, fontFamily: FontFamily?, modifier: Modifier, )",
         "PinPicker(m: ClipboardHistoryManager, id: Long)",
@@ -45116,6 +45124,8 @@
         "CategoryProperties",
         "getPageCount",
         "initialize",
+        "invalidateMerged",
+        "getMergedKeyboard",
         "clearKeyboardCache",
         "getCategoryName",
         "getCategoryId",
@@ -45168,6 +45178,8 @@
         "getPageCount()",
         "EmojiCategory(final Context ctx, final KeyboardLayoutSet layoutSet, final TypedArray emojiPaletteViewAttr)",
         "initialize()",
+        "invalidateMerged()",
+        "getMergedKeyboard()",
         "clearKeyboardCache()",
         "addShownCategoryId(final int categoryId)",
         "isShownCategoryId(final int categoryId)",
@@ -45327,7 +45339,7 @@
         "onCancel()",
         "onMove(x: Int, y: Int, eventTime: Long)",
         "dispose()",
-        "EmojiKeyGrid( keyboard: DynamicGridKeyboard, callback: EmojiViewCallback, popups: EmojiKeyPopups, version: Int, modifier: Modifier = Modifier, )",
+        "EmojiKeyGrid( keyboard: DynamicGridKeyboard, callback: EmojiViewCallback, popups: EmojiKeyPopups, version: Int, modifier: Modifier = Modifier, pinOnLongPress: Boolean = false, )",
         "class EmojiKeyPopups",
         "class EmojiKeyTouch"
       ]
@@ -45346,6 +45358,23 @@
       ],
       "symbols": [
         "class EmojiLayoutParams"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/keyboard/emoji/EmojiMerge.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EmojiMerge",
+        "EmojiSearchQuery"
+      ],
+      "imports": [],
+      "symbols": [
+        "merge(pinned: List<T>, recent: List<T>)",
+        "pinsOnLongPress(categoryId: Int)",
+        "terms(raw: String)",
+        "class EmojiMerge",
+        "class EmojiSearchQuery"
       ]
     },
     {
@@ -45398,6 +45427,7 @@
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.height",
         "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.foundation.layout.width",
         "androidx.compose.foundation.lazy.LazyColumn",
         "androidx.compose.foundation.lazy.LazyListState",
@@ -45420,8 +45450,7 @@
         "androidx.compose.ui.platform.LocalDensity",
         "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.style.TextAlign",
-        "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.sp"
+        "androidx.compose.ui.unit.dp"
       ],
       "symbols": [
         "palette()",
@@ -45436,7 +45465,7 @@
         "getDescription(emoji: String)",
         "onPinEmoji(key: Key)",
         "addRecentKey(key: Key)",
-        "bumpCategory(categoryId: Int)",
+        "bumpCategory(requested: Int)",
         "setHardwareAcceleratedDrawingEnabled(enabled: Boolean)",
         "startEmojiPalettes(keyVisualAttr: KeyVisualAttributes?, editorInfo: EditorInfo?, keyboardActionListener: KeyboardActionListener)",
         "setupBottomRowKeyboard(editorInfo: EditorInfo?, keyboardActionListener: KeyboardActionListener)",
@@ -45447,6 +45476,7 @@
         "clearKeyboardCache()",
         "initDictionaryFacilitator()",
         "Body()",
+        "SearchBox()",
         "TypeTabRow()",
         "TypeTab(type: MediaType, label: String, textColor: Color)",
         "CategoryPages(categoryId: Int)",
@@ -48713,6 +48743,8 @@
         "helium314.keyboard.latin.utils.Log",
         "helium314.keyboard.latin.utils.SubtypeSettings",
         "helium314.keyboard.latin.utils.prefs",
+        "helium314.keyboard.latin.settings.DefaultsMigration",
+        "helium314.keyboard.latin.utils.toolbarLayoutRevisionPending",
         "helium314.keyboard.latin.utils.upgradeToolbarPrefs",
         "kotlinx.coroutines.CoroutineScope",
         "kotlinx.coroutines.Dispatchers",
@@ -48855,6 +48887,81 @@
         "class gathers",
         "class that",
         "class AudioAndHapticFeedbackManager"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/latin/autofill/AutocompleteItems.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutocompleteItem",
+        "AutocompleteItems",
+        "AutocompleteUnlock"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.autofill.AutofillProfile",
+        "com.diegonmarcos.superapp.autofill.AutofillSot",
+        "com.diegonmarcos.superapp.autofill.Snippet"
+      ],
+      "symbols": [
+        "build(profiles: List<AutofillProfile>, snippets: List<Snippet>)",
+        "sens(col: String)",
+        "shown(item: AutocompleteItem, unlocked: Boolean)",
+        "access(item: AutocompleteItem, unlocked: Boolean)",
+        "isUnlocked(now: Long)",
+        "grant(now: Long)",
+        "lock()",
+        "class AutocompleteItem",
+        "class AutocompleteItems",
+        "class Access",
+        "class AutocompleteUnlock"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/latin/autofill/AutocompleteUnlockActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutocompleteUnlockActivity"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.app.KeyguardManager",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.os.SystemClock"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)",
+        "start(context: Context)",
+        "class AutocompleteUnlockActivity"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/latin/autofill/AutofillSchemas.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SchemaField",
+        "SchemaTable",
+        "AutofillSchemas"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.autofill.AutofillSot"
+      ],
+      "symbols": [
+        "label(column: String)",
+        "account()",
+        "secret(keys: List<String>)",
+        "identityHandoff()",
+        "vault()",
+        "all()",
+        "class SchemaField",
+        "class SchemaTable",
+        "class AutofillSchemas",
+        "class Vault"
       ]
     },
     {
@@ -50752,6 +50859,7 @@
         "android.text.Spanned",
         "android.text.style.SuggestionSpan",
         "helium314.keyboard.latin.settings.Defaults",
+        "helium314.keyboard.latin.settings.GrammarMode",
         "helium314.keyboard.latin.settings.Settings",
         "helium314.keyboard.latin.utils.prefs",
         "org.json.JSONObject",
@@ -50769,12 +50877,12 @@
         "applySentenceCaps(text: String)",
         "applyLocalRules(context: Context, text: String)",
         "post(urlStr: String, body: String)",
-        "callRemote(context: Context, text: String, language: String)",
+        "callRemote(context: Context, text: String, language: String, highlightOnly: Boolean = false)",
         "checkAndFix(context: Context, connection: RichInputConnection)",
         "checkWholeField(context: Context, connection: RichInputConnection)",
         "checkWholeFieldLocal(context: Context, connection: RichInputConnection)",
-        "checkWholeFieldRemote(context: Context, connection: RichInputConnection)",
-        "replace(context: Context, connection: RichInputConnection, before: String, start: Int, end: Int, replacement: String, tail: String)",
+        "checkWholeFieldRemote(context: Context, connection: RichInputConnection, highlightOnly: Boolean = false)",
+        "replace(context: Context, connection: RichInputConnection, before: String, start: Int, end: Int, replacement: String, tail: String, highlightOnly: Boolean = false)",
         "class GrammarChecker",
         "class Match"
       ]
@@ -51901,6 +52009,50 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/latin/settings/DefaultsMigration.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DefaultsMigration"
+      ],
+      "imports": [
+        "android.content.SharedPreferences",
+        "androidx.core.content.edit"
+      ],
+      "symbols": [
+        "keysToReset(stored: Map<String, *>)",
+        "apply(prefs: SharedPreferences)",
+        "class DefaultsMigration",
+        "class Group"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/latin/settings/GrammarMode.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GrammarMode",
+        "EngineOrigin",
+        "GrammarEngine",
+        "GrammarEngines"
+      ],
+      "imports": [
+        "android.content.SharedPreferences",
+        "androidx.core.content.edit"
+      ],
+      "symbols": [
+        "next()",
+        "fromId(id: String?)",
+        "resolve(stored: String?, legacyAutoCorrect: Boolean, legacyEngine: String?)",
+        "read(prefs: SharedPreferences)",
+        "write(prefs: SharedPreferences, mode: GrammarMode)",
+        "class GrammarMode",
+        "class EngineOrigin",
+        "class GrammarEngine",
+        "class GrammarEngines"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/latin/settings/Settings.java",
       "lang": "java",
       "role": "java",
@@ -51919,6 +52071,7 @@
         "readScreenMetrics",
         "readVibrationEnabled",
         "toggleAutoCorrect",
+        "cycleGrammarMode",
         "readGestureDynamicPreviewEnabled",
         "readGestureDynamicPreviewDefault",
         "readDefaultGestureFastTypingCooldown",
@@ -51933,8 +52086,7 @@
         "readOneHandedModeScale",
         "writeOneHandedModeScale",
         "readOneHandedModeGravity",
-        "writeOneHandedModeGravity",
-        "writeSplitKeyboardEnabled"
+        "writeOneHandedModeGravity"
       ],
       "imports": [
         "android.annotation.SuppressLint",
@@ -51996,6 +52148,7 @@
         "readScreenMetrics(final Resources res)",
         "readVibrationEnabled(final SharedPreferences prefs)",
         "toggleAutoCorrect()",
+        "cycleGrammarMode()",
         "readGestureDynamicPreviewEnabled(final SharedPreferences prefs)",
         "readGestureDynamicPreviewDefault(final Context context)",
         "readDefaultGestureFastTypingCooldown(final Resources res)",
@@ -52017,8 +52170,7 @@
         "readBottomPaddingScale(SharedPreferences prefs, boolean landscape, boolean folded)",
         "readSidePaddingScale(SharedPreferences prefs, boolean landscape, boolean split, boolean folded)",
         "readHeightScale(SharedPreferences prefs, boolean landscape, boolean folded)",
-        "readBottomRowScale(SharedPreferences prefs, boolean landscape, boolean folded)",
-        "readKeyGapScale(SharedPreferences prefs, boolean landscape, boolean folded)"
+        "readBottomRowScale(SharedPreferences prefs, boolean landscape, boolean folded)"
       ]
     },
     {
@@ -53026,13 +53178,18 @@
         "kotlin.math.abs"
       ],
       "symbols": [
-        "pageWidth(viewport: Int, icon: Int)",
+        "cell(baseCell: Int, scale: Float)",
+        "iconsPerPage(viewport: Int, icon: Int)",
+        "pageWidth(viewport: Int)",
+        "slotStart(slot: Int, perPage: Int, page: Int)",
+        "gapSlotsForOwnPage(slot: Int, perPage: Int)",
+        "gaps(keys: List<ToolbarKey>, ownPage: Set<ToolbarKey>, perPage: Int)",
+        "layout(keys: List<ToolbarKey>, ownPage: Set<ToolbarKey>, viewport: Int, baseCell: Int, scale: Float)",
         "turnPageTarget(scroll: Int, direction: Int, page: Int, limit: Int)",
         "nearestPageTarget(scroll: Int, page: Int, limit: Int)",
-        "gapForOwnPage(startWithoutGap: Int, page: Int)",
-        "gaps(keys: List<ToolbarKey>, ownPage: Set<ToolbarKey>, icon: Int, page: Int)",
         "performFling(initialVelocity: Float)",
         "class ToolbarPaging",
+        "class Layout",
         "class PagedToolbarFling"
       ]
     },
@@ -55031,6 +55188,7 @@
         "defaultSecondRowToolbarPref",
         "defaultClipboardToolbarPref",
         "TOOLBAR_LAYOUT_REVISION",
+        "toolbarLayoutRevisionPending",
         "upgradeToolbarPrefs",
         "getEnabledToolbarKeys",
         "getSecondRowToolbarKeys",
@@ -55058,6 +55216,7 @@
         "helium314.keyboard.latin.R",
         "helium314.keyboard.latin.common.Constants.Separators",
         "helium314.keyboard.latin.settings.Defaults",
+        "helium314.keyboard.latin.settings.GrammarMode",
         "helium314.keyboard.latin.settings.Settings",
         "helium314.keyboard.latin.utils.ToolbarKey.*",
         "kotlinx.coroutines.Dispatchers",
@@ -55077,6 +55236,7 @@
         "getCodeForToolbarKey(key: ToolbarKey)",
         "getCodeForToolbarKeyLongClick(key: ToolbarKey)",
         "adoptToolbarLayoutRevision(prefs: SharedPreferences)",
+        "toolbarLayoutRevisionPending(prefs: SharedPreferences)",
         "upgradeToolbarPrefs(prefs: SharedPreferences)",
         "upgradeToolbarPref(prefs: SharedPreferences, pref: String, default: String)",
         "getEnabledToolbarKeys(prefs: SharedPreferences)",
@@ -55275,6 +55435,18 @@
         "unsetBatchMode()",
         "setRejectedBatchModeSuggestion(final String rejectedSuggestion)",
         "getRejectedBatchModeSuggestion()"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/settings/ConfigsOrder.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsEntry"
+      ],
+      "imports": [],
+      "symbols": [
+        "class ConfigsEntry"
       ]
     },
     {
@@ -56785,6 +56957,44 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/settings/screens/AutocompleteScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutocompleteScreen"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.WindowInsetsSides",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.only",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.safeDrawing",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Scaffold",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "helium314.keyboard.latin.autofill.AutofillSchemas",
+        "helium314.keyboard.latin.autofill.SchemaTable",
+        "helium314.keyboard.latin.R",
+        "helium314.keyboard.settings.SearchSettingsScreen",
+        "helium314.keyboard.settings.preferences.PreferenceCategory"
+      ],
+      "symbols": [
+        "AutocompleteScreen(onClickBack: ()",
+        "SchemaTableView(table: SchemaTable)"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/keyboard/src/main/java/helium314/keyboard/settings/screens/ClipboardSettingsScreen.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -57365,6 +57575,33 @@
       ],
       "imports": [
         "android.content.Context",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.WindowInsetsSides",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.only",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.safeDrawing",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Scaffold",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.collectAsState",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.alpha",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "helium314.keyboard.latin.settings.EngineOrigin",
+        "helium314.keyboard.latin.settings.GrammarEngines",
+        "helium314.keyboard.latin.settings.GrammarMode",
+        "helium314.keyboard.latin.utils.Log",
+        "helium314.keyboard.latin.utils.getActivity",
+        "helium314.keyboard.latin.utils.prefs",
+        "helium314.keyboard.settings.SettingsActivity",
+        "helium314.keyboard.settings.preferences.PreferenceCategory",
         "androidx.compose.material3.Surface",
         "androidx.compose.runtime.Composable",
         "androidx.compose.ui.platform.LocalContext",
@@ -57376,15 +57613,12 @@
         "helium314.keyboard.latin.utils.Theme",
         "helium314.keyboard.latin.utils.previewDark",
         "helium314.keyboard.settings.SearchSettingsScreen",
-        "helium314.keyboard.settings.Setting",
-        "helium314.keyboard.settings.initPreview",
-        "helium314.keyboard.settings.preferences.ListPreference",
-        "helium314.keyboard.settings.preferences.SwitchPreference",
-        "helium314.keyboard.settings.preferences.TextInputPreference"
+        "helium314.keyboard.settings.Setting"
       ],
       "symbols": [
         "createGrammarSettings(context: Context)",
         "GrammarCheckScreen(onClickBack: ()",
+        "EnginesList()",
         "PreferencePreview()"
       ]
     },
@@ -57475,6 +57709,7 @@
         "helium314.keyboard.latin.utils.SubtypeLocaleUtils.displayName",
         "helium314.keyboard.latin.utils.SubtypeSettings",
         "helium314.keyboard.latin.utils.NextScreenIcon",
+        "helium314.keyboard.settings.ConfigsEntry",
         "helium314.keyboard.settings.SearchSettingsScreen",
         "helium314.keyboard.latin.utils.Theme",
         "helium314.keyboard.settings.initPreview",
@@ -58302,6 +58537,7 @@
         "helium314.keyboard.settings.screens.SecondaryLayoutScreen",
         "helium314.keyboard.settings.screens.SubtypeScreen",
         "helium314.keyboard.settings.screens.AiRoutingScreen",
+        "helium314.keyboard.settings.screens.AutocompleteScreen",
         "helium314.keyboard.settings.screens.UpdateScreen",
         "helium314.keyboard.settings.screens.GrammarCheckScreen",
         "helium314.keyboard.settings.screens.TextEnhanceScreen",
@@ -58310,8 +58546,7 @@
         "helium314.keyboard.settings.screens.ToolbarScreen",
         "helium314.keyboard.settings.screens.TranslationInfoScreen",
         "helium314.keyboard.settings.screens.EmojiInfoScreen",
-        "helium314.keyboard.settings.screens.VoiceTranscriptInfoScreen",
-        "helium314.keyboard.settings.screens.ClipboardSettingsScreen"
+        "helium314.keyboard.settings.screens.VoiceTranscriptInfoScreen"
       ],
       "symbols": [
         "SettingsNavHost( onClickBack: ()",
@@ -58397,6 +58632,27 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/keyboard/emoji/EmojiMergeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "EmojiMergeTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "pinnedIsOnTopAndRecentBelowWithoutRepeats()",
+        "theMergedPageIsTheRecentsPageAndTheFirstOneOpened()",
+        "aLongPressPinsOnTheMergedPageAndOpensThePickerOnTheOthers()",
+        "theSearchBoxLooksUpLowerCasedWordsOnce()",
+        "class EmojiMergeTest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/keyboard/emoji/EmojiPageIndicatorMathTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -58444,6 +58700,35 @@
         "toolbarKeyAndBackLeadBackToTyping()",
         "lockedConfigChangeWhileClipboardOpenKeepsTheExit()",
         "class KeyboardViewStateTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/latin/autofill/AutocompleteItemsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AutocompleteItemsTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.autofill.AutofillAddress",
+        "com.diegonmarcos.superapp.autofill.AutofillContact",
+        "com.diegonmarcos.superapp.autofill.AutofillProfile",
+        "com.diegonmarcos.superapp.autofill.AutofillSot",
+        "com.diegonmarcos.superapp.autofill.Snippet",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "theAccountTablesAreTheProvidersOwnColumns()",
+        "everySchemaOfTheFleetIsInTheOnePlace()",
+        "rowsComeFromProfilesContactsAddressesSnippetsThenTheVault()",
+        "sensitiveRowsAreMaskedUntilUnlocked()",
+        "aSensitiveRowNeedsTheUnlockToPasteOrCopyAndAVaultRowOpensTheVault()",
+        "theUnlockExpiresAndCanBeLocked()",
+        "class AutocompleteItemsTest"
       ]
     },
     {
@@ -58504,6 +58789,53 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/latin/settings/DefaultsMigrationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DefaultsMigrationTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "nothingStoredNeedsNothing()",
+        "aUserStillOnTheOldDefaultsIsMoved()",
+        "aUserWhoTurnedAFixOffKeepsAllThreeAsTheyAre()",
+        "aPartlyStoredGroupStillOnTheOldDefaultIsMoved()",
+        "theSpaceBarChoiceIsIndependentOfTheFixes()",
+        "everyGroupNamesTheValueItWasShippedWith()",
+        "class DefaultsMigrationTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/latin/settings/GrammarModeTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GrammarModeTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "theModeCyclesHighlightAutoCorrectOffAndBack()",
+        "aStoredModeWins()",
+        "withoutAStoredModeTheOldSettingsDecide()",
+        "onlyAutoCorrectCorrectsAndOnlyOffStopsChecking()",
+        "theModeIdsAreStable()",
+        "everyEngineIsListedAndMarkedNativeOrExternal()",
+        "theGrammarFixesAndTheSpaceBarLanguageSwitchAreOffByDefault()",
+        "class GrammarModeTest"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/latin/suggestions/SuggestionStripLayoutTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -58550,11 +58882,15 @@
       ],
       "symbols": [
         "defaultRow()",
-        "aPageIsAsManyWholeIconsAsTheViewportShows()",
-        "theDefaultRowSplitsElevenTenAndTheOwnPageKeyAlone()",
+        "iconsPerPageIsTheViewportDividedByTheCell()",
+        "theCellFollowsTheScale()",
+        "everyScaleMakesEveryPageExactlyOneScreen()",
+        "theOwnPageKeyStartsAPageAtEveryScale()",
+        "theDefaultRowFillsWholePagesAtTheDeclaredScale()",
         "onlyAKeyThatWantsItsOwnPageGetsAGap()",
         "aKeyAlreadyOnAPageBoundaryNeedsNoGap()",
-        "theGapsDoNotMoveWhenTheRowIsLaidOutAgain()",
+        "theLayoutDoesNotMoveWhenTheRowIsLaidOutAgain()",
+        "slotsOfAPageAddUpToThePageWithoutADrift()",
         "aFlingTurnsOnePageAndLandsFlushAtTheEnd()",
         "aSlowDragSettlesOnTheNearestPage()",
         "whenTheIconsFitPagingIsInert()",
@@ -58589,6 +58925,33 @@
         "grey(v: Int)",
         "class TranslatePaletteTest",
         "class Quad"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/keyboard/src/test/java/helium314/keyboard/settings/ConfigsAndLabelsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsAndLabelsTest"
+      ],
+      "imports": [
+        "helium314.keyboard.latin.common.Constants.Separators",
+        "helium314.keyboard.latin.utils.ToolbarKey",
+        "helium314.keyboard.latin.utils.defaultToolbarPref",
+        "java.io.File",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "string(file: File, name: String)",
+        "toolbarIsFirstInConfigsAndAutocompleteFollowsClipboard()",
+        "theThreeRenamesAreLabelsOnly()",
+        "noTranslationKeepsTheOldLabels()",
+        "theGrammarPageAndItsEngineSettingAreNamedApart()",
+        "theFirstToolbarPageHasOneGrammarModeIconAndTheAutocompleteIconInTheFreedSlot()",
+        "class ConfigsAndLabelsTest"
       ]
     },
     {
@@ -197858,6 +198221,20 @@
         "bad()",
         "scratch()",
         "plant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-keyboard/test/test-keyboard-autocomplete-schemas.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "pass()",
+        "fail()"
+      ],
+      "imports": [],
+      "symbols": [
+        "pass()",
+        "fail()"
       ]
     },
     {
