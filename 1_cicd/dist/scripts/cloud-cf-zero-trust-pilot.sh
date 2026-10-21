@@ -116,6 +116,8 @@ do_plan() {
   terraform show -json tfplan > tfplan.json
   echo "── changes by action ──"
   jq -r '.resource_changes[] | select(.change.actions != ["no-op"]) | "\(.change.actions|join("+"))\t\(.address)"' tfplan.json | sort
+  # Attribute NAMES that differ (never values) on non-secret zero-trust addresses: what to fix in code.
+  jq -r '.resource_changes[] | select(.change.actions != ["no-op"] and (.address|test("zt_(org|vnet|warp|smtp|fleet|dns)"))) | . as $r | ($r.change.before // {}) as $b | ($r.change.after // {}) as $a | "  attrs \($r.address): " + ([($a|keys[]?), ($b|keys[]?)] | unique | map(select(. as $k | ($b[$k]) != ($a[$k]) and ($k|test("secret|token|tunnel_secret")|not))) | join(","))' tfplan.json | sort
 }
 
 commit_back() { # commit_back <msg> <paths...>
