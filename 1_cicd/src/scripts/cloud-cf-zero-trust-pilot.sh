@@ -266,7 +266,10 @@ do_drift() {
               "access/identity_providers|cloudflare_zero_trust_access_identity_provider" \
               "access/service_tokens?per_page=100|cloudflare_zero_trust_access_service_token" \
               "gateway/rules|cloudflare_zero_trust_gateway_policy" \
-              "gateway/locations|cloudflare_zero_trust_dns_location"; do
+              "gateway/locations|cloudflare_zero_trust_dns_location" \
+              "teamnet/virtual_networks?is_deleted=false|cloudflare_zero_trust_tunnel_virtual_network" \
+              "cfd_tunnel?is_deleted=false&per_page=100|cloudflare_zero_trust_tunnel_cloudflared" \
+              "teamnet/routes?is_deleted=false|cloudflare_zero_trust_tunnel_route"; do
     path="${spec%%|*}"; typ="${spec##*|}"
     live="$(cf "/accounts/$ACCT/$path" | jq '.result | length')"
     held="$(grep -c "^$typ\." state.txt || true)"
