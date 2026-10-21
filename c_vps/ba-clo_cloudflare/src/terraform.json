@@ -205,5 +205,55 @@
     "min_tls_version": "1.2",
     "automatic_https_rewrites": "on",
     "opportunistic_encryption": "on"
+  },
+
+  "zero_trust": {
+    "_doc": "Cloudflare One (Zero Trust) — PRIMARY auth + network edge, Authelia stays the FALLBACK. Design: a0_docs/eng-specs/cloudflare-zero-trust.md. Rendered by zero-trust.tf. Phase 1 = tunnel + cloudflared on oci-apps (always on) + ONE pilot Access app, ONE service token, ONE Gateway private-DNS override (gated by org_enabled). No existing hostname is touched in phase 1.",
+    "_org_enabled_doc": "false until the owner enables Zero Trust on the account (dashboard → Zero Trust → pick team name → Free plan). The 2026-10-14 probe returned access.api.error.not_enabled. While false, ONLY the tunnel (no public hostname, catch-all 404) is created — nothing is exposed. Flip to true, then run the cf-zero-trust workflow [zt:plan] → [zt:apply] → [zt:verify].",
+    "org_enabled": true,
+    "_tunnel_ingress_doc": "false = tunnel fleet-edge keeps only the catch-all 404 (pilot apply is pure creates). true adds the spec-zt ingress rule: one in-place update of cloudflare_zero_trust_tunnel_cloudflared_config.zt_fleet; rollback = set false and re-apply.",
+    "tunnel_ingress": false,
+    "team_name": "diegonmarcos",
+    "tunnel": {
+      "name": "fleet-edge",
+      "_doc": "ONE remotely-managed tunnel for the whole fleet. Connectors (cloudflared replicas) run on fleet VMs and reach origins over the WireGuard mesh (10.0.0.0/24), so a hostname can point at any VM. Phase 1: one replica on oci-apps (a_solutions/infra-net_cloudflared). Credentials: tunnel token in sops only.",
+      "catchall_service": "http_status:404"
+    },
+    "identity": {
+      "_doc": "No IdP existed (Access was never enabled). Phase 1 = Cloudflare one-time PIN (no client secret to manage, mail to me@ arrives via CF Email Routing → worker → Gmail + Stalwart). Phase 2 adds Google (OAuth client the owner creates) as the primary button; OTP stays as break-glass.",
+      "idp": "onetimepin",
+      "owner_emails": [
+        "me@diegonmarcos.com"
+      ],
+      "session_duration": "24h"
+    },
+    "pilot_app": {
+      "_doc": "Pilot = cloud-spec (static spec site, busybox httpd on oci-apps :3080, read-only, no user data). Its EXISTING route https://cloud.diegonmarcos.com/spec/ (Caddy + Authelia + WG gate) is untouched; the pilot adds a NEW hostname next to it. The DNS record depends_on the Access app, so the hostname is never live without Access in front.",
+      "name": "cloud-spec (zt pilot)",
+      "hostname": "spec-zt.diegonmarcos.com",
+      "record_name": "spec-zt",
+      "service": "http://10.0.0.6:3080"
+    },
+    "service_tokens": [
+      {
+        "key": "pilot",
+        "name": "zt-pilot-machine",
+        "duration": "8760h",
+        "_doc": "Machine bearer for API/MCP/CI clients: send CF-Access-Client-Id + CF-Access-Client-Secret headers. Secret leaves terraform only sops-encrypted (src/secrets.zt-service-token.yaml)."
+      }
+    ],
+    "private_dns": {
+      "_doc": "Gateway DNS location 'fleet' + DNS override policies = private names resolved by Cloudflare. Names live under fleet.internal (ICANN-reserved .internal: never collides with the public zone or its '*' wildcard, and never leaks to public DNS). Hickory (10.0.0.1) stays the fleet resolver and fallback; phase 2 points Hickory's forwarder at this location (DoT/DoH).",
+      "location_name": "fleet",
+      "records": [
+        {
+          "fqdn": "oci-apps.fleet.internal",
+          "ips": [
+            "10.0.0.6"
+          ],
+          "precedence": 1000
+        }
+      ]
+    }
   }
 }
