@@ -278,6 +278,11 @@ do_drift() {
     if [ "$live" != "$held" ]; then echo "DRIFT: $typ has $live live object(s) but terraform holds $held (server-only objects are not in code)"; DRIFT=1; fi
   done
   rm -f state.txt
+  # Settings the provider cannot manage (gateway settings crash it): compared with the pinned values.
+  while IFS=$'\t' read -r path jqx want; do
+    got="$(cf "/accounts/$ACCT/$path" | jq -r "$jqx")"
+    if [ "$got" = "$want" ]; then echo "  asserted $path $jqx = $got"; else echo "DRIFT: $path $jqx is '$got', code pins '$want'"; DRIFT=1; fi
+  done < <(jq -r '.zero_trust.adopted.asserted_settings[]|[.path,.jq,.equals]|@tsv' "$CFG")
   tf_cleanup
   [ "$DRIFT" -eq 0 ] && echo "no drift: live Cloudflare One == repo" || return 1
 }

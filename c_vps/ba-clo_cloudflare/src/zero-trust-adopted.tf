@@ -115,21 +115,19 @@ import {
 # nothing live or in state touched until that plan shows zero changes.
 # =============================================================================
 
-# "" = off, "true" = every component, or a comma list of: fallback, cert, gateway, posture
+# "" = off, "true" = every component, or a comma list of: fallback, cert, posture
 variable "zt_adopt_settings" {
   type    = string
   default = ""
 }
 
 locals {
-  zt_set_sel  = var.zt_adopt_settings == "true" || try(local.zt_ad.settings_enabled, false) ? ["fallback", "cert", "gateway", "posture"] : compact(split(",", var.zt_adopt_settings))
+  zt_set_sel  = var.zt_adopt_settings == "true" || try(local.zt_ad.settings_enabled, false) ? ["fallback", "cert", "posture"] : compact(split(",", var.zt_adopt_settings))
   zt_fb_n     = (local.zt_n == 1 && contains(local.zt_set_sel, "fallback")) ? 1 : 0
-  zt_cert_n   = (local.zt_n == 1 && (contains(local.zt_set_sel, "cert") || contains(local.zt_set_sel, "gateway"))) ? 1 : 0
-  zt_gw_n     = (local.zt_n == 1 && contains(local.zt_set_sel, "gateway")) ? 1 : 0
+  zt_cert_n   = (local.zt_n == 1 && contains(local.zt_set_sel, "cert")) ? 1 : 0
   zt_post_n   = (local.zt_n == 1 && contains(local.zt_set_sel, "posture")) ? 1 : 0
   zt_fb_imp   = { for i in range(local.zt_fb_n) : tostring(i) => i }
   zt_cert_imp = { for i in range(local.zt_cert_n) : tostring(i) => i }
-  zt_gw_imp   = { for i in range(local.zt_gw_n) : tostring(i) => i }
   zt_post_imp = { for i in range(local.zt_post_n) : tostring(i) => i }
 }
 
@@ -166,18 +164,11 @@ import {
   id       = "${local.config.account_id}/${local.zt_ad.gateway_certificate_id}"
 }
 
-resource "cloudflare_zero_trust_gateway_settings" "zt_gateway" {
-  count               = local.zt_gw_n
-  account_id          = local.config.account_id
-  tls_decrypt_enabled = false
-  lifecycle { ignore_changes = all }
-}
-
-import {
-  for_each = local.zt_gw_imp
-  to       = cloudflare_zero_trust_gateway_settings.zt_gateway[each.value]
-  id       = local.config.account_id
-}
+# NOT adopted as a resource: cloudflare_zero_trust_gateway_settings (and its alias
+# cloudflare_teams_account) crash the v4.52.7 provider plugin on every read of this
+# account ("Plugin did not respond", even with a minimal config). Those values are pinned
+# instead as asserted expectations in terraform.json .zero_trust.adopted.asserted_settings
+# and compared with the live API by the drift run (mode drift).
 
 # Built-in posture rules (created by Cloudflare when the org was created).
 resource "cloudflare_zero_trust_device_posture_rule" "zt_posture_gateway" {
