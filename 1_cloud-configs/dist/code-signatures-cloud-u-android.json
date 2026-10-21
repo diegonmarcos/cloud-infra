@@ -6,13 +6,13 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21902,
+    "files": 21903,
     "by_lang": {
       "js": 481,
       "sh": 533,
       "py": 148,
       "kotlin": 11506,
-      "java": 635,
+      "java": 636,
       "ts": 8461,
       "nix": 31,
       "rust": 107
@@ -21,7 +21,7 @@
       "file": 2275,
       "shell": 422,
       "script": 241,
-      "java": 634,
+      "java": 635,
       "entrypoint": 23,
       "module": 6414,
       "compose": 1,
@@ -7365,6 +7365,7 @@
         "com.diegonmarcos.superapp.launcher.AppInstall",
         "com.diegonmarcos.superapp.launcher.AppLongPressMenu",
         "com.diegonmarcos.superapp.launcher.Sections",
+        "com.diegonmarcos.superapp.launcher.TileSeparator",
         "com.diegonmarcos.superapp.ui.LauncherPalette",
         "com.diegonmarcos.superapp.ui.snack",
         "com.diegonmarcos.superapp.R",
@@ -7397,8 +7398,7 @@
         "androidx.compose.foundation.lazy.LazyListScope",
         "androidx.compose.foundation.lazy.LazyRow",
         "androidx.compose.foundation.lazy.items",
-        "androidx.compose.foundation.shape.RoundedCornerShape",
-        "androidx.compose.material3.Icon"
+        "androidx.compose.foundation.shape.RoundedCornerShape"
       ],
       "symbols": [
         "onCreate(savedInstanceState: android.os.Bundle?)",
@@ -10748,7 +10748,6 @@
         "android.content.Context",
         "android.os.Bundle",
         "androidx.compose.foundation.clickable",
-        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.PaddingValues",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -10767,7 +10766,8 @@
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.produceState",
         "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.setValue"
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment"
       ],
       "symbols": [
         "palette()",
@@ -11189,7 +11189,6 @@
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.height",
-        "androidx.compose.foundation.layout.offset",
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
         "androidx.compose.foundation.layout.wrapContentHeight",
@@ -11209,13 +11208,14 @@
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.painterResource",
         "androidx.compose.ui.semantics.clearAndSetSemantics",
-        "androidx.compose.ui.semantics.testTag",
         "androidx.compose.ui.text.style.TextAlign",
         "androidx.compose.ui.text.style.TextOverflow",
         "androidx.compose.ui.unit.Dp",
         "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.unit.sp",
-        "com.diegonmarcos.superapp.extinstall.extInstallRing"
+        "com.diegonmarcos.superapp.extinstall.extInstallRing",
+        "com.diegonmarcos.superapp.settings.GridColumns",
+        "com.diegonmarcos.superapp.ui.Haptics"
       ],
       "symbols": [
         "tileIconDp(widthPx: Int, density: Float, cols: Int, pageDp: Int, chromeDp: Int)",
@@ -11225,13 +11225,13 @@
         "largestIconDp()",
         "count()",
         "clear()",
-        "tileSepTag(id: String)",
-        "TileDivider(tag: String, iconCentreY: Dp, edgeShift: Dp, modifier: Modifier = Modifier)",
+        "TileSeparator(text: String, modifier: Modifier = Modifier)",
         "TileGroupHeader(text: String, modifier: Modifier = Modifier, compact: Boolean = false)",
         "TileSubgroupHeader(text: String, modifier: Modifier = Modifier, compact: Boolean = false)",
         "tileTag(id: String)",
         "tileIconTag(id: String)",
         "CompactTile(tileId: String, label: String, @DrawableRes iconRes: Int, onClick: ()",
+        "tileSepTag(id: String)",
         "class TileMetrics",
         "class Sample"
       ]
@@ -11923,7 +11923,6 @@
         "com.diegonmarcos.superapp.uikit.LocalKitPalette",
         "androidx.annotation.DrawableRes",
         "androidx.compose.foundation.layout.Arrangement",
-        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.IntrinsicSize",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.Column",
@@ -11939,7 +11938,6 @@
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
-        "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
@@ -17318,6 +17316,8 @@
         "androidx.compose.ui.test.performScrollToNode",
         "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
         "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.onRoot",
+        "androidx.compose.ui.test.printToString",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.superapp.launcher.AppDrawerSheetFragment",
         "com.diegonmarcos.superapp.launcher.GroupedTilesFragment",
@@ -198407,6 +198407,31 @@
       "imports": [],
       "symbols": [
         "isBenchOutPathAllowed(path: String?)"
+      ]
+    },
+    {
+      "path": "ac_cloud-mail/app/src/main/java/eu/faircode/email/ViewModelUnread.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "ViewModelUnread"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.annotation.NonNull",
+        "androidx.lifecycle.AndroidViewModel",
+        "androidx.lifecycle.LiveData",
+        "androidx.paging.DataSource",
+        "androidx.paging.LivePagedListBuilder",
+        "androidx.paging.PagedList",
+        "java.util.List"
+      ],
+      "symbols": [
+        "ViewModelUnread(@NonNull Application application)",
+        "clearMessages()",
+        "class keys",
+        "class ViewModelUnread",
+        "class comment"
       ]
     },
     {
