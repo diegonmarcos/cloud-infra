@@ -142,7 +142,7 @@ resource "cloudflare_zero_trust_dns_location" "zt_fleet" {
   count          = local.zt_n
   account_id     = local.config.account_id
   name           = local.zt.private_dns.location_name
-  client_default = false
+  client_default = true  # Cloudflare forces true on the account's first location; code matches live
   ecs_support    = false
   # The v4 provider sends endpoints=[] when the block is absent and the API
   # answers "empty endpoint": declare them (DoH only; no IP/DoT exposure).
