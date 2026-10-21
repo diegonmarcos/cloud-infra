@@ -6,25 +6,25 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2974,
+    "files": 2978,
     "by_lang": {
       "sh": 158,
       "nix": 177,
-      "py": 865,
+      "py": 867,
       "ts": 1157,
-      "js": 81,
+      "js": 83,
       "rust": 536
     },
     "by_role": {
       "shell": 148,
       "nix-module": 19,
-      "python": 854,
+      "python": 855,
       "module": 707,
-      "file": 327,
+      "file": 329,
       "script": 8,
       "flake": 80,
       "compose": 78,
-      "entrypoint": 49,
+      "entrypoint": 50,
       "mcp-tool": 115,
       "workflow-dag": 5,
       "rust-module": 531,
@@ -882,6 +882,17 @@
         "node:child_process",
         "node:path",
         "node:url"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "_shared/test-public-route-allowlist.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs",
+        "node:path"
       ],
       "symbols": []
     },
@@ -7359,6 +7370,23 @@
         "baseImage",
         "apt",
         "title"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-me-api/src/gen-c3-datasets.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "build",
+        "GROUPS"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "node:url"
+      ],
+      "symbols": [
+        "build()"
       ]
     },
     {
@@ -18058,7 +18086,31 @@
       ]
     },
     {
-      "path": "infra-sec_auth-broker/parked/src/compose.nix",
+      "path": "infra-sec_auth-broker/src/code/main.py",
+      "lang": "py",
+      "role": "entrypoint",
+      "exports": [
+        "b64e(b)",
+        "b64d(s)",
+        "make_handler(b)",
+        "main()",
+        "class Broker"
+      ],
+      "imports": [
+        "http.server",
+        "base64",
+        "urllib.error"
+      ],
+      "symbols": [
+        "b64e(b)",
+        "b64d(s)",
+        "make_handler(b)",
+        "main()",
+        "class Broker"
+      ]
+    },
+    {
+      "path": "infra-sec_auth-broker/src/compose.nix",
       "lang": "nix",
       "role": "compose",
       "exports": [
@@ -18069,34 +18121,20 @@
       "symbols": [
         "ab",
         "up",
-        "secretKey",
         "mk",
         "image",
         "container_name",
         "ports",
-        "volumes",
         "restart",
         "environment",
-        "OAUTH2_PROXY_PROVIDER",
-        "OAUTH2_PROXY_CLIENT_ID",
-        "OAUTH2_PROXY_CLIENT_SECRET",
-        "OAUTH2_PROXY_COOKIE_SECRET",
-        "OAUTH2_PROXY_HTTP_ADDRESS",
-        "OAUTH2_PROXY_PROXY_PREFIX",
-        "OAUTH2_PROXY_SCOPE",
-        "OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE",
-        "OAUTH2_PROXY_COOKIE_NAME",
-        "OAUTH2_PROXY_COOKIE_DOMAINS",
-        "OAUTH2_PROXY_WHITELIST_DOMAINS",
-        "OAUTH2_PROXY_COOKIE_EXPIRE",
-        "OAUTH2_PROXY_COOKIE_REFRESH",
-        "OAUTH2_PROXY_COOKIE_SECURE",
-        "OAUTH2_PROXY_COOKIE_SAMESITE",
-        "OAUTH2_PROXY_REVERSE_PROXY",
-        "OAUTH2_PROXY_UPSTREAMS",
-        "OAUTH2_PROXY_SET_XAUTHREQUEST",
-        "OAUTH2_PROXY_SKIP_PROVIDER_BUTTON",
-        "OAUTH2_PROXY_SILENCE_PING_LOGGING",
+        "BROKER_PROVIDER",
+        "PORT",
+        "BIND_HOST",
+        "BROKER_CONFIG",
+        "AUTH_BROKER_COOKIE_SECRET",
+        "healthcheck",
+        "test",
+        "interval",
         "limits",
         "reservations",
         "logging",
@@ -18104,7 +18142,7 @@
       ]
     },
     {
-      "path": "infra-sec_auth-broker/parked/src/flake.nix",
+      "path": "infra-sec_auth-broker/src/flake.nix",
       "lang": "nix",
       "role": "flake",
       "exports": [
@@ -18125,15 +18163,56 @@
         "buildJson",
         "container",
         "engine",
-        "lib",
-        "allowedEmails",
+        "nb",
         "packages",
         "pkgs",
         "default",
         "srcDir",
         "templates",
         "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
         "title"
+      ]
+    },
+    {
+      "path": "infra-sec_auth-broker/src/test/test-broker.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "ok(msg)",
+        "need(cond, msg)",
+        "serve(handler, port)",
+        "mkcfg(github_on=True, google_on=True)",
+        "start(cfg, pid, port)",
+        "http(url, method=\"GET\", body=None, headers=None)",
+        "post(base, prefix, op, body=None, headers=XHR)",
+        "cookie_of(h)",
+        "login(base, b, prefix, rd=\"/\", user=None, token=None)",
+        "class Stub",
+        "class SH"
+      ],
+      "imports": [
+        "http.server",
+        "copy",
+        "main",
+        "base64"
+      ],
+      "symbols": [
+        "ok(msg)",
+        "need(cond, msg)",
+        "serve(handler, port)",
+        "mkcfg(github_on=True, google_on=True)",
+        "start(cfg, pid, port)",
+        "http(url, method=\"GET\", body=None, headers=None)",
+        "post(base, prefix, op, body=None, headers=XHR)",
+        "cookie_of(h)",
+        "login(base, b, prefix, rd=\"/\", user=None, token=None)",
+        "class Stub",
+        "class SH"
       ]
     },
     {

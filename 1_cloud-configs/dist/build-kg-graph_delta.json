@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 333,
-    "edges": 459,
+    "nodes": 336,
+    "edges": 462,
     "by_table": {
       "vm": 4,
-      "service": 79,
-      "container": 95,
-      "domain": 45,
+      "service": 80,
+      "container": 97,
+      "domain": 44,
       "repo": 3,
-      "module": 79,
+      "module": 80,
       "package": 28
     }
   },
@@ -386,7 +386,7 @@
         "name": "cloud-me-api",
         "category": "app",
         "description": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063).",
-        "domain": "api.diegonmarcos.com/me",
+        "domain": null,
         "port": 8124,
         "vm": "oci-analytics",
         "folder": "infra-api_cloud-me-api"
@@ -1163,6 +1163,44 @@
         "image": null,
         "role": "app",
         "port": null,
+        "public": false
+      }
+    },
+    {
+      "table": "service",
+      "id": "auth_broker",
+      "key": "service:auth_broker",
+      "properties": {
+        "name": "auth-broker",
+        "category": "sec",
+        "description": "Identity broker for the multi-SSO sign-in: GitHub and Google by the OAuth device flow, owner only (#1066)",
+        "domain": null,
+        "port": null,
+        "vm": "oci-apps",
+        "folder": "infra-sec_auth-broker"
+      }
+    },
+    {
+      "table": "container",
+      "id": "auth_broker_google",
+      "key": "container:auth_broker_google",
+      "properties": {
+        "name": "auth-broker-google",
+        "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
+        "role": "google",
+        "port": 4180,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "auth_broker_github",
+      "key": "container:auth_broker_github",
+      "properties": {
+        "name": "auth-broker-github",
+        "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
+        "role": "github",
+        "port": 4181,
         "public": false
       }
     },
@@ -2414,14 +2452,6 @@
     },
     {
       "table": "domain",
-      "id": "api_diegonmarcos_com/me",
-      "key": "domain:api_diegonmarcos_com/me",
-      "properties": {
-        "fqdn": "api.diegonmarcos.com/me"
-      }
-    },
-    {
-      "table": "domain",
       "id": "api_diegonmarcos_com/git",
       "key": "domain:api_diegonmarcos_com/git",
       "properties": {
@@ -3149,6 +3179,17 @@
         "repo": "cloud",
         "category": "tools",
         "service": "disk-janitor"
+      }
+    },
+    {
+      "table": "module",
+      "id": "infra_sec_auth_broker",
+      "key": "module:infra_sec_auth_broker",
+      "properties": {
+        "name": "infra-sec_auth-broker",
+        "repo": "cloud",
+        "category": "sec",
+        "service": "auth-broker"
       }
     },
     {
@@ -4583,6 +4624,31 @@
     },
     {
       "table": "hosted_on",
+      "from": "service:auth_broker",
+      "to": "vm:oci_apps",
+      "key": "service:auth_broker->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:auth_broker",
+      "to": "container:auth_broker_google",
+      "key": "service:auth_broker->runs_container->container:auth_broker_google",
+      "properties": {
+        "role": "google"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:auth_broker",
+      "to": "container:auth_broker_github",
+      "key": "service:auth_broker->runs_container->container:auth_broker_github",
+      "properties": {
+        "role": "github"
+      }
+    },
+    {
+      "table": "hosted_on",
       "from": "service:authelia",
       "to": "vm:gcp_proxy",
       "key": "service:authelia->hosted_on->vm:gcp_proxy",
@@ -5407,15 +5473,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:cloud_me_api",
-      "to": "service:caddy",
-      "key": "service:cloud_me_api->proxied_by->service:caddy",
-      "properties": {
-        "domain": "api.diegonmarcos.com/me"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:cloud_superapp_mcp",
       "to": "service:caddy",
       "key": "service:cloud_superapp_mcp->proxied_by->service:caddy",
@@ -5830,13 +5887,6 @@
       "from": "domain:mcp_diegonmarcos_com",
       "to": "service:cloud_mail_mcp",
       "key": "domain:mcp_diegonmarcos_com->routes_to->service:cloud_mail_mcp",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:api_diegonmarcos_com/me",
-      "to": "service:cloud_me_api",
-      "key": "domain:api_diegonmarcos_com/me->routes_to->service:cloud_me_api",
       "properties": {}
     },
     {
@@ -6663,6 +6713,20 @@
       "from": "module:infra_ops_disk_janitor",
       "to": "service:disk_janitor",
       "key": "module:infra_ops_disk_janitor->implements->service:disk_janitor",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_sec_auth_broker",
+      "to": "repo:cloud",
+      "key": "module:infra_sec_auth_broker->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_sec_auth_broker",
+      "to": "service:auth_broker",
+      "key": "module:infra_sec_auth_broker->implements->service:auth_broker",
       "properties": {}
     },
     {

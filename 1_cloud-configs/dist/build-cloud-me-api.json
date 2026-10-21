@@ -34,15 +34,6 @@
     "port_env": "PORT",
     "dns": "cloud-me-api.app",
     "public": true,
-    "proxy": {
-      "auth": "two_factor",
-      "type": "path",
-      "parent_domain": "api.diegonmarcos.com",
-      "base_path": "/me",
-      "public_paths": [
-        "/me/health"
-      ]
-    },
     "healthcheck": "/health",
     "monitoring": {
       "tls_check": true,
@@ -311,13 +302,12 @@
       },
       "vm": "oci-analytics",
       "healthcheck": "/health",
-      "domain": "api.diegonmarcos.com/me",
       "description": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063).",
       "api": {
         "has_api": true,
-        "has_web_ui": true,
+        "has_web_ui": false,
         "api_path": "/me",
-        "api_url": "https://api.diegonmarcos.com/me/me",
+        "api_url": null,
         "healthcheck_paths": [
           "/health"
         ],
@@ -909,6 +899,26 @@
         "api_path": null,
         "api_url": null,
         "healthcheck_paths": []
+      }
+    },
+    "auth-broker": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "google": 4180,
+        "github": 4181
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/oauth2/google/health",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub and Google by the OAuth device flow, owner only (#1066)",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": [
+          "/oauth2/google/health",
+          "/oauth2/github/health"
+        ]
       }
     },
     "authelia": {
@@ -1966,26 +1976,21 @@
       "known_hosts": "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
     },
     "datasets": {
-      "_doc": "name -> {repo,path}. The c3-* front ends fetch /me/config/<site>.",
+      "_doc": "name -> {builtin} | {repo,path}. The c3-* front ends fetch /me/config/<site>. builtin = real fleet config generated from this repo's build.json files by src/gen-c3-datasets.mjs into src/code/data/ (shipped in the image, never hand-edited; the test fails when stale). No placeholder seed is read.",
       "c3-mail": {
-        "repo": "cloud-me-containers",
-        "path": "c3/c3-mail.json"
+        "builtin": "data/c3-mail.json"
       },
       "c3-security-network": {
-        "repo": "cloud-me-containers",
-        "path": "c3/c3-security-network.json"
+        "builtin": "data/c3-security-network.json"
       },
       "c3-dns-routing": {
-        "repo": "cloud-me-containers",
-        "path": "c3/c3-dns-routing.json"
+        "builtin": "data/c3-dns-routing.json"
       },
       "c3-observability": {
-        "repo": "cloud-me-containers",
-        "path": "c3/c3-observability.json"
+        "builtin": "data/c3-observability.json"
       },
       "c3-mcp-apis": {
-        "repo": "cloud-me-containers",
-        "path": "c3/c3-mcp-apis.json"
+        "builtin": "data/c3-mcp-apis.json"
       }
     },
     "files": {

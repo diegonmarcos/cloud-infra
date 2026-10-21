@@ -112,6 +112,8 @@
         "umami-setup",
         "agents-tmp-reaper",
         "disk-janitor",
+        "auth-broker-google",
+        "auth-broker-github",
         "crowdsec",
         "cloud-cgc-pub-mcp",
         "cloud-cgc-pvt-mcp",
@@ -1701,7 +1703,6 @@
       "vm": "oci-E2-f_1",
       "folder": "infra-api_cloud-me-api",
       "description": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063).",
-      "domain": "api.diegonmarcos.com/me",
       "port": 8124,
       "dns": "cloud-me-api.app",
       "upstream": "10.0.0.4:8124",
@@ -1713,15 +1714,6 @@
           "port_env": "PORT",
           "dns": "cloud-me-api.app",
           "public": true,
-          "proxy": {
-            "auth": "two_factor",
-            "type": "path",
-            "parent_domain": "api.diegonmarcos.com",
-            "base_path": "/me",
-            "public_paths": [
-              "/me/health"
-            ]
-          },
           "healthcheck": "/health",
           "monitoring": {
             "tls_check": true,
@@ -1749,19 +1741,6 @@
         "containers": [],
         "ports": [],
         "networks": []
-      },
-      "proxy": {
-        "_doc": "auth=two_factor is the Caddy mkProtected block: Bearer -> forward_auth introspect-proxy, with the interactive Authelia session as the non-bearer fallback. Only /me/health is pre-auth (public_paths), and it answers {status,service} and nothing about the repos. Everything else, including /me/config/*, is never reachable unauthenticated, and the service verifies the credential itself too (direct mesh dials have no edge gate).",
-        "primary": {
-          "wg_only": false,
-          "auth": "two_factor",
-          "type": "path",
-          "parent_domain": "api.diegonmarcos.com",
-          "base_path": "/me",
-          "public_paths": [
-            "/me/health"
-          ]
-        }
       },
       "declared_ports": {
         "app": 8124
@@ -3740,6 +3719,65 @@
         "networks": []
       },
       "flake": "infra-ops_disk-janitor"
+    },
+    "auth-broker": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-sec_auth-broker",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub and Google by the OAuth device flow, owner only (#1066)",
+      "dns": "auth-broker.app",
+      "containers": {
+        "google": {
+          "container_name": "auth-broker-google",
+          "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
+          "port": 4180,
+          "public": false,
+          "healthcheck": "/oauth2/google/health",
+          "volumes": [],
+          "env_file": true,
+          "resources": {
+            "mem_reservation": "16m",
+            "mem_limit": "64m"
+          },
+          "protocol": "http"
+        },
+        "github": {
+          "container_name": "auth-broker-github",
+          "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
+          "port": 4181,
+          "public": false,
+          "healthcheck": "/oauth2/github/health",
+          "volumes": [],
+          "env_file": true,
+          "resources": {
+            "mem_reservation": "16m",
+            "mem_limit": "64m"
+          },
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "auth-broker-google",
+        "auth-broker-github"
+      ],
+      "all_ports": [
+        "4180",
+        "4181"
+      ],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "app_hub": false
+      },
+      "declared_ports": {
+        "google": 4180,
+        "github": 4181
+      },
+      "flake": "infra-sec_auth-broker"
     },
     "authelia": {
       "category": "sec",

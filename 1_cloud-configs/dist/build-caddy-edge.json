@@ -905,14 +905,6 @@
           "comment": "C3 Public API — single public-edge listener on oci-analytics. Consolidates http-to-smtp-proxy-api (Bearer-gated /mail/*) and c3-analytics-api passthrough (public /analytics/*). Replaces split listeners across gcp-proxy + oci-analytics so gcp-proxy becomes a pure wg0 spoke."
         },
         {
-          "base_path": "/me",
-          "upstream": "10.0.0.4:8124",
-          "public_paths": [
-            "/me/health"
-          ],
-          "comment": "Cloud Me API: read-only, authenticated read path to the owner's private cloud-me-* repos. The service holds one READ-ONLY deploy key per repo server-side, keeps a shallow clone of each declared repo, and serves declared JSON datasets (and filtered config files) to fleet apps, so no app holds a GitHub credential (#1079). First consumer: the cloud-webapps c3-* sites (#1063)."
-        },
-        {
           "base_path": "/git",
           "upstream": "10.0.0.4:8123",
           "public_paths": [

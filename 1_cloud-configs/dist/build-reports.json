@@ -26,10 +26,6 @@
       "url": "https://api.diegonmarcos.com/c3-services-api/health"
     },
     {
-      "service": "cloud-me-api",
-      "url": "https://api.diegonmarcos.com/me/health"
-    },
-    {
       "service": "git-proxy-api",
       "url": "https://api.diegonmarcos.com/git/health"
     },
@@ -162,10 +158,6 @@
     {
       "service": "c3-services-api",
       "domain": "api.diegonmarcos.com/c3-services-api"
-    },
-    {
-      "service": "cloud-me-api",
-      "domain": "api.diegonmarcos.com/me"
     },
     {
       "service": "git-proxy-api",
@@ -308,10 +300,6 @@
     {
       "service": "c3-services-api",
       "domain": "api.diegonmarcos.com/c3-services-api"
-    },
-    {
-      "service": "cloud-me-api",
-      "domain": "api.diegonmarcos.com/me"
     },
     {
       "service": "git-proxy-api",
@@ -588,7 +576,7 @@
     "cloud-me-api": {
       "name": "cloud-me-api",
       "vm": "oci-E2-f_1",
-      "domain": "api.diegonmarcos.com/me",
+      "domain": null,
       "enabled": true,
       "category": "app",
       "ports": {
@@ -963,6 +951,18 @@
       "enabled": true,
       "category": "tools",
       "ports": null,
+      "health": null
+    },
+    "auth-broker": {
+      "name": "auth-broker",
+      "vm": "oci-A1-f_0",
+      "domain": null,
+      "enabled": true,
+      "category": "sec",
+      "ports": {
+        "google": 4180,
+        "github": 4181
+      },
       "health": null
     },
     "authelia": {
@@ -1783,6 +1783,10 @@
       "dns": "umami-setup.app"
     },
     {
+      "service": "auth-broker",
+      "dns": "auth-broker.app"
+    },
+    {
       "service": "authelia",
       "dns": "authelia.app"
     },
@@ -2277,6 +2281,7 @@
           "umami",
           "agents-tmp-reaper",
           "disk-janitor",
+          "auth-broker",
           "crowdsec",
           "cloud-cgc-pub-mcp",
           "hermes-agent",
@@ -2469,7 +2474,7 @@
       "cloud-me-api": {
         "name": "cloud-me-api",
         "vm": "oci-E2-f_1",
-        "domain": "api.diegonmarcos.com/me",
+        "domain": null,
         "enabled": true,
         "category": "app",
         "ports": {
@@ -2844,6 +2849,18 @@
         "enabled": true,
         "category": "tools",
         "ports": null,
+        "health": null
+      },
+      "auth-broker": {
+        "name": "auth-broker",
+        "vm": "oci-A1-f_0",
+        "domain": null,
+        "enabled": true,
+        "category": "sec",
+        "ports": {
+          "google": 4180,
+          "github": 4181
+        },
         "health": null
       },
       "authelia": {
