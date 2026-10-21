@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21903,
+    "files": 21912,
     "by_lang": {
       "js": 481,
       "sh": 533,
       "py": 148,
-      "kotlin": 11506,
+      "kotlin": 11515,
       "java": 636,
       "ts": 8461,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11503,
+      "kotlin": 11512,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -8320,7 +8320,7 @@
       ],
       "imports": [
         "androidx.compose.runtime.Composable",
-        "com.diegonmarcos.superapp.adbdebug.AdbShellScreen",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellHostedPage",
         "com.diegonmarcos.superapp.ui.LauncherPalette",
         "com.diegonmarcos.superapp.uikit.KitComposeFragment"
       ],
@@ -9835,6 +9835,39 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/AdbPeerDots.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.adbdebug.AdbPeers",
+        "com.diegonmarcos.superapp.adbdebug.PeerLink",
+        "com.diegonmarcos.superapp.adbdebug.PeerStatus"
+      ],
+      "symbols": [
+        "tint(link: PeerLink)",
+        "links(statuses: List<PeerStatus>)",
+        "tints(statuses: List<PeerStatus>)",
+        "describe(statuses: List<PeerStatus>)",
+        "PeerDots(tints: List<Int>, description: String, modifier: Modifier = Modifier)",
+        "class AdbPeerDots",
+        "class as"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/launcher/AggregatorFeeds.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -11152,6 +11185,7 @@
         "refreshBattery(intent: Intent)",
         "refreshUsb(intent: Intent?)",
         "refreshTether(i: Intent)",
+        "noteAdbPeers(list: List<com.diegonmarcos.superapp.adbdebug.PeerStatus>, pin: Boolean = false)",
         "refreshAdb()",
         "refreshWifiLevel()",
         "refreshWgLevel()",
@@ -11164,8 +11198,7 @@
         "SignalDots(level: Int, tint: Int, modifier: Modifier = Modifier)",
         "IconLabel(text: String, tint: Int, modifier: Modifier = Modifier)",
         "Tappable(tag: String, onTap: (IntRect)",
-        "PetAbove(model: StatusStripModel, toolId: String)",
-        "LauncherStripContent(model: StatusStripModel)"
+        "PetAbove(model: StatusStripModel, toolId: String)"
       ]
     },
     {
@@ -16953,9 +16986,12 @@
       "exports": [
         "ShellToolbarState",
         "OrbGlyph",
-        "ShellToolbarRow"
+        "ShellToolbarRow",
+        "ShellTopInset"
       ],
       "imports": [
+        "android.view.View",
+        "android.view.ViewGroup",
         "androidx.annotation.DrawableRes",
         "androidx.compose.animation.core.Animatable",
         "androidx.compose.animation.core.tween",
@@ -16993,7 +17029,15 @@
         "OrbGlyph(@DrawableRes res: Int, modifier: Modifier = Modifier)",
         "ShellToolbarRow(onMenu: ()",
         "wiggle(a: Animatable<Float, *>, peak: Float)",
-        "class ShellToolbarState"
+        "insetPx(declaredPx: Int, islandShown: Boolean, islandBottomPx: Int)",
+        "viewOrNull(id: Int)",
+        "topIn(ancestor: View, v: View)",
+        "insetFor(root: View, host: View)",
+        "currentInsetPx(root: View)",
+        "apply(root: View)",
+        "install(root: View)",
+        "class ShellToolbarState",
+        "class ShellTopInset"
       ]
     },
     {
@@ -18395,6 +18439,26 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/configs/AdbShellInFrameTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbShellInFrameTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.ShellActivity",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellHost",
+        "com.diegonmarcos.superapp.launcher.SectionPages",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class AdbShellInFrameTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/configs/BadgePanesLiveBadgeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -18848,6 +18912,48 @@
         "theQuestionOffersEveryFolderButTheSink()",
         "aStoreRowNobodyFiledStaysUnshelvedWithoutASuggestion()",
         "class PhoneJevTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/AdbPeerDotsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbPeerDotsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.wrapContentSize",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.adbdebug.AdbPeers",
+        "com.diegonmarcos.superapp.adbdebug.PeerLink",
+        "com.diegonmarcos.superapp.adbdebug.PeerStatus",
+        "com.diegonmarcos.superapp.settings.LauncherSettingsPrefs",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.ui.ShellFxState",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "petsOff()",
+        "showStrip(peers: List<PeerStatus>)",
+        "onAllNodesTagged(tag: String)",
+        "centre(tag: String)",
+        "greenness(tag: String)",
+        "class AdbPeerDotsTest"
       ]
     },
     {
@@ -19549,6 +19655,81 @@
       ],
       "symbols": [
         "class PlaceholderPagesComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/ShellTopInsetGuardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShellTopInsetGuardTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.graphics.Paint",
+        "android.view.ContextThemeWrapper",
+        "android.view.Gravity",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.FrameLayout",
+        "androidx.compose.ui.semantics.SemanticsProperties",
+        "androidx.compose.ui.semantics.getOrNull",
+        "androidx.compose.ui.test.SemanticsMatcher",
+        "androidx.compose.ui.test.hasSetTextAction",
+        "androidx.compose.ui.test.performTextInput",
+        "androidx.fragment.app.Fragment",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "com.diegonmarcos.superapp.ui.ShellTopInset",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.ParameterizedRobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File",
+        "java.time.Duration"
+      ],
+      "symbols": [
+        "keys()",
+        "params()",
+        "px(dp: Int)",
+        "pageFor(k: String)",
+        "buildShell()",
+        "host(page: Fragment)",
+        "settle(stripDp: Int)",
+        "windowTop(v: View)",
+        "viewTops(v: View, out: MutableList<Pair<String, Int>> = mutableListOf()",
+        "pageViewTops()",
+        "composeTops()",
+        "shot(name: String, limitPx: Float)",
+        "class ShellTopInsetGuardTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/ShellTopInsetStaticGuardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ShellTopInsetStaticGuardTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.ui.ShellTopInset",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "text(f: File)",
+        "applyLauncherChrome()",
+        "class ShellTopInsetStaticGuardTest"
       ]
     },
     {
@@ -66633,11 +66814,80 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/main/java/com/diegonmarcos/superapp/adbdebug/AdbPeerReader.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbPeerReader",
+        "AdbStatusProvider"
+      ],
+      "imports": [
+        "android.content.ContentProvider",
+        "android.content.ContentValues",
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.database.Cursor",
+        "android.net.Uri",
+        "android.os.Binder",
+        "android.os.Bundle",
+        "android.os.Process",
+        "com.diegonmarcos.superapp.core.FleetConfig"
+      ],
+      "symbols": [
+        "ownLink(ctx: Context, now: Long = System.currentTimeMillis()",
+        "own(ctx: Context, peer: AdbPeer)",
+        "remote(ctx: Context, peer: AdbPeer)",
+        "read(ctx: Context, peers: List<AdbPeer> = AdbPeers.FLEET)",
+        "pairingHeldElsewhere(ctx: Context)",
+        "peers(ctx: Context)",
+        "onCreate()",
+        "call(method: String, arg: String?, extras: Bundle?)",
+        "query(uri: Uri, p: Array<out String>?, s: String?, a: Array<out String>?, o: String?)",
+        "getType(uri: Uri)",
+        "insert(uri: Uri, values: ContentValues?)",
+        "delete(uri: Uri, s: String?, a: Array<out String>?)",
+        "update(uri: Uri, v: ContentValues?, s: String?, a: Array<out String>?)",
+        "class AdbPeerReader",
+        "class Probe",
+        "class AdbStatusProvider"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/main/java/com/diegonmarcos/superapp/adbdebug/AdbPeers.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbPeer",
+        "PeerLink",
+        "PeerStatus",
+        "AdbPeers",
+        "PairingClaim"
+      ],
+      "imports": [],
+      "symbols": [
+        "linkOf(state: ConnState)",
+        "parseLink(name: String?)",
+        "title(link: PeerLink)",
+        "dot(link: PeerLink)",
+        "holdsPairing(s: PeerStatus, now: Long)",
+        "pairingHeldElsewhere(ownApplicationId: String, statuses: List<PeerStatus>, now: Long)",
+        "pairingRefusal(holder: PeerStatus)",
+        "take(now: Long = System.currentTimeMillis()",
+        "release()",
+        "class AdbPeer",
+        "class PeerLink",
+        "class PeerStatus",
+        "class AdbPeers",
+        "class PairingClaim"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/main/java/com/diegonmarcos/superapp/adbdebug/AdbShellActivity.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
         "AdbShellActivity",
+        "AdbShellHost",
         "AdbShellLink"
       ],
       "imports": [
@@ -66649,8 +66899,10 @@
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
+        "openAdbShellInFrame()",
         "open(ctx: Context)",
         "class AdbShellActivity",
+        "class AdbShellHost",
         "class AdbShellLink"
       ]
     },
@@ -66686,6 +66938,9 @@
       "role": "kotlin",
       "exports": [
         "AdbShellPage",
+        "AdbShellHostedPage",
+        "HOSTED_TAG",
+        "HOSTED_PAD",
         "AdbShellScreen",
         "AdbShellChip"
       ],
@@ -66744,6 +66999,7 @@
         "AdbShellPage(modifier: Modifier = Modifier)",
         "connect()",
         "runChannelAction(action: ChannelAction, work: (Context)",
+        "AdbShellHostedPage(pad: androidx.compose.ui.unit.Dp = HOSTED_PAD)",
         "AdbShellScreen(dark: Boolean? = null)",
         "denseTypography()",
         "d()",
@@ -67577,6 +67833,25 @@
         "currentTouchesOnlyTheHeldValueAndClearEmptiesIt()",
         "noSharedAdbCodeHardCodesAnAppLabel()",
         "class AdbIdentityTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/shizuku-adb-debug-tools/src/test/java/com/diegonmarcos/superapp/adbdebug/AdbPeersTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AdbPeersTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class AdbPeersTest"
       ]
     },
     {
@@ -469633,8 +469908,7 @@
         "androidx.compose.ui.text.input.PasswordVisualTransformation",
         "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.unit.sp",
-        "com.diegonmarcos.superapp.adbdebug.AdbIdentity",
-        "com.diegonmarcos.superapp.adbdebug.AdbShellPage",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellHostedPage",
         "com.diegonmarcos.superapp.ai.AiFleetChat",
         "com.diegonmarcos.superapp.ai.AiSettingsPickers",
         "com.diegonmarcos.superapp.ai.materialAiTheme",
@@ -469743,6 +470017,7 @@
         "androidx.compose.ui.graphics.vector.ImageVector",
         "androidx.compose.ui.graphics.vector.rememberVectorPainter",
         "com.diegonmarcos.superapp.ai.AiFleetChatPanel",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellHost",
         "com.diegonmarcos.superapp.bottomnav.AppTopBarScaffold",
         "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
         "com.diegonmarcos.superapp.bottomnav.FleetChrome",
@@ -469753,11 +470028,11 @@
         "com.diegonmarcos.superapp.bottomnav.TopBarDrawer",
         "com.diegonmarcos.superapp.bottomnav.islandEntries",
         "com.diegonmarcos.superapp.bottomnav.rememberAccountLauncher",
-        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
-        "androidx.appcompat.app.AppCompatActivity"
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
+        "openAdbShellInFrame()",
         "onNewIntent(intent: Intent)",
         "StoreShell()",
         "pageOf(section: NavSection)",
@@ -469947,6 +470222,57 @@
       "symbols": [
         "evaluate()",
         "class AccessPageTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-store/app/src/test/java/com/diegonmarcos/cloudstore/ConfigsAdbShellTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ConfigsAdbShellTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.ContextWrapper",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.material3.Surface",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithText",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.fragment.app.FragmentActivity",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellActivity",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellHost",
+        "com.diegonmarcos.superapp.adbdebug.AdbShellLink",
+        "com.diegonmarcos.superapp.adbdebug.HOSTED_TAG",
+        "com.diegonmarcos.superapp.uikit.KitDenseMaterial",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "evaluate()",
+        "openAdbShellInFrame()",
+        "class ConfigsAdbShellTest",
+        "class FrameHost"
       ]
     },
     {
