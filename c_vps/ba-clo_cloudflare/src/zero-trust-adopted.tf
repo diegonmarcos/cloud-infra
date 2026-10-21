@@ -105,3 +105,108 @@ import {
   to = cloudflare_zero_trust_tunnel_cloudflared.zt_smtp_proxy
   id = "${local.config.account_id}/${local.zt_ad.smtp_tunnel.id}"
 }
+
+# =============================================================================
+# Remaining account-level Zero Trust settings (#994): WARP fallback domains, the
+# account device/proxy settings + TLS decrypt switch (gateway settings), the
+# Gateway-managed CA certificate and the two built-in device posture rules.
+# GATED by var.zt_adopt_settings / .zero_trust.adopted.settings_enabled so the very
+# first plan can be run from main (workflow_dispatch input adopt_settings) with
+# nothing live or in state touched until that plan shows zero changes.
+# =============================================================================
+
+variable "zt_adopt_settings" {
+  type    = bool
+  default = false
+}
+
+locals {
+  zt_set_on = (local.zt_n == 1) && (var.zt_adopt_settings || try(local.zt_ad.settings_enabled, false))
+  zt_set_n  = local.zt_set_on ? 1 : 0
+  zt_set_imp = { for i in range(local.zt_set_n) : tostring(i) => i }
+}
+
+resource "cloudflare_zero_trust_local_fallback_domain" "zt_fallback" {
+  count      = local.zt_set_n
+  account_id = local.config.account_id
+  dynamic "domains" {
+    for_each = local.zt_ad.fallback_domains
+    content {
+      suffix = domains.value
+    }
+  }
+}
+
+import {
+  for_each = local.zt_set_imp
+  to       = cloudflare_zero_trust_local_fallback_domain.zt_fallback[each.value]
+  id       = local.config.account_id
+}
+
+resource "cloudflare_zero_trust_gateway_certificate" "zt_gateway_ca" {
+  count           = local.zt_set_n
+  account_id      = local.config.account_id
+  gateway_managed = true
+  activate        = true
+  lifecycle { ignore_changes = [validity_period_days, activate, gateway_managed, custom] }
+}
+
+import {
+  for_each = local.zt_set_imp
+  to       = cloudflare_zero_trust_gateway_certificate.zt_gateway_ca[each.value]
+  id       = "${local.config.account_id}/${local.zt_ad.gateway_certificate_id}"
+}
+
+resource "cloudflare_zero_trust_gateway_settings" "zt_gateway" {
+  count                = local.zt_set_n
+  account_id           = local.config.account_id
+  tls_decrypt_enabled  = false
+  certificate {
+    id = cloudflare_zero_trust_gateway_certificate.zt_gateway_ca[0].id
+  }
+  proxy {
+    tcp              = true
+    udp              = true
+    root_ca          = false
+    virtual_ip       = true
+    disable_for_time = 0
+  }
+  # Everything else is unset live (antivirus, block page, logging, fips, ...): the
+  # provider models those as blocks and would plan empty-block updates every run.
+  lifecycle { ignore_changes = [antivirus, block_page, body_scanning, extended_email_matching, fips, logging, payload_log, ssh_session_log, activity_log_enabled, protocol_detection_enabled, non_identity_browser_isolation_enabled, url_browser_isolation_enabled, custom_certificate] }
+}
+
+import {
+  for_each = local.zt_set_imp
+  to       = cloudflare_zero_trust_gateway_settings.zt_gateway[each.value]
+  id       = local.config.account_id
+}
+
+# Built-in posture rules (created by Cloudflare when the org was created).
+resource "cloudflare_zero_trust_device_posture_rule" "zt_posture_gateway" {
+  count      = local.zt_set_n
+  account_id = local.config.account_id
+  type       = "gateway"
+  name       = "Gateway"
+  lifecycle { ignore_changes = [description, schedule, expiration, match, input] }
+}
+
+import {
+  for_each = local.zt_set_imp
+  to       = cloudflare_zero_trust_device_posture_rule.zt_posture_gateway[each.value]
+  id       = "${local.config.account_id}/${local.zt_ad.posture_rule_ids.gateway}"
+}
+
+resource "cloudflare_zero_trust_device_posture_rule" "zt_posture_warp" {
+  count      = local.zt_set_n
+  account_id = local.config.account_id
+  type       = "warp"
+  name       = "WARP"
+  lifecycle { ignore_changes = [description, schedule, expiration, match, input] }
+}
+
+import {
+  for_each = local.zt_set_imp
+  to       = cloudflare_zero_trust_device_posture_rule.zt_posture_warp[each.value]
+  id       = "${local.config.account_id}/${local.zt_ad.posture_rule_ids.warp}"
+}

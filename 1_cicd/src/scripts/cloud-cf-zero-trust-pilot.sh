@@ -86,6 +86,7 @@ tf_prepare() {
   awk 'index($0, "INJECTED_FROM_SECRETS") == 0 && index($0, "CHANGE_ME") == 0' terraform.tfvars.template > terraform.tfvars
   export TF_VAR_cloudflare_api_key="$CLOUDFLARE_API_KEY"
   export TF_IN_AUTOMATION=1
+  export TF_VAR_zt_adopt_settings="${ZT_ADOPT_SETTINGS:-false}"
   terraform init -input=false -no-color >/dev/null
 }
 
@@ -104,7 +105,7 @@ do_plan() {
   echo "── changes by action ──"
   jq -r '.resource_changes[] | select(.change.actions != ["no-op"]) | "\(.change.actions|join("+"))\t\(.address)"' tfplan.json | sort
   # Attribute NAMES that differ (never values) on non-secret zero-trust addresses: what to fix in code.
-  jq -r '.resource_changes[] | select(.change.actions != ["no-op"] and (.address|test("zt_(org|vnet|warp|smtp|fleet|dns)"))) | . as $r | ($r.change.before // {}) as $b | ($r.change.after // {}) as $a | "  attrs \($r.address): " + ([($a|keys[]?), ($b|keys[]?)] | unique | map(select(. as $k | ($b[$k]) != ($a[$k]) and ($k|test("secret|token|tunnel_secret")|not))) | join(","))' tfplan.json | sort
+  jq -r '.resource_changes[] | select(.change.actions != ["no-op"] and (.address|test("zt_(org|vnet|warp|smtp|fleet|dns|fallback|gateway|posture)"))) | . as $r | ($r.change.before // {}) as $b | ($r.change.after // {}) as $a | "  attrs \($r.address): " + ([($a|keys[]?), ($b|keys[]?)] | unique | map(select(. as $k | ($b[$k]) != ($a[$k]) and ($k|test("secret|token|tunnel_secret")|not))) | join(","))' tfplan.json | sort
 }
 
 commit_back() { # commit_back <msg> <paths...>

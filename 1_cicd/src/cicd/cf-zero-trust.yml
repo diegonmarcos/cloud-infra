@@ -38,6 +38,11 @@ on:
         required: true
         default: "plan"
         type: string
+      adopt_settings:
+        description: "true = include the gated account-settings adoption (fallback domains, gateway settings, CA, posture) in this run"
+        required: false
+        default: "false"
+        type: string
 
 concurrency:
   # Same group as ship-terraform: never two writers of terraform.tfstate.enc.
@@ -53,6 +58,7 @@ jobs:
       SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
       CLOUDFLARE_API_KEY: ${{ secrets.CLOUDFLARE_API_KEY }}
       CLOUDFLARE_EMAIL: ${{ secrets.CLOUDFLARE_EMAIL }}
+      ZT_ADOPT_SETTINGS: ${{ inputs.adopt_settings }}
     steps:
       - uses: actions/checkout@v4
         with:
