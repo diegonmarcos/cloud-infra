@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21912,
+    "files": 21918,
     "by_lang": {
       "js": 481,
-      "sh": 533,
+      "sh": 534,
       "py": 148,
-      "kotlin": 11515,
+      "kotlin": 11520,
       "java": 636,
       "ts": 8461,
       "nix": 31,
@@ -19,14 +19,14 @@
     },
     "by_role": {
       "file": 2275,
-      "shell": 422,
+      "shell": 423,
       "script": 241,
       "java": 635,
       "entrypoint": 23,
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11512,
+      "kotlin": 11517,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -17362,8 +17362,6 @@
         "androidx.compose.ui.test.performScrollToNode",
         "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
         "androidx.compose.ui.test.performClick",
-        "androidx.compose.ui.test.onRoot",
-        "androidx.compose.ui.test.printToString",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.superapp.launcher.AppDrawerSheetFragment",
         "com.diegonmarcos.superapp.launcher.GroupedTilesFragment",
@@ -25883,6 +25881,26 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GroupTitle",
+        "Tile"
+      ],
+      "imports": [
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "com.diegonmarcos.superapp.uikit.KitListRow",
+        "com.diegonmarcos.superapp.uikit.KitSectionHeader",
+        "com.diegonmarcos.superapp.uikit.KitState"
+      ],
+      "symbols": [
+        "GroupTitle(text: String, modifier: Modifier = Modifier)",
+        "Tile( label: String, modifier: Modifier = Modifier, secondary: String = \"\", pill: Pair<String, KitState>? = null, tag: String = label, onClick: (()"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/AccountVaultTabs.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -26673,6 +26691,108 @@
         "stepTitle(id: String)",
         "buttonLabel(id: String)",
         "class RunbookTags"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/SectionKit.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PublicConfig",
+        "MeshStatus",
+        "ActivityFeed"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "isSecretKey(key: String)",
+        "looksSecret(value: String)",
+        "rows(entry: JSONObject, wanted: List<String>)",
+        "desktops(bundle: JSONObject?)",
+        "containers(bundle: JSONObject?)",
+        "classify(thisPhone: Boolean, tunnelUp: Boolean, reachable: Boolean?)",
+        "word(k: Kind)",
+        "record(ctx: Context, kind: String, text: String, now: Long = System.currentTimeMillis()",
+        "items(ctx: Context)",
+        "clear(ctx: Context)",
+        "parse(json: String?)",
+        "append(json: String?, item: Item)",
+        "class PublicConfig",
+        "class device",
+        "class Entry",
+        "class keyed",
+        "class MeshStatus",
+        "class Kind",
+        "class ActivityFeed",
+        "class Item"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/account/src/main/java/com/diegonmarcos/superapp/profile/SectionPages.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SectionPageTags",
+        "WalletPage",
+        "DesktopConfigsPage",
+        "C3ConfigsPage",
+        "BackupsPage",
+        "DevicesMeshPage",
+        "ActivityPage"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.Context",
+        "android.content.ContextWrapper",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableIntStateOf",
+        "androidx.compose.runtime.mutableStateMapOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.uikit.KitAction",
+        "com.diegonmarcos.superapp.uikit.KitActionBar",
+        "com.diegonmarcos.superapp.uikit.KitState",
+        "com.diegonmarcos.superapp.uikit.KitStatusBanner",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext",
+        "java.io.File",
+        "java.net.InetAddress",
+        "java.text.SimpleDateFormat",
+        "java.util.Date",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "hostActivity()",
+        "SectionColumn(tag: String, content: @Composable ()",
+        "openRoute(ctx: Context, route: String, say: (String)",
+        "WalletPage()",
+        "DesktopConfigsPage()",
+        "C3ConfigsPage()",
+        "BackupsPage()",
+        "runtimeStores(ctx: Context)",
+        "DevicesMeshPage()",
+        "probe()",
+        "ActivityPage()",
+        "class SectionPageTags",
+        "class devices"
       ]
     },
     {
@@ -72354,6 +72474,7 @@
         "androidx.work.Worker",
         "androidx.work.WorkerParameters",
         "com.diegonmarcos.superapp.profile.AccountDevice",
+        "com.diegonmarcos.superapp.profile.ActivityFeed",
         "com.diegonmarcos.superapp.profile.AutoBackup",
         "com.diegonmarcos.superapp.profile.DeviceVault",
         "java.util.concurrent.TimeUnit"
@@ -72668,6 +72789,7 @@
         "ImportPage"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.profile.ActivityFeed",
         "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Column",
@@ -72706,8 +72828,7 @@
         "com.diegonmarcos.superapp.uikit.KitCard",
         "com.diegonmarcos.superapp.uikit.KitConfirmDialog",
         "com.diegonmarcos.superapp.uikit.KitDensity",
-        "com.diegonmarcos.superapp.uikit.KitEmptyState",
-        "com.diegonmarcos.superapp.uikit.KitFingerprint"
+        "com.diegonmarcos.superapp.uikit.KitEmptyState"
       ],
       "symbols": [
         "cell(p: String, m: AuthMethod)",
@@ -72901,8 +73022,9 @@
         "androidx.compose.foundation.layout.statusBarsPadding",
         "androidx.compose.material.icons.Icons",
         "androidx.compose.material.icons.filled.AccountCircle",
-        "androidx.compose.material.icons.filled.Home",
         "androidx.compose.material.icons.filled.Key",
+        "androidx.compose.material.icons.filled.Notifications",
+        "androidx.compose.material.icons.filled.Share",
         "androidx.compose.material.icons.filled.Settings",
         "androidx.compose.material3.Surface",
         "androidx.compose.runtime.Composable",
@@ -72924,8 +73046,7 @@
         "com.diegonmarcos.cloudaccount.hub.HubNav",
         "com.diegonmarcos.cloudaccount.hub.ImportPage",
         "com.diegonmarcos.cloudaccount.hub.LocalDeviceAuth",
-        "com.diegonmarcos.cloudaccount.hub.SecretsProvidersPage",
-        "com.diegonmarcos.cloudaccount.hub.SystemDeviceAuth"
+        "com.diegonmarcos.cloudaccount.hub.SecretsProvidersPage"
       ],
       "symbols": [
         "pickText(onText: (String)",
@@ -73161,10 +73282,11 @@
         "setUp()",
         "fakeJwt(exp: Long)",
         "b64(s: String)",
-        "islandOrderIsProfilesSecretsHomeConfigs()",
+        "bottomNavIsPersonalConfigsDataConnectActivity()",
         "everyOldPageIsReachable()",
         "strippedPagesSitUnderOneContainerEach()",
         "path(section: String, page: String)",
+        "tabs(section: String)",
         "openIntentDeepLinksResolveThroughTheSameMap()",
         "i(section: String?, page: String?)",
         "connectionsMatrixIsBuiltFromStoredAuthState()",
@@ -73233,6 +73355,97 @@
         "withoutMailTheVaultKeepsTheCopyForTheNextExportAndTheImportStillSucceeds()",
         "aBundleWithoutSignaturesStillExportsAndImportsAsBefore()",
         "class MailSignaturesTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/app/src/test/java/com/diegonmarcos/cloudaccount/SectionScreensTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SectionScreensTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.statusBarsPadding",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.Star",
+        "androidx.compose.material3.Surface",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.CompositionLocalProvider",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.vector.rememberVectorPainter",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.SemanticsMatcher",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.cloudaccount.autofill.AutofillProfilesPage",
+        "com.diegonmarcos.cloudaccount.hub.AppProfilesPage",
+        "com.diegonmarcos.cloudaccount.hub.ConnectionsPage",
+        "com.diegonmarcos.cloudaccount.hub.LocalDeviceAuth",
+        "com.diegonmarcos.cloudaccount.hub.SecretsProvidersPage",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
+        "com.diegonmarcos.superapp.bottomnav.islandEntries",
+        "com.diegonmarcos.superapp.profile.AccountHost",
+        "com.diegonmarcos.superapp.profile.AccountModel",
+        "com.diegonmarcos.superapp.profile.AccountPermsPage",
+        "com.diegonmarcos.superapp.profile.AccountProfilePage",
+        "com.diegonmarcos.superapp.profile.AccountStore",
+        "com.diegonmarcos.superapp.profile.ActivityFeed",
+        "com.diegonmarcos.superapp.profile.ActivityPage",
+        "com.diegonmarcos.superapp.profile.BackupsPage",
+        "com.diegonmarcos.superapp.profile.C3ConfigsPage",
+        "com.diegonmarcos.superapp.profile.DesktopConfigsPage",
+        "com.diegonmarcos.superapp.profile.DevicesMeshPage"
+      ],
+      "symbols": [
+        "evaluate()",
+        "seed()",
+        "PageFor(go: (String, String)",
+        "Chrome()",
+        "shot(name: String)",
+        "pages()",
+        "class SectionScreensTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/app/src/test/java/com/diegonmarcos/cloudaccount/SectionsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SectionsTest"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.profile.ActivityFeed",
+        "com.diegonmarcos.superapp.profile.MeshStatus",
+        "com.diegonmarcos.superapp.profile.PublicConfig",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner"
+      ],
+      "symbols": [
+        "fakeToken()",
+        "fakeJwt()",
+        "configsSectionIsExactlyTheAllowedPages()",
+        "publicConfigDropsEverySecretKeyAndValue()",
+        "declaredDesktopsAndContainersShowOnlyPublicFields()",
+        "meshStatusWords()",
+        "activityLogKeepsNewestFirstAndCapsAndRefusesSecrets()",
+        "class SectionsTest"
       ]
     },
     {
@@ -73399,6 +73612,20 @@
         "check()",
         "ok()",
         "bad()",
+        "mutate()"
+      ]
+    },
+    {
+      "path": "ac_cloud-account/test/test-account-configs-public.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "mutate()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
         "mutate()"
       ]
     },
