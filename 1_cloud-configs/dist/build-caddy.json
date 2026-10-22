@@ -829,6 +829,14 @@
       "comment": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
     },
     {
+      "domain": "c3-tokens-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:4184",
+      "auth": "none",
+      "wg_only": true,
+      "container": "tokens-api",
+      "comment": "c3 container tokens-api (mesh-only; tokens-api-http-4184.app)"
+    },
+    {
       "domain": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
       "upstream": "10.0.0.6:3105",
       "auth": "none",
@@ -2018,6 +2026,11 @@
       "private_name": "cloud.crowdsec.app"
     },
     {
+      "service": "tokens-api.app",
+      "upstream": "10.0.0.6:4184",
+      "private_name": "cloud.tokens-api.app"
+    },
+    {
       "service": "cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105",
       "private_name": "cloud.cloud-cgc-pub-mcp.app"
@@ -2376,6 +2389,12 @@
       "source": "internal_routes"
     },
     {
+      "service": "cloud.tokens-api.app",
+      "upstream": "10.0.0.6:4184",
+      "alias_of": "tokens-api.app",
+      "source": "internal_routes"
+    },
+    {
       "service": "cloud.cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105",
       "alias_of": "cloud-cgc-pub-mcp.app",
@@ -2714,6 +2733,12 @@
     {
       "service": "c3-crowdsec.app",
       "upstream": "10.0.0.6:8088",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
+      "service": "c3-tokens-api.app",
+      "upstream": "10.0.0.6:4184",
       "scheme": "c3",
       "source": "url_scheme"
     },
@@ -3057,6 +3082,11 @@
         "host": "c3-crowdsec.diegonmarcos.com",
         "container": "crowdsec",
         "private": "c3-crowdsec.app"
+      },
+      {
+        "host": "c3-tokens-api.diegonmarcos.com",
+        "container": "tokens-api",
+        "private": "c3-tokens-api.app"
       },
       {
         "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
@@ -4138,6 +4168,27 @@
       "port": 8088,
       "protocol": "http",
       "upstream": "10.0.0.6:8088",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
+      "service": "tokens-api.app",
+      "redirect_to": "https://tokens-api-http-4184.app",
+      "container": "tokens-api",
+      "container_key": "app",
+      "svc": "tokens-api",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "tokens-api-http-4184.app",
+      "container": "tokens-api",
+      "container_key": "app",
+      "svc": "tokens-api",
+      "vm": "oci-A1-f_0",
+      "port": 4184,
+      "protocol": "http",
+      "upstream": "10.0.0.6:4184",
       "source": "containers.app.port"
     },
     {
@@ -5556,6 +5607,16 @@
       "notes": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
     },
     {
+      "host": "c3-tokens-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:4184",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container tokens-api (mesh-only; tokens-api-http-4184.app)"
+    },
+    {
       "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:3105",
@@ -6598,6 +6659,16 @@
       "notes": null
     },
     {
+      "host": "tokens-api.app",
+      "path": null,
+      "upstream": "10.0.0.6:4184",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "cloud-cgc-pub-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
@@ -7147,6 +7218,16 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "crowdsec",
+      "notes": null
+    },
+    {
+      "host": "tokens-api-http-4184.app",
+      "path": null,
+      "upstream": "10.0.0.6:4184",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "tokens-api",
       "notes": null
     },
     {
