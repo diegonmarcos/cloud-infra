@@ -28,8 +28,8 @@ on:
         description: "path of the sops yaml/json file inside the repo"
         required: true
         type: string
-      key:
-        description: "top-level key to set"
+      ops:
+        description: 'JSON list of {"idx": sops index like ["a"]["b"], "from": "cipher"|"literal", "v": literal value}'
         required: true
         type: string
       cipher_file:
@@ -66,26 +66,27 @@ jobs:
       - name: Set the key
         env:
           T_FILE: ${{ inputs.file }}
-          T_KEY: ${{ inputs.key }}
+          T_OPS: ${{ inputs.ops }}
           T_CIPHER: ${{ inputs.cipher_file }}
         run: |
           set -eu
-          case "$T_FILE$T_KEY$T_CIPHER" in *..*|*'"'*|*"'"*|*' '*) echo "::error::refusing odd file/key"; exit 1;; esac
+          case "$T_FILE$T_CIPHER" in *..*|*'"'*|*"'"*|*' '*) echo "::error::refusing odd file/key"; exit 1;; esac
           mkdir -p ~/.config/sops/age && umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
           export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
           SET_VALUE="$(age -d -i ~/.config/sops/age/keys.txt "self/$T_CIPHER")"
           [ -n "$SET_VALUE" ] || { echo "::error::the decrypted value is empty"; exit 1; }
           echo "::add-mask::$SET_VALUE"
           export SET_VALUE
-          printf '%s' "$SET_VALUE" | jq -Rs . | sops set --value-stdin "target/$T_FILE" "[\"$T_KEY\"]"
-          grep -q '^sops:' "target/$T_FILE" || grep -q '"sops"' "target/$T_FILE"
           export T_PATH="target/$T_FILE"
           python3 - <<'PY'
-          import os, sys
-          v, t, k = os.environ["SET_VALUE"], open(os.environ["T_PATH"]).read(), os.environ["T_KEY"]
-          line = [l for l in t.splitlines() if l.startswith(k + ":")]
-          print("key present: %s, encrypted: %s, plaintext in file: %s, value length: %d" % (bool(line), bool(line) and "ENC[" in line[0], v in t, len(v)))
-          sys.exit(0 if line and "ENC[" in line[0] and v not in t else 1)
+          import json, os, subprocess, sys
+          v, path = os.environ["SET_VALUE"], os.environ["T_PATH"]
+          for o in json.loads(os.environ["T_OPS"]):
+              val = v if o.get("from") == "cipher" else o["v"]
+              subprocess.run(["sops", "set", "--value-stdin", path, o["idx"]], input=json.dumps(val).encode(), check=True)
+          t = open(path).read()
+          print("sops metadata present: %s, plaintext in file: %s" % ("sops:" in t, v in t))
+          sys.exit(0 if "sops:" in t and v not in t else 1)
           PY
           mkdir -p out && cp "target/$T_FILE" out/result.enc
       - uses: actions/upload-artifact@v4
