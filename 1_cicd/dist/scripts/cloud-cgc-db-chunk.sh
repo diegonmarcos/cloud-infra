@@ -123,6 +123,37 @@ chunk_quarantine() {  # $1 state in  $2 paths file  $3 reason  $4 state out
      "$1" > "$4.tmp" && mv "$4.tmp" "$4"
 }
 
+# RETRY of a quarantined file, ALONE and with a long budget (#1061). Only a file that hangs by
+# itself stays out. A killed window leaves the file's node persisted WITHOUT its edges, and
+# octocode skips a file whose node hash equals the content hash, so a plain retry would "finish"
+# in seconds with no edges. The retry therefore appends a marker line (comment syntax by
+# extension) so the hash differs and octocode rebuilds the node and discovers its edges; the file
+# is restored afterwards. Empty output = this file cannot carry a marker (no comment syntax), so
+# it cannot be forced and stays quarantined.
+chunk_retry_marker() {  # $1 path → stdout: the line to append, or nothing
+  case "$1" in
+    *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.kt|*.kts|*.java|*.rs|*.go|*.c|*.h|*.cpp|*.hpp|*.cc|*.swift|*.dart|*.scala|*.cs|*.gradle) echo "// cgc-retry" ;;
+    *.py|*.sh|*.bash|*.nix|*.yml|*.yaml|*.toml|*.rb|*.pl|*.r|*.properties) echo "# cgc-retry" ;;
+    *.css|*.scss|*.less) echo "/* cgc-retry */" ;;
+    *.md|*.html|*.xml|*.svg|*.vue) echo "<!-- cgc-retry -->" ;;
+    *) : ;;
+  esac
+}
+
+# Quarantined files still worth a retry: fewer than $2 tries so far.
+chunk_quarantine_pick() {  # $1 state file  $2 max tries → stdout: paths
+  jq -r --argjson m "$2" '. as $s | (.quarantine // {}) | keys[] | select(((($s.quarantine_tries // {})[.]) // 0) < $m)' "$1" 2>/dev/null | LC_ALL=C sort -u
+}
+
+chunk_quarantine_release() {  # $1 state in  $2 path  $3 state out — the file indexed on its own
+  jq --arg p "$2" 'del(.quarantine[$p]) | del(.quarantine_tries[$p])' "$1" > "$3.tmp" && mv "$3.tmp" "$3"
+}
+
+chunk_quarantine_fail() {  # $1 state in  $2 path  $3 reason  $4 state out — it hung (or could not be forced) alone
+  jq --arg p "$2" --arg why "$3" \
+     '.quarantine[$p] = $why | .quarantine_tries[$p] = ((.quarantine_tries[$p] // 0) + 1)' "$1" > "$4.tmp" && mv "$4.tmp" "$4"
+}
+
 # Escape a literal path as an anchored gitignore pattern.
 chunk_glob_escape() {  # stdin paths → stdout patterns
   sed -e 's/[][\\*?!#]/\\&/g' -e 's/^/\//' -e 's/ $/\\ /'

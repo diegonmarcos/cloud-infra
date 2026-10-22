@@ -1787,6 +1787,58 @@ chunk_home_project() {
 # _idx_marker (STRAY-SELECT). Out: _rc (0 converged, 124 not converged or slice expired,
 # else octocode failure), _log (last octocode log), _proj_resolved when known,
 # CHUNK_STATUS (one JSON line).
+
+# One quarantined file, alone (see chunk_retry_marker). Returns 0 when a retry was attempted
+# (the caller re-plans), 1 when nothing is left to retry or no time remains for it.
+cgc_quarantine_retry_one() {  # $1 usable slice minutes
+  _qr_max="${CGC_QUARANTINE_MAX_TRIES:-2}"
+  _qr_budget="${CGC_QUARANTINE_BUDGET_MIN:-150}"
+  _qr_f=$(chunk_quarantine_pick "$_cr_sf_stage" "$_qr_max" | head -n 1)
+  [ -n "$_qr_f" ] || return 1
+  [ "$1" -ge 20 ] 2>/dev/null || return 1
+  [ "$_qr_budget" -gt "$1" ] && _qr_budget="$1"
+  if cgc_repo_is_private "$_cr_r"; then _qr_show="(name withheld: private repo)"; else _qr_show="$_qr_f"; fi
+  _qr_mark=$(chunk_retry_marker "$_qr_f")
+  if [ -z "$_qr_mark" ] || [ ! -f "$_cr_d/$_qr_f" ]; then
+    chunk_quarantine_fail "$_cr_sf_stage" "$_qr_f" "cannot be forced: no comment syntax for a retry marker (or the file is gone), its node has no edges" "$_cr_sf_stage"
+    echo "::warning::[cgc-db] $_cr_r · quarantined $_qr_show cannot be retried (no marker syntax)"
+    return 0
+  fi
+  # A window of exactly this file: the allowlist limits the candidates, the quarantine is lifted
+  # for the plan only.
+  printf '%s\n' "$_qr_f" > "$_cr_o/qallow"
+  chunk_quarantine_release "$_cr_sf_stage" "$_qr_f" "$_cr_o/qstate"
+  chunk_plan "$_cr_d" "$_cr_o/qstate" "$_cr_head" 1 "$_cr_o/qallow" "$_cr_o" >/dev/null
+  [ -s "$_cr_o/next" ] || { chunk_exclude_clear "$_cr_d"; chunk_quarantine_fail "$_cr_sf_stage" "$_qr_f" "not plannable on its own (not embedded yet?)" "$_cr_sf_stage"; return 0; }
+  printf '%s\n' "$_qr_mark" >> "$_cr_d/$_qr_f"
+  chunk_touch_next "$_cr_d" "$_cr_o/next"
+  for _qr_gm in "${OCTO_HOME:?}"/*/storage/git_metadata.lance; do [ -d "$_qr_gm" ] && rm -rf "${_qr_gm:?}"; done
+  echo "[cgc-db] $_cr_r · retrying quarantined $_qr_show ALONE (budget ${_qr_budget}m, try $(( $(jq -r --arg p "$_qr_f" '(.quarantine_tries[$p] // 0)' "$_cr_sf_stage") + 1 ))/$_qr_max)"
+  _qr_l0=0; [ -n "${LLM_PROXY_LOG:-}" ] && [ -f "$LLM_PROXY_LOG" ] && _qr_l0=$(wc -l < "$LLM_PROXY_LOG" | tr -d ' ')
+  _qr_hb=""
+  if [ "${CGC_HEARTBEAT_S:-0}" -gt 0 ] 2>/dev/null; then
+    : > "$_log"
+    chunk_heartbeat "$_cr_r · quarantine retry" "$_log" "${LLM_PROXY_LOG:-}" "$_qr_l0" "$CGC_HEARTBEAT_S" "$_cr_o/octocode.pid" 0 "" &
+    _qr_hb=$!
+  fi
+  _qr_t0=$(date +%s); _qr_rc=0
+  ( cd "$_cr_d" && timeout "${_qr_budget}m" octocode index ) >"$_log" 2>&1 &
+  _qr_op=$!; echo "$_qr_op" > "$_cr_o/octocode.pid"
+  wait "$_qr_op" || _qr_rc=$?
+  _qr_dt=$(( $(date +%s) - _qr_t0 ))
+  [ -z "$_qr_hb" ] || { kill "$_qr_hb" 2>/dev/null || true; wait "$_qr_hb" 2>/dev/null || true; }
+  git -C "$_cr_d" checkout -q -- "$_qr_f" 2>/dev/null || true
+  chunk_exclude_clear "$_cr_d"
+  if [ "$_qr_rc" = "0" ]; then
+    chunk_commit "$_cr_o" "$_cr_head" "$_cr_o/qstate"
+    chunk_quarantine_release "$_cr_o/qstate" "$_qr_f" "$_cr_sf_stage"
+    echo "[cgc-db] $_cr_r · quarantined $_qr_show indexed alone in ${_qr_dt}s, edges included: released from quarantine"
+  else
+    chunk_quarantine_fail "$_cr_sf_stage" "$_qr_f" "hangs ALONE: octocode did not finish it in ${_qr_budget}m (rc=$_qr_rc), $(date -u +%Y-%m-%d), run ${GITHUB_RUN_ID:-local}" "$_cr_sf_stage"
+    echo "::error::[cgc-db] $_cr_r · $_qr_show hangs ALONE (>${_qr_budget}m, rc=$_qr_rc): it stays out of the graphrag index (node without edges), see .quarantine in the chunk state"
+  fi
+  return 0
+}
 chunk_index_repo() {
   _cr_r="$1"; _cr_d="$2"; _cr_head="$3"
   _cr_o="${CGC_SCRATCH:?}/chunk-$_cr_r"; rm -rf "${_cr_o:?}"; mkdir -p "$_cr_o"
@@ -1859,6 +1911,12 @@ chunk_index_repo() {
       _cr_plan_n="$CHUNK_N_DEFAULT"
     fi
     chunk_plan "$_cr_d" "$_cr_sf_stage" "$_cr_head" "$_cr_plan_n" "$_cr_allow" "$_cr_o"
+    # Everything plannable is done: now retry the quarantined files, each ALONE with a long
+    # budget (#1061). One that hangs alone stays out, with the reason and the exact path.
+    if [ ! -s "$_cr_o/next" ] && [ "$MANIFEST_PHASE" = "graphrag" ] && [ -z "${CGC_QUARANTINE_RETRY_OFF:-}" ]; then
+      chunk_exclude_clear "$_cr_d"
+      if cgc_quarantine_retry_one "$_cr_slice"; then continue; fi
+    fi
     if [ ! -s "$_cr_o/next" ]; then
       chunk_exclude_clear "$_cr_d"
       if chunk_converged "$_cr_o/state" "$_cr_o/indexable" ""; then
