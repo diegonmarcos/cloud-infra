@@ -93,30 +93,19 @@ chunk_quarantined_list() {  # $1 = state file → stdout: quarantined paths, sor
   jq -r '(.quarantine // {}) | keys[]' "$1" 2>/dev/null | LC_ALL=C sort -u
 }
 
-# Paths octocode had in flight when a window was killed: nodes it added or was describing,
-# read from the window's log, limited to the window's new-work files.
-chunk_inflight_from_log() {  # $1 octocode log  $2 new-work file list → stdout: paths
-  _if_t=$(mktemp)
-  LC_ALL=C sort -u "$2" > "$_if_t"
-  tr '\r' '\n' < "$1" 2>/dev/null \
-    | sed -n -e 's/^.*Added new node: //p' -e 's/^.*Updated pending node description for: //p' -e 's/^.*Applied AI description to: //p' \
-    | LC_ALL=C sort -u | LC_ALL=C comm -12 - "$_if_t"
-  rm -f "$_if_t"
-}
-
 chunk_quarantine() {  # $1 state in  $2 paths file  $3 reason  $4 state out
   jq --rawfile p "$2" --arg why "$3" \
      '.quarantine = ((.quarantine // {}) + ([$p | split("\n")[] | select(length > 0)] | map({key: ., value: $why}) | from_entries))' \
      "$1" > "$4.tmp" && mv "$4.tmp" "$4"
 }
 
-# RETRY of a quarantined file, ALONE and with a long budget (#1061). Only a file that hangs by
-# itself stays out. A killed window leaves the file's node persisted WITHOUT its edges, and
-# octocode skips a file whose node hash equals the content hash, so a plain retry would "finish"
-# in seconds with no edges. The retry therefore appends a marker line (comment syntax by
-# extension) so the hash differs and octocode rebuilds the node and discovers its edges; the file
-# is restored afterwards. Empty output = this file cannot carry a marker (no comment syntax), so
-# it cannot be forced and stays quarantined.
+# REWORK after a stalled window (#1061). The window was killed during relationship discovery,
+# which runs AFTER the nodes are persisted, so its files hold a node WITHOUT edges, and octocode
+# skips a file whose node hash equals the content hash: a plain retry would "finish" in seconds
+# with no edges. Files in `rework` are therefore forced: a marker line (comment syntax by
+# extension) is appended for the window so the hash differs and octocode rebuilds the node and
+# discovers its edges; the file is restored by git afterwards. Empty marker = no comment syntax
+# (json, ...): it cannot be forced, and carries no imports to relate anyway.
 chunk_retry_marker() {  # $1 path → stdout: the line to append, or nothing
   case "$1" in
     *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.kt|*.kts|*.java|*.rs|*.go|*.c|*.h|*.cpp|*.hpp|*.cc|*.swift|*.dart|*.scala|*.cs|*.gradle) echo "// cgc-retry" ;;
@@ -127,18 +116,23 @@ chunk_retry_marker() {  # $1 path → stdout: the line to append, or nothing
   esac
 }
 
-# Quarantined files still worth a retry: fewer than $2 tries so far.
-chunk_quarantine_pick() {  # $1 state file  $2 max tries → stdout: paths
-  jq -r --argjson m "$2" '. as $s | (.quarantine // {}) | keys[] | select(((($s.quarantine_tries // {})[.]) // 0) < $m)' "$1" 2>/dev/null | LC_ALL=C sort -u
+chunk_rework_add() {  # $1 state in  $2 paths file  $3 state out
+  jq --rawfile p "$2" '.rework = (((.rework // []) + ($p | split("\n") | map(select(length > 0)))) | unique)' "$1" > "$3.tmp" && mv "$3.tmp" "$3"
 }
-
-chunk_quarantine_release() {  # $1 state in  $2 path  $3 state out — the file indexed on its own
-  jq --arg p "$2" 'del(.quarantine[$p]) | del(.quarantine_tries[$p])' "$1" > "$3.tmp" && mv "$3.tmp" "$3"
+chunk_rework_clear() {  # $1 state in  $2 paths file  $3 state out
+  jq --rawfile p "$2" '($p | split("\n") | map(select(length > 0))) as $d | .rework = ((.rework // []) - $d)' "$1" > "$3.tmp" && mv "$3.tmp" "$3"
 }
-
-chunk_quarantine_fail() {  # $1 state in  $2 path  $3 reason  $4 state out — it hung (or could not be forced) alone
-  jq --arg p "$2" --arg why "$3" \
-     '.quarantine[$p] = $why | .quarantine_tries[$p] = ((.quarantine_tries[$p] // 0) + 1)' "$1" > "$4.tmp" && mv "$4.tmp" "$4"
+# Append the marker to every window file that is in `rework`; stdout = the files marked.
+chunk_rework_apply() {  # $1 repo dir  $2 window new-work list  $3 state file
+  jq -r '(.rework // [])[]' "$3" 2>/dev/null | LC_ALL=C sort -u | LC_ALL=C comm -12 - "$(LC_ALL=C sort -u "$2" > "$2.srt" && echo "$2.srt")" | while IFS= read -r _rw_f; do
+    _rw_m=$(chunk_retry_marker "$_rw_f")
+    [ -n "$_rw_m" ] && [ -f "$1/$_rw_f" ] || continue
+    printf '\n%s\n' "$_rw_m" >> "$1/$_rw_f" && echo "$_rw_f"
+  done
+}
+chunk_rework_restore() {  # $1 repo dir  $2 marked list
+  [ -s "$2" ] || return 0
+  while IFS= read -r _rr_f; do git -C "$1" checkout -q -- "$_rr_f" 2>/dev/null || true; done < "$2"
 }
 
 # Escape a literal path as an anchored gitignore pattern.

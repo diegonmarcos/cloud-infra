@@ -1775,57 +1775,6 @@ chunk_home_project() {
 # else octocode failure), _log (last octocode log), _proj_resolved when known,
 # CHUNK_STATUS (one JSON line).
 
-# One quarantined file, alone (see chunk_retry_marker). Returns 0 when a retry was attempted
-# (the caller re-plans), 1 when nothing is left to retry or no time remains for it.
-cgc_quarantine_retry_one() {  # $1 usable slice minutes
-  _qr_max="${CGC_QUARANTINE_MAX_TRIES:-2}"
-  _qr_budget="${CGC_QUARANTINE_BUDGET_MIN:-150}"
-  _qr_f=$(chunk_quarantine_pick "$_cr_sf_stage" "$_qr_max" | head -n 1)
-  [ -n "$_qr_f" ] || return 1
-  [ "$1" -ge 20 ] 2>/dev/null || return 1
-  [ "$_qr_budget" -gt "$1" ] && _qr_budget="$1"
-  if cgc_repo_is_private "$_cr_r"; then _qr_show="(name withheld: private repo)"; else _qr_show="$_qr_f"; fi
-  _qr_mark=$(chunk_retry_marker "$_qr_f")
-  if [ -z "$_qr_mark" ] || [ ! -f "$_cr_d/$_qr_f" ]; then
-    chunk_quarantine_fail "$_cr_sf_stage" "$_qr_f" "cannot be forced: no comment syntax for a retry marker (or the file is gone), its node has no edges" "$_cr_sf_stage"
-    echo "::warning::[cgc-db] $_cr_r · quarantined $_qr_show cannot be retried (no marker syntax)"
-    return 0
-  fi
-  # A window of exactly this file: the allowlist limits the candidates, the quarantine is lifted
-  # for the plan only.
-  printf '%s\n' "$_qr_f" > "$_cr_o/qallow"
-  chunk_quarantine_release "$_cr_sf_stage" "$_qr_f" "$_cr_o/qstate"
-  chunk_plan "$_cr_d" "$_cr_o/qstate" "$_cr_head" 1 "$_cr_o/qallow" "$_cr_o" >/dev/null
-  [ -s "$_cr_o/next" ] || { chunk_exclude_clear "$_cr_d"; chunk_quarantine_fail "$_cr_sf_stage" "$_qr_f" "not plannable on its own (not embedded yet?)" "$_cr_sf_stage"; return 0; }
-  printf '%s\n' "$_qr_mark" >> "$_cr_d/$_qr_f"
-  chunk_touch_next "$_cr_d" "$_cr_o/next"
-  for _qr_gm in "${OCTO_HOME:?}"/*/storage/git_metadata.lance; do [ -d "$_qr_gm" ] && rm -rf "${_qr_gm:?}"; done
-  echo "[cgc-db] $_cr_r · retrying quarantined $_qr_show ALONE (budget ${_qr_budget}m, try $(( $(jq -r --arg p "$_qr_f" '(.quarantine_tries[$p] // 0)' "$_cr_sf_stage") + 1 ))/$_qr_max)"
-  _qr_l0=0; [ -n "${LLM_PROXY_LOG:-}" ] && [ -f "$LLM_PROXY_LOG" ] && _qr_l0=$(wc -l < "$LLM_PROXY_LOG" | tr -d ' ')
-  _qr_hb=""
-  if [ "${CGC_HEARTBEAT_S:-0}" -gt 0 ] 2>/dev/null; then
-    : > "$_log"
-    chunk_heartbeat "$_cr_r · quarantine retry" "$_log" "${LLM_PROXY_LOG:-}" "$_qr_l0" "$CGC_HEARTBEAT_S" "$_cr_o/octocode.pid" 0 "" &
-    _qr_hb=$!
-  fi
-  _qr_t0=$(date +%s); _qr_rc=0
-  ( cd "$_cr_d" && timeout "${_qr_budget}m" octocode index ) >"$_log" 2>&1 &
-  _qr_op=$!; echo "$_qr_op" > "$_cr_o/octocode.pid"
-  wait "$_qr_op" || _qr_rc=$?
-  _qr_dt=$(( $(date +%s) - _qr_t0 ))
-  [ -z "$_qr_hb" ] || { kill "$_qr_hb" 2>/dev/null || true; wait "$_qr_hb" 2>/dev/null || true; }
-  git -C "$_cr_d" checkout -q -- "$_qr_f" 2>/dev/null || true
-  chunk_exclude_clear "$_cr_d"
-  if [ "$_qr_rc" = "0" ]; then
-    chunk_commit "$_cr_o" "$_cr_head" "$_cr_o/qstate"
-    chunk_quarantine_release "$_cr_o/qstate" "$_qr_f" "$_cr_sf_stage"
-    echo "[cgc-db] $_cr_r · quarantined $_qr_show indexed alone in ${_qr_dt}s, edges included: released from quarantine"
-  else
-    chunk_quarantine_fail "$_cr_sf_stage" "$_qr_f" "hangs ALONE: octocode did not finish it in ${_qr_budget}m (rc=$_qr_rc), $(date -u +%Y-%m-%d), run ${GITHUB_RUN_ID:-local}" "$_cr_sf_stage"
-    echo "::error::[cgc-db] $_cr_r · $_qr_show hangs ALONE (>${_qr_budget}m, rc=$_qr_rc): it stays out of the graphrag index (node without edges), see .quarantine in the chunk state"
-  fi
-  return 0
-}
 chunk_index_repo() {
   _cr_r="$1"; _cr_d="$2"; _cr_head="$3"
   _cr_o="${CGC_SCRATCH:?}/chunk-$_cr_r"; rm -rf "${_cr_o:?}"; mkdir -p "$_cr_o"
@@ -1849,6 +1798,16 @@ chunk_index_repo() {
   _cr_n=$(chunk_state_read "$_cr_sf_stage" | jq -r '.chunk // 0')
   [ "${_cr_n:-0}" -gt 0 ] 2>/dev/null || _cr_n="$CHUNK_N_DEFAULT"
   [ -n "${CGC_CHUNK_FILES:-}" ] && _cr_n="$CGC_CHUNK_FILES"
+  # graphrag (#1061): a window's cost is dominated by a fixed relationship-discovery phase after its
+  # file loop (octocode re-resolves the imports of every unchanged importer of the window's
+  # symbols), so BIG windows amortise it and a stalled one is split by halving down to ONE file.
+  # The rate-based sizing below measures that fixed cost as ms/file and shrank every window to
+  # the floor, so graphrag starts each run at CGC_GRAPHRAG_START_CHUNK and only halves on a stall.
+  _cr_min="$CHUNK_MIN"
+  if [ "$MANIFEST_PHASE" = "graphrag" ] && [ -z "${CGC_CHUNK_FILES:-}" ]; then
+    _cr_min="${CGC_GRAPHRAG_CHUNK_MIN:-1}"
+    [ "$_cr_n" -lt "${CGC_GRAPHRAG_START_CHUNK:-400}" ] && _cr_n="${CGC_GRAPHRAG_START_CHUNK:-400}"
+  fi
   _cr_pub_s=$(( CHUNK_PUBLISH_RESERVE_MIN * 60 ))
   _cr_i=0; _rc=0; _log="$(mktemp)"; _cr_conv=0
   while :; do
@@ -1881,7 +1840,11 @@ chunk_index_repo() {
     if [ "$MANIFEST_PHASE" = "graphrag" ] && [ "${CHUNK_GR_MIN_MSPF:-0}" -gt "${_cr_mspf:-0}" ] 2>/dev/null; then
       _cr_mspf="$CHUNK_GR_MIN_MSPF"
     fi
-    if [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null && [ -z "${CGC_CHUNK_FILES:-}" ]; then
+    if [ "$MANIFEST_PHASE" = "graphrag" ] && [ -z "${CGC_CHUNK_FILES:-}" ]; then
+      _cr_plan_n="$_cr_n"
+      [ "$CHUNK_MAX" -gt 0 ] && [ "$_cr_plan_n" -gt "$CHUNK_MAX" ] && _cr_plan_n="$CHUNK_MAX"
+      echo "[cgc-db] $_cr_r · chunk $_cr_i: graphrag window of up to ${_cr_plan_n} files (halved on a stall, down to one file)"
+    elif [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null && [ -z "${CGC_CHUNK_FILES:-}" ]; then
       _cr_plan_n=$(( _cr_wplan * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
       # The rate may only SHRINK the adapted chunk, never grow past it (#888). A window
       # of mostly already-indexed files measures a rate the next window cannot keep:
@@ -1898,12 +1861,6 @@ chunk_index_repo() {
       _cr_plan_n="$CHUNK_N_DEFAULT"
     fi
     chunk_plan "$_cr_d" "$_cr_sf_stage" "$_cr_head" "$_cr_plan_n" "$_cr_allow" "$_cr_o"
-    # Everything plannable is done: now retry the quarantined files, each ALONE with a long
-    # budget (#1061). One that hangs alone stays out, with the reason and the exact path.
-    if [ ! -s "$_cr_o/next" ] && [ "$MANIFEST_PHASE" = "graphrag" ] && [ -z "${CGC_QUARANTINE_RETRY_OFF:-}" ]; then
-      chunk_exclude_clear "$_cr_d"
-      if cgc_quarantine_retry_one "$_cr_slice"; then continue; fi
-    fi
     if [ ! -s "$_cr_o/next" ]; then
       chunk_exclude_clear "$_cr_d"
       if chunk_converged "$_cr_o/state" "$_cr_o/indexable" ""; then
@@ -1932,7 +1889,22 @@ chunk_index_repo() {
     # the heartbeat can find and kill it; a kill it ordered is reported as the window's 124.
     _cr_pidf="$_cr_o/octocode.pid"; _cr_stalled="$_cr_o/stalled"; rm -f "$_cr_pidf" "$_cr_stalled"
     _cr_stall_s=0
-    [ "$MANIFEST_PHASE" = "graphrag" ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-30} * 60 ))
+    # Silence limit scales with the window (a 400-file window legitimately goes quiet for
+    # ~25 min in discovery, a handful of files does not): base minutes at the start size,
+    # never under 8 min; one file ALONE gets its own long budget before it is quarantined.
+    [ "$MANIFEST_PHASE" = "graphrag" ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-30} * 60 * _cr_nn / ${CGC_GRAPHRAG_START_CHUNK:-400} ))
+    if [ "$MANIFEST_PHASE" = "graphrag" ]; then
+      [ "$_cr_stall_s" -lt 480 ] && _cr_stall_s=480
+      [ "$_cr_stall_s" -gt $(( ${CGC_STALL_MIN:-30} * 60 )) ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-30} * 60 ))
+      if [ "$_cr_nn" -le 1 ]; then
+        _cr_stall_s=$(( ${CGC_ALONE_BUDGET_MIN:-60} * 60 ))
+        [ "$_cr_wto" -gt "${CGC_ALONE_BUDGET_MIN:-60}" ] && _cr_wto="${CGC_ALONE_BUDGET_MIN:-60}"
+      fi
+    fi
+    # Files a stalled window left with a node but no edges are forced this time (marker line).
+    _cr_marked="$_cr_o/marked"; : > "$_cr_marked"
+    [ "$MANIFEST_PHASE" = "graphrag" ] && chunk_rework_apply "$_cr_d" "$_cr_o/next" "$_cr_sf_stage" > "$_cr_marked"
+    [ ! -s "$_cr_marked" ] || echo "[cgc-db] $_cr_r · chunk $_cr_i: forcing $(wc -l < "$_cr_marked" | tr -d ' ') file(s) a stalled window left without edges"
     if [ "${CGC_HEARTBEAT_S:-0}" -gt 0 ] 2>/dev/null; then
       : > "$_log"
       chunk_heartbeat "$_cr_r · chunk $_cr_i" "$_log" "${LLM_PROXY_LOG:-}" "$_cr_l0" "$CGC_HEARTBEAT_S" "$_cr_pidf" "$_cr_stall_s" "$_cr_stalled" &
@@ -1945,26 +1917,27 @@ chunk_index_repo() {
     [ -f "$_cr_stalled" ] && _rc=124
     _cr_dt=$(( $(date +%s) - _cr_t0 ))
     if [ -n "$_cr_hb" ]; then kill "$_cr_hb" 2>/dev/null || true; wait "$_cr_hb" 2>/dev/null || true; fi
+    chunk_rework_restore "$_cr_d" "$_cr_marked"
     chunk_exclude_clear "$_cr_d"
     _cr_llm=0
     chunk_llm_summary "${LLM_PROXY_LOG:-}" "$_cr_l0" "$_cr_dt" "$_cr_nn" "$_cr_r · chunk $_cr_i (rc=$_rc)" "$_cr_o" || _cr_llm=$?
     if [ "$_rc" = "124" ]; then
-      _cr_inflight="$_cr_o/inflight"; : > "$_cr_inflight"
-      [ -f "$_cr_stalled" ] && chunk_inflight_from_log "$_log" "$_cr_o/next" > "$_cr_inflight"
-      if [ -s "$_cr_inflight" ]; then
-        # A stalled window is not a size problem (halving after each kill walked the chunk
-        # down to the floor, #1061): quarantine the files octocode had in flight, with the
-        # reason, and go on with the rest of the window. The run summary lists them.
-        _cr_qn=$(wc -l < "$_cr_inflight" | tr -d ' ')
-        chunk_quarantine "$_cr_o/state0" "$_cr_inflight" "stalled graphrag window (no LLM call, no output for ${CGC_STALL_MIN:-30}m) with this file in flight, $(date -u +%Y-%m-%d), run ${GITHUB_RUN_ID:-local}" "$_cr_sf_stage"
-        if cgc_repo_is_private "$_cr_r"; then _cr_qnames="(names withheld: private repo)"; else _cr_qnames=$(tr '\n' ' ' < "$_cr_inflight"); fi
-        echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i stalled — QUARANTINED $_cr_qn file(s), skipped from now on: $_cr_qnames"
-      elif [ -f "$_cr_stalled" ]; then
-        _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+      if [ "$MANIFEST_PHASE" = "graphrag" ] && [ "$_cr_nn" -le 1 ] && [ -s "$_cr_o/next" ]; then
+        # ONE file, alone, with the long budget, and it still hangs: the only case that leaves
+        # a file out. Name it (private repos: count only) and say why.
+        chunk_quarantine "$_cr_o/state0" "$_cr_o/next" "hangs ALONE: octocode made no progress on this file for ${CGC_ALONE_BUDGET_MIN:-60}m, $(date -u +%Y-%m-%d), run ${GITHUB_RUN_ID:-local}" "$_cr_sf_stage"
+        chunk_rework_add "$_cr_sf_stage" "$_cr_o/next" "$_cr_sf_stage"
+        if cgc_repo_is_private "$_cr_r"; then _cr_qnames="(name withheld: private repo)"; else _cr_qnames=$(tr '\n' ' ' < "$_cr_o/next"); fi
+        echo "::error::[cgc-db] $_cr_r · QUARANTINED $_cr_qnames: it hangs ALONE (> ${CGC_ALONE_BUDGET_MIN:-60}m); skipped from now on, node without edges"
+      elif [ "$MANIFEST_PHASE" = "graphrag" ]; then
+        # Split: halve the window (down to one file). A stalled window left its files with
+        # nodes but no edges, so they are forced (marker) in the windows that follow.
+        _cr_n=$(( _cr_nn / 2 )); [ "$_cr_n" -ge 1 ] || _cr_n=1
         jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_o/state0" > "$_cr_sf_stage"
-        echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i stalled with no in-flight evidence in the log — chunk size halved to $_cr_n; this window's files stay outstanding"
+        chunk_rework_add "$_cr_sf_stage" "$_cr_o/next" "$_cr_sf_stage"
+        echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i of ${_cr_nn} file(s) stalled/timed out (${_cr_dt}s) — splitting: next window ${_cr_n} file(s)"
       else
-      _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+      _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_wto * 60 )) "$_cr_min" "$CHUNK_MAX")
       # The rate was too optimistic: double it so the next sized window is half as big.
       jq --argjson n "$_cr_n" '.chunk = $n | if (.ms_per_file // 0) > 0 then .ms_per_file *= 2 else . end' "$_cr_o/state0" > "$_cr_sf_stage"
       echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i did not finish in ${_cr_wto}m — chunk size halved to $_cr_n; this window's files stay outstanding"
@@ -1975,8 +1948,9 @@ chunk_index_repo() {
       break
     fi
     [ "$_rc" = "0" ] || break
-    _cr_n=$(chunk_adapt "$_cr_n" ok "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+    _cr_n=$(chunk_adapt "$_cr_n" ok "$_cr_dt" $(( _cr_wto * 60 )) "$_cr_min" "$CHUNK_MAX")
     chunk_commit "$_cr_o" "$_cr_head" "$_cr_sf_stage" "$_cr_o/deferred"
+    [ "$MANIFEST_PHASE" != "graphrag" ] || chunk_rework_clear "$_cr_sf_stage" "$_cr_o/next" "$_cr_sf_stage"
     _cr_prev=$(chunk_state_read "$_cr_sf_stage" | jq -r '.ms_per_file // 0')
     _cr_mspf=$(( _cr_dt * 1000 / (_cr_nn > 0 ? _cr_nn : 1) ))
     # graphrag gets slower as the done set grows (more importers re-analysed per window):
