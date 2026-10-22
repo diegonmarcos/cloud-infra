@@ -920,6 +920,12 @@ function deriveCaddy(c: any): DerivedFile[] {
       service: svc.dns,
       upstream,
     });
+    // dns_aliases (fleet addressing rule, ticket #1100): extra mesh names for the
+    // same upstream, so the canonical `<container>.app` resolves beside the legacy
+    // `dns` until the consumers are switched (phase P4 swaps `dns` and drops these).
+    for (const alias of (svc.dns_aliases ?? []) as string[]) {
+      if (alias !== svc.dns) internalRoutes.push({ service: alias, upstream });
+    }
   }
   // VM dashboards: read directly from per-VM build.json (source of truth)
   const hmDir = join(CLOUD_ROOT, "b_infra", "home-manager");
