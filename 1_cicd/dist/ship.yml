@@ -807,7 +807,14 @@ jobs:
           echo "ssh_host=$HOST" >> "$GITHUB_OUTPUT"
           echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
 
+      # Per-service isolation: a service whose build fails (or whose committed
+      # dist/ differs from the fresh render) must not stop the other services
+      # of this VM from deploying. This step is non-fatal; the verdict is
+      # enforced by "Fail build job" below, AFTER the trace (per-service
+      # ok/fail status) is uploaded for the deploy job to read.
       - name: Ship via cloud-builder
+        id: ship
+        continue-on-error: true
         # Fail fast instead of burning the full job ceiling: a single
         # stuck build/push inside this step (cold docker cache, oci-builder
         # hang) should surface as its own timeout well before the job-level
@@ -930,6 +937,14 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+      - name: Fail build job if any service failed
+        if: always() && steps.ship.outcome == 'failure'
+        run: |
+          T="${{ runner.temp }}/traces/${{ matrix.vm }}.json"
+          echo "::error::Build → ${{ matrix.vm }}: at least one service failed; the others still deploy. Failed services:"
+          jq -r '.services[]? | select(.status=="fail") | "  FAILED: \(.dir)"' "$T" 2>/dev/null || echo "  (no per-service trace: the build died before any service ran; nothing on this VM deploys)"
+          exit 1
+
   # ── Deploy: one matrix job per VM, config+secrets render + pull/up ──
   # PLAN-ghcr-artifacts.md item 2. needs: build guarantees every image this
   # pulls was freshly pushed moments ago — the same ordering the single-job
@@ -942,7 +957,9 @@ jobs:
   deploy:
     name: "Deploy → ${{ matrix.vm }}"
     needs: [detect, build]
-    if: needs.detect.outputs.has_vms == 'true'
+    # Deploy whatever built, even when a sibling service's build failed (the
+    # build job is then red and the deploy-gate fails the run at the end).
+    if: ${{ !cancelled() && needs.detect.result == 'success' && needs.detect.outputs.has_vms == 'true' }}
     # Arch-agnostic on the RUNNER side — redeploy re-renders compose/config
     # text (nix), rsyncs, and ssh's into the VM; none of that depends on the
     # runner's own CPU architecture the way an image build does. Flat
@@ -1019,6 +1036,43 @@ jobs:
       GCP_T4_USER: ${{ secrets.GCP_T4_USER }}
       SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
     steps:
+      - name: Fetch build trace
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: trace-build-${{ matrix.vm }}
+          path: ${{ runner.temp }}/build-trace
+
+      # Per-service deploy gate: only services whose own build reported ok are
+      # deployed. A failed/drifted service is skipped and reported; a missing
+      # trace (build died before any service ran) deploys nothing here.
+      - name: Select services that built
+        id: built
+        env:
+          VM: ${{ matrix.vm }}
+          CHANGED: ${{ matrix.changed_dirs }}
+          TRACE: ${{ runner.temp }}/build-trace/${{ matrix.vm }}.json
+        run: |
+          set -eu
+          if [ ! -s "$TRACE" ]; then
+            echo "::error::Deploy → $VM skipped: no build trace (build did not reach the services)."
+            echo "go=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          OK=$(jq -r '.services[]? | select(.status=="ok") | .dir' "$TRACE")
+          DIRS=""
+          if [ -n "$CHANGED" ]; then
+            for d in $CHANGED; do
+              if printf '%s\n' "$OK" | grep -qxF "$d"; then DIRS="$DIRS $d"
+              else echo "::error::Deploy → $VM: SKIPPING $d (its build did not succeed)"; fi
+            done
+          else
+            DIRS=$(printf '%s' "$OK" | tr '\n' ' ')
+            jq -r '.services[]? | select(.status=="fail") | "::error::Deploy → '"$VM"': SKIPPING \(.dir) (its build did not succeed)"' "$TRACE"
+          fi
+          DIRS=$(printf '%s' "$DIRS" | xargs)
+          echo "dirs=$DIRS" >> "$GITHUB_OUTPUT"
+          if [ -n "$DIRS" ]; then echo "go=true" >> "$GITHUB_OUTPUT"; else echo "go=false" >> "$GITHUB_OUTPUT"; echo "::warning::Deploy → $VM: nothing built; no deploy"; fi
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
@@ -1124,9 +1178,10 @@ jobs:
           echo "ssh_user=$USER" >> "$GITHUB_OUTPUT"
 
       - name: Ship via cloud-builder
+        if: steps.built.outputs.go == 'true'
         timeout-minutes: 80
         env:
-          CHANGED_DIRS: ${{ matrix.changed_dirs }}
+          CHANGED_DIRS: ${{ steps.built.outputs.dirs }}
           SHIP_MODE: deploy
           SSH_KEY: ${{ steps.ssh.outputs.ssh_key }}
           SSH_HOST: ${{ steps.ssh.outputs.ssh_host }}
