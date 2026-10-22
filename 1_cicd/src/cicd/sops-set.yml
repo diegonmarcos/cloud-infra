@@ -1,0 +1,69 @@
+name: "Sops set (re-encrypted file as artifact)"
+
+# Adds or replaces ONE key in a sops-encrypted file of a public sibling repo, using the fleet age key that only CI
+# holds, and hands back the re-encrypted FILE as a one-day artifact. The plaintext value comes from a GitHub
+# Actions secret named by `secret_name` (write-only; set it with the cloud-infra-mcp secrets tool, delete it after
+# the run); it is read from the environment, passed to sops on stdin and never printed. The artifact holds the
+# encrypted file only, so the caller commits it to the target repo (this workflow never pushes anywhere).
+on:
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "owner/repo of the target (diegonmarcos/* only)"
+        required: true
+        type: string
+      file:
+        description: "path of the sops yaml/json file inside the repo"
+        required: true
+        type: string
+      key:
+        description: "top-level key to set"
+        required: true
+        type: string
+      secret_name:
+        description: "name of the GitHub Actions secret that holds the value"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  set:
+    runs-on: ubuntu-latest
+    if: ${{ startsWith(inputs.repo, 'diegonmarcos/') }}
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+      SET_VALUE: ${{ secrets[inputs.secret_name] }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.repo }}
+          path: target
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install sops
+        run: |
+          set -eu
+          curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.10.2/sops-v3.10.2.linux.amd64
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+          sops --version
+      - name: Set the key
+        env:
+          T_FILE: ${{ inputs.file }}
+          T_KEY: ${{ inputs.key }}
+        run: |
+          set -eu
+          [ -n "$SET_VALUE" ] || { echo "::error::the named secret is empty or missing"; exit 1; }
+          echo "::add-mask::$SET_VALUE"
+          case "$T_FILE$T_KEY" in *..*|*'"'*|*"'"*|*' '*) echo "::error::refusing odd file/key"; exit 1;; esac
+          mkdir -p ~/.config/sops/age && umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+          export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
+          printf '%s' "$SET_VALUE" | jq -Rs . | sops set --value-stdin "target/$T_FILE" "[\"$T_KEY\"]"
+          grep -q '^sops:' "target/$T_FILE" || grep -q '"sops"' "target/$T_FILE"
+          if grep -qF -- "$SET_VALUE" "target/$T_FILE"; then echo "::error::plaintext found in the output file"; exit 1; fi
+          mkdir -p out && cp "target/$T_FILE" out/result.enc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sops-set-result
+          path: out/result.enc
+          retention-days: 1
