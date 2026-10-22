@@ -59,6 +59,10 @@ const POLICY_FILE  = path.join(CLAUDE_SOT, 'mcp-policy.json');
 
 type Server = { type: string; url: string; headers?: Record<string, string>; headersHelper?: string };
 
+// Servers whose build.json sets proxy.primary.mesh_only: the public edge has
+// no route for them, so the project .mcp.json must not advertise one.
+const meshOnly = new Set<string>();
+
 function main(): void {
   const servers: Record<string, Server> = {};
   const skipped: string[] = [];
@@ -72,6 +76,7 @@ function main(): void {
 
     const mcp = d?.mcp;
     if (!mcp) continue;
+    if (d?.proxy?.primary?.mesh_only === true) meshOnly.add(dir.includes('_') ? dir.slice(dir.indexOf('_') + 1) : dir);
 
     // stdio servers run as a local command, not a URL. They cannot be
     // expressed as a shared project-scoped entry (the binary path is
@@ -229,13 +234,14 @@ function writeProjectMcp(servers: Record<string, Server>): void {
     }
     const isPublic = e.url.startsWith(`https://${AUTH_HOST}/`);
     // direct_http (mesh-IP) servers: the edge serves /<name>/mcp for those it
-    // routes (cloud-cgc-pvt-mcp: 200) and 404s the rest (cloud-vault-mcp) —
-    // an honest failure, never an OAuth prompt.
+    // routes (cloud-cgc-pvt-mcp: 200). mesh_only servers (cloud-vault-mcp) get
+    // no --public, so off-mesh the bridge says "no public route" instead of
+    // probing an edge path that 404s.
     const mesh = isPublic ? meshOf[n] : e.url;
     const pub = isPublic ? e.url : `https://${AUTH_HOST}/${n}/mcp`;
     const args = ['${CLAUDE_PROJECT_DIR:-.}/.claude/mcp-connect.mjs'];
     if (mesh) args.push('--mesh', mesh);
-    args.push('--public', pub);
+    if (!meshOnly.has(n)) args.push('--public', pub);
     project[n] = { type: 'stdio', command: 'node', args };
   }
   const out = {
