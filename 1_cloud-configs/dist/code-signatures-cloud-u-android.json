@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22077,
+    "files": 22081,
     "by_lang": {
       "js": 488,
       "sh": 545,
       "py": 155,
-      "kotlin": 11644,
+      "kotlin": 11648,
       "java": 637,
       "ts": 8467,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6423,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11641,
+      "kotlin": 11645,
       "python": 50,
       "rust-module": 110,
       "hook": 150,
@@ -164801,6 +164801,22 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/DriveApp.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveApp"
+      ],
+      "imports": [
+        "android.app.Application",
+        "com.diegonmarcos.clouddrive.startup.StartupGuard"
+      ],
+      "symbols": [
+        "onCreate()",
+        "class DriveApp"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/DriveDebugLog.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -164852,6 +164868,7 @@
         "kotlinx.coroutines.flow.StateFlow"
       ],
       "symbols": [
+        "safe(default: T, block: ()",
         "read()",
         "edit(block: SharedPreferences.Editor.()",
         "setDefaultSort(key: String)",
@@ -165870,6 +165887,8 @@
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
+        "startup()",
+        "guarded(phase: String, optional: Boolean = false, block: ()",
         "onResume()",
         "Root()",
         "requestStorageAccess()",
@@ -166398,6 +166417,99 @@
         "legacyRoot()",
         "resolve(path: String)",
         "class SharedStore"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/startup/CrashReportActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CrashReportActivity"
+      ],
+      "imports": [
+        "android.content.ClipData",
+        "android.content.ClipboardManager",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.widget.Toast",
+        "androidx.activity.ComponentActivity",
+        "androidx.activity.compose.setContent",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.statusBarsPadding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.text.selection.SelectionContainer",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.clouddrive.MainActivity"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "Screen(report: String)",
+        "copy(report: String)",
+        "share(report: String)",
+        "retryInSafeMode()",
+        "class CrashReportActivity"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/startup/StartupGuard.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StartupGuard"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Looper",
+        "android.os.Process",
+        "java.io.File",
+        "java.io.PrintWriter",
+        "java.io.StringWriter",
+        "java.text.SimpleDateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.TimeZone",
+        "java.util.concurrent.atomic.AtomicInteger",
+        "kotlin.system.exitProcess"
+      ],
+      "symbols": [
+        "failureCount()",
+        "dir(ctx: Context)",
+        "format(phase: String, t: Throwable, env: String, nowMs: Long)",
+        "record(dir: File, phase: String, t: Throwable, env: String, nowMs: Long = System.currentTimeMillis()",
+        "reports(dir: File)",
+        "unseen(dir: File)",
+        "latest(dir: File)",
+        "markAllSeen(dir: File)",
+        "prune(dir: File)",
+        "shareText(dir: File)",
+        "env(ctx: Context?)",
+        "step(ctx: Context, phase: String, optional: Boolean = false, block: ()",
+        "launchReport(ctx: Context, clearTask: Boolean)",
+        "install(app: Application)",
+        "isReportProcess(ctx: Context)",
+        "onMainThread()",
+        "class StartupGuard"
       ]
     },
     {
@@ -168585,6 +168697,40 @@
       ],
       "symbols": [
         "class SharedStorePathsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/startup/StartupGuardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StartupGuardTest"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.clouddrive.DrivePrefs",
+        "java.io.File",
+        "java.nio.file.Files",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner"
+      ],
+      "symbols": [
+        "tmp()",
+        "reportCarriesPhaseAndFullStackTrace()",
+        "anUnshownReportIsSurfacedUntilMarkedSeen()",
+        "recordNeverThrowsAndOldReportsArePruned()",
+        "aFailingStepIsRecordedAndTheNextStepStillRuns()",
+        "safeModeSkipsOptionalPhasesOnly()",
+        "staleTypedPrefsAreDefaultsNotAClassCastException()",
+        "noSocketOnTheMainThread()",
+        "class StartupGuardTest"
       ]
     },
     {
