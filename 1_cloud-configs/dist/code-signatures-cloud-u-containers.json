@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 3008,
+    "files": 3009,
     "by_lang": {
       "sh": 164,
       "nix": 179,
       "js": 88,
-      "py": 874,
+      "py": 875,
       "ts": 1167,
       "rust": 536
     },
@@ -19,7 +19,7 @@
       "shell": 154,
       "nix-module": 19,
       "file": 334,
-      "python": 860,
+      "python": 861,
       "module": 715,
       "script": 9,
       "flake": 81,
@@ -18383,6 +18383,7 @@
         "class Broker"
       ],
       "imports": [
+        "email.message",
         "http.server",
         "base64",
         "urllib.error"
@@ -18418,6 +18419,9 @@
         "BIND_HOST",
         "BROKER_CONFIG",
         "AUTH_BROKER_COOKIE_SECRET",
+        "AUTH_BROKER_SMTP_USER",
+        "AUTH_BROKER_SMTP_PASSWORD",
+        "AUTH_BROKER_RESEND_API_KEY",
         "healthcheck",
         "test",
         "interval",
@@ -18462,6 +18466,30 @@
         "baseImage",
         "apt",
         "title"
+      ]
+    },
+    {
+      "path": "infra-sec_auth-broker/src/test/test-broker-email.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "need(cond, msg)",
+        "mk(env=ENV, **eo)",
+        "boom(*a)",
+        "call(path, body=None, headers=None)",
+        "class Mailer"
+      ],
+      "imports": [
+        "http.server",
+        "json",
+        "main"
+      ],
+      "symbols": [
+        "need(cond, msg)",
+        "mk(env=ENV, **eo)",
+        "boom(*a)",
+        "call(path, body=None, headers=None)",
+        "class Mailer"
       ]
     },
     {

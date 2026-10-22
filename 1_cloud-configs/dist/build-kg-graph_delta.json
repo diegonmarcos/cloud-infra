@@ -33,12 +33,12 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 340,
-    "edges": 467,
+    "nodes": 341,
+    "edges": 468,
     "by_table": {
       "vm": 4,
       "service": 81,
-      "container": 99,
+      "container": 100,
       "domain": 44,
       "repo": 3,
       "module": 81,
@@ -1173,7 +1173,7 @@
       "properties": {
         "name": "auth-broker",
         "category": "sec",
-        "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)",
+        "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT) and Email code (one-time code), owner only (#1066, #1083, #1118)",
         "domain": null,
         "port": null,
         "vm": "oci-apps",
@@ -1213,6 +1213,18 @@
         "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
         "role": "cloudflare",
         "port": 4182,
+        "public": false
+      }
+    },
+    {
+      "table": "container",
+      "id": "auth_broker_email",
+      "key": "container:auth_broker_email",
+      "properties": {
+        "name": "auth-broker-email",
+        "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
+        "role": "email",
+        "port": 4183,
         "public": false
       }
     },
@@ -4703,6 +4715,15 @@
       "key": "service:auth_broker->runs_container->container:auth_broker_cloudflare",
       "properties": {
         "role": "cloudflare"
+      }
+    },
+    {
+      "table": "runs_container",
+      "from": "service:auth_broker",
+      "to": "container:auth_broker_email",
+      "key": "service:auth_broker->runs_container->container:auth_broker_email",
+      "properties": {
+        "role": "email"
       }
     },
     {

@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22072,
+    "files": 22077,
     "by_lang": {
       "js": 488,
       "sh": 545,
       "py": 155,
-      "kotlin": 11639,
+      "kotlin": 11644,
       "java": 637,
       "ts": 8467,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6423,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11636,
+      "kotlin": 11641,
       "python": 50,
       "rust-module": 110,
       "hook": 150,
@@ -20238,6 +20238,7 @@
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.graphics.Color",
         "androidx.compose.ui.test.assertHasClickAction",
+        "androidx.compose.ui.test.assertTextEquals",
         "androidx.compose.ui.test.onNodeWithTag",
         "androidx.compose.ui.unit.dp",
         "androidx.compose.ui.unit.sp",
@@ -164716,6 +164717,66 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/documents/DriveDocumentsProvider.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveDocumentsProvider"
+      ],
+      "imports": [
+        "android.database.Cursor",
+        "android.database.MatrixCursor",
+        "android.os.CancellationSignal",
+        "android.os.ParcelFileDescriptor",
+        "android.provider.DocumentsContract.Document",
+        "android.provider.DocumentsContract.Root",
+        "android.provider.DocumentsProvider",
+        "android.webkit.MimeTypeMap",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.SharedStore",
+        "java.io.File",
+        "java.io.FileNotFoundException"
+      ],
+      "symbols": [
+        "roots()",
+        "title(id: String)",
+        "onCreate()",
+        "queryRoots(projection: Array<String>?)",
+        "queryDocument(documentId: String, projection: Array<String>?)",
+        "queryChildDocuments(parentDocumentId: String, projection: Array<String>?, sortOrder: String?)",
+        "openDocument(documentId: String, mode: String, signal: CancellationSignal?)",
+        "isChildDocument(parentDocumentId: String, documentId: String)",
+        "addRow(c: MatrixCursor, documentId: String)",
+        "docId(rootId: String, rootDir: File, file: File)",
+        "resolve(documentId: String)",
+        "mimeOf(f: File)",
+        "class DriveDocumentsProvider"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/documents/PickerActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PickerActivity"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.Intent",
+        "android.net.Uri",
+        "android.os.Bundle",
+        "android.provider.DocumentsContract",
+        "androidx.activity.ComponentActivity",
+        "androidx.activity.result.contract.ActivityResultContract"
+      ],
+      "symbols": [
+        "createIntent(context: android.content.Context, input: Intent)",
+        "parseResult(resultCode: Int, intent: Intent?)",
+        "onCreate(savedInstanceState: Bundle?)",
+        "class PickerActivity"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/DriveActions.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -167965,6 +168026,41 @@
         "blankAndBrokenInputParseToEmpty()",
         "class DeclarationsTest",
         "class is"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/documents/DriveDocumentsProviderTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DriveDocumentsProviderTest"
+      ],
+      "imports": [
+        "android.content.pm.ProviderInfo",
+        "android.provider.DocumentsContract.Document",
+        "android.provider.DocumentsContract.Root",
+        "java.io.File",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assert.fail",
+        "org.junit.Before",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.TemporaryFolder",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment"
+      ],
+      "symbols": [
+        "setUp()",
+        "roots()",
+        "listsBothRoots()",
+        "listsChildrenFoldersFirst()",
+        "describesADocument()",
+        "opensADocumentReadOnly()",
+        "cannotLeaveItsRoot()",
+        "class DriveDocumentsProviderTest"
       ]
     },
     {
@@ -500298,6 +500394,22 @@
       ]
     },
     {
+      "path": "ac_cloud-vault/app/src/main/kotlin/com/x8bit/bitwarden/fleet/SyncSignInNeeded.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SyncSignInNeeded"
+      ],
+      "imports": [
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.StateFlow"
+      ],
+      "symbols": [
+        "set(value: Boolean)",
+        "class SyncSignInNeeded"
+      ]
+    },
+    {
       "path": "ac_cloud-vault/app/src/main/kotlin/com/x8bit/bitwarden/fleet/VaultFleetEndpoints.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -510179,6 +510291,27 @@
       ]
     },
     {
+      "path": "ac_cloud-vault/app/src/main/kotlin/com/x8bit/bitwarden/ui/platform/feature/vaultunlockednavbar/BiometricEnrollViewModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BiometricEnrollViewModel"
+      ],
+      "imports": [
+        "androidx.lifecycle.ViewModel",
+        "com.x8bit.bitwarden.data.auth.repository.AuthRepository",
+        "com.x8bit.bitwarden.data.platform.repository.SettingsRepository",
+        "dagger.hilt.android.lifecycle.HiltViewModel",
+        "javax.crypto.Cipher",
+        "javax.inject.Inject"
+      ],
+      "symbols": [
+        "cipherIfEnrollmentNeeded()",
+        "enroll(cipher: Cipher)",
+        "class BiometricEnrollViewModel"
+      ]
+    },
+    {
       "path": "ac_cloud-vault/app/src/main/kotlin/com/x8bit/bitwarden/ui/platform/feature/vaultunlockednavbar/FleetNavScaffold.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -510186,6 +510319,12 @@
         "FleetNavScaffold"
       ],
       "imports": [
+        "androidx.compose.runtime.collectAsState",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.ui.unit.dp",
+        "com.x8bit.bitwarden.fleet.SyncSignInNeeded",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.remember",
@@ -510271,6 +510410,7 @@
         "VaultUnlockedNavBarScreen"
       ],
       "imports": [
+        "kotlinx.coroutines.launch",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.getValue",

@@ -115,6 +115,7 @@
         "auth-broker-google",
         "auth-broker-github",
         "auth-broker-cloudflare",
+        "auth-broker-email",
         "crowdsec",
         "tokens-api",
         "cloud-cgc-pub-mcp",
@@ -3730,7 +3731,7 @@
       "category": "sec",
       "vm": "oci-A1-f_0",
       "folder": "infra-sec_auth-broker",
-      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT) and Email code (one-time code), owner only (#1066, #1083, #1118)",
       "dns": "auth-broker.app",
       "containers": {
         "google": {
@@ -3774,17 +3775,33 @@
             "mem_limit": "64m"
           },
           "protocol": "http"
+        },
+        "email": {
+          "container_name": "auth-broker-email",
+          "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
+          "port": 4183,
+          "public": false,
+          "healthcheck": "/oauth2/email/health",
+          "volumes": [],
+          "env_file": true,
+          "resources": {
+            "mem_reservation": "16m",
+            "mem_limit": "64m"
+          },
+          "protocol": "http"
         }
       },
       "container_names": [
         "auth-broker-google",
         "auth-broker-github",
-        "auth-broker-cloudflare"
+        "auth-broker-cloudflare",
+        "auth-broker-email"
       ],
       "all_ports": [
         "4180",
         "4181",
-        "4182"
+        "4182",
+        "4183"
       ],
       "all_dns": [],
       "compose": {
@@ -3798,7 +3815,8 @@
       "declared_ports": {
         "google": 4180,
         "github": 4181,
-        "cloudflare": 4182
+        "cloudflare": 4182,
+        "email": 4183
       },
       "flake": "infra-sec_auth-broker"
     },
