@@ -959,6 +959,7 @@ function deriveCaddy(c: any): DerivedFile[] {
   // ── Redirects: domain → target (permanent redirect, no upstream needed) ──
   const redirects: any[] = [
     { domain: "mail.diegonmarcos.com", target: "https://webmail.diegonmarcos.com{uri}", comment: "mail → webmail redirect" },
+    { domain: "fin-api.diegonmarcos.com", target: "https://c3-pvt.diegonmarcos.com/fin-api{uri}", comment: "fin-api own host retired (#1104): redirect to the c3-pvt path" },
   ];
 
   // ── Auth upstreams: Caddy forward_auth targets (from cloud-data, not hardcoded) ──
