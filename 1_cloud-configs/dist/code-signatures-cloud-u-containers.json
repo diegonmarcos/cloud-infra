@@ -8590,6 +8590,12 @@
       "lang": "ts",
       "role": "module",
       "exports": [
+        "phoneAlias",
+        "doorsOf",
+        "onPhone",
+        "currentPhone",
+        "pinPhone",
+        "dialOrder",
         "fleetToken",
         "sq",
         "run",
@@ -8598,15 +8604,22 @@
         "scan",
         "get",
         "call",
+        "PHONES",
         "PORT_DEVCONTROL",
         "PORT_FIRST",
         "PORT_LAST",
         "App"
       ],
       "imports": [
-        "node:child_process"
+        "node:child_process",
+        "node:async_hooks"
       ],
       "symbols": [
+        "phoneAlias(q: string)",
+        "doorsOf(alias: string)",
+        "currentPhone()",
+        "pinPhone(phone: string)",
+        "dialOrder(want: string | null)",
         "fleetToken()",
         "sq(s: string)",
         "exec(cmd: string, args: string[], stdin: string)",
@@ -8644,6 +8657,7 @@
       "exports": [
         "label",
         "resolve",
+        "stamp",
         "registerTools",
         "ROUTE_RE"
       ],
@@ -8658,6 +8672,8 @@
         "apps(refresh = false)",
         "label(a: App)",
         "resolve(list: App[], query: string)",
+        "stamp(phone: string | null, r: Out)",
+        "phoneTool(server: McpServer)",
         "registerTools(server: McpServer, appModules: AppModule[] = [])",
         "pkgOf(query: string)",
         "adbExec(cmd: string, timeoutSec = 30)",
@@ -8905,7 +8921,7 @@
         "environment",
         "PORT",
         "MCP_HTTP_HOST",
-        "SUPERAPP_HOSTS"
+        "SUPERAPP_PHONES"
       ]
     },
     {
@@ -8950,10 +8966,12 @@
       "lang": "sh",
       "role": "shell",
       "exports": [
+        "bad()",
         "check()"
       ],
       "imports": [],
       "symbols": [
+        "bad()",
         "check()"
       ]
     },
