@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 3003,
+    "files": 3008,
     "by_lang": {
       "sh": 164,
       "nix": 179,
-      "js": 87,
+      "js": 88,
       "py": 874,
-      "ts": 1163,
+      "ts": 1167,
       "rust": 536
     },
     "by_role": {
       "shell": 154,
       "nix-module": 19,
-      "file": 333,
+      "file": 334,
       "python": 860,
-      "module": 712,
+      "module": 715,
       "script": 9,
       "flake": 81,
       "compose": 79,
       "entrypoint": 51,
-      "mcp-tool": 116,
+      "mcp-tool": 117,
       "workflow-dag": 5,
       "rust-module": 531,
       "hook": 53
@@ -3073,6 +3073,21 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/ssh-argv.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sshArgv",
+        "vmMeshAddress",
+        "SSH_BASE_OPTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "sshArgv(alias: string, wrappedCommand: string, connectTimeout: number | string = 10)",
+        "vmMeshAddress(vm: { ip: string; wg_ip?: string })"
+      ]
+    },
+    {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "module",
@@ -3080,13 +3095,15 @@
         "sshExec",
         "sshExecAsync",
         "checkVmReachable",
-        "remoteShellWrap"
+        "remoteShellWrap",
+        "vmMeshAddress"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
         "./audit.js",
-        "./shell-quote.js"
+        "./shell-quote.js",
+        "./ssh-argv.js"
       ],
       "symbols": [
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
@@ -6230,6 +6247,21 @@
       ]
     },
     {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/ssh-argv.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sshArgv",
+        "vmMeshAddress",
+        "SSH_BASE_OPTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "sshArgv(alias: string, wrappedCommand: string, connectTimeout: number | string = 10)",
+        "vmMeshAddress(vm: { ip: string; wg_ip?: string })"
+      ]
+    },
+    {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "module",
@@ -6237,13 +6269,15 @@
         "sshExec",
         "sshExecAsync",
         "checkVmReachable",
-        "remoteShellWrap"
+        "remoteShellWrap",
+        "vmMeshAddress"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
         "./audit.js",
-        "./shell-quote.js"
+        "./shell-quote.js",
+        "./ssh-argv.js"
       ],
       "symbols": [
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
@@ -6452,6 +6486,17 @@
       "symbols": [
         "fishWords(s)"
       ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-ssh-check.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "./shared/libs/ssh-argv.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/test-vm-files-policy.mjs",
@@ -21344,6 +21389,21 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/ssh-argv.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "sshArgv",
+        "vmMeshAddress",
+        "SSH_BASE_OPTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "sshArgv(alias: string, wrappedCommand: string, connectTimeout: number | string = 10)",
+        "vmMeshAddress(vm: { ip: string; wg_ip?: string })"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "module",
@@ -21351,13 +21411,15 @@
         "sshExec",
         "sshExecAsync",
         "checkVmReachable",
-        "remoteShellWrap"
+        "remoteShellWrap",
+        "vmMeshAddress"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
         "./audit.js",
-        "./shell-quote.js"
+        "./shell-quote.js",
+        "./ssh-argv.js"
       ],
       "symbols": [
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
@@ -22864,6 +22926,21 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/ssh-argv.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "sshArgv",
+        "vmMeshAddress",
+        "SSH_BASE_OPTS"
+      ],
+      "imports": [],
+      "symbols": [
+        "sshArgv(alias: string, wrappedCommand: string, connectTimeout: number | string = 10)",
+        "vmMeshAddress(vm: { ip: string; wg_ip?: string })"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/ssh.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -22871,13 +22948,15 @@
         "sshExec",
         "sshExecAsync",
         "checkVmReachable",
-        "remoteShellWrap"
+        "remoteShellWrap",
+        "vmMeshAddress"
       ],
       "imports": [
         "./exec.js",
         "./config.js",
         "./audit.js",
-        "./shell-quote.js"
+        "./shell-quote.js",
+        "./ssh-argv.js"
       ],
       "symbols": [
         "sshExec(\n  vmNameOrAlias: string,\n  command: string,\n  timeout?: number,\n  _noRetry = false,\n  connectTimeout = 10,\n)",
