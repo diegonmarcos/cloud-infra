@@ -56,9 +56,9 @@ jobs:
       - name: Install sops
         run: |
           set -eu
-          curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.10.2/sops-v3.10.2.linux.amd64
+          curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
           sudo install -m 0755 /tmp/sops /usr/local/bin/sops
-          sops --version
+          sops --version; sops set --help 2>&1 | grep -q value-stdin
       - name: Set the key
         env:
           T_FILE: ${{ inputs.file }}
