@@ -281,6 +281,13 @@
       "record_name": "spec-zt",
       "service": "http://10.0.0.6:3080"
     },
+    "broker_app": {
+      "_doc": "Cloudflare One sign-in for the auth broker (cloud-u-containers infra-sec_auth-broker, provider cloudflare). The chooser's Cloudflare One button sends the browser here; Access logs the owner in (owner-only policy, no machine tokens) and forwards the request, with Cf-Access-Jwt-Assertion, through the fleet tunnel straight to the broker instance on oci-apps, whose /oauth2/cloudflare/callback verifies the JWT and issues the shared _diego_sso cookie. The Access app AUD (output zt_broker_aud) is listed in the broker build.json auth_broker.cloudflare_access.aud. The DNS record depends_on the Access app.",
+      "name": "auth broker (cloudflare one sign-in)",
+      "hostname": "auth-cf.diegonmarcos.com",
+      "record_name": "auth-cf",
+      "service": "http://10.0.0.6:4182"
+    },
     "service_tokens": [
       {
         "key": "pilot",

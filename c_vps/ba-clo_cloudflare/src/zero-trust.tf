@@ -46,7 +46,7 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "zt_fleet" {
   config {
     # Public hostnames exist only once Access is in front of them.
     dynamic "ingress_rule" {
-      for_each = (local.zt_on && try(local.zt.tunnel_ingress, false)) ? [local.zt.pilot_app] : []
+      for_each = (local.zt_on && try(local.zt.tunnel_ingress, false)) ? [local.zt.pilot_app, local.zt.broker_app] : []
       content {
         hostname = ingress_rule.value.hostname
         service  = ingress_rule.value.service
@@ -116,6 +116,36 @@ resource "cloudflare_zero_trust_access_application" "zt_pilot" {
     cloudflare_zero_trust_access_policy.zt_owner[0].id,
     cloudflare_zero_trust_access_policy.zt_machines[0].id,
   ]
+}
+
+# Cloudflare One sign-in for the auth broker: owner-only (no machine tokens), so a service token
+# can never mint a broker session. The broker verifies the forwarded JWT itself.
+resource "cloudflare_zero_trust_access_application" "zt_broker" {
+  count                     = local.zt_n
+  account_id                = local.config.account_id
+  name                      = local.zt.broker_app.name
+  domain                    = local.zt.broker_app.hostname
+  type                      = "self_hosted"
+  session_duration          = local.zt.identity.session_duration
+  allowed_idps              = [cloudflare_zero_trust_access_identity_provider.zt_otp[0].id]
+  auto_redirect_to_identity = true
+  app_launcher_visible      = false
+  policies = [
+    cloudflare_zero_trust_access_policy.zt_owner[0].id,
+  ]
+}
+
+resource "cloudflare_record" "zt_broker" {
+  count   = local.zt_n
+  zone_id = var.cloudflare_zone_id
+  name    = local.zt.broker_app.record_name
+  type    = "CNAME"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.zt_fleet.id}.cfargotunnel.com"
+  proxied = true
+  ttl     = 1
+  comment = "ZT: auth broker Cloudflare One sign-in callback (tunnel fleet-edge + Access, owner only)"
+
+  depends_on = [cloudflare_zero_trust_access_application.zt_broker]
 }
 
 # Proxied CNAME → tunnel. depends_on the Access app: the hostname must never
@@ -210,4 +240,8 @@ output "zt_dns_location_doh_subdomain" {
 # cloud-u-containers infra-sec_auth-broker/build.json auth_broker.cloudflare_access.aud (#1083).
 output "zt_pilot_aud" {
   value = local.zt_on ? cloudflare_zero_trust_access_application.zt_pilot[0].aud : ""
+}
+
+output "zt_broker_aud" {
+  value = local.zt_on ? cloudflare_zero_trust_access_application.zt_broker[0].aud : ""
 }
