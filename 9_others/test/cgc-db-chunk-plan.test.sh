@@ -103,6 +103,20 @@ run_suite() {
     grep -qxF 'libs/k/b.png' <<<"$PI" && f ".noindex'd file counted indexable because a .gitignore re-include outranked it"
     grep -qxF 'libs/k/a.kt' <<<"$PI" || f "re-included source file dropped"
 
+    # 8 (run 39749111631): dirty files share the window budget, so halving can go below them.
+    S3="$R/state3.json"; cp "$S" "$S3"
+    for df in $(head -6 "$O/indexable" | grep -v '^\.noindex$'); do echo more >> "$R/$df"; done
+    git -C "$R" commit -qam dirty6; H3=$(git -C "$R" rev-parse HEAD)
+    chunk_plan "$R" "$S3" "$H3" 2 "" "$O" >/dev/null
+    nd=$(wc -l < "$O/dirty" | tr -d ' ')
+    [ "$nd" -ge 5 ] && [ "$(wc -l < "$O/next")" = 2 ] || f "window of 2 holds $(wc -l < "$O/next") files with $nd dirty (dirty must not exceed the budget)"
+    chunk_commit "$O" "$H3" "$S3"
+    [ "$(jq '.dirty|length' "$S3")" = $((nd - 2)) ] || f "dirty files the window left out were not kept dirty"
+    n=0; while [ "$(jq '.dirty|length' "$S3")" != 0 ]; do
+      n=$((n+1)); [ "$n" -gt 10 ] && { f "dirty did not drain"; break; }
+      chunk_plan "$R" "$S3" "$H3" 2 "" "$O" >/dev/null; chunk_commit "$O" "$H3" "$S3"
+    done
+
     # adapt
     [ "$(chunk_adapt 2000 timeout 0 100 100 20000)" = 1000 ] || f "timeout must halve"
     [ "$(chunk_adapt 2000 ok 10 100 100 20000)" = 4000 ] || f "fast chunk must double"
@@ -129,6 +143,7 @@ mutate window-in-root-noindex 's|_cx="\$_cp_d/.git/info/exclude"$|_cx="$_cp_d/.n
 mutate commit-drops-done      's|sort -u "\$_cc_o/done" "\$_cc_o/next.ok" > "\$_cc_o/done1"|sort -u "$_cc_o/next.ok" > "$_cc_o/done1"|'
 mutate no-dirty-from-diff     's|LC_ALL=C sort -u "\$_cp_o/dirty0" "\$_cp_o/changed"|LC_ALL=C sort -u "$_cp_o/dirty0"|'
 mutate deleted-stays-done     's|LC_ALL=C comm -12 "\$_cp_o/done0" "\$_cp_o/indexable" > "\$_cp_o/done"|cp "$_cp_o/done0" "$_cp_o/done"|'
+mutate dirty-over-budget      's|head -n "\$_cp_n" "\$_cp_o/dirty" > "\$_cp_o/dirty_win"|cp "$_cp_o/dirty" "$_cp_o/dirty_win"|'
 mutate allowlist-ignored      's|if \[ -n "\$_cp_allow" \]; then|if false; then|'
 mutate block-not-cleared      's|^  chunk_exclude_clear "\$_cp_d"$|  :|'
 mutate noindex-below-gitignore 's|ls-files -c -i --exclude-from=|ls-files -c -i --exclude-standard --exclude-from=|'

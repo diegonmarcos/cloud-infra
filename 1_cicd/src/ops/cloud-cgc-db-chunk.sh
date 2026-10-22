@@ -186,8 +186,15 @@ chunk_plan() {  # $1 repo dir  $2 state file  $3 head  $4 chunk size  $5 allowli
   else
     cp "$_cp_o/remaining" "$_cp_o/cand"
   fi
-  head -n "$_cp_n" "$_cp_o/cand" > "$_cp_o/chunk"
-  LC_ALL=C sort -u "$_cp_o/dirty" "$_cp_o/chunk" > "$_cp_o/next"
+  # The window's size budget $_cp_n is shared by dirty and chunk files, dirty first. A
+  # head move that dirtied 509 done files used to put all 509 in every window, so halving a
+  # stalled window could never get under 509 files and the same stall repeated (run
+  # 39749111631, cloud-u-android: 909, 963, 990 new-work files for chunks 400, 454, 481).
+  # The dirty files a window leaves out stay dirty (chunk_commit) for the next one.
+  head -n "$_cp_n" "$_cp_o/dirty" > "$_cp_o/dirty_win"
+  _cp_room=$(( _cp_n - $(wc -l < "$_cp_o/dirty_win" | tr -d ' ') ))
+  head -n "$_cp_room" "$_cp_o/cand" > "$_cp_o/chunk"
+  LC_ALL=C sort -u "$_cp_o/dirty_win" "$_cp_o/chunk" > "$_cp_o/next"
   LC_ALL=C sort -u "$_cp_o/done" "$_cp_o/next" > "$_cp_o/window"
   # Everything indexable outside the window is hidden from this walk.
   _cx="$_cp_d/.git/info/exclude"
@@ -220,10 +227,12 @@ chunk_commit() {  # $1 plan out dir  $2 head  $3 state file to write  [$4 deferr
   if [ -n "${4:-}" ] && [ -s "$4" ]; then
     LC_ALL=C sort -u "$4" > "$_cc_o/deferred.sorted"
     LC_ALL=C comm -23 "$_cc_o/next" "$_cc_o/deferred.sorted" > "$_cc_o/next.ok"
-    LC_ALL=C comm -12 "$_cc_o/dirty" "$_cc_o/deferred.sorted" > "$_cc_o/dirty1"
+    LC_ALL=C comm -12 "$_cc_o/dirty_win" "$_cc_o/deferred.sorted" > "$_cc_o/dirty1"
   else
     cp "$_cc_o/next" "$_cc_o/next.ok"; : > "$_cc_o/dirty1"
   fi
+  # dirty files the window did not take stay dirty
+  LC_ALL=C comm -23 "$_cc_o/dirty" "$_cc_o/dirty_win" | LC_ALL=C sort -u - "$_cc_o/dirty1" > "$_cc_o/dirty2" && mv "$_cc_o/dirty2" "$_cc_o/dirty1"
   LC_ALL=C sort -u "$_cc_o/done" "$_cc_o/next.ok" > "$_cc_o/done1"
   jq --rawfile done "$_cc_o/done1" --rawfile dirty "$_cc_o/dirty1" --arg head "$2" \
      '.done = ($done | split("\n") | map(select(length > 0)))
