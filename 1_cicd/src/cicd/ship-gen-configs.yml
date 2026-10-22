@@ -51,7 +51,7 @@ permissions:
 
 concurrency:
   group: gen-configs
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   generate:
