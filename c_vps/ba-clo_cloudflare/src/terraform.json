@@ -16,6 +16,7 @@
       { "name": "diegonmarcos.com",  "proxied": false, "ttl": 300, "comment": null },
       { "name": "www",               "proxied": false, "ttl": 300, "comment": null },
       { "name": "*",                 "proxied": false, "ttl": 1,   "comment": "Wildcard → oci-analytics (public edge) ONLY. Internal wg0 mesh resolution is split-horizon via Hickory (10.0.0.1:53), NOT a public CF record — keeps RFC1918 mesh IPs off public DNS." },
+      { "name": "c3-pub",            "proxied": true,  "ttl": 1,   "comment": "Routing tier pub (#1104): the ONLY Cloudflare-proxied (orange) name. Unauthenticated explicit allowlist, served by the hub site c3-pub; geo-fence at the Cloudflare edge." },
       { "name": "api",               "proxied": false, "ttl": 300, "comment": "api.* → public edge (oci-analytics). Public /pub/* routes here; internal wg-cloud routes resolve via Hickory split-horizon, not a public mesh record." },
       { "name": "mail",              "proxied": false, "ttl": 300, "comment": "Explicit A — CF wildcard doesn't catch bare 'mail' label when MX exists at same name" }
     ],
