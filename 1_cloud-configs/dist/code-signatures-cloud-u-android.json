@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22066,
+    "files": 22068,
     "by_lang": {
       "js": 488,
       "sh": 545,
       "py": 155,
-      "kotlin": 11633,
+      "kotlin": 11635,
       "java": 637,
       "ts": 8467,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6423,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11630,
+      "kotlin": 11632,
       "python": 50,
       "rust-module": 110,
       "hook": 150,
@@ -7754,6 +7754,7 @@
         "Boards",
         "ThreadIntents",
         "BoardsWire",
+        "readHealthBoard",
         "FleetBoardsSource"
       ],
       "imports": [
@@ -7781,6 +7782,7 @@
         "steps(body: String)",
         "places(body: String)",
         "projects(body: String)",
+        "readHealthBoard(ctx: Context, days: Int = 30, today: LocalDate = LocalDate.now()",
         "fleetMail(limit: Int)",
         "mailRows(c: Cursor)",
         "steps(days: Int)",
@@ -14421,6 +14423,7 @@
       "symbols": [
         "groups(json: String)",
         "parse(json: String)",
+        "resolve(all: List<Badge>, id: String)",
         "badges(all: List<Badge>)",
         "restartServices(all: List<Badge>)",
         "badgesOf(all: List<Badge>, service: String)",
@@ -14654,12 +14657,23 @@
         "HealthBadgeModel"
       ],
       "imports": [
-        "com.diegonmarcos.superapp.health.StepsToday",
-        "java.util.Locale"
+        "com.diegonmarcos.superapp.boards.HealthAgg",
+        "com.diegonmarcos.superapp.boards.HealthBoard",
+        "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.boards.Why",
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
+        "org.json.JSONObject"
       ],
       "symbols": [
-        "stepsText(r: StepsToday.Result?)",
-        "class HealthBadgeModel"
+        "toJson()",
+        "faceFromJson(s: String?)",
+        "permName(p: String)",
+        "face(read: Read<HealthBoard>?)",
+        "ok(b: HealthBoard)",
+        "updated(ageMs: Long)",
+        "class HealthBadgeModel",
+        "class State",
+        "class Face"
       ]
     },
     {
@@ -14681,15 +14695,10 @@
         "android.os.Looper",
         "androidx.core.app.NotificationCompat",
         "com.diegonmarcos.superapp.R",
-        "com.diegonmarcos.superapp.health.HealthConnectGateway",
-        "com.diegonmarcos.superapp.health.StepsToday",
-        "java.time.ZoneId",
         "kotlinx.coroutines.CoroutineScope",
-        "kotlinx.coroutines.Job",
         "kotlinx.coroutines.SupervisorJob",
         "kotlinx.coroutines.cancel",
-        "kotlinx.coroutines.launch",
-        "java.util.Locale"
+        "kotlinx.coroutines.launch"
       ],
       "symbols": [
         "onBind(intent: Intent?)",
@@ -14701,7 +14710,10 @@
         "badge()",
         "refreshMs()",
         "refresh()",
-        "build(today: HealthConnectGateway.ActivityToday?, steps: StepsToday.Result? = null)",
+        "prefs()",
+        "cached()",
+        "save(f: HealthBadgeModel.Face, at: Long = System.currentTimeMillis()",
+        "build()",
         "ensureChannel()",
         "class HealthBadgeService"
       ]
@@ -19918,6 +19930,49 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/MyHealthCardScreenTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MyHealthCardScreenTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.ui.test.assertHasClickAction",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.dp",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.boards.HealthAgg",
+        "com.diegonmarcos.superapp.boards.HealthFixtures",
+        "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.boards.Why",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
+        "com.diegonmarcos.superapp.notificationcenter.HealthBadgeModel",
+        "com.diegonmarcos.superapp.notificationcenter.HealthBadgeService",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "data(f: HealthBadgeModel.Face)",
+        "draw(d: BadgeCardData.Data, shot: String)",
+        "snap(name: String)",
+        "class MyHealthCardScreenTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/MyHealthShotTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -20070,7 +20125,12 @@
       "exports": [],
       "imports": [
         "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
-        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration"
+        "com.diegonmarcos.superapp.boards.HealthAgg",
+        "com.diegonmarcos.superapp.boards.HealthFixtures",
+        "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
+        "com.diegonmarcos.superapp.notificationcenter.HealthBadgeModel",
+        "java.time.LocalDate"
       ],
       "symbols": [
         "badge(b: BadgeDeclaration.Badge)",
@@ -21390,14 +21450,13 @@
         "weatherOpensTheProvidersPageForThePosition()",
         "weatherWithoutAFixOpensTheProvidersHome()",
         "weatherUrlUsesDotDecimalsInAnyLocale()",
-        "healthOpensNavTimelineSteps()",
+        "myHealthOpensTheBoardsMyHealthPage()",
         "permissionStateMapping()",
         "todayIsTheLocalDayNotTheUtcDay()",
         "todayRangeSpansExactlyOneCalendarDayAcrossDst()",
         "zeroWithNoOriginsHintsAtSamsungSync()",
         "deniedAsksForGrantAndNeverShowsZero()",
         "statusLineNamesSourcePermissionAndLastData()",
-        "stepsTextFormats()",
         "class BadgeClickTest"
       ]
     },
@@ -21474,6 +21533,38 @@
         "report(r: BatteryReading, samples: List<BatterySample> = discharged()",
         "card(r: BatteryReading, samples: List<BatterySample> = discharged()",
         "class BatteryBadgeModelTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/HealthBadgeModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HealthBadgeModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.boards.HealthAgg",
+        "com.diegonmarcos.superapp.boards.HealthFixtures",
+        "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.boards.Why",
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
+        "com.diegonmarcos.superapp.notificationcenter.HealthBadgeModel.State",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.io.File",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "board(raw: HealthBoardReader.Raw = HealthFixtures.seeded(today)",
+        "class HealthBadgeModelTest"
       ]
     },
     {
