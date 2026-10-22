@@ -85,6 +85,31 @@ chunk_state_read() {  # $1 = state file → stdout: state JSON (default when abs
   fi
 }
 
+# QUARANTINE (#1061). A window that spins with no LLM call and no output is killed by the
+# stall watchdog; the files octocode had in flight (the nodes added/described but never
+# related, which it prints when it exits) are recorded here with the reason and skipped from
+# then on, so one bad file can never stall a whole repo again. State: .quarantine = {path: reason}.
+chunk_quarantined_list() {  # $1 = state file → stdout: quarantined paths, sorted
+  jq -r '(.quarantine // {}) | keys[]' "$1" 2>/dev/null | LC_ALL=C sort -u
+}
+
+# Paths octocode had in flight when a window was killed: nodes it added or was describing,
+# read from the window's log, limited to the window's new-work files.
+chunk_inflight_from_log() {  # $1 octocode log  $2 new-work file list → stdout: paths
+  _if_t=$(mktemp)
+  LC_ALL=C sort -u "$2" > "$_if_t"
+  tr '\r' '\n' < "$1" 2>/dev/null \
+    | sed -n -e 's/^.*Added new node: //p' -e 's/^.*Updated pending node description for: //p' -e 's/^.*Applied AI description to: //p' \
+    | LC_ALL=C sort -u | LC_ALL=C comm -12 - "$_if_t"
+  rm -f "$_if_t"
+}
+
+chunk_quarantine() {  # $1 state in  $2 paths file  $3 reason  $4 state out
+  jq --rawfile p "$2" --arg why "$3" \
+     '.quarantine = ((.quarantine // {}) + ([$p | split("\n")[] | select(length > 0)] | map({key: ., value: $why}) | from_entries))' \
+     "$1" > "$4.tmp" && mv "$4.tmp" "$4"
+}
+
 # Escape a literal path as an anchored gitignore pattern.
 chunk_glob_escape() {  # stdin paths → stdout patterns
   sed -e 's/[][\\*?!#]/\\&/g' -e 's/^/\//' -e 's/ $/\\ /'
@@ -127,6 +152,10 @@ chunk_plan() {  # $1 repo dir  $2 state file  $3 head  $4 chunk size  $5 allowli
     | LC_ALL=C comm -12 - "$_cp_o/indexable" > "$_cp_o/dirty"
   LC_ALL=C comm -12 "$_cp_o/done0" "$_cp_o/indexable" > "$_cp_o/done"
   LC_ALL=C comm -23 "$_cp_o/indexable" "$_cp_o/done" > "$_cp_o/remaining"
+  # Quarantined files (a window stalled while they were in flight) are neither done nor
+  # work: never planned again, hidden from the walk like any file outside the window.
+  chunk_quarantined_list "$_cp_o/state0" > "$_cp_o/quarantine"
+  LC_ALL=C comm -23 "$_cp_o/remaining" "$_cp_o/quarantine" > "$_cp_o/remaining.q" && mv "$_cp_o/remaining.q" "$_cp_o/remaining"
   if [ -n "$_cp_allow" ]; then
     LC_ALL=C sort -u "$_cp_allow" | LC_ALL=C comm -12 "$_cp_o/remaining" - > "$_cp_o/cand"
   else
@@ -250,9 +279,9 @@ chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen 
     _hb_dcpu=$(( _hb_cpu - ${_hb_cpu0:-$_hb_cpu} )); _hb_cpu0=$_hb_cpu
     echo "[cgc-db] $1 heartbeat $(( ( $(date +%s) - _hb_t0 ) / 60 ))m: ${_hb_p:-no progress line yet}; LLM calls done ${_hb_c}${_hb_last}; cpu $(( _hb_dcpu / $5 ))% of a core"
     if [ -n "${8:-}" ] && [ "${7:-0}" -gt 0 ] 2>/dev/null && [ -n "$_hb_p" ]; then
-      # A window burning CPU (>= 20% of a core over the beat) is working, not stalled: only
-      # progress, an LLM call or CPU keeps it alive; the window cap still bounds a livelock.
-      if [ "${_hb_p}|${_hb_c}" != "$_hb_sig" ] || [ "$_hb_dcpu" -ge $(( $5 * 20 )) ]; then
+      # CPU is reported in the heartbeat but is NOT liveness: run 39688954936 spun at 100% of
+      # a core for 87 minutes with no call and no output (octocode livelock, #1061).
+      if [ "${_hb_p}|${_hb_c}" != "$_hb_sig" ]; then
         _hb_sig="${_hb_p}|${_hb_c}"; _hb_since=$(date +%s)
       elif [ $(( $(date +%s) - _hb_since )) -ge "$7" ]; then
         echo "::warning::[cgc-db] $1 stalled: no progress and no LLM call for $(( ( $(date +%s) - _hb_since ) / 60 ))m at '${_hb_p}' -- killing octocode now instead of waiting for the window cap"
@@ -287,7 +316,7 @@ chunk_heartbeat() {  # $1 label  $2 octocode log  $3 call log|""  $4 lines seen 
 # Nothing outstanding after this window?
 chunk_converged() {  # $1 state file  $2 indexable file  $3 allowlist file|"" → rc 0 when converged
   _cv_t=$(mktemp)
-  jq -r '.done[]' "$1" | LC_ALL=C sort -u > "$_cv_t"
+  { jq -r '.done[]' "$1"; chunk_quarantined_list "$1"; } | LC_ALL=C sort -u > "$_cv_t"
   _cv_left=$(LC_ALL=C comm -23 "$2" "$_cv_t" | wc -l | tr -d ' ')
   _cv_dirty=$(jq '.dirty | length' "$1")
   rm -f "$_cv_t"
@@ -325,12 +354,13 @@ chunk_touch_next() {  # $1 repo dir  $2 next-file list
 # One JSON status line per repo+phase — the convergence monitor's record.
 chunk_status_json() {  # $1 repo  $2 phase  $3 state file  $4 indexable file  $5 head  $6 converged(0/1)
   _cs_t=$(mktemp)
-  jq -r '.done[]' "$3" | LC_ALL=C sort -u > "$_cs_t"
+  { jq -r '.done[]' "$3"; chunk_quarantined_list "$3"; } | LC_ALL=C sort -u > "$_cs_t"
   _cs_left=$(LC_ALL=C comm -23 "$4" "$_cs_t" | wc -l | tr -d ' ')
   rm -f "$_cs_t"
   jq -c --arg repo "$1" --arg phase "$2" --arg head "$5" --argjson conv "$6" \
         --argjson total "$(wc -l < "$4" | tr -d ' ')" --argjson left "$_cs_left" \
      '{repo: $repo, phase: $phase, head: $head, seen: .seen, total: $total,
        done: (.done | length), remaining: $left, dirty: (.dirty | length),
+       quarantined: ((.quarantine // {}) | length),
        chunk: .chunk, stale_runs: .stale_runs, converged: ($conv == 1)}' "$3"
 }

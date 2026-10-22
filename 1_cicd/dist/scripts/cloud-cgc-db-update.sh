@@ -1887,7 +1887,7 @@ chunk_index_repo() {
     # the heartbeat can find and kill it; a kill it ordered is reported as the window's 124.
     _cr_pidf="$_cr_o/octocode.pid"; _cr_stalled="$_cr_o/stalled"; rm -f "$_cr_pidf" "$_cr_stalled"
     _cr_stall_s=0
-    [ "$MANIFEST_PHASE" = "graphrag" ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-10} * 60 ))
+    [ "$MANIFEST_PHASE" = "graphrag" ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-30} * 60 ))
     if [ "${CGC_HEARTBEAT_S:-0}" -gt 0 ] 2>/dev/null; then
       : > "$_log"
       chunk_heartbeat "$_cr_r · chunk $_cr_i" "$_log" "${LLM_PROXY_LOG:-}" "$_cr_l0" "$CGC_HEARTBEAT_S" "$_cr_pidf" "$_cr_stall_s" "$_cr_stalled" &
@@ -1904,12 +1904,20 @@ chunk_index_repo() {
     _cr_llm=0
     chunk_llm_summary "${LLM_PROXY_LOG:-}" "$_cr_l0" "$_cr_dt" "$_cr_nn" "$_cr_r · chunk $_cr_i (rc=$_rc)" "$_cr_o" || _cr_llm=$?
     if [ "$_rc" = "124" ]; then
-      if [ -f "$_cr_stalled" ]; then
-        # A stall kill says nothing about the window's size: halving after each one walked
-        # cloud-u-android's graphrag chunk down to the 100-file floor, where every window
-        # paid the same fixed silent phase for +100 files (#1061). Keep the size and rate.
-        cp "$_cr_o/state0" "$_cr_sf_stage"
-        echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i stalled — chunk size kept at $_cr_n (a stall is not a size problem); this window's files stay outstanding"
+      _cr_inflight="$_cr_o/inflight"; : > "$_cr_inflight"
+      [ -f "$_cr_stalled" ] && chunk_inflight_from_log "$_log" "$_cr_o/next" > "$_cr_inflight"
+      if [ -s "$_cr_inflight" ]; then
+        # A stalled window is not a size problem (halving after each kill walked the chunk
+        # down to the floor, #1061): quarantine the files octocode had in flight, with the
+        # reason, and go on with the rest of the window. The run summary lists them.
+        _cr_qn=$(wc -l < "$_cr_inflight" | tr -d ' ')
+        chunk_quarantine "$_cr_o/state0" "$_cr_inflight" "stalled graphrag window (no LLM call, no output for ${CGC_STALL_MIN:-30}m) with this file in flight, $(date -u +%Y-%m-%d), run ${GITHUB_RUN_ID:-local}" "$_cr_sf_stage"
+        if cgc_repo_is_private "$_cr_r"; then _cr_qnames="(names withheld: private repo)"; else _cr_qnames=$(tr '\n' ' ' < "$_cr_inflight"); fi
+        echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i stalled — QUARANTINED $_cr_qn file(s), skipped from now on: $_cr_qnames"
+      elif [ -f "$_cr_stalled" ]; then
+        _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
+        jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_o/state0" > "$_cr_sf_stage"
+        echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i stalled with no in-flight evidence in the log — chunk size halved to $_cr_n; this window's files stay outstanding"
       else
       _cr_n=$(chunk_adapt "$_cr_n" timeout "$_cr_dt" $(( _cr_wto * 60 )) "$CHUNK_MIN" "$CHUNK_MAX")
       # The rate was too optimistic: double it so the next sized window is half as big.
