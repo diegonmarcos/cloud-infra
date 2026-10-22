@@ -60,7 +60,14 @@ jobs:
           export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
           printf '%s' "$SET_VALUE" | jq -Rs . | sops set --value-stdin "target/$T_FILE" "[\"$T_KEY\"]"
           grep -q '^sops:' "target/$T_FILE" || grep -q '"sops"' "target/$T_FILE"
-          if grep -qF -- "$SET_VALUE" "target/$T_FILE"; then echo "::error::plaintext found in the output file"; exit 1; fi
+          export T_PATH="target/$T_FILE"
+          python3 - <<'PY'
+          import os, sys
+          v, t, k = os.environ["SET_VALUE"], open(os.environ["T_PATH"]).read(), os.environ["T_KEY"]
+          line = [l for l in t.splitlines() if l.startswith(k + ":")]
+          print("key present: %s, encrypted: %s, plaintext in file: %s, value length: %d" % (bool(line), bool(line) and "ENC[" in line[0], v in t, len(v)))
+          sys.exit(0 if line and "ENC[" in line[0] and v not in t else 1)
+          PY
           mkdir -p out && cp "target/$T_FILE" out/result.enc
       - uses: actions/upload-artifact@v4
         with:
