@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 21954,
+    "files": 21956,
     "by_lang": {
       "js": 481,
       "sh": 536,
       "py": 150,
-      "kotlin": 11553,
+      "kotlin": 11555,
       "java": 635,
       "ts": 8461,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6414,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11550,
+      "kotlin": 11552,
       "python": 49,
       "rust-module": 107,
       "hook": 150,
@@ -162138,6 +162138,28 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/ExecListing.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExecListing"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreAccess",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec.Companion.q",
+        "java.io.File",
+        "java.io.IOException"
+      ],
+      "symbols": [
+        "script(guestDir: String)",
+        "parse(dir: String, out: String, mimes: FileOps.MimeResolver, showHidden: Boolean)",
+        "list(ctx: Context, dir: File, mimes: FileOps.MimeResolver, showHidden: Boolean)",
+        "class ExecListing"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/files/ExplorerScreen.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -164009,7 +164031,8 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "SyncScreen"
+        "SyncScreen",
+        "TerminalIslandAction"
       ],
       "imports": [
         "androidx.compose.animation.AnimatedContent",
@@ -164055,7 +164078,8 @@
       ],
       "symbols": [
         "SyncScreen( git: GitSyncCoordinator, rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, page: String? = null, onPageConsumed: ()",
-        "say(msg: String)"
+        "say(msg: String)",
+        "TerminalIslandAction(actions: DriveActions, say: (String)"
       ]
     },
     {
@@ -165076,6 +165100,24 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/files/ExecListingTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ExecListingTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "parsesTypesSizesAndNames()",
+        "hiddenFilesFollowTheFlag()",
+        "class ExecListingTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/files/FileOpsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -165811,9 +165853,16 @@
         "android.os.Looper",
         "android.view.View",
         "androidx.activity.ComponentActivity",
+        "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.FolderOpen",
+        "androidx.compose.material.icons.filled.MoreVert",
+        "androidx.compose.material.icons.filled.Search",
         "androidx.compose.ui.test.assertIsDisplayed",
         "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithContentDescription",
+        "androidx.compose.ui.test.onAllNodesWithTag",
         "androidx.compose.ui.test.onAllNodesWithText",
+        "androidx.compose.ui.test.onNodeWithText",
         "androidx.compose.ui.test.onNodeWithTag",
         "com.diegonmarcos.clouddrive.Declarations",
         "com.diegonmarcos.clouddrive.DriveActions",
@@ -165853,6 +165902,7 @@
         "openUrl(url: String)",
         "launchApp(packageName: String, fallbackUrl: String)",
         "openAuthProfile(pkg: String, target: String, extra: String)",
+        "shot(name: String)",
         "class DriveScreenshotTest"
       ]
     },
