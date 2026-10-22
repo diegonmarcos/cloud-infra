@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22042,
+    "files": 22055,
     "by_lang": {
       "js": 487,
       "sh": 542,
       "py": 154,
-      "kotlin": 11616,
+      "kotlin": 11629,
       "java": 635,
       "ts": 8467,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6423,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11613,
+      "kotlin": 11626,
       "python": 49,
       "rust-module": 110,
       "hook": 150,
@@ -7750,6 +7750,7 @@
         "fleetMail(limit: Int = 30)",
         "phoneNotifications()",
         "steps(days: Int = 7)",
+        "health(days: Int = 30)",
         "places(days: Int = 7)",
         "taskProjects()",
         "group(mail: List<InboxItem>, phone: List<InboxItem>)",
@@ -7761,6 +7762,7 @@
         "fleetMail(limit: Int)",
         "mailRows(c: Cursor)",
         "steps(days: Int)",
+        "health(days: Int)",
         "places(days: Int)",
         "ask(pkg: String, app: String, op: String, q: Map<String, String>, parse: (String)",
         "class BoardsSource",
@@ -7779,6 +7781,57 @@
         "class ThreadIntents",
         "class BoardsWire",
         "class FleetBoardsSource"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/boards/HealthBoard.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "KmDay",
+        "KmAvg",
+        "StepsBlock",
+        "BpmDay",
+        "RhrBlock",
+        "SleepDay",
+        "SleepAvg",
+        "SleepBlock",
+        "HealthBoard",
+        "HealthAgg"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
+        "java.time.LocalDate",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "stride(heightM: Double?)",
+        "km(distanceM: Double?, steps: Long?, strideM: Double)",
+        "window(today: LocalDate, n: Int)",
+        "mean(values: List<Double?>)",
+        "kmDay(d: LocalDate, raw: HealthBoardReader.Raw, stride: Double)",
+        "kmAvg(days: List<KmDay>)",
+        "steps(raw: HealthBoardReader.Raw, today: LocalDate)",
+        "rhr(raw: HealthBoardReader.Raw, today: LocalDate)",
+        "sleepAvg(days: List<SleepDay>)",
+        "sleep(raw: HealthBoardReader.Raw, today: LocalDate)",
+        "missing(granted: Set<String>)",
+        "board(raw: HealthBoardReader.Raw, today: LocalDate)",
+        "kmText(km: Double?, estimated: Boolean = false)",
+        "kmStepsText(km: Double?, steps: Long?, estimated: Boolean = false)",
+        "hm(min: Double?)",
+        "hours(min: Double)",
+        "bpmText(v: Double?)",
+        "class KmDay",
+        "class KmAvg",
+        "class StepsBlock",
+        "class BpmDay",
+        "class RhrBlock",
+        "class SleepDay",
+        "class SleepAvg",
+        "class SleepBlock",
+        "class HealthBoard",
+        "class HealthAgg"
       ]
     },
     {
@@ -10736,6 +10789,8 @@
         "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.DisposableEffect",
+        "androidx.compose.runtime.mutableIntStateOf",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.produceState",
@@ -10750,14 +10805,12 @@
         "androidx.compose.ui.graphics.asImageBitmap",
         "androidx.compose.ui.graphics.drawscope.Stroke",
         "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.LocalLifecycleOwner",
+        "androidx.lifecycle.Lifecycle",
+        "androidx.lifecycle.LifecycleEventObserver",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.text.font.FontWeight",
-        "androidx.compose.ui.text.style.TextOverflow",
-        "androidx.compose.ui.unit.dp",
-        "androidx.core.graphics.drawable.toBitmap",
-        "com.diegonmarcos.superapp.boards.Boards",
-        "com.diegonmarcos.superapp.boards.BoardsSource",
-        "com.diegonmarcos.superapp.boards.InboxGroup"
+        "androidx.compose.ui.text.style.TextOverflow"
       ],
       "symbols": [
         "unavailable(board: String)",
@@ -10774,9 +10827,17 @@
         "InboxRow(state: AggregatorState, item: InboxItem, now: Long, onOpen: (String)",
         "openItem(item: InboxItem, onOpen: (String)",
         "AppGlyph(icon: ImageBitmap?, label: String)",
+        "rememberResumeCount()",
         "BoardStepsBody(epoch: Int, onOpen: (String)",
-        "StepsContent(b: StepsBoard, onOpen: (String)",
-        "StepsChart(days: List<com.diegonmarcos.superapp.boards.StepsDay>)",
+        "HealthContent(b: HealthBoard)",
+        "HealthPermissionCard(missing: Set<String>, onGrant: ()",
+        "StatTriple(tag: String, today: Pair<String, String>, avg7: Pair<String, String>, avg30: Pair<String, String>, ok: Boolean)",
+        "StepsSection(s: StepsBlock)",
+        "RhrSection(r: RhrBlock)",
+        "SleepSection(s: SleepBlock)",
+        "stageColor(stage: String)",
+        "BarChart(tag: String, dates: List<java.time.LocalDate>, values: List<Float?>, labels: List<String>)",
+        "SleepChart(week: List<SleepDay>)",
         "BoardPlacesBody(epoch: Int, onOpen: (String)",
         "PlacesDayCard(d: PlacesDay, onOpen: (String)",
         "MiniMap(d: PlacesDay, modifier: Modifier)",
@@ -14627,6 +14688,7 @@
         "android.content.Intent",
         "android.os.Bundle",
         "androidx.activity.ComponentActivity",
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
         "com.diegonmarcos.superapp.health.HealthConnectGateway"
       ],
       "symbols": [
@@ -15093,18 +15155,18 @@
         "WeatherBadgeService"
       ],
       "imports": [
-        "android.annotation.SuppressLint",
         "android.app.NotificationChannel",
         "android.app.NotificationManager",
+        "android.app.PendingIntent",
         "android.app.Service",
         "android.content.Intent",
         "android.location.Geocoder",
-        "android.location.Location",
-        "android.location.LocationManager",
+        "android.net.Uri",
         "android.os.Build",
         "android.os.Handler",
         "android.os.IBinder",
         "android.os.Looper",
+        "android.provider.Settings",
         "androidx.core.app.NotificationCompat",
         "com.diegonmarcos.superapp.R",
         "kotlinx.coroutines.CoroutineScope",
@@ -15127,13 +15189,94 @@
         "badge()",
         "refreshMs()",
         "refresh()",
-        "lastKnownLocation()",
-        "fetchToday()",
-        "placeName(loc: Location)",
-        "build(today: WeatherToday?)",
+        "initialState()",
+        "cachedState(fix: WeatherLocation.Fix?)",
+        "compute()",
+        "fetchToday(loc: WeatherLocation.Fix)",
+        "coords(lat: Double, lon: Double)",
+        "placeName(loc: WeatherLocation.Fix)",
+        "build(state: WeatherFace.State)",
+        "actionPi(a: WeatherFace.Action?)",
         "ensureChannel()",
         "class WeatherBadgeService",
         "class WeatherToday"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/WeatherFace.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherFace"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.superapp.R",
+        "java.util.Locale"
+      ],
+      "symbols": [
+        "of(ctx: Context, s: State)",
+        "position(ctx: Context, fix: WeatherLocation.Fix, nowMs: Long)",
+        "class WeatherFace",
+        "class State",
+        "class Forecast",
+        "class Loading",
+        "class NoLocation",
+        "class Action",
+        "class Face"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/WeatherLocation.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherLocation",
+        "WeatherFixStore"
+      ],
+      "imports": [
+        "android.annotation.SuppressLint",
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.location.Location",
+        "android.location.LocationManager",
+        "android.os.Build",
+        "android.os.CancellationSignal",
+        "androidx.core.content.ContextCompat",
+        "androidx.core.location.LocationManagerCompat",
+        "androidx.core.util.Consumer",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "enabled(provider: String)",
+        "lastKnown(provider: String)",
+        "request(provider: String, timeoutMs: Long)",
+        "load()",
+        "save(fix: Fix)",
+        "reasonFor(env: Env)",
+        "allowed(env: Env, provider: String)",
+        "resolve(now: Long, env: Env, probe: Probe, store: FixStore)",
+        "fresh(now: Long, f: Fix)",
+        "keep(fix: Fix, store: FixStore, fresh: Boolean)",
+        "toFix(provider: String)",
+        "env(ctx: Context)",
+        "granted(p: String)",
+        "save(fix: WeatherLocation.Fix)",
+        "saveForecast(c: Cached)",
+        "loadForecast()",
+        "class WeatherLocation",
+        "class Fix",
+        "class Reason",
+        "class Result",
+        "class Found",
+        "class None",
+        "class Env",
+        "class Probe",
+        "class FixStore",
+        "class AndroidProbe",
+        "class WeatherFixStore",
+        "class Cached"
       ]
     },
     {
@@ -18482,6 +18625,52 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/boards/HealthAggTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HealthAggTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
+        "com.diegonmarcos.superapp.health.HealthBoardReader.Night",
+        "com.diegonmarcos.superapp.health.HealthBoardReader.Raw",
+        "com.diegonmarcos.superapp.health.HealthBoardReader.Status",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.Instant",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "raw( steps: Map<LocalDate, Long> = emptyMap()",
+        "t(min: Long)",
+        "class HealthAggTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/boards/HealthFixtures.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HealthFixtures"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.health.HealthBoardReader.Night",
+        "com.diegonmarcos.superapp.health.HealthBoardReader.Raw",
+        "com.diegonmarcos.superapp.health.HealthBoardReader.Status",
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "seeded(today: LocalDate)",
+        "class HealthFixtures"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/cloud/C3PagesComposeTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -19286,6 +19475,10 @@
         "com.diegonmarcos.superapp.boards.PlaceVisit",
         "com.diegonmarcos.superapp.boards.PlacesDay",
         "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.boards.HealthAgg",
+        "com.diegonmarcos.superapp.boards.HealthBoard",
+        "com.diegonmarcos.superapp.boards.HealthFixtures",
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
         "com.diegonmarcos.superapp.boards.StepsBoard",
         "com.diegonmarcos.superapp.boards.StepsDay",
         "com.diegonmarcos.superapp.boards.TaskProject",
@@ -19308,6 +19501,7 @@
         "fleetMail(limit: Int)",
         "phoneNotifications()",
         "steps(days: Int)",
+        "health(days: Int)",
         "places(days: Int)",
         "taskProjects()",
         "use(f: Fake)",
@@ -19666,6 +19860,60 @@
       ],
       "symbols": [
         "class IndexTileGridComposeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/MyHealthShotTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MyHealthShotTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.asAndroidBitmap",
+        "androidx.compose.ui.test.captureToImage",
+        "androidx.compose.ui.test.hasTestTag",
+        "androidx.compose.ui.test.onRoot",
+        "com.diegonmarcos.superapp.boards.Boards",
+        "com.diegonmarcos.superapp.boards.BoardsSource",
+        "com.diegonmarcos.superapp.boards.HealthAgg",
+        "com.diegonmarcos.superapp.boards.HealthBoard",
+        "com.diegonmarcos.superapp.boards.HealthFixtures",
+        "com.diegonmarcos.superapp.boards.InboxItem",
+        "com.diegonmarcos.superapp.boards.PlacesDay",
+        "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.boards.StepsBoard",
+        "com.diegonmarcos.superapp.boards.TaskProject",
+        "com.diegonmarcos.superapp.boards.Why",
+        "com.diegonmarcos.superapp.health.HealthBoardReader",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.After",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "fleetMail(limit: Int)",
+        "phoneNotifications()",
+        "steps(days: Int)",
+        "health(days: Int)",
+        "places(days: Int)",
+        "taskProjects()",
+        "restore()",
+        "shoot(name: String, board: HealthBoard, waitTag: String)",
+        "class MyHealthShotTest",
+        "class Src"
       ]
     },
     {
@@ -20154,6 +20402,50 @@
       "symbols": [
         "Loose(content: @androidx.compose.runtime.Composable ()",
         "class TileSizeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/WeatherCardScreenTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherCardScreenTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.dp",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherBadgeService",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherFace",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherFixStore",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherModel",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File",
+        "java.time.Instant",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "body()",
+        "e(t: String, c: Double, p: Int)",
+        "data(state: WeatherFace.State)",
+        "snap(name: String)",
+        "class WeatherCardScreenTest"
       ]
     },
     {
@@ -21257,6 +21549,111 @@
         "setUp()",
         "posted()",
         "class StoreNotifyGateTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/WeatherFaceTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherFaceTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherFace.Action",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherFace.State",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.Fix",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.Reason",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "forecastStateShowsTheForecastWithNoButton()",
+        "aKnownPositionNeverShowsTheOldWaitingText()",
+        "noPositionNamesThePermissionOrProviderAndOffersTheFix()",
+        "face(r: Reason)",
+        "positionLineSaysSourceAndAge()",
+        "class WeatherFaceTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/WeatherFixStoreTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherFixStoreTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.Fix",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "roundTripsEveryFieldAcrossANewInstance()",
+        "olderOrEqualOrInvalidNeverReplacesAndNothingClears()",
+        "forecastCacheSurvivesToo()",
+        "class WeatherFixStoreTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/WeatherLocationTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WeatherLocationTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.Env",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.Fix",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.GPS",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.NETWORK",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.PASSIVE",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.Reason",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherLocation.Result",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "fix(src: String, ageMin: Long, lat: Double = 40.4)",
+        "load()",
+        "save(fix: Fix)",
+        "enabled(provider: String)",
+        "lastKnown(provider: String)",
+        "request(provider: String, timeoutMs: Long)",
+        "orderIsCheapestFirstAndGpsIsLast()",
+        "freshPersistedFixUsesNoProviderAtAll()",
+        "cachedNetworkFixWinsOverFresherPassiveAndGps()",
+        "networkIsRequestedBeforeGpsAndGpsIsSkippedWhenNetworkAnswers()",
+        "gpsOnlyAsLastResort()",
+        "gpsNeedsFinePermissionAndDisabledProvidersAreNotAsked()",
+        "failedRefreshNeverClearsTheStoredFix()",
+        "staleSystemFixIsUsedAndPersistedWhenNothingElseExists()",
+        "onlyANewerFixReplacesTheStoredOne()",
+        "revokedPermissionStillAnswersFromTheStoredFix()",
+        "noFixSaysTheActualReason()",
+        "why(e: Env)",
+        "class WeatherLocationTest",
+        "class MemStore",
+        "class FakeProbe"
       ]
     },
     {
@@ -37410,13 +37807,40 @@
       "symbols": [
         "appId(context: Context)",
         "overrideEndpoint(context: Context)",
+        "endpoints(context: Context)",
         "endpoint(context: Context)",
+        "overrideDisabled(context: Context)",
+        "queueDir(context: Context)",
+        "flushQueue(context: Context)",
+        "deviceMeta(context: Context)",
+        "send(urls: List<String>, payload: String, connectTimeoutMs: Int, readTimeoutMs: Int)",
         "post( context: Context, kind: String, title: String? = null, message: String? = null, meta: Map<String, String> = emptyMap()",
         "postLogcat(context: Context, kind: String = \"log\", title: String? = null)",
         "installCrashHandler(context: Context)",
         "postBlocking( context: Context, kind: String, title: String?, message: String?, log: String?, meta: Map<String, String>, connectTimeoutMs: Int = 5_000, readTimeoutMs: Int = 8_000, )",
         "class Telemetry",
         "class or"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/core/src/main/java/com/diegonmarcos/superapp/core/TelemetryRoute.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TelemetryRoute",
+        "TelemetryQueue"
+      ],
+      "imports": [
+        "java.io.File"
+      ],
+      "symbols": [
+        "path(appId: String)",
+        "urls(meshOrigin: String, publicOrigin: String, appId: String)",
+        "enqueue(dir: File, payload: String, nowMs: Long = System.currentTimeMillis()",
+        "files(dir: File)",
+        "drain(dir: File, send: (String)",
+        "class TelemetryRoute",
+        "class TelemetryQueue"
       ]
     },
     {
@@ -37441,6 +37865,30 @@
         "theStoreDeclaresTheThreeKindsTheOwnerAskedFor()",
         "theSuperAppStaysClosedWhateverIsStored()",
         "class StoreNotifyPrefsTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/core/src/test/java/com/diegonmarcos/superapp/core/TelemetryRouteTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TelemetryRouteTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "meshIsTriedBeforePublicAndBothCarryTheAppRoute()",
+        "anOriginTheDeclarationDoesNotCarryIsLeftOut()",
+        "tmp()",
+        "aCrashThatCouldNotBeSentIsKeptAndGoesOutOnTheNextStart()",
+        "drainStopsAtTheFirstRefusalAndKeepsTheRest()",
+        "theQueueKeepsTheNewestAndRefusesAnOversizeEvent()",
+        "class TelemetryRouteTest"
       ]
     },
     {
@@ -44025,6 +44473,45 @@
         "restorePolicy()",
         "snapshotRead_doesNotTouchNetwork_andPersistsLocally()",
         "class HealthLocalOnlyTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/health/src/main/java/com/diegonmarcos/superapp/health/HealthBoardReader.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "HealthBoardReader"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.health.connect.client.HealthConnectClient",
+        "androidx.health.connect.client.permission.HealthPermission",
+        "androidx.health.connect.client.records.DistanceRecord",
+        "androidx.health.connect.client.records.HeightRecord",
+        "androidx.health.connect.client.records.RestingHeartRateRecord",
+        "androidx.health.connect.client.records.SleepSessionRecord",
+        "androidx.health.connect.client.records.StepsRecord",
+        "androidx.health.connect.client.request.AggregateGroupByPeriodRequest",
+        "androidx.health.connect.client.request.ReadRecordsRequest",
+        "androidx.health.connect.client.time.TimeRangeFilter",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "java.time.Instant",
+        "java.time.LocalDate",
+        "java.time.Period",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "read(context: Context, days: Int = 30, today: LocalDate = LocalDate.now()",
+        "guarded(perm: String, empty: T, f: suspend ()",
+        "nights(sessions: List<SessionIn>)",
+        "minutes(a: Instant, b: Instant)",
+        "class HealthBoardReader",
+        "class Night",
+        "class Status",
+        "class Raw",
+        "class StageIn",
+        "class SessionIn"
       ]
     },
     {

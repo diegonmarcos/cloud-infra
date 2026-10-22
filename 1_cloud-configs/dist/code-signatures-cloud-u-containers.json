@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2994,
+    "files": 3000,
     "by_lang": {
       "sh": 163,
       "nix": 179,
-      "js": 85,
+      "js": 86,
       "py": 874,
-      "ts": 1157,
+      "ts": 1162,
       "rust": 536
     },
     "by_role": {
       "shell": 153,
       "nix-module": 19,
-      "file": 331,
+      "file": 332,
       "python": 860,
-      "module": 707,
+      "module": 711,
       "script": 9,
       "flake": 81,
       "compose": 79,
       "entrypoint": 51,
-      "mcp-tool": 115,
+      "mcp-tool": 116,
       "workflow-dag": 5,
       "rust-module": 531,
       "hook": 53
@@ -1523,6 +1523,7 @@
         "./routes/security.js",
         "./routes/finops.js",
         "./routes/publicLogs.js",
+        "./routes/appLogs.js",
         "./routes/fleetProfile.js",
         "./routes/metrics.js",
         "./routes/logs.js",
@@ -1596,6 +1597,27 @@
       ],
       "symbols": [
         "parseId(idStr: string, reply: { code: (n: number)"
+      ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/api/routes/appLogs.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerAppLogsRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "node:fs/promises",
+        "node:fs",
+        "node:path",
+        "../../shared/libs/config.js",
+        "./publicLogs.js",
+        "../../shared/libs/app-logs-core.js"
+      ],
+      "symbols": [
+        "declaredContainers()",
+        "registerAppLogsRoutes(app: FastifyInstance)"
       ]
     },
     {
@@ -1770,7 +1792,12 @@
       "lang": "ts",
       "role": "module",
       "exports": [
-        "registerPublicLogsRoutes"
+        "withinRateLimit",
+        "notifyNtfy",
+        "registerPublicLogsRoutes",
+        "LOGS_DIR",
+        "MAX_LOG_BYTES",
+        "EVENT_KINDS"
       ],
       "imports": [
         "fastify",
@@ -1873,13 +1900,24 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/gen-declared-apks.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:fs"
+      ],
+      "symbols": []
+    },
+    {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/__selfcheck__.ts",
       "lang": "ts",
       "role": "module",
       "exports": [],
       "imports": [
         "node:assert",
-        "./secrets-status.js"
+        "./secrets-status.js",
+        "./app-logs-core.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -1887,6 +1925,29 @@
         "foldBucket(values: number[])",
         "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
         "bucket5m(ts: Date)"
+      ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/app-logs-core.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "telemetryAppId",
+        "resolveName",
+        "apksFromFleet",
+        "readEvents",
+        "isLogFileName",
+        "AppKind",
+        "DeclaredApk",
+        "StoredEvent"
+      ],
+      "imports": [],
+      "symbols": [
+        "telemetryAppId(pkg: string)",
+        "resolveName(kind: AppKind, raw: string, apks: DeclaredApk[], containers: string[])",
+        "apksFromFleet(fleet: { apps?: Array<{ label?: string; package?: string; kind?: string }> })",
+        "readEvents(jsonl: string, opts: { kind?: string; since?: string; limit?: number })",
+        "isLogFileName(f: string)"
       ]
     },
     {
@@ -5000,7 +5061,8 @@
       "exports": [],
       "imports": [
         "node:assert",
-        "./secrets-status.js"
+        "./secrets-status.js",
+        "./app-logs-core.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -5008,6 +5070,29 @@
         "foldBucket(values: number[])",
         "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
         "bucket5m(ts: Date)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/app-logs-core.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "telemetryAppId",
+        "resolveName",
+        "apksFromFleet",
+        "readEvents",
+        "isLogFileName",
+        "AppKind",
+        "DeclaredApk",
+        "StoredEvent"
+      ],
+      "imports": [],
+      "symbols": [
+        "telemetryAppId(pkg: string)",
+        "resolveName(kind: AppKind, raw: string, apks: DeclaredApk[], containers: string[])",
+        "apksFromFleet(fleet: { apps?: Array<{ label?: string; package?: string; kind?: string }> })",
+        "readEvents(jsonl: string, opts: { kind?: string; since?: string; limit?: number })",
+        "isLogFileName(f: string)"
       ]
     },
     {
@@ -20073,7 +20158,8 @@
       "exports": [],
       "imports": [
         "node:assert",
-        "./secrets-status.js"
+        "./secrets-status.js",
+        "./app-logs-core.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -20081,6 +20167,29 @@
         "foldBucket(values: number[])",
         "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
         "bucket5m(ts: Date)"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/app-logs-core.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "telemetryAppId",
+        "resolveName",
+        "apksFromFleet",
+        "readEvents",
+        "isLogFileName",
+        "AppKind",
+        "DeclaredApk",
+        "StoredEvent"
+      ],
+      "imports": [],
+      "symbols": [
+        "telemetryAppId(pkg: string)",
+        "resolveName(kind: AppKind, raw: string, apks: DeclaredApk[], containers: string[])",
+        "apksFromFleet(fleet: { apps?: Array<{ label?: string; package?: string; kind?: string }> })",
+        "readEvents(jsonl: string, opts: { kind?: string; since?: string; limit?: number })",
+        "isLogFileName(f: string)"
       ]
     },
     {
@@ -21569,7 +21678,8 @@
       "exports": [],
       "imports": [
         "node:assert",
-        "./secrets-status.js"
+        "./secrets-status.js",
+        "./app-logs-core.js"
       ],
       "symbols": [
         "compareOp(value: number, op: string, threshold: number)",
@@ -21577,6 +21687,29 @@
         "foldBucket(values: number[])",
         "mergeWeightedAvg(existingAvg: number, existingCount: number, incomingAvg: number, incomingCount: number)",
         "bucket5m(ts: Date)"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/app-logs-core.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "telemetryAppId",
+        "resolveName",
+        "apksFromFleet",
+        "readEvents",
+        "isLogFileName",
+        "AppKind",
+        "DeclaredApk",
+        "StoredEvent"
+      ],
+      "imports": [],
+      "symbols": [
+        "telemetryAppId(pkg: string)",
+        "resolveName(kind: AppKind, raw: string, apks: DeclaredApk[], containers: string[])",
+        "apksFromFleet(fleet: { apps?: Array<{ label?: string; package?: string; kind?: string }> })",
+        "readEvents(jsonl: string, opts: { kind?: string; since?: string; limit?: number })",
+        "isLogFileName(f: string)"
       ]
     },
     {
