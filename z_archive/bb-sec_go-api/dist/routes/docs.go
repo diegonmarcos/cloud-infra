@@ -62,7 +62,7 @@ func buildServiceCatalog(cfg *config.AppConfig) map[string]ServiceInfo {
 		"git":        "https://git.diegonmarcos.com/api/v1/version",
 		"automation": "https://windmill.diegonmarcos.com/api/version",
 		"monitoring": "https://grafana.diegonmarcos.com/api/health",
-		"drive":      "https://drive-notes-affine.diegonmarcos.com/api/server/status",
+		"drive":      "https://drive-notes.diegonmarcos.com/api/server/status",
 		"logs":       "https://logs.diegonmarcos.com/version",
 	}
 

@@ -52,7 +52,7 @@ Replace per-service duplicated docker-compose YAML generation with a shared Nix 
 
 ### DONE (18/52)
 
-- [x] `aa-sui_affine` (hedgedoc + postgres)
+- [x] `aa-sui_cloud_notes` (hedgedoc + postgres)
 - [x] `aa-sui_code-server`
 - [x] `aa-sui_etherpad` (etherpad + postgres)
 - [x] `aa-sui_filebrowser`

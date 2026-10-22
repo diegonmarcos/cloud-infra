@@ -27,7 +27,7 @@
 
 | Service | Domain | VM | Has API | MCP Tool | Spec URL | Notes |
 |---------|--------|-----|---------|----------|----------|-------|
-| affine | drive-notes-affine.diegonmarcos.com | oci-apps | yes | no | `/api/v1/` | Collaborative docs REST API |
+| cloud-notes | drive-notes.diegonmarcos.com | oci-apps | yes | no | `/api/v1/` | Collaborative docs REST API |
 | code-server | ide.diegonmarcos.com | oci-apps | partial | no | — | VS Code Server — no public REST API |
 | etherpad | app.diegonmarcos.com/etherpad | oci-apps | yes | no | `/api/1.3.0/` | Full REST API with API key |
 | filebrowser | app.diegonmarcos.com/filebrowser | oci-apps | yes | no | `/api/` | File ops REST API |
@@ -111,7 +111,7 @@
 |--------|-------|----------|
 | Has API + MCP tool | 2 | c3-api, crawlee-cloud |
 | Has API, partial MCP | 3 | rust-api, mailu (mailu-mcp), mattermost (cloud-mattermost-mcp) |
-| Has API, no MCP tool | 19 | affine, etherpad, filebrowser, grist, hedgedoc, photoprism, syncthing, authelia, vaultwarden, matomo, nocodb, ntfy, dagu, gitea, ollama, ollama-arm, postlite, lgtm, rig-agentic |
+| Has API, no MCP tool | 19 | cloud-notes, etherpad, filebrowser, grist, hedgedoc, photoprism, syncthing, authelia, vaultwarden, matomo, nocodb, ntfy, dagu, gitea, ollama, ollama-arm, postlite, lgtm, rig-agentic |
 | No REST API | 8 | radicale, revealmd, caddy (internal), redis, dozzle, hickory-dns, backup-borg, db-agent |
 
 ### Priority candidates for new MCP tools

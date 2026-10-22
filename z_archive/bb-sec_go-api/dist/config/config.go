@@ -136,7 +136,7 @@ func Load() *AppConfig {
 		"matomo-hybrid":   "analytics.diegonmarcos.com",
 		"mailu-front-1":   "mail.diegonmarcos.com",
 		"flask-api":       "api.diegonmarcos.com",
-		"affine":          "drive-notes-affine.diegonmarcos.com",
+		"cloud-notes":          "drive-notes.diegonmarcos.com",
 		"gitea":           "git.diegonmarcos.com",
 		"windmill-server": "windmill.diegonmarcos.com",
 		"lgtm_grafana":    "grafana.diegonmarcos.com",

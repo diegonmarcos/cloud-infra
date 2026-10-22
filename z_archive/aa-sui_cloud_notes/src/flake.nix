@@ -23,7 +23,7 @@
     title = "HedgeDoc - Collaborative markdown editor (notes.diegonmarcos.com)";
 
     mkDockerCompose = pkgs: docker.mkCompose pkgs {
-      banner = docker.banner "~/git/cloud/a_solutions/aa-sui_affine/src/flake.nix";
+      banner = docker.banner "~/git/cloud/a_solutions/aa-sui_cloud_notes/src/flake.nix";
 
       services.hedgedoc = docker.mkService {
         name = "hedgedoc";

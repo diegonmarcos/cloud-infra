@@ -39,7 +39,7 @@ vault/E0_secrets/
 ├── .sops.yaml                    # age recipient config (moved from cloud/)
 ├── cloud/
 │   ├── a_solutions/
-│   │   ├── aa-sui_affine/secrets.yaml
+│   │   ├── aa-sui_cloud_notes/secrets.yaml
 │   │   ├── aa-sui_code-server/secrets.yaml
 │   │   ├── ...all ~32 services...
 │   │   └── bb-sec_authelia/jwks_key.yaml
