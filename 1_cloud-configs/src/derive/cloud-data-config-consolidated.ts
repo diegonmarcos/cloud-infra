@@ -1020,6 +1020,28 @@ function main() {
       return { host: e.host, hostname, user: e.user, port: e.port, identity_file: e.identity_file ?? "~/.ssh/vault_id_rsa" };
     });
   };
+  // build.json `ssh.phones` x `ssh.doors` (cloud-superapp-mcp, #1106): the phones are declared ONCE
+  // ({alias, wg_client}) and the doors once ({suffix, user, port}); every ssh alias the MCP dials is
+  // their product, so a Host block can no longer be missing for a declared phone. Names follow the
+  // MCP's own rule: <alias><suffix> (v4) and <alias><suffix>-v6. Explicit extra_hosts still merge in
+  // (an explicit host of the same name wins), so nothing already declared changes meaning.
+  const mergeExtraHosts = (svcName: string, ssh: any): any[] => {
+    const explicit: any[] = Array.isArray(ssh.extra_hosts) ? ssh.extra_hosts : [];
+    if (ssh.phones == null && ssh.doors == null) return explicit;
+    if (!Array.isArray(ssh.phones) || !Array.isArray(ssh.doors)) throw new Error(`${svcName}: ssh.phones and ssh.doors must both be arrays`);
+    const byHost = new Map<string, any>();
+    for (const p of ssh.phones) {
+      if (!p.alias || !p.wg_client) throw new Error(`${svcName}: ssh.phones entry needs alias and wg_client (${JSON.stringify(p)})`);
+      for (const d of ssh.doors) {
+        for (const family of ["v4", "v6"]) {
+          const host = `${p.alias}${d.suffix ?? ""}${family === "v6" ? "-v6" : ""}`;
+          byHost.set(host, { host, wg_client: p.wg_client, family, user: d.user, port: d.port });
+        }
+      }
+    }
+    for (const e of explicit) byHost.set(e.host, e);
+    return [...byHost.values()];
+  };
   for (const [alias, hmVm] of Object.entries(homeManagerVms) as [string, any][]) {
     const containerSshTargets: any[] = [];
     for (const svcName of (hmVm.containers ?? []) as string[]) {
@@ -1037,7 +1059,7 @@ function main() {
             uid: svc.ssh.uid ?? 0,
             ssh_dir: svc.ssh.ssh_dir ?? "/root/.ssh",
             keys: svc.ssh.keys ?? [],
-            extra_hosts: resolveExtraHosts(svcName, svc.ssh.extra_hosts),
+            extra_hosts: resolveExtraHosts(svcName, mergeExtraHosts(svcName, svc.ssh)),
           });
         }
       }
