@@ -114,7 +114,9 @@
         "disk-janitor",
         "auth-broker-google",
         "auth-broker-github",
+        "auth-broker-cloudflare",
         "crowdsec",
+        "tokens-api",
         "cloud-cgc-pub-mcp",
         "cloud-cgc-pvt-mcp",
         "cloud-agi-hermes",
@@ -827,6 +829,12 @@
         "type": "A",
         "value": "10.0.0.1",
         "service": "mcp-oauth"
+      },
+      {
+        "name": "tokens-api.app",
+        "type": "A",
+        "value": "10.0.0.6",
+        "service": "tokens-api"
       },
       {
         "name": "cloud-cgc-pub-mcp.app",
@@ -3722,7 +3730,7 @@
       "category": "sec",
       "vm": "oci-A1-f_0",
       "folder": "infra-sec_auth-broker",
-      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow) and Google (web code flow + PKCE), owner only (#1066)",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)",
       "dns": "auth-broker.app",
       "containers": {
         "google": {
@@ -3752,15 +3760,31 @@
             "mem_limit": "64m"
           },
           "protocol": "http"
+        },
+        "cloudflare": {
+          "container_name": "auth-broker-cloudflare",
+          "image": "ghcr.io/diegonmarcos/auth-broker-binaries:latest",
+          "port": 4182,
+          "public": false,
+          "healthcheck": "/oauth2/cloudflare/health",
+          "volumes": [],
+          "env_file": true,
+          "resources": {
+            "mem_reservation": "16m",
+            "mem_limit": "64m"
+          },
+          "protocol": "http"
         }
       },
       "container_names": [
         "auth-broker-google",
-        "auth-broker-github"
+        "auth-broker-github",
+        "auth-broker-cloudflare"
       ],
       "all_ports": [
         "4180",
-        "4181"
+        "4181",
+        "4182"
       ],
       "all_dns": [],
       "compose": {
@@ -3773,7 +3797,8 @@
       },
       "declared_ports": {
         "google": 4180,
-        "github": 4181
+        "github": 4181,
+        "cloudflare": 4182
       },
       "flake": "infra-sec_auth-broker"
     },
@@ -4268,7 +4293,7 @@
           "healthcheck": "/health",
           "monitoring": null,
           "volumes": [],
-          "env_file": false,
+          "env_file": true,
           "depends_on": [],
           "resources": null,
           "read_only": false,
@@ -4353,6 +4378,76 @@
         "path": "/health"
       },
       "flake": "infra-sec_mcp-oauth"
+    },
+    "tokens-api": {
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-sec_tokens-api",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds",
+      "domain": "tokens-api.diegonmarcos.com",
+      "port": 4184,
+      "dns": "tokens-api.app",
+      "upstream": "10.0.0.6:4184",
+      "containers": {
+        "app": {
+          "container_name": "tokens-api",
+          "image": "ghcr.io/diegonmarcos/tokens-api-binaries:latest",
+          "port": 4184,
+          "port_env": null,
+          "dns": "tokens-api.app",
+          "public": true,
+          "proxy": {
+            "domain": "tokens-api.diegonmarcos.com",
+            "auth": "two_factor"
+          },
+          "healthcheck": "/health",
+          "monitoring": {
+            "tls_check": true,
+            "dns_check": true,
+            "endpoint_check": true
+          },
+          "volumes": [
+            "tokens_api_data:/data"
+          ],
+          "env_file": true,
+          "depends_on": [],
+          "resources": null,
+          "read_only": false,
+          "protocol": "http"
+        }
+      },
+      "container_names": [
+        "tokens-api"
+      ],
+      "all_ports": [
+        "4184"
+      ],
+      "all_dns": [
+        "tokens-api.app"
+      ],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "proxy": {
+        "primary": {
+          "domain": "tokens-api.diegonmarcos.com",
+          "auth": "two_factor"
+        }
+      },
+      "declared_ports": {
+        "app": 4184
+      },
+      "health": {
+        "path": "/health"
+      },
+      "monitoring": {
+        "tls_check": true,
+        "dns_check": true,
+        "endpoint_check": true
+      },
+      "flake": "infra-sec_tokens-api"
     },
     "cloud-cgc-pub-mcp": {
       "category": "obs",
@@ -5489,6 +5584,17 @@
               "desc": "IMAPS (host:2993 → stalwart:993)"
             },
             {
+              "port": 2080,
+              "container_port": 8080,
+              "protocol": "http",
+              "bind": [
+                "10.0.0.3",
+                "10.1.0.3"
+              ],
+              "service": "jmap_mesh_http",
+              "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.app is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer."
+            },
+            {
               "port": 6190,
               "container_port": 4190,
               "protocol": "tls",
@@ -5766,6 +5872,7 @@
           "type": "path",
           "parent_domain": "api.diegonmarcos.com",
           "base_path": "/fin-api",
+          "public_host": "fin-api.diegonmarcos.com",
           "auth": "two_factor",
           "paths": {
             "/health": {

@@ -137,7 +137,7 @@
   },
   "edge_auth": {
     "multi_sso": {
-      "_doc": "MULTI-SSO (#1066). ONE flag. ON since 2026-10-21 (guard: src/test/test-multi-sso.sh pins this state and proves the ON render only ADDS to the OFF render; OFF/absent renders the pre-multi-SSO Caddyfile). enabled=true: the auth vhost also answers every host in `hosts` (account.diegonmarcos.com; DNS is covered by the wildcard record, TLS is on-demand), serves the three-button chooser on GET / for a browser with no Authelia session, proxies /oauth2/<provider>/* to the auth broker (device flow for GitHub, web code flow + PKCE for Google; infra-sec_auth-broker, on oci-apps over the mesh), and the shared edge gate accepts a broker session cookie as a third credential beside the fleet Bearer and the Authelia session. The broker only admits `allowed_emails`. Per-provider switches live in infra-sec_auth-broker/build.json (providers[].enabled); a switched-off provider's button is hidden by the chooser.",
+      "_doc": "MULTI-SSO (#1066). ONE flag. ON since 2026-10-21 (guard: src/test/test-multi-sso.sh pins this state and proves the ON render only ADDS to the OFF render; OFF/absent renders the pre-multi-SSO Caddyfile). enabled=true: the auth vhost also answers every host in `hosts` (account.diegonmarcos.com; DNS is covered by the wildcard record, TLS is on-demand), serves the four-button chooser (Authelia, Cloudflare One, Google, GitHub) on GET / for a browser with no Authelia session, proxies /oauth2/<provider>/* to the auth broker (device flow and web flow for GitHub, web code flow + PKCE for Google, Cloudflare Access login bridge for Cloudflare One; infra-sec_auth-broker, on oci-apps over the mesh), and the shared edge gate accepts a broker session cookie as a third credential beside the fleet Bearer and the Authelia session. The broker only admits `allowed_emails`. Per-provider switches live in infra-sec_auth-broker/build.json (providers[].enabled); a switched-off provider's button is hidden by the chooser.",
       "enabled": true,
       "primary_host": "auth.diegonmarcos.com",
       "hosts": [
@@ -158,8 +158,51 @@
           "label": "GitHub",
           "upstream": "10.0.0.6:4181",
           "prefix": "/oauth2/github"
+        },
+        {
+          "id": "cloudflare",
+          "label": "Cloudflare One",
+          "upstream": "10.0.0.6:4182",
+          "prefix": "/oauth2/cloudflare"
         }
       ],
+      "chooser": {
+        "_doc": "The sign-in chooser page served on the auth vhost (src/sso-chooser.html), GENERATED from this block, `providers` above and src/sso-chooser.tpl.html by src/gen-sso-chooser.py (test/test-sso-chooser.sh fails on drift). Self-contained: no third-party request at runtime. `order` is the button order (digit keys 1..n pick them); `authelia` is the portal entry that is not a broker; `hints` are the one-line captions; `links` are the footer icon links (public pages).",
+        "home": "https://suite.diegonmarcos.com/",
+        "order": [
+          "authelia",
+          "cloudflare",
+          "google",
+          "github"
+        ],
+        "authelia": {
+          "label": "Authelia",
+          "href": "https://auth.diegonmarcos.com/?ui=authelia"
+        },
+        "hints": {
+          "authelia": "fleet SSO portal",
+          "cloudflare": "Zero Trust login bridge",
+          "google": "owner account",
+          "github": "owner account"
+        },
+        "links": [
+          {
+            "id": "linktree",
+            "label": "Linktree",
+            "url": "https://diegonmarcos.github.io/linktree"
+          },
+          {
+            "id": "superapp",
+            "label": "Cloud SuperApp",
+            "url": "https://diegonmarcos.github.io/cloud-webapps/cloud-superapp"
+          },
+          {
+            "id": "store",
+            "label": "Cloud Store",
+            "url": "https://diegonmarcos.github.io/cloud-webapps/cloud-store"
+          }
+        ]
+      },
       "cloudflare_access": {
         "_doc": "Cloudflare Access JWT as the third credential (after the Authelia session and the broker cookie): a request carrying Cf-Access-Jwt-Assertion and neither cookie is sent to the broker's <prefix>/cf-auth, which verifies it against the team certs and the AUDs in infra-sec_auth-broker/build.json auth_broker.cloudflare_access (owner email only). Only active while multi_sso.enabled is true.",
         "enabled": true,
@@ -462,6 +505,13 @@
       "comment": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
     },
     {
+      "domain": "tokens-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:4184",
+      "landing": "https://diegonmarcos.github.io/c__Cloud/",
+      "wg_only": true,
+      "comment": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds"
+    },
+    {
       "domain": "chat.diegonmarcos.com",
       "upstream": "10.0.0.6:8065",
       "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-chat/",
@@ -575,6 +625,12 @@
       "auth": "none",
       "wg_only": true,
       "comment": "Bitwarden password manager"
+    },
+    {
+      "domain": "fin-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:8340",
+      "wg_only": true,
+      "comment": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools (own host fin-api.diegonmarcos.com; path route kept until P4)"
     },
     {
       "domain": "c3-infra-api.diegonmarcos.com",
@@ -767,6 +823,14 @@
       "wg_only": true,
       "container": "crowdsec",
       "comment": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
+    },
+    {
+      "domain": "c3-tokens-api.diegonmarcos.com",
+      "upstream": "10.0.0.6:4184",
+      "auth": "none",
+      "wg_only": true,
+      "container": "tokens-api",
+      "comment": "c3 container tokens-api (mesh-only; tokens-api-http-4184.app)"
     },
     {
       "domain": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
@@ -1913,6 +1977,11 @@
       "private_name": "cloud.crowdsec.app"
     },
     {
+      "service": "tokens-api.app",
+      "upstream": "10.0.0.6:4184",
+      "private_name": "cloud.tokens-api.app"
+    },
+    {
       "service": "cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105",
       "private_name": "cloud.cloud-cgc-pub-mcp.app"
@@ -2194,6 +2263,12 @@
       "service": "cloud.crowdsec.app",
       "upstream": "10.0.0.6:8088",
       "alias_of": "crowdsec.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.tokens-api.app",
+      "upstream": "10.0.0.6:4184",
+      "alias_of": "tokens-api.app",
       "source": "internal_routes"
     },
     {
@@ -2587,6 +2662,12 @@
       "source": "url_scheme"
     },
     {
+      "service": "c3-tokens-api.app",
+      "upstream": "10.0.0.6:4184",
+      "scheme": "c3",
+      "source": "url_scheme"
+    },
+    {
       "service": "c3-cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105",
       "scheme": "c3",
@@ -2926,6 +3007,11 @@
         "host": "c3-crowdsec.diegonmarcos.com",
         "container": "crowdsec",
         "private": "c3-crowdsec.app"
+      },
+      {
+        "host": "c3-tokens-api.diegonmarcos.com",
+        "container": "tokens-api",
+        "private": "c3-tokens-api.app"
       },
       {
         "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
@@ -4011,6 +4097,27 @@
     },
     {
       "kind": "redirect",
+      "service": "tokens-api.app",
+      "redirect_to": "https://tokens-api-http-4184.app",
+      "container": "tokens-api",
+      "container_key": "app",
+      "svc": "tokens-api",
+      "vm": "oci-A1-f_0"
+    },
+    {
+      "kind": "canonical",
+      "service": "tokens-api-http-4184.app",
+      "container": "tokens-api",
+      "container_key": "app",
+      "svc": "tokens-api",
+      "vm": "oci-A1-f_0",
+      "port": 4184,
+      "protocol": "http",
+      "upstream": "10.0.0.6:4184",
+      "source": "containers.app.port"
+    },
+    {
+      "kind": "redirect",
       "service": "cloud-cgc-pub-mcp.app",
       "redirect_to": "https://cloud-cgc-pub-mcp-http-3105.app",
       "container": "cloud-cgc-pub-mcp",
@@ -4211,6 +4318,18 @@
       "port": 2993,
       "protocol": "tls",
       "upstream": "10.0.0.3:2993",
+      "source": "containers.app.extra_ports"
+    },
+    {
+      "kind": "canonical",
+      "service": "stalwart-http-2080.app",
+      "container": "stalwart",
+      "container_key": "app",
+      "svc": "stalwart",
+      "vm": "oci-E2-f_0",
+      "port": 2080,
+      "protocol": "http",
+      "upstream": "10.0.0.3:2080",
       "source": "containers.app.extra_ports"
     },
     {
@@ -5013,6 +5132,16 @@
       "notes": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
     },
     {
+      "host": "tokens-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:4184",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds"
+    },
+    {
       "host": "chat.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:8065",
@@ -5161,6 +5290,16 @@
       "zone": "com",
       "service": null,
       "notes": "Bitwarden password manager"
+    },
+    {
+      "host": "fin-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:8340",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "Fincept Terminal backend (fin-api) — REST + WebSocket over DataHub, 35 data connectors, 7 analytics, 17 brokers, 6 investor personas, MCP tools (own host fin-api.diegonmarcos.com; path route kept until P4)"
     },
     {
       "host": "c3-infra-api.diegonmarcos.com",
@@ -5401,6 +5540,16 @@
       "zone": "com",
       "service": null,
       "notes": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
+    },
+    {
+      "host": "c3-tokens-api.diegonmarcos.com",
+      "path": null,
+      "upstream": "10.0.0.6:4184",
+      "kind": "reverse_proxy",
+      "tls": "public",
+      "zone": "com",
+      "service": null,
+      "notes": "c3 container tokens-api (mesh-only; tokens-api-http-4184.app)"
     },
     {
       "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
@@ -6355,6 +6504,16 @@
       "notes": null
     },
     {
+      "host": "tokens-api.app",
+      "path": null,
+      "upstream": "10.0.0.6:4184",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "cloud-cgc-pub-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
@@ -6867,6 +7026,16 @@
       "notes": null
     },
     {
+      "host": "tokens-api-http-4184.app",
+      "path": null,
+      "upstream": "10.0.0.6:4184",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "tokens-api",
+      "notes": null
+    },
+    {
       "host": "cloud-cgc-pub-mcp-http-3105.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
@@ -6970,6 +7139,16 @@
       "host": "stalwart-tls-2993.app",
       "path": null,
       "upstream": "10.0.0.3:2993",
+      "kind": "reverse_proxy",
+      "tls": "on_demand",
+      "zone": "com",
+      "service": "stalwart",
+      "notes": null
+    },
+    {
+      "host": "stalwart-http-2080.app",
+      "path": null,
+      "upstream": "10.0.0.3:2080",
       "kind": "reverse_proxy",
       "tls": "on_demand",
       "zone": "com",

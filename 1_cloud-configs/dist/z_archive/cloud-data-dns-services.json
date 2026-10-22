@@ -147,7 +147,7 @@
     },
     "auth-broker": {
       "ip": "10.0.0.1",
-      "desc": "Identity broker for the multi-SSO sign-in: GitHub (device flow) and Google (web code flow + PKCE), owner only (#1066)"
+      "desc": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)"
     },
     "authelia": {
       "ip": "10.0.0.1",
@@ -176,6 +176,10 @@
     "mcp-oauth": {
       "ip": "10.0.0.1",
       "desc": "MCP OAuth 2.1 authorization server for mcp.diegonmarcos.com (option 31.1, WIP, NOT approved): RFC 8414/9728 discovery, RFC 7591 DCR, /authorize behind Authelia, PKCE S256 /token, opaque tokens introspected by introspect-proxy"
+    },
+    "tokens-api": {
+      "ip": "10.0.0.1",
+      "desc": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds"
     },
     "cloud-cgc-pub-mcp": {
       "ip": "10.0.0.1",

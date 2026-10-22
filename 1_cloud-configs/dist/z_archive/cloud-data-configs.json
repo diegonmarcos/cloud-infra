@@ -54,13 +54,14 @@
       "name": "auth-broker",
       "category": "sec",
       "vm": "oci-A1-f_0",
-      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow) and Google (web code flow + PKCE), owner only (#1066)",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)",
       "domain": "—",
       "ports": [],
       "networks": [],
       "containers": [
         "auth-broker-google",
-        "auth-broker-github"
+        "auth-broker-github",
+        "auth-broker-cloudflare"
       ]
     },
     {
@@ -1004,6 +1005,18 @@
       ]
     },
     {
+      "name": "tokens-api",
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds",
+      "domain": "tokens-api.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "tokens-api"
+      ]
+    },
+    {
       "name": "umami",
       "category": "tools",
       "vm": "oci-A1-f_0",
@@ -1107,13 +1120,14 @@
       "name": "auth-broker",
       "category": "sec",
       "vm": "oci-A1-f_0",
-      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow) and Google (web code flow + PKCE), owner only (#1066)",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)",
       "domain": "—",
       "ports": [],
       "networks": [],
       "containers": [
         "auth-broker-google",
-        "auth-broker-github"
+        "auth-broker-github",
+        "auth-broker-cloudflare"
       ]
     },
     {
@@ -1541,6 +1555,18 @@
       "networks": [],
       "containers": [
         "scrappers-api"
+      ]
+    },
+    {
+      "name": "tokens-api",
+      "category": "sec",
+      "vm": "oci-A1-f_0",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds",
+      "domain": "tokens-api.diegonmarcos.com",
+      "ports": [],
+      "networks": [],
+      "containers": [
+        "tokens-api"
       ]
     },
     {

@@ -899,11 +899,12 @@
       "ip": "10.0.0.6",
       "ports": {
         "google": 4180,
-        "github": 4181
+        "github": 4181,
+        "cloudflare": 4182
       },
       "vm": "oci-apps",
       "healthcheck": "/oauth2/google/health",
-      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow) and Google (web code flow + PKCE), owner only (#1066)",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -911,7 +912,8 @@
         "api_url": null,
         "healthcheck_paths": [
           "/oauth2/google/health",
-          "/oauth2/github/health"
+          "/oauth2/github/health",
+          "/oauth2/cloudflare/health"
         ]
       }
     },
@@ -1064,6 +1066,31 @@
         "display_name": "MCP OAuth Authorization Server",
         "description": "OAuth 2.1 AS for MCP connectors (claude.ai, claude.com, localhost). Public paths are exactly the mcp.diegonmarcos.com entry of caddy_config.edge_auth.public_open; /introspect is mesh-only.",
         "auth": "oauth2"
+      }
+    },
+    "tokens-api": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 4184
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/health",
+      "domain": "tokens-api.diegonmarcos.com",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/",
+        "api_url": "https://tokens-api.diegonmarcos.com/",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/",
+        "endpoint_count": 8,
+        "display_name": "Fleet Token Engine",
+        "description": "Owner-only token manager (list, reveal, generate, import, revoke, audit) and the mesh-only /v1/verify that introspect-proxy calls.",
+        "auth": "bearer"
       }
     },
     "cloud-cgc-pub-mcp": {
@@ -1476,6 +1503,16 @@
           ],
           "desc": "SMTP shadow (host:2025 → stalwart:25)",
           "service": "smtp_shadow",
+          "role": "app"
+        },
+        "2080": {
+          "protocol": "http",
+          "bind": [
+            "10.0.0.3",
+            "10.1.0.3"
+          ],
+          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.app is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
+          "service": "jmap_mesh_http",
           "role": "app"
         },
         "2443": {
@@ -1967,15 +2004,32 @@
             "https://auth.diegonmarcos.com/oauth2/github/callback"
           ]
         }
+      },
+      {
+        "id": "cloudflare",
+        "label": "Cloudflare One",
+        "enabled": true,
+        "provider": "cloudflare",
+        "flow": "access",
+        "port": 4182,
+        "prefix": "/oauth2/cloudflare",
+        "_doc_flow": "Cloudflare One (Zero Trust) sign-in. <prefix>/start (on the chooser hosts in `hosts`) sends the browser to `login_url`, a hostname that Cloudflare Access protects (cloud-infra c_vps/ba-clo_cloudflare terraform.json zero_trust.broker_app: Access app + owner-only policy, proxied through the fleet tunnel straight to this instance). After the Access login, Cloudflare forwards the request with Cf-Access-Jwt-Assertion; <prefix>/callback verifies it (RS256 against the team certs, issuer, audience in cloudflare_access.aud, expiry, owner email only), issues the shared _diego_sso cookie and 302s to rd (an https URL under rd_domain; a relative rd is resolved against the chooser host it came from). A request without a valid JWT gets 401 and no cookie. No client id or secret exists for this provider.",
+        "hosts": [
+          "auth.diegonmarcos.com",
+          "account.diegonmarcos.com"
+        ],
+        "login_url": "https://auth-cf.diegonmarcos.com/oauth2/cloudflare/callback",
+        "home_url": "https://auth.diegonmarcos.com/"
       }
     ],
     "cloudflare_access": {
-      "_doc": "Cloudflare Access (Zero Trust) as a fourth credential: the broker verifies Cf-Access-Jwt-Assertion (RS256 signature against the team certs, issuer, audience, expiry) and admits only a token whose email is in allowed_emails (service-token JWTs carry no email and are refused). `aud` lists the AUD tags of the Access applications trusted (terraform output zt_pilot_aud in cloud-infra c_vps/ba-clo_cloudflare). Served on every instance at <prefix>/cf-auth; the edge gate calls it when the request carries the header.",
+      "_doc": "Cloudflare Access (Zero Trust) as a fourth credential: the broker verifies Cf-Access-Jwt-Assertion (RS256 signature against the team certs, issuer, audience, expiry) and admits only a token whose email is in allowed_emails (service-token JWTs carry no email and are refused). `aud` lists the AUD tags of the Access applications trusted (terraform outputs zt_pilot_aud and zt_broker_aud in cloud-infra c_vps/ba-clo_cloudflare; zt_broker_aud is the Cloudflare One sign-in app, #1083). Served on every instance at <prefix>/cf-auth; the edge gate calls it when the request carries the header.",
       "enabled": true,
       "team_domain": "diegonmarcos.cloudflareaccess.com",
       "certs_url": "https://diegonmarcos.cloudflareaccess.com/cdn-cgi/access/certs",
       "aud": [
-        "fd961754aece540b409ee165bc028105168acece9dca1f530e38f5f62e5b8f3c"
+        "fd961754aece540b409ee165bc028105168acece9dca1f530e38f5f62e5b8f3c",
+        "669d709af5740d926d2f122e7752331015a22a5487b1c82e8b63d4f32f31dfc0"
       ]
     }
   },
@@ -1992,6 +2046,7 @@
   "secret_env_vars": [
     "AUTH_BROKER_GOOGLE_CLIENT_ID",
     "AUTH_BROKER_GOOGLE_CLIENT_SECRET",
-    "AUTH_BROKER_COOKIE_SECRET"
+    "AUTH_BROKER_COOKIE_SECRET",
+    "AUTH_BROKER_GITHUB_APP_CLIENT_SECRET"
   ]
 }

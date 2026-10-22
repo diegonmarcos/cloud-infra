@@ -917,11 +917,12 @@
       "ip": "10.0.0.6",
       "ports": {
         "google": 4180,
-        "github": 4181
+        "github": 4181,
+        "cloudflare": 4182
       },
       "vm": "oci-apps",
       "healthcheck": "/oauth2/google/health",
-      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow) and Google (web code flow + PKCE), owner only (#1066)",
+      "description": "Identity broker for the multi-SSO sign-in: GitHub (device flow + web), Google (web code flow + PKCE) and Cloudflare One (Access JWT), owner only (#1066, #1083)",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -929,7 +930,8 @@
         "api_url": null,
         "healthcheck_paths": [
           "/oauth2/google/health",
-          "/oauth2/github/health"
+          "/oauth2/github/health",
+          "/oauth2/cloudflare/health"
         ]
       }
     },
@@ -1082,6 +1084,31 @@
         "display_name": "MCP OAuth Authorization Server",
         "description": "OAuth 2.1 AS for MCP connectors (claude.ai, claude.com, localhost). Public paths are exactly the mcp.diegonmarcos.com entry of caddy_config.edge_auth.public_open; /introspect is mesh-only.",
         "auth": "oauth2"
+      }
+    },
+    "tokens-api": {
+      "ip": "10.0.0.6",
+      "ports": {
+        "app": 4184
+      },
+      "vm": "oci-apps",
+      "healthcheck": "/health",
+      "domain": "tokens-api.diegonmarcos.com",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds",
+      "api": {
+        "has_api": true,
+        "has_web_ui": true,
+        "api_path": "/",
+        "api_url": "https://tokens-api.diegonmarcos.com/",
+        "healthcheck_paths": [
+          "/health"
+        ],
+        "type": "custom-rest",
+        "base_path": "/",
+        "endpoint_count": 8,
+        "display_name": "Fleet Token Engine",
+        "description": "Owner-only token manager (list, reveal, generate, import, revoke, audit) and the mesh-only /v1/verify that introspect-proxy calls.",
+        "auth": "bearer"
       }
     },
     "cloud-cgc-pub-mcp": {
@@ -1494,6 +1521,16 @@
           ],
           "desc": "SMTP shadow (host:2025 → stalwart:25)",
           "service": "smtp_shadow",
+          "role": "app"
+        },
+        "2080": {
+          "protocol": "http",
+          "bind": [
+            "10.0.0.3",
+            "10.1.0.3"
+          ],
+          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.app is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
+          "service": "jmap_mesh_http",
           "role": "app"
         },
         "2443": {
