@@ -516,13 +516,6 @@
       "comment": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
     },
     {
-      "domain": "tokens-api.diegonmarcos.com",
-      "upstream": "10.0.0.6:4184",
-      "landing": "https://diegonmarcos.github.io/c__Cloud/",
-      "wg_only": true,
-      "comment": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds"
-    },
-    {
       "domain": "chat.diegonmarcos.com",
       "upstream": "10.0.0.6:8065",
       "landing": "https://diegonmarcos.github.io/c__Cloud/c_inboxes/cloud-chat/",
@@ -834,14 +827,6 @@
       "wg_only": true,
       "container": "crowdsec",
       "comment": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
-    },
-    {
-      "domain": "c3-tokens-api.diegonmarcos.com",
-      "upstream": "10.0.0.6:4184",
-      "auth": "none",
-      "wg_only": true,
-      "container": "tokens-api",
-      "comment": "c3 container tokens-api (mesh-only; tokens-api-http-4184.app)"
     },
     {
       "domain": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
@@ -1873,9 +1858,19 @@
       "private_name": "cloud.drive-mcp.app"
     },
     {
+      "service": "cloud-drive-mcp.app",
+      "upstream": "10.0.0.6:3109",
+      "private_name": "cloud.cloud-drive-mcp.app"
+    },
+    {
       "service": "c3-infra-mcp.app",
       "upstream": "10.0.0.6:3100",
       "private_name": "cloud.c3-infra-mcp.app"
+    },
+    {
+      "service": "cloud-infra-mcp.app",
+      "upstream": "10.0.0.6:3100",
+      "private_name": "cloud.cloud-infra-mcp.app"
     },
     {
       "service": "mail-mcp.app",
@@ -1883,9 +1878,19 @@
       "private_name": "cloud.mail-mcp.app"
     },
     {
+      "service": "cloud-mail-mcp.app",
+      "upstream": "10.0.0.6:3103",
+      "private_name": "cloud.cloud-mail-mcp.app"
+    },
+    {
       "service": "mattermost-mcp.app",
       "upstream": "10.0.0.6:3102",
       "private_name": "cloud.mattermost-mcp.app"
+    },
+    {
+      "service": "cloud-mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102",
+      "private_name": "cloud.cloud-mattermost-mcp.app"
     },
     {
       "service": "cloud-me-api.app",
@@ -1898,9 +1903,19 @@
       "private_name": "cloud.c3-services-mcp.app"
     },
     {
+      "service": "cloud-services-mcp.app",
+      "upstream": "10.0.0.6:3101",
+      "private_name": "cloud.cloud-services-mcp.app"
+    },
+    {
       "service": "superapp-mcp.app",
       "upstream": "10.0.0.6:3110",
       "private_name": "cloud.superapp-mcp.app"
+    },
+    {
+      "service": "cloud-superapp-mcp.app",
+      "upstream": "10.0.0.6:3110",
+      "private_name": "cloud.cloud-superapp-mcp.app"
     },
     {
       "service": "git-proxy-api.app",
@@ -1913,9 +1928,19 @@
       "private_name": "cloud.g-personal-mcp.app"
     },
     {
+      "service": "google-personal-mcp.app",
+      "upstream": "10.0.0.6:3106",
+      "private_name": "cloud.google-personal-mcp.app"
+    },
+    {
       "service": "g-workspace-mcp.app",
       "upstream": "10.0.0.6:3104",
       "private_name": "cloud.g-workspace-mcp.app"
+    },
+    {
+      "service": "google-workspace-mcp.app",
+      "upstream": "10.0.0.6:3104",
+      "private_name": "cloud.google-workspace-mcp.app"
     },
     {
       "service": "gitea.app",
@@ -1936,6 +1961,11 @@
       "service": "c3-spec.app",
       "upstream": "10.0.0.6:3080",
       "private_name": "cloud.c3-spec.app"
+    },
+    {
+      "service": "cloud-spec.app",
+      "upstream": "10.0.0.6:3080",
+      "private_name": "cloud.cloud-spec.app"
     },
     {
       "service": "dagu.app",
@@ -1988,11 +2018,6 @@
       "private_name": "cloud.crowdsec.app"
     },
     {
-      "service": "tokens-api.app",
-      "upstream": "10.0.0.6:4184",
-      "private_name": "cloud.tokens-api.app"
-    },
-    {
       "service": "cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105",
       "private_name": "cloud.cloud-cgc-pub-mcp.app"
@@ -2013,9 +2038,19 @@
       "private_name": "cloud.mattermost.app"
     },
     {
+      "service": "chat-mattermost.app",
+      "upstream": "10.0.0.6:8065",
+      "private_name": "cloud.chat-mattermost.app"
+    },
+    {
       "service": "webmail.app",
       "upstream": "10.0.0.6:3000",
       "private_name": "cloud.webmail.app"
+    },
+    {
+      "service": "cloud-webmail.app",
+      "upstream": "10.0.0.6:3000",
+      "private_name": "cloud.cloud-webmail.app"
     },
     {
       "service": "matrix-continuwuity.app",
@@ -2063,6 +2098,11 @@
       "private_name": "cloud.calendar.app"
     },
     {
+      "service": "calendar-radicale.app",
+      "upstream": "10.0.0.6:5232",
+      "private_name": "cloud.calendar-radicale.app"
+    },
+    {
       "service": "cloud-notes-sync.app",
       "upstream": "10.0.0.6:8098",
       "private_name": "cloud.cloud-notes-sync.app"
@@ -2081,6 +2121,11 @@
       "service": "contacts.app",
       "upstream": "10.0.0.6:5233",
       "private_name": "cloud.contacts.app"
+    },
+    {
+      "service": "contacts-radicale.app",
+      "upstream": "10.0.0.6:5233",
+      "private_name": "cloud.contacts-radicale.app"
     },
     {
       "service": "etherpad.app",
@@ -2139,9 +2184,21 @@
       "source": "internal_routes"
     },
     {
+      "service": "cloud.cloud-drive-mcp.app",
+      "upstream": "10.0.0.6:3109",
+      "alias_of": "cloud-drive-mcp.app",
+      "source": "internal_routes"
+    },
+    {
       "service": "cloud.c3-infra-mcp.app",
       "upstream": "10.0.0.6:3100",
       "alias_of": "c3-infra-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-infra-mcp.app",
+      "upstream": "10.0.0.6:3100",
+      "alias_of": "cloud-infra-mcp.app",
       "source": "internal_routes"
     },
     {
@@ -2151,9 +2208,21 @@
       "source": "internal_routes"
     },
     {
+      "service": "cloud.cloud-mail-mcp.app",
+      "upstream": "10.0.0.6:3103",
+      "alias_of": "cloud-mail-mcp.app",
+      "source": "internal_routes"
+    },
+    {
       "service": "cloud.mattermost-mcp.app",
       "upstream": "10.0.0.6:3102",
       "alias_of": "mattermost-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-mattermost-mcp.app",
+      "upstream": "10.0.0.6:3102",
+      "alias_of": "cloud-mattermost-mcp.app",
       "source": "internal_routes"
     },
     {
@@ -2169,9 +2238,21 @@
       "source": "internal_routes"
     },
     {
+      "service": "cloud.cloud-services-mcp.app",
+      "upstream": "10.0.0.6:3101",
+      "alias_of": "cloud-services-mcp.app",
+      "source": "internal_routes"
+    },
+    {
       "service": "cloud.superapp-mcp.app",
       "upstream": "10.0.0.6:3110",
       "alias_of": "superapp-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-superapp-mcp.app",
+      "upstream": "10.0.0.6:3110",
+      "alias_of": "cloud-superapp-mcp.app",
       "source": "internal_routes"
     },
     {
@@ -2187,9 +2268,21 @@
       "source": "internal_routes"
     },
     {
+      "service": "cloud.google-personal-mcp.app",
+      "upstream": "10.0.0.6:3106",
+      "alias_of": "google-personal-mcp.app",
+      "source": "internal_routes"
+    },
+    {
       "service": "cloud.g-workspace-mcp.app",
       "upstream": "10.0.0.6:3104",
       "alias_of": "g-workspace-mcp.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.google-workspace-mcp.app",
+      "upstream": "10.0.0.6:3104",
+      "alias_of": "google-workspace-mcp.app",
       "source": "internal_routes"
     },
     {
@@ -2214,6 +2307,12 @@
       "service": "cloud.c3-spec.app",
       "upstream": "10.0.0.6:3080",
       "alias_of": "c3-spec.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-spec.app",
+      "upstream": "10.0.0.6:3080",
+      "alias_of": "cloud-spec.app",
       "source": "internal_routes"
     },
     {
@@ -2277,12 +2376,6 @@
       "source": "internal_routes"
     },
     {
-      "service": "cloud.tokens-api.app",
-      "upstream": "10.0.0.6:4184",
-      "alias_of": "tokens-api.app",
-      "source": "internal_routes"
-    },
-    {
       "service": "cloud.cloud-cgc-pub-mcp.app",
       "upstream": "10.0.0.6:3105",
       "alias_of": "cloud-cgc-pub-mcp.app",
@@ -2307,9 +2400,21 @@
       "source": "internal_routes"
     },
     {
+      "service": "cloud.chat-mattermost.app",
+      "upstream": "10.0.0.6:8065",
+      "alias_of": "chat-mattermost.app",
+      "source": "internal_routes"
+    },
+    {
       "service": "cloud.webmail.app",
       "upstream": "10.0.0.6:3000",
       "alias_of": "webmail.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.cloud-webmail.app",
+      "upstream": "10.0.0.6:3000",
+      "alias_of": "cloud-webmail.app",
       "source": "internal_routes"
     },
     {
@@ -2367,6 +2472,12 @@
       "source": "internal_routes"
     },
     {
+      "service": "cloud.calendar-radicale.app",
+      "upstream": "10.0.0.6:5232",
+      "alias_of": "calendar-radicale.app",
+      "source": "internal_routes"
+    },
+    {
       "service": "cloud.cloud-notes-sync.app",
       "upstream": "10.0.0.6:8098",
       "alias_of": "cloud-notes-sync.app",
@@ -2388,6 +2499,12 @@
       "service": "cloud.contacts.app",
       "upstream": "10.0.0.6:5233",
       "alias_of": "contacts.app",
+      "source": "internal_routes"
+    },
+    {
+      "service": "cloud.contacts-radicale.app",
+      "upstream": "10.0.0.6:5233",
+      "alias_of": "contacts-radicale.app",
       "source": "internal_routes"
     },
     {
@@ -2427,69 +2544,9 @@
       "source": "internal_routes"
     },
     {
-      "service": "cloud.cloud-drive-mcp.app",
-      "upstream": "10.0.0.6:3109",
-      "alias_of": "cloud-drive-mcp-http-3109.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.cloud-infra-mcp.app",
-      "upstream": "10.0.0.6:3100",
-      "alias_of": "cloud-infra-mcp-http-3100.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.cloud-mail-mcp.app",
-      "upstream": "10.0.0.6:3103",
-      "alias_of": "cloud-mail-mcp-http-3103.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.cloud-mattermost-mcp.app",
-      "upstream": "10.0.0.6:3102",
-      "alias_of": "cloud-mattermost-mcp-http-3102.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.cloud-services-mcp.app",
-      "upstream": "10.0.0.6:3101",
-      "alias_of": "cloud-services-mcp-http-3101.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.cloud-superapp-mcp.app",
-      "upstream": "10.0.0.6:3110",
-      "alias_of": "cloud-superapp-mcp-http-3110.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.google-personal-mcp.app",
-      "upstream": "10.0.0.6:3106",
-      "alias_of": "google-personal-mcp-http-3106.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.google-workspace-mcp.app",
-      "upstream": "10.0.0.6:3104",
-      "alias_of": "google-workspace-mcp-http-3104.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.cloud-spec.app",
-      "upstream": "10.0.0.6:3080",
-      "alias_of": "cloud-spec-http-3080.app",
-      "source": "all_app_urls"
-    },
-    {
       "service": "cloud.matomo-hybrid.app",
       "upstream": "10.0.0.6:8080",
       "alias_of": "matomo-hybrid-http-8080.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.cloud-webmail.app",
-      "upstream": "10.0.0.6:3000",
-      "alias_of": "cloud-webmail-http-3000.app",
       "source": "all_app_urls"
     },
     {
@@ -2502,18 +2559,6 @@
       "service": "cloud.photoprism-app.app",
       "upstream": "10.0.0.6:3013",
       "alias_of": "photoprism_app-http-3013.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.calendar-radicale.app",
-      "upstream": "10.0.0.6:5232",
-      "alias_of": "calendar-radicale-http-5232.app",
-      "source": "all_app_urls"
-    },
-    {
-      "service": "cloud.contacts-radicale.app",
-      "upstream": "10.0.0.6:5233",
-      "alias_of": "contacts-radicale-http-5233.app",
       "source": "all_app_urls"
     },
     {
@@ -2669,12 +2714,6 @@
     {
       "service": "c3-crowdsec.app",
       "upstream": "10.0.0.6:8088",
-      "scheme": "c3",
-      "source": "url_scheme"
-    },
-    {
-      "service": "c3-tokens-api.app",
-      "upstream": "10.0.0.6:4184",
       "scheme": "c3",
       "source": "url_scheme"
     },
@@ -3018,11 +3057,6 @@
         "host": "c3-crowdsec.diegonmarcos.com",
         "container": "crowdsec",
         "private": "c3-crowdsec.app"
-      },
-      {
-        "host": "c3-tokens-api.diegonmarcos.com",
-        "container": "tokens-api",
-        "private": "c3-tokens-api.app"
       },
       {
         "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
@@ -4108,27 +4142,6 @@
     },
     {
       "kind": "redirect",
-      "service": "tokens-api.app",
-      "redirect_to": "https://tokens-api-http-4184.app",
-      "container": "tokens-api",
-      "container_key": "app",
-      "svc": "tokens-api",
-      "vm": "oci-A1-f_0"
-    },
-    {
-      "kind": "canonical",
-      "service": "tokens-api-http-4184.app",
-      "container": "tokens-api",
-      "container_key": "app",
-      "svc": "tokens-api",
-      "vm": "oci-A1-f_0",
-      "port": 4184,
-      "protocol": "http",
-      "upstream": "10.0.0.6:4184",
-      "source": "containers.app.port"
-    },
-    {
-      "kind": "redirect",
       "service": "cloud-cgc-pub-mcp.app",
       "redirect_to": "https://cloud-cgc-pub-mcp-http-3105.app",
       "container": "cloud-cgc-pub-mcp",
@@ -5143,16 +5156,6 @@
       "notes": "CrowdSec behavioral IDS/IPS engine — DORMANT placeholder (Cloudflare-off fallback). Container runs but detects/remediates nothing: empty acquisition, online API (CAPI) disabled, no bouncers wired."
     },
     {
-      "host": "tokens-api.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:4184",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds"
-    },
-    {
       "host": "chat.diegonmarcos.com",
       "path": null,
       "upstream": "10.0.0.6:8065",
@@ -5551,16 +5554,6 @@
       "zone": "com",
       "service": null,
       "notes": "c3 container crowdsec (mesh-only; crowdsec-http-8088.app)"
-    },
-    {
-      "host": "c3-tokens-api.diegonmarcos.com",
-      "path": null,
-      "upstream": "10.0.0.6:4184",
-      "kind": "reverse_proxy",
-      "tls": "public",
-      "zone": "com",
-      "service": null,
-      "notes": "c3 container tokens-api (mesh-only; tokens-api-http-4184.app)"
     },
     {
       "host": "c3-cloud-cgc-pub-mcp.diegonmarcos.com",
@@ -6285,7 +6278,27 @@
       "notes": null
     },
     {
+      "host": "cloud-drive-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3109",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "c3-infra-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3100",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cloud-infra-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3100",
       "kind": "reverse_proxy",
@@ -6305,7 +6318,27 @@
       "notes": null
     },
     {
+      "host": "cloud-mail-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3103",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "mattermost-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3102",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cloud-mattermost-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3102",
       "kind": "reverse_proxy",
@@ -6335,7 +6368,27 @@
       "notes": null
     },
     {
+      "host": "cloud-services-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3101",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "superapp-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3110",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cloud-superapp-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3110",
       "kind": "reverse_proxy",
@@ -6365,7 +6418,27 @@
       "notes": null
     },
     {
+      "host": "google-personal-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3106",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "g-workspace-mcp.app",
+      "path": null,
+      "upstream": "10.0.0.6:3104",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "google-workspace-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3104",
       "kind": "reverse_proxy",
@@ -6406,6 +6479,16 @@
     },
     {
       "host": "c3-spec.app",
+      "path": null,
+      "upstream": "10.0.0.6:3080",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cloud-spec.app",
       "path": null,
       "upstream": "10.0.0.6:3080",
       "kind": "reverse_proxy",
@@ -6515,16 +6598,6 @@
       "notes": null
     },
     {
-      "host": "tokens-api.app",
-      "path": null,
-      "upstream": "10.0.0.6:4184",
-      "kind": "reverse_proxy",
-      "tls": "internal",
-      "zone": "com",
-      "service": null,
-      "notes": null
-    },
-    {
       "host": "cloud-cgc-pub-mcp.app",
       "path": null,
       "upstream": "10.0.0.6:3105",
@@ -6565,7 +6638,27 @@
       "notes": null
     },
     {
+      "host": "chat-mattermost.app",
+      "path": null,
+      "upstream": "10.0.0.6:8065",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "webmail.app",
+      "path": null,
+      "upstream": "10.0.0.6:3000",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "cloud-webmail.app",
       "path": null,
       "upstream": "10.0.0.6:3000",
       "kind": "reverse_proxy",
@@ -6665,6 +6758,16 @@
       "notes": null
     },
     {
+      "host": "calendar-radicale.app",
+      "path": null,
+      "upstream": "10.0.0.6:5232",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
       "host": "cloud-notes-sync.app",
       "path": null,
       "upstream": "10.0.0.6:8098",
@@ -6696,6 +6799,16 @@
     },
     {
       "host": "contacts.app",
+      "path": null,
+      "upstream": "10.0.0.6:5233",
+      "kind": "reverse_proxy",
+      "tls": "internal",
+      "zone": "com",
+      "service": null,
+      "notes": null
+    },
+    {
+      "host": "contacts-radicale.app",
       "path": null,
       "upstream": "10.0.0.6:5233",
       "kind": "reverse_proxy",
@@ -7034,16 +7147,6 @@
       "tls": "on_demand",
       "zone": "com",
       "service": "crowdsec",
-      "notes": null
-    },
-    {
-      "host": "tokens-api-http-4184.app",
-      "path": null,
-      "upstream": "10.0.0.6:4184",
-      "kind": "reverse_proxy",
-      "tls": "on_demand",
-      "zone": "com",
-      "service": "tokens-api",
       "notes": null
     },
     {

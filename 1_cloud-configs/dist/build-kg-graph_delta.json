@@ -33,13 +33,13 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 341,
-    "edges": 469,
+    "nodes": 340,
+    "edges": 467,
     "by_table": {
       "vm": 4,
       "service": 81,
       "container": 99,
-      "domain": 45,
+      "domain": 44,
       "repo": 3,
       "module": 81,
       "package": 28
@@ -1429,8 +1429,8 @@
       "properties": {
         "name": "tokens-api",
         "category": "sec",
-        "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds",
-        "domain": "tokens-api.diegonmarcos.com",
+        "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds. Public address: c3-pvt.diegonmarcos.com/tokens-api (shared gate, #1104); mesh tokens-api.app",
+        "domain": null,
         "port": 4184,
         "vm": "oci-apps",
         "folder": "infra-sec_tokens-api"
@@ -1445,7 +1445,7 @@
         "image": "ghcr.io/diegonmarcos/tokens-api-binaries:latest",
         "role": "app",
         "port": 4184,
-        "public": true
+        "public": false
       }
     },
     {
@@ -2614,14 +2614,6 @@
       "key": "domain:crowdsec_diegonmarcos_com",
       "properties": {
         "fqdn": "crowdsec.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "domain",
-      "id": "tokens_api_diegonmarcos_com",
-      "key": "domain:tokens_api_diegonmarcos_com",
-      "properties": {
-        "fqdn": "tokens-api.diegonmarcos.com"
       }
     },
     {
@@ -5726,15 +5718,6 @@
     },
     {
       "table": "proxied_by",
-      "from": "service:tokens_api",
-      "to": "service:caddy",
-      "key": "service:tokens_api->proxied_by->service:caddy",
-      "properties": {
-        "domain": "tokens-api.diegonmarcos.com"
-      }
-    },
-    {
-      "table": "proxied_by",
       "from": "service:chat_mattermost",
       "to": "service:caddy",
       "key": "service:chat_mattermost->proxied_by->service:caddy",
@@ -6118,13 +6101,6 @@
       "from": "domain:crowdsec_diegonmarcos_com",
       "to": "service:crowdsec",
       "key": "domain:crowdsec_diegonmarcos_com->routes_to->service:crowdsec",
-      "properties": {}
-    },
-    {
-      "table": "routes_to",
-      "from": "domain:tokens_api_diegonmarcos_com",
-      "to": "service:tokens_api",
-      "key": "domain:tokens_api_diegonmarcos_com->routes_to->service:tokens_api",
       "properties": {}
     },
     {
