@@ -636,6 +636,32 @@ function deriveCaddy(c: any): DerivedFile[] {
     }
   }
 
+  // public_host (fleet addressing rule, ticket #1100): a service whose primary
+  // route is a path on a shared host (api.* / mcp.*) may ALSO declare its own
+  // host `<container>.diegonmarcos.com`. Emitted as an ordinary subdomain route
+  // to the same upstream, so the shared edge gate (bearer or session; anonymous
+  // HTML to the container page, API clients 401/403) applies unchanged. The
+  // path route above stays until the consumers are switched (phase P4).
+  // public_paths of the path block become bypass_paths of the host, with the
+  // base_path prefix removed (the host serves the upstream at its root).
+  for (const [, svc] of Object.entries(services)) {
+    if (svc.enabled === false) continue;
+    const proxy = svc.proxy?.primary;
+    if (!proxy?.public_host || proxy.streaming) continue;
+    const up = rewriteUpstreamForCaddy(svc.vm, svc.upstream);
+    if (!up) continue;
+    const base: string = proxy.base_path ?? "";
+    const bypass = publicPathsOfProxy(proxy).map((p) => (base && p.startsWith(base + "/") ? p.slice(base.length) : p));
+    routes.push({
+      domain: proxy.public_host,
+      upstream: up,
+      ...(proxy.auth === "none" ? { auth: "none" } : {}),
+      ...(wgOnly(proxy) ? { wg_only: true } : {}),
+      ...(bypass.length > 0 ? { bypass_paths: bypass } : {}),
+      comment: `${svc.description} (own host ${proxy.public_host}; path route kept until P4)`,
+    });
+  }
+
   // Also scan flat routes for path-based entries that services don't have
   // (e.g., crawlee dashboard on app hub, windmill, gitea, grafana on app hub,
   //  api/dash redirect, etc.)
