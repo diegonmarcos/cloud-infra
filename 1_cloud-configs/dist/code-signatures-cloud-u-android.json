@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22068,
+    "files": 22072,
     "by_lang": {
       "js": 488,
       "sh": 545,
       "py": 155,
-      "kotlin": 11635,
+      "kotlin": 11639,
       "java": 637,
       "ts": 8467,
       "nix": 31,
@@ -26,7 +26,7 @@
       "module": 6423,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11632,
+      "kotlin": 11636,
       "python": 50,
       "rust-module": 110,
       "hook": 150,
@@ -9856,12 +9856,12 @@
         "barParams(outsideTouch: Boolean = false)",
         "dp(v: Int)",
         "buildNotification()",
-        "actionPi(target: String)",
-        "serviceAction(action: String)",
+        "quickActionsNotification(ctx: Context, cfg: FloatingNavConfig)",
+        "quickActions(ctx: Context, cfg: FloatingNavConfig)",
+        "actionPi(ctx: Context, target: String)",
+        "serviceAction(ctx: Context, action: String)",
         "actionIcon(target: String)",
-        "showMenu(ctx: Context)",
-        "overlayAllowed(ctx: Context)",
-        "setEnabled(ctx: Context, on: Boolean)"
+        "showMenu(ctx: Context)"
       ]
     },
     {
@@ -9920,6 +9920,7 @@
         "android.os.Build",
         "androidx.core.app.NotificationCompat",
         "com.diegonmarcos.superapp.notificationcenter.BadgeCustomization",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeModel",
         "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
         "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
         "com.diegonmarcos.superapp.notificationcenter.NotifyGroups",
@@ -10772,6 +10773,7 @@
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.painterResource",
         "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.semantics.contentDescription",
         "androidx.compose.ui.semantics.role",
         "androidx.compose.ui.semantics.semantics",
         "androidx.compose.ui.text.font.FontWeight",
@@ -10781,17 +10783,24 @@
         "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
         "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
         "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
+        "com.diegonmarcos.superapp.notificationcenter.NotifyGroups",
         "com.diegonmarcos.superapp.ui.Haptics"
       ],
       "symbols": [
         "card(id: String)",
+        "section(groupId: String)",
         "progress(id: String)",
-        "action(id: String)",
-        "orderedBadges(@Suppress(\"UNUSED_PARAMETER\")",
+        "action(id: String, actionId: String)",
+        "actions(id: String)",
+        "subText(id: String)",
+        "badgeSections(ctx: android.content.Context)",
+        "orderedBadges(ctx: android.content.Context)",
         "BadgeCards()",
         "accentOf(d: BadgeCardData.Data)",
         "BadgeCard(d: BadgeCardData.Data)",
-        "class BadgeCardTags"
+        "ActionRow(d: BadgeCardData.Data, accent: Color, hostView: android.view.View)",
+        "class BadgeCardTags",
+        "class BadgeSection"
       ]
     },
     {
@@ -14439,6 +14448,28 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BadgeModel"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.PendingIntent",
+        "androidx.annotation.DrawableRes",
+        "androidx.core.app.NotificationCompat"
+      ],
+      "symbols": [
+        "add(b: NotificationCompat.Builder, actions: List<Action>)",
+        "add(b: NotificationCompat.Builder, action: Action?)",
+        "idOf(label: String)",
+        "of(n: Notification)",
+        "class BadgeModel",
+        "class Action"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/BadgeRestartReceiver.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -14816,6 +14847,7 @@
       ],
       "symbols": [
         "build(ctx: Context)",
+        "actions(ctx: Context, sharePi: PendingIntent)",
         "ensureChannel(ctx: Context)",
         "class is",
         "class KdeStatusNotifier"
@@ -15256,6 +15288,7 @@
       "symbols": [
         "of(ctx: Context, s: State)",
         "intentFor(ctx: Context, a: Action)",
+        "iconFor(a: Action)",
         "position(ctx: Context, fix: WeatherLocation.Fix, nowMs: Long)",
         "class WeatherFace",
         "class State",
@@ -20116,6 +20149,119 @@
         "spec()",
         "hex(c: androidx.compose.ui.graphics.Color)",
         "class NotifStyleGuardTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifyCardGuardTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NotifyCardGuardTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.File"
+      ],
+      "symbols": [
+        "class NotifyCardGuardTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifyCardParityTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NotifyCardParityTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.app.Notification",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.content.Context",
+        "android.content.Intent",
+        "androidx.core.app.NotificationCompat",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.floatingnav.FloatingNavConfig",
+        "com.diegonmarcos.superapp.floatingnav.FloatingNavService",
+        "com.diegonmarcos.superapp.kdeconnect.KdeConnectManager",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeDeclaration",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeModel",
+        "com.diegonmarcos.superapp.notificationcenter.KdeStatusNotifier",
+        "com.diegonmarcos.superapp.notificationcenter.WeatherFace",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Before",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "nm()",
+        "setUp()",
+        "tearDown()",
+        "pi(code: Int)",
+        "generic(b: BadgeDeclaration.Badge, acts: List<BadgeModel.Action>)",
+        "notificationOf(b: BadgeDeclaration.Badge)",
+        "class NotifyCardParityTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/NotifyCardsShotTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NotifyCardsShotTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.app.Notification",
+        "android.app.NotificationManager",
+        "android.content.Context",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "android.widget.FrameLayout",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.Text",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.test.assertHasClickAction",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "androidx.compose.ui.viewinterop.AndroidView",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.floatingnav.FloatingNavConfig",
+        "com.diegonmarcos.superapp.floatingnav.FloatingNavService",
+        "com.diegonmarcos.superapp.kdeconnect.KdeConnectManager",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeCardData",
+        "com.diegonmarcos.superapp.notificationcenter.BadgeServices",
+        "com.diegonmarcos.superapp.notificationcenter.KdeStatusNotifier",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "frame(id: String, n: Notification, shot: String, want: List<String>)",
+        "snap(name: String)",
+        "class NotifyCardsShotTest"
       ]
     },
     {
