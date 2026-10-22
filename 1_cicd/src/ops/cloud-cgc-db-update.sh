@@ -1775,6 +1775,29 @@ chunk_home_project() {
 # else octocode failure), _log (last octocode log), _proj_resolved when known,
 # CHUNK_STATUS (one JSON line).
 
+# Persist the chunk state NOW, right after a stall decision (halved window, forced rework,
+# quarantine), so a job the platform cuts off later cannot lose it: the next dispatch pulls the
+# checkpointed image with this state inside. Non-fatal: a failed persist only costs the decision.
+# Uses the loop's variables; skipped when too little of the slice is left (the final publish does it).
+cgc_chunk_persist_decision() {
+  _cp_next=$(( BUDGET_MIN - ( $(date +%s) - START_TS ) / 60 - 2 * _cr_pub_s / 60 ))
+  [ "$_cp_next" -ge "${CGC_MIN_SLICE_MIN:-20}" ] || return 0
+  if [ -z "${_proj_resolved:-}" ]; then
+    _proj_resolved=$(resolve_project_dir "$OCTO_HOME" "$_before_dirs" "$_idx_marker") || { echo "::warning::[cgc-db] $_cr_r · could not resolve the project dir; the stall decision is persisted by the final publish"; return 0; }
+  fi
+  cp "$_cr_sf_stage" "$(chunk_state_path "$OCTO_HOME/$_proj_resolved" "$MANIFEST_PHASE")" || return 0
+  _cp_p0=$(date +%s)
+  if [ "${CGC_FORCE:-0}" = "1" ]; then
+    printf '{"octocode":"%s","phase":"%s","commit":"%s"}\n' "$OCTO_VERSION" "$MANIFEST_PHASE" "$_cr_head" > "$OCTO_HOME/$_proj_resolved/$FORCE_PARTIAL_MARKER"
+    ( REPO_TAG="$(force_partial_tag)"; checkpoint_publish "$_cr_r" ) || echo "::warning::[cgc-db] $_cr_r · checkpoint of the stall decision failed (continuing)"
+    rm -f "$OCTO_HOME/$_proj_resolved/$FORCE_PARTIAL_MARKER"
+  else
+    checkpoint_publish "$_cr_r" || echo "::warning::[cgc-db] $_cr_r · checkpoint of the stall decision failed (continuing)"
+  fi
+  _cr_pub_s=$(( $(date +%s) - _cp_p0 + 300 ))
+  echo "[cgc-db] $_cr_r · stall decision checkpointed (publish took $(( _cr_pub_s / 60 - 5 ))m)"
+}
+
 chunk_index_repo() {
   _cr_r="$1"; _cr_d="$2"; _cr_head="$3"
   _cr_o="${CGC_SCRATCH:?}/chunk-$_cr_r"; rm -rf "${_cr_o:?}"; mkdir -p "$_cr_o"
@@ -1942,6 +1965,7 @@ chunk_index_repo() {
       jq --argjson n "$_cr_n" '.chunk = $n | if (.ms_per_file // 0) > 0 then .ms_per_file *= 2 else . end' "$_cr_o/state0" > "$_cr_sf_stage"
       echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i did not finish in ${_cr_wto}m — chunk size halved to $_cr_n; this window's files stay outstanding"
       fi
+      [ "$MANIFEST_PHASE" != "graphrag" ] || cgc_chunk_persist_decision
       # A window killed at its own cap (graphrag) leaves the rest of the slice: go on in
       # this job with the halved window. The top of the loop stops when too little is left.
       [ "$_cr_wto" -lt "$_cr_slice" ] && [ "$_cr_llm" != "3" ] && continue

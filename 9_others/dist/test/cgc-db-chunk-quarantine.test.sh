@@ -89,7 +89,7 @@ run_suite "$LIB" && echo "  ok   quarantine properties hold on the real library"
 
 # wiring: the update script splits a stalled graphrag window and quarantines only a file that hangs ALONE
 UPD="$REPO_ROOT/1_cicd/src/ops/cloud-cgc-db-update.sh"
-if grep -q 'splitting: next window' "$UPD" && grep -q 'hangs ALONE' "$UPD" && grep -q 'CGC_ALONE_BUDGET_MIN' "$UPD" && grep -q 'chunk_rework_apply' "$UPD" && grep -q 'chunk_rework_restore' "$UPD"; then echo "  ok   a stalled window is split down to one file; only a file that hangs alone is quarantined"; else echo "  FAIL the split / alone-quarantine / rework wiring is missing from the chunk loop" >&2; fails=1; fi
+if grep -q 'cgc_chunk_persist_decision' "$UPD" && grep -q 'stall decision checkpointed' "$UPD" && grep -q 'splitting: next window' "$UPD" && grep -q 'hangs ALONE' "$UPD" && grep -q 'CGC_ALONE_BUDGET_MIN' "$UPD" && grep -q 'chunk_rework_apply' "$UPD" && grep -q 'chunk_rework_restore' "$UPD"; then echo "  ok   a stalled window is split down to one file; only a file that hangs alone is quarantined"; else echo "  FAIL the split / alone-quarantine / rework wiring is missing from the chunk loop" >&2; fails=1; fi
 
 # 5: CPU is not liveness (the watchdog resets only on progress or an LLM call)
 if grep -q 'dcpu.*-ge' "$LIB"; then echo "  FAIL watchdog still treats CPU as liveness" >&2; fails=1; else echo "  ok   the stall watchdog does not reset on CPU"; fi
