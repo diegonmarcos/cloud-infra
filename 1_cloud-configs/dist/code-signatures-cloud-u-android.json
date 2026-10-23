@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22122,
+    "files": 22152,
     "by_lang": {
       "js": 488,
-      "sh": 549,
-      "py": 162,
-      "kotlin": 11695,
+      "sh": 550,
+      "py": 163,
+      "kotlin": 11723,
       "java": 647,
       "nix": 29,
       "rust": 111,
@@ -19,13 +19,13 @@
     },
     "by_role": {
       "file": 2279,
-      "shell": 434,
+      "shell": 435,
       "script": 255,
       "java": 646,
-      "kotlin": 11692,
+      "kotlin": 11720,
       "module": 6417,
       "flake": 25,
-      "python": 53,
+      "python": 54,
       "rust-module": 111,
       "hook": 150,
       "nix-module": 4,
@@ -7349,6 +7349,7 @@
         "PlacesDay",
         "TimelineSeg",
         "TimelineBoard",
+        "TrackerDay",
         "TaskProject",
         "Boards",
         "ThreadIntents",
@@ -7375,6 +7376,7 @@
         "health(days: Int = 30)",
         "places(days: Int = 7)",
         "timeline(hours: Int = 24)",
+        "daily(days: Int = 7)",
         "taskProjects()",
         "group(mail: List<InboxItem>, phone: List<InboxItem>)",
         "put(key: String, pi: PendingIntent?)",
@@ -7382,6 +7384,12 @@
         "steps(body: String)",
         "places(body: String)",
         "timeline(body: String)",
+        "checkVersion(o: JSONObject)",
+        "placeText(loc: JSONObject?)",
+        "segments(body: String)",
+        "timelineOf(segs: List<TimelineSeg>, nowMs: Long, hours: Int)",
+        "timelineV1OrShim(today: LocalDate, nowMs: Long, hours: Int, segments: (LocalDate)",
+        "daily(body: String)",
         "projects(body: String)",
         "readHealthBoard(ctx: Context, days: Int = 30, today: LocalDate = LocalDate.now()",
         "fleetMail(limit: Int)",
@@ -7390,6 +7398,7 @@
         "health(days: Int)",
         "places(days: Int)",
         "timeline(hours: Int)",
+        "daily(days: Int)",
         "ask(pkg: String, app: String, op: String, q: Map<String, String>, parse: (String)",
         "class BoardsSource",
         "class Read",
@@ -7400,15 +7409,7 @@
         "class InboxGroup",
         "class StepsDay",
         "class StepsBoard",
-        "class PlaceVisit",
-        "class PlacesDay",
-        "class TimelineSeg",
-        "class TimelineBoard",
-        "class TaskProject",
-        "class Boards",
-        "class ThreadIntents",
-        "class BoardsWire",
-        "class FleetBoardsSource"
+        "class PlaceVisit"
       ]
     },
     {
@@ -7425,7 +7426,9 @@
         "SleepAvg",
         "SleepBlock",
         "HealthBoard",
-        "HealthAgg"
+        "HealthAgg",
+        "TrackerHealth",
+        "TrackerAgg"
       ],
       "imports": [
         "com.diegonmarcos.superapp.health.HealthBoardReader",
@@ -7450,6 +7453,8 @@
         "hm(min: Double?)",
         "hours(min: Double)",
         "bpmText(v: Double?)",
+        "summarize(days: List<TrackerDay>, today: LocalDate)",
+        "hoursText(h: Double?)",
         "class KmDay",
         "class KmAvg",
         "class StepsBlock",
@@ -7459,7 +7464,9 @@
         "class SleepAvg",
         "class SleepBlock",
         "class HealthBoard",
-        "class HealthAgg"
+        "class HealthAgg",
+        "class TrackerHealth",
+        "class TrackerAgg"
       ]
     },
     {
@@ -10473,6 +10480,7 @@
         "rememberResumeCount()",
         "BoardStepsBody(epoch: Int, onOpen: (String)",
         "HealthContent(b: HealthBoard)",
+        "TrackerHealthSection()",
         "HealthPermissionCard(missing: Set<String>, onGrant: ()",
         "StatTriple(tag: String, today: Pair<String, String>, avg7: Pair<String, String>, avg30: Pair<String, String>, ok: Boolean)",
         "StepsSection(s: StepsBlock)",
@@ -19399,6 +19407,36 @@
         "inboxState()",
         "class BoardsTest",
         "class Fake"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/BoardsTrackerV1Test.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BoardsTrackerV1Test"
+      ],
+      "imports": [
+        "android.app.Application",
+        "com.diegonmarcos.superapp.boards.BoardsWire",
+        "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.boards.TimelineBoard",
+        "com.diegonmarcos.superapp.boards.TimelineSeg",
+        "com.diegonmarcos.superapp.boards.TrackerAgg",
+        "com.diegonmarcos.superapp.boards.TrackerDay",
+        "com.diegonmarcos.superapp.boards.Why",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Assert.fail",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "class BoardsTrackerV1Test"
       ]
     },
     {
@@ -31386,11 +31424,13 @@
         "android.content.ComponentName",
         "android.content.Context",
         "android.content.Intent",
+        "android.os.Build",
         "android.os.Bundle",
         "android.os.Handler",
         "android.os.Looper",
         "android.os.Parcel",
-        "android.os.ResultReceiver"
+        "android.os.ResultReceiver",
+        "com.diegonmarcos.superapp.core.StoreNotifyGate"
       ],
       "symbols": [
         "applies(pkg: String)",
@@ -31398,6 +31438,7 @@
         "receiverForSending(local: ResultReceiver)",
         "run(ctx: Context, pkg: String)",
         "onReceiveResult(resultCode: Int, data: Bundle?)",
+        "attempt(app: Context, pkg: String, intent: Intent, n: Int)",
         "resultOf(ctx: Context, pkg: String)",
         "record(ctx: Context, pkg: String, text: String)",
         "class UnpackAfterInstall",
@@ -32836,6 +32877,58 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/commonMain/kotlin/com/diegonmarcos/superapp/bottomnav/IconPillTabs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.interaction.MutableInteractionSource",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.BoxWithConstraints",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.defaultMinSize",
+        "androidx.compose.foundation.layout.displayCutout",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.statusBars",
+        "androidx.compose.foundation.layout.union",
+        "androidx.compose.foundation.layout.widthIn",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.selection.selectableGroup",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.graphics.painter.Painter",
+        "androidx.compose.ui.platform.LocalDensity",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.semantics.CollectionInfo",
+        "androidx.compose.ui.semantics.CollectionItemInfo",
+        "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.semantics.collectionInfo",
+        "androidx.compose.ui.semantics.collectionItemInfo",
+        "androidx.compose.ui.semantics.contentDescription",
+        "androidx.compose.ui.semantics.role",
+        "androidx.compose.ui.semantics.selected",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.text.TextStyle"
+      ],
+      "symbols": [
+        "IconPillStrip( pages: List<NavPage>, selectedId: String?, onSelect: (NavPage)",
+        "rememberSource()"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/bottomnav/src/commonMain/kotlin/com/diegonmarcos/superapp/bottomnav/MiniJson.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -32992,6 +33085,7 @@
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.painter.Painter",
         "androidx.compose.ui.platform.LocalDensity",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.semantics.CollectionInfo",
@@ -33001,8 +33095,7 @@
         "androidx.compose.ui.semantics.collectionInfo",
         "androidx.compose.ui.semantics.collectionItemInfo",
         "androidx.compose.ui.semantics.contentDescription",
-        "androidx.compose.ui.semantics.role",
-        "androidx.compose.ui.semantics.selected"
+        "androidx.compose.ui.semantics.role"
       ],
       "symbols": [
         "PageTabs( pages: List<NavPage>, selectedId: String?, onSelect: (NavPage)",
@@ -33014,6 +33107,7 @@
         "planPills( availPx: Float, count: Int, longest: Int, padPx: Float, marginPx: Float, startPx: Float, minPx: Float, stepPx: Float, minChars: Int, charWidth: (Float)",
         "tab(id: String)",
         "label(id: String)",
+        "icon(id: String)",
         "class TabSurface",
         "class PillPlan",
         "class PageTabsTags"
@@ -38583,6 +38677,7 @@
         "prefs(context: Context, fileName: String)",
         "wasReset(context: Context, fileName: String)",
         "acknowledgeReset(context: Context, fileName: String)",
+        "memoryFor(fileName: String)",
         "recover( open: ()",
         "deleteMasterKeyAlias()",
         "getAll()",
@@ -38679,6 +38774,7 @@
         "corruptKeysetRecoversByDeletingTheFileAndReports()",
         "aKeystoreThatStaysBrokenGetsItsAliasDeletedToo()",
         "neverThrowsEvenWhenEverythingFailsAndFallsBackToMemory()",
+        "memoryFallbackIsSharedAcrossOpensOfTheSameFile()",
         "class SafeEncryptedPrefsTest"
       ]
     },
@@ -76903,7 +76999,7 @@
         "theBearerIsNotInTheEntriesOrTheGrants()",
         "theMailReaderTakesOnlyTheMailServicesOfTheSameDeclaration()",
         "cloudVaultIsGrantedTheFleetEndpointsAndTheBearerOnceAndARevokeSticks()",
-        "theVaultServiceCarriesItsPublicNameButStaysMeshOnlyUntilAPublicHostExists()",
+        "theVaultHasOneUrlAndIsNotARoutedFleetService()",
         "class FleetEndpointsPublishTest"
       ]
     },
@@ -346291,38 +346387,30 @@
         "androidx.appcompat.app.AppCompatActivity",
         "androidx.compose.foundation.background",
         "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.foundation.layout.WindowInsetsSides",
         "androidx.compose.foundation.layout.fillMaxSize",
-        "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.height",
         "androidx.compose.foundation.layout.only",
-        "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.systemBars",
         "androidx.compose.foundation.layout.windowInsetsPadding",
-        "androidx.compose.material3.DrawerValue",
-        "androidx.compose.material3.Icon",
-        "androidx.compose.material3.IconButton",
-        "androidx.compose.material3.ModalDrawerSheet",
-        "androidx.compose.material3.ModalNavigationDrawer",
-        "androidx.compose.material3.NavigationDrawerItem",
-        "androidx.compose.material3.NavigationDrawerItemDefaults",
-        "androidx.compose.material3.Text",
-        "androidx.compose.material3.rememberDrawerState",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.CompositionLocalProvider",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.key",
         "androidx.compose.runtime.mutableIntStateOf",
         "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.rememberCoroutineScope",
         "androidx.compose.runtime.setValue",
         "androidx.compose.runtime.staticCompositionLocalOf",
-        "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.graphics.Color",
-        "androidx.compose.ui.res.colorResource"
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.fragment.app.commit",
+        "com.diegonmarcos.superapp.bottomnav.FleetChrome",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitFragmentHostState",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "com.diegonmarcos.superapp.updater.UpdateProgress",
+        "com.diegonmarcos.superapp.updater.Updater"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
@@ -346331,13 +346419,9 @@
         "onSaveInstanceState(outState: Bundle)",
         "onDestroy()",
         "Shell()",
-        "TopBar(onMenu: ()",
-        "DrawerSheet(close: ()",
-        "select(section: Section?)",
         "open(sectionId: String, pageId: String? = null)",
         "onTarget(target: String)",
         "handleUpdateState(state: UpdateProgress.State)",
-        "iconRes(name: String)",
         "class MainActivity"
       ]
     },
@@ -346372,6 +346456,45 @@
       ]
     },
     {
+      "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/MeTopBar.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeTopBar"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.semantics.Role",
+        "androidx.compose.ui.semantics.role",
+        "androidx.compose.ui.semantics.selected",
+        "androidx.compose.ui.semantics.semantics",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp"
+      ],
+      "symbols": [
+        "entry(sectionId: String)",
+        "MeTopBar(title: String, currentSectionId: String?, onOpen: (String)",
+        "class MeTopBar"
+      ]
+    },
+    {
       "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/Sections.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -346397,8 +346520,7 @@
         "all()",
         "byId(id: String?)",
         "bottom()",
-        "drawer()",
-        "toolbarSection()",
+        "settings()",
         "default()",
         "stack(ctx: Context, sectionId: String, pageId: String)",
         "load()",
@@ -346432,6 +346554,7 @@
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.painterResource",
         "androidx.fragment.app.Fragment",
         "androidx.fragment.app.FragmentActivity",
         "androidx.fragment.app.commit",
@@ -346444,6 +346567,7 @@
       "symbols": [
         "SectionScreen(sectionId: String, requestedPage: String?, modifier: Modifier = Modifier)",
         "PageContent(section: Section, page: Page, modifier: Modifier)",
+        "pageIcon(ctx: Context, name: String)",
         "healthFragment(o: JSONObject)",
         "HostedFragment(key: String, modifier: Modifier, create: ()",
         "findFragmentActivity()"
@@ -346503,6 +346627,11 @@
         "Block(o: JSONObject)",
         "Titles(o: JSONObject)",
         "StatsCard(o: JSONObject)",
+        "BulletsCard(o: JSONObject)",
+        "QuoteCard(o: JSONObject)",
+        "TableCard(o: JSONObject)",
+        "TableRow(cells: List<String>, group: Boolean, header: Boolean)",
+        "LinkRow(label: String, url: String)",
         "ItemCard(o: JSONObject)",
         "LinkGrid(links: JSONArray)",
         "LinkTile(o: JSONObject, modifier: Modifier)",
@@ -346609,6 +346738,56 @@
       ]
     },
     {
+      "path": "ac_cloud-me/app/src/test/java/com/diegonmarcos/cloudme/MeTabsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeTabsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.test.assertCountEquals",
+        "androidx.compose.ui.test.assertIsSelected",
+        "androidx.compose.ui.test.assertTextEquals",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performScrollTo",
+        "com.diegonmarcos.superapp.bottomnav.PageTabs",
+        "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "showTabs(select: String)",
+        "nameCount(id: String)",
+        "class MeTabsTest"
+      ]
+    },
+    {
       "path": "ac_cloud-me/build.sh",
       "lang": "sh",
       "role": "shell",
@@ -346682,6 +346861,32 @@
         "_verify_release_asset()",
         "_publish_release_asset()",
         "step_gh_release()"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/data/regen-study.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "load()",
+        "end_year(dates)",
+        "present(dates)",
+        "job_card(e, body=False)",
+        "edu_card(e, body=False)",
+        "build(d)",
+        "main(argv)"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "load()",
+        "end_year(dates)",
+        "present(dates)",
+        "job_card(e, body=False)",
+        "edu_card(e, body=False)",
+        "build(d)",
+        "main(argv)"
       ]
     },
     {
@@ -346844,6 +347049,28 @@
         "_gone()",
         "_sub()",
         "_json()"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/test/test-me-redesign.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check_tree()",
+        "expect_green()",
+        "only()",
+        "mutant()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check_tree()",
+        "expect_green()",
+        "only()",
+        "mutant()"
       ]
     },
     {
@@ -348946,6 +349173,34 @@
       ]
     },
     {
+      "path": "ac_cloud-nav/app/src/androidTest/java/com/diegonmarcos/cloudnav/tracker/DayScreenTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayScreenTest"
+      ],
+      "imports": [
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.hasText",
+        "androidx.compose.ui.test.junit4.createComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.onNodeWithText",
+        "androidx.compose.ui.test.performScrollToNode",
+        "androidx.test.ext.junit.runners.AndroidJUnit4",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "java.time.LocalDate",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "at(h: Int)",
+        "mapAddressCategoryAndIconsAreShown()",
+        "class DayScreenTest"
+      ]
+    },
+    {
       "path": "ac_cloud-nav/app/src/androidTest/java/com/diegonmarcos/cloudnav/tracker/EngineSettingsScreenTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -350577,6 +350832,7 @@
         "com.diegonmarcos.cloudnav.maps.MapsPageStrip",
         "com.diegonmarcos.cloudnav.maps.MapsStopsFragment",
         "com.diegonmarcos.cloudnav.maps.TimelineHost",
+        "com.diegonmarcos.cloudnav.tracker.DayFragment",
         "com.diegonmarcos.cloudnav.tracker.StepsFragment",
         "com.diegonmarcos.cloudnav.tracker.TrackerInk",
         "com.diegonmarcos.superapp.bottomnav.NavPage",
@@ -350591,6 +350847,340 @@
         "openStopsForDay(dayMs: Long)",
         "pageFragment(id: String)",
         "class TimelineFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/Address.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Geocoded",
+        "AddressParser",
+        "withGeocoded"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "toJson()",
+        "fromJson(s: String)",
+        "v(k: String)",
+        "str(k: String)",
+        "street(road: String?, number: String?)",
+        "parse(providerId: String, body: String)",
+        "nominatim(body: String)",
+        "photon(body: String)",
+        "overpass(body: String)",
+        "overpassQuery(lat: Double, lon: Double, radiusM: Int = 40)",
+        "merge(base: Geocoded?, poi: Geocoded?)",
+        "withGeocoded(g: Geocoded)",
+        "class Geocoded",
+        "class AddressParser"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/CorrectionStore.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CorrectionStore"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "all()",
+        "add(c: Correction)",
+        "memory()",
+        "memoryOf(cs: List<Correction>)",
+        "encode(cs: List<Correction>)",
+        "decode(s: String)",
+        "str(k: String)",
+        "class CorrectionStore"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/DayFragment.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayFragment"
+      ],
+      "imports": [
+        "android.app.DatePickerDialog",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.lifecycle.lifecycleScope",
+        "com.diegonmarcos.cloudnav.maps.TimelineSync",
+        "com.diegonmarcos.superapp.uikit.KitComposeFragment",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext",
+        "java.time.LocalDate",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "palette()",
+        "onResume()",
+        "Content()",
+        "correct(c: Correction)",
+        "load(date: LocalDate)",
+        "compute(app: android.content.Context, date: LocalDate, today: LocalDate)",
+        "class DayFragment"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/DayIcons.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayIcons"
+      ],
+      "imports": [
+        "androidx.annotation.DrawableRes",
+        "com.diegonmarcos.cloudnav.R"
+      ],
+      "symbols": [
+        "mode(m: Mode)",
+        "poi(c: PoiCategory)",
+        "stay(s: DaySeg.Stay)",
+        "class DayIcons"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/DayJson.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayJson"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "place(p: Place?)",
+        "segment(s: DaySeg)",
+        "segments(day: List<DaySeg>, fromMs: Long, toMs: Long)",
+        "daily(stats: List<DayStats>)",
+        "class DayJson"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/DayMap.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayRouteMap"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.ContextWrapper",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.graphics.Paint",
+        "android.view.MotionEvent",
+        "androidx.annotation.DrawableRes",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.DisposableEffect",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.viewinterop.AndroidView",
+        "androidx.core.content.ContextCompat",
+        "androidx.lifecycle.Lifecycle",
+        "androidx.lifecycle.LifecycleEventObserver",
+        "androidx.lifecycle.LifecycleOwner",
+        "com.diegonmarcos.cloudnav.maps.MapStyles",
+        "org.maplibre.android.MapLibre",
+        "org.maplibre.android.camera.CameraUpdateFactory",
+        "org.maplibre.android.geometry.LatLng",
+        "org.maplibre.android.geometry.LatLngBounds",
+        "org.maplibre.android.maps.MapView",
+        "org.maplibre.android.maps.MapLibreMap",
+        "org.maplibre.android.maps.Style",
+        "org.maplibre.android.style.expressions.Expression",
+        "org.maplibre.android.style.layers.CircleLayer",
+        "org.maplibre.android.style.layers.LineLayer",
+        "org.maplibre.android.style.layers.Property",
+        "org.maplibre.android.style.layers.PropertyFactory",
+        "org.maplibre.android.style.layers.SymbolLayer",
+        "org.maplibre.android.style.sources.GeoJsonSource"
+      ],
+      "symbols": [
+        "DayRouteMap(model: RouteModel, modifier: Modifier = Modifier, styleKey: String = \"light\")",
+        "lifecycleOwner()",
+        "draw(ctx: Context, map: MapLibreMap, style: Style, m: RouteModel)",
+        "icon(ctx: Context, name: String)",
+        "iconRes(name: String)",
+        "iconSpec(name: String)"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/DayScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayTab",
+        "DayTags",
+        "DayUi",
+        "DayActions",
+        "DayFormat",
+        "DayScreen"
+      ],
+      "imports": [
+        "android.app.TimePickerDialog",
+        "androidx.compose.foundation.Canvas",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxHeight",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.lazy.LazyColumn",
+        "androidx.compose.foundation.lazy.items",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.horizontalScroll",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.DropdownMenu",
+        "androidx.compose.material3.DropdownMenuItem",
+        "androidx.compose.material3.FloatingActionButton",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.drawscope.Stroke"
+      ],
+      "symbols": [
+        "tab(t: DayTab)",
+        "seg(i: Int)",
+        "confirm(i: Int)",
+        "edit(i: Int)",
+        "missing(i: Int)",
+        "menu(i: Int)",
+        "modeLabel(m: Mode)",
+        "modeColor(m: Mode)",
+        "dateLabel(d: LocalDate, today: LocalDate)",
+        "hours(ms: Long)",
+        "stayTitle(s: DaySeg.Stay)",
+        "DayScreen(ui: DayUi, tab: DayTab, onTab: (DayTab)",
+        "DayTabView(ui: DayUi, a: DayActions, zone: ZoneId)",
+        "DatePicker(ui: DayUi, a: DayActions)",
+        "SummaryRow(ui: DayUi)",
+        "RouteMap(ui: DayUi)",
+        "Glyph(res: Int, bg: Color, desc: String, modifier: Modifier = Modifier)",
+        "StayRow(i: Int, s: DaySeg.Stay, a: DayActions, zone: ZoneId, onAddMissing: ()",
+        "MoveRow(i: Int, m: DaySeg.Move, a: DayActions, zone: ZoneId)",
+        "splitAt(a: DayActions, s: DaySeg, zone: ZoneId, ctx: android.content.Context)",
+        "NameDialog(title: String, initial: String, onDismiss: ()",
+        "AddVisitDialog(range: Pair<Long, Long>, zone: ZoneId, onDismiss: ()",
+        "TripsTabView(ui: DayUi, actions: DayActions)",
+        "InsightsTabView(ui: DayUi)",
+        "Bars(title: String, v: List<Pair<String, Double>>, unit: String)",
+        "ListTab(title: String, sub: String, rows: List<Triple<String, String, String>>)",
+        "class DayTab",
+        "class DayTags",
+        "class DayUi",
+        "class DayActions",
+        "class DayFormat"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/DayTimeline.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "Mode",
+        "StayKind",
+        "Place",
+        "DaySeg",
+        "ModeInference",
+        "Correction",
+        "Remembered",
+        "DayTimeline",
+        "ModeStat",
+        "DaySummary",
+        "DayStats",
+        "Aggregates",
+        "Edits",
+        "PlaceTotal",
+        "CityTotal",
+        "CountryTotal",
+        "Rankings"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudnav.maps.TlKind",
+        "com.diegonmarcos.cloudnav.maps.TlSegment",
+        "java.time.LocalDate",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "parse(s: String?)",
+        "infer(avgMps: Double, stepsPerMin: Double)",
+        "dayStart(d: LocalDate, zone: ZoneId)",
+        "placeOf(s: TlSegment)",
+        "overlap(a0: Long, a1: Long, b0: Long, b1: Long)",
+        "build(store: List<TlSegment>, fromMs: Long, toMs: Long, corrections: List<Correction> = emptyList()",
+        "moveOf(a: Long, b: Long, dist: Double, steps: Long, from: Place?, to: Place?, fixed: Mode?)",
+        "remember(p: Place?, memory: List<Remembered>)",
+        "dist(a: Place, b: Place)",
+        "bestIdx(segs: List<DaySeg>, c: Correction, stay: Boolean?)",
+        "apply(segs: List<DaySeg>, c: Correction, from: Long, to: Long)",
+        "trim(s: DaySeg, a: Long, b: Long)",
+        "fill(segs: List<DaySeg>, from: Long, to: Long)",
+        "fillLinks(segs: List<DaySeg>)",
+        "link(segs: List<DaySeg>)",
+        "missingVisits(day: List<DaySeg>)",
+        "unconfirmed(day: List<DaySeg>)",
+        "summary(day: List<DaySeg>)",
+        "perDay(store: List<TlSegment>, days: List<LocalDate>, nowMs: Long, zone: ZoneId, corrections: List<Correction> = emptyList()",
+        "confirm(s: DaySeg.Stay)",
+        "editPlace(s: DaySeg.Stay, name: String)",
+        "editMode(m: DaySeg.Move, mode: Mode)",
+        "delete(s: DaySeg)",
+        "split(s: DaySeg, atMs: Long)",
+        "addVisit(startMs: Long, endMs: Long, name: String, near: Place?, kind: StayKind = StayKind.IDLE)",
+        "stays(days: List<List<DaySeg>>)",
+        "places(days: List<List<DaySeg>>)",
+        "cities(days: List<List<DaySeg>>)",
+        "countries(days: List<List<DaySeg>>)",
+        "class Mode",
+        "class StayKind",
+        "class Place",
+        "class DaySeg",
+        "class Stay",
+        "class Move",
+        "class ModeInference",
+        "class Correction",
+        "class Type",
+        "class Remembered",
+        "class DayTimeline"
       ]
     },
     {
@@ -350635,7 +351225,8 @@
         "EngineConfig",
         "SourceRules",
         "EngineState",
-        "TriggerPlanner"
+        "TriggerPlanner",
+        "BatteryPolicy"
       ],
       "imports": [],
       "symbols": [
@@ -350644,13 +351235,17 @@
         "accurateProvider(c: EngineConfig)",
         "lowPowerProvider(c: EngineConfig)",
         "accurateDue(c: EngineConfig, s: EngineState, nowMs: Long)",
-        "due(c: EngineConfig, s: EngineState, nowMs: Long)",
+        "due(c: EngineConfig, s: EngineState, nowMs: Long, moving: Boolean = false)",
+        "isMoving(stepsSinceLastTick: Long)",
+        "accurateProvider(c: EngineConfig, moving: Boolean)",
+        "allowGps(moving: Boolean)",
         "class Provider",
         "class Action",
         "class EngineConfig",
         "class SourceRules",
         "class EngineState",
-        "class TriggerPlanner"
+        "class TriggerPlanner",
+        "class BatteryPolicy"
       ]
     },
     {
@@ -350773,6 +351368,37 @@
       ]
     },
     {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/PlaceNamer.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PlaceNamer"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudnav.maps.MapsApiKeyPrefs",
+        "com.diegonmarcos.cloudnav.maps.MapsProviderPrefs",
+        "com.diegonmarcos.cloudnav.maps.MapsProviders",
+        "java.net.HttpURLConnection",
+        "java.net.URL",
+        "java.net.URLEncoder"
+      ],
+      "symbols": [
+        "reverse(providerId: String, url: String)",
+        "overpass(url: String, ql: String)",
+        "name(places: List<Place?>)",
+        "lookup(lat: Double, lon: Double)",
+        "call(url: String, post: String?)",
+        "key(lat: Double, lon: Double)",
+        "waitMs(lastMs: Long, nowMs: Long)",
+        "gap()",
+        "class PlaceNamer",
+        "class Net",
+        "class val",
+        "class HttpNet"
+      ]
+    },
+    {
       "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/PlacesDigest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -350796,6 +351422,53 @@
         "class Stay",
         "class StopFix",
         "class PlacesDigest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/PoiCategory.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PoiCategory"
+      ],
+      "imports": [],
+      "symbols": [
+        "of(osmClass: String?, osmType: String?)",
+        "parse(s: String?)",
+        "class PoiCategory"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/RouteGeo.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RouteLine",
+        "RouteMarker",
+        "RouteModel",
+        "RouteGeo"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject"
+      ],
+      "symbols": [
+        "modeArgb(m: Mode)",
+        "hex(argb: Long)",
+        "modeHex(m: Mode)",
+        "modeIcon(m: Mode)",
+        "stayIcon(s: DaySeg.Stay)",
+        "at()",
+        "build(day: List<DaySeg>, fixes: List<PlaceFix> = emptyList()",
+        "feature(geometry: JSONObject, props: JSONObject)",
+        "coord(p: LatLon)",
+        "linesJson(m: RouteModel)",
+        "markersJson(m: RouteModel)",
+        "currentJson(m: RouteModel)",
+        "class RouteLine",
+        "class RouteMarker",
+        "class RouteModel",
+        "class RouteGeo"
       ]
     },
     {
@@ -351064,7 +351737,7 @@
         "request(provider: String, timeoutMs: Long)",
         "allowed(env: Env, provider: String)",
         "fresh(now: Long, f: Fix)",
-        "resolve(now: Long, env: Env, probe: Probe, held: Fix? = null)",
+        "resolve(now: Long, env: Env, probe: Probe, held: Fix? = null, allowGps: Boolean = true)",
         "env(ctx: Context)",
         "granted(p: String)",
         "toFix(provider: String)",
@@ -351102,6 +351775,9 @@
         "onCreate()",
         "steps(ctx: Context, days: Int, zone: ZoneId = ZoneId.systemDefault()",
         "timeline(ctx: Context, hours: Int, nowMs: Long = System.currentTimeMillis()",
+        "segments(ctx: Context, date: String?, nowMs: Long = System.currentTimeMillis()",
+        "daily(ctx: Context, days: Int, nowMs: Long = System.currentTimeMillis()",
+        "trips(ctx: Context, days: Int, nowMs: Long = System.currentTimeMillis()",
         "places(ctx: Context, days: Int, zone: ZoneId = ZoneId.systemDefault()",
         "query(uri: Uri, p: Array<out String>?, s: String?, a: Array<out String>?, o: String?)",
         "getType(uri: Uri)",
@@ -351214,6 +351890,113 @@
         "class EngineUi",
         "class EngineActions",
         "class EngineTags"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/Trips.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TripStop",
+        "Trip",
+        "TripsResult",
+        "Trips",
+        "HomeStore",
+        "TripsJson"
+      ],
+      "imports": [
+        "android.content.Context",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "norm(c: String?)",
+        "same(a: String, b: String)",
+        "detectHome(days: List<DayStats>)",
+        "route(t: Trip)",
+        "group(days: List<DayStats>, homeOverride: String? = null)",
+        "flush(ongoing: Boolean)",
+        "get()",
+        "set(city: String?)",
+        "toJson(r: TripsResult)",
+        "class TripStop",
+        "class Trip",
+        "class TripsResult",
+        "class Trips",
+        "class HomeStore",
+        "class TripsJson"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/WakePolicy.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WakeKind",
+        "WakeState",
+        "WakePolicy"
+      ],
+      "imports": [],
+      "symbols": [
+        "apply(s: WakeState, kind: WakeKind, now: Long)",
+        "effectiveMoving(stepsMoving: Boolean, s: WakeState, now: Long)",
+        "accurateWhileMoving(moving: Boolean, lastAccurateMs: Long, now: Long)",
+        "tickMinutes(sourcesArmed: Boolean)",
+        "fenceRadiusM(accuracyM: Double)",
+        "needsFence(s: WakeState, lat: Double, lon: Double)",
+        "movesFor(kind: WakeKind)",
+        "class WakeKind",
+        "class WakeState",
+        "class WakePolicy"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/WakeSources.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WakeSources",
+        "WakeReceiver"
+      ],
+      "imports": [
+        "android.annotation.SuppressLint",
+        "android.app.PendingIntent",
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.hardware.Sensor",
+        "android.hardware.SensorManager",
+        "android.hardware.TriggerEvent",
+        "android.hardware.TriggerEventListener",
+        "androidx.work.Data",
+        "androidx.work.ExistingWorkPolicy",
+        "androidx.work.OneTimeWorkRequestBuilder",
+        "androidx.work.WorkManager",
+        "com.google.android.gms.location.ActivityRecognition",
+        "com.google.android.gms.location.ActivityTransition",
+        "com.google.android.gms.location.ActivityTransitionRequest",
+        "com.google.android.gms.location.ActivityTransitionResult",
+        "com.google.android.gms.location.DetectedActivity",
+        "com.google.android.gms.location.Geofence",
+        "com.google.android.gms.location.GeofencingEvent",
+        "com.google.android.gms.location.GeofencingRequest",
+        "com.google.android.gms.location.LocationServices"
+      ],
+      "symbols": [
+        "arm(ctx: Context)",
+        "disarm(ctx: Context)",
+        "pending(ctx: Context, action: String)",
+        "granted(ctx: Context, perm: String)",
+        "armActivity(ctx: Context)",
+        "armMotion(ctx: Context)",
+        "onTrigger(e: TriggerEvent?)",
+        "armFence(ctx: Context)",
+        "handle(ctx: Context, kind: WakeKind, now: Long = System.currentTimeMillis()",
+        "kindOf(activityType: Int)",
+        "onReceive(ctx: Context, intent: Intent)",
+        "class WakeSources",
+        "class WakeReceiver"
       ]
     },
     {
@@ -351361,6 +352144,119 @@
       ]
     },
     {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/AddressTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AddressTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class AddressTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/AggregatesTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AggregatesTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudnav.maps.TlKind",
+        "com.diegonmarcos.cloudnav.maps.TlSegment",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.LocalDate",
+        "java.time.ZoneOffset"
+      ],
+      "symbols": [
+        "at(h: Int, m: Int = 0, day: LocalDate = d)",
+        "stay(kind: TlKind, a: Long, b: Long, city: String, lat: Double = 40.0)",
+        "move(a: Long, b: Long, dist: Double, steps: Long = 0)",
+        "class AggregatesTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/BatteryPolicyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "BatteryPolicyTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "enabled(provider: String)",
+        "lastKnown(provider: String)",
+        "request(provider: String, timeoutMs: Long)",
+        "class BatteryPolicyTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/DayJsonContractTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayJsonContractTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudnav.maps.TlKind",
+        "com.diegonmarcos.cloudnav.maps.TlSegment",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.LocalDate",
+        "java.time.ZoneOffset"
+      ],
+      "symbols": [
+        "at(h: Int, m: Int = 0)",
+        "class DayJsonContractTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/DayTimelineTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DayTimelineTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudnav.maps.TlKind",
+        "com.diegonmarcos.cloudnav.maps.TlSegment",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.LocalDate",
+        "java.time.ZoneOffset"
+      ],
+      "symbols": [
+        "at(h: Int, m: Int = 0, day: LocalDate = d)",
+        "stay(kind: TlKind, a: Long, b: Long, name: String? = null, city: String? = \"Madrid\", lat: Double = homeLat)",
+        "move(a: Long, b: Long, dist: Double, steps: Long)",
+        "assertGapless(day: List<DaySeg>, a: Long = from, b: Long = to)",
+        "visitDay(vararg c: Correction, memory: List<Remembered> = emptyList()",
+        "class DayTimelineTest"
+      ]
+    },
+    {
       "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/DeadReckoningTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -351422,6 +352318,22 @@
       ]
     },
     {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/ModeInferenceTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ModeInferenceTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "kmh(v: Double)",
+        "class ModeInferenceTest"
+      ]
+    },
+    {
       "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/PlacesDigestTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -351439,6 +352351,24 @@
         "at(h: Int, m: Int)",
         "t(h: Int)",
         "class PlacesDigestTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/RouteGeoTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "RouteGeoTest"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class RouteGeoTest"
       ]
     },
     {
@@ -351536,6 +352466,45 @@
         "at(h: Int, plus: Long = 0)",
         "class StopLocatorTest",
         "class Probe"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/TripsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TripsTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.LocalDate"
+      ],
+      "symbols": [
+        "day(i: Int, city: String?, car: Double = 0.0, plane: Double = 0.0, lat: Double? = null)",
+        "days(vararg c: String?)",
+        "class TripsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/WakePolicyTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "WakePolicyTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class WakePolicyTest"
       ]
     },
     {
@@ -476724,6 +477693,9 @@
       ],
       "symbols": [
         "restore()",
+        "noRetry()",
+        "aRefusedStartIsRetriedUntilAndroidAllowsIt()",
+        "aStartRefusedForTheWholeWindowOpensTheApp()",
         "onlyTheTwoTerminalsApply()",
         "otherPackagesStartNothing()",
         "startsTheUnpackServiceExplicitlyWithAResultReceiver()",
