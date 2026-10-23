@@ -6,29 +6,29 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22081,
+    "files": 22123,
     "by_lang": {
       "js": 488,
-      "sh": 545,
-      "py": 155,
-      "kotlin": 11648,
-      "java": 637,
+      "sh": 548,
+      "py": 157,
+      "kotlin": 11676,
+      "java": 645,
       "ts": 8467,
       "nix": 31,
-      "rust": 110
+      "rust": 111
     },
     "by_role": {
       "file": 2279,
-      "shell": 432,
-      "script": 249,
-      "java": 636,
+      "shell": 434,
+      "script": 252,
+      "java": 644,
       "entrypoint": 23,
       "module": 6423,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11645,
+      "kotlin": 11673,
       "python": 50,
-      "rust-module": 110,
+      "rust-module": 111,
       "hook": 150,
       "nix-module": 4,
       "mcp-tool": 53
@@ -325,6 +325,28 @@
         "walk(root, rel_dirs, excludes)",
         "discover(root, plan)",
         "scan(root, plan)",
+        "main()"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-crash-default-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "read(rel)",
+        "strip(text)",
+        "main()"
+      ],
+      "imports": [
+        "glob",
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "read(rel)",
+        "strip(text)",
         "main()"
       ]
     },
@@ -2734,6 +2756,28 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-crash-default-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "read(rel)",
+        "strip(text)",
+        "main()"
+      ],
+      "imports": [
+        "glob",
+        "json",
+        "os",
+        "re",
+        "sys"
+      ],
+      "symbols": [
+        "read(rel)",
+        "strip(text)",
+        "main()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-debug-ports-guard.py",
       "lang": "py",
       "role": "script",
@@ -4930,6 +4974,20 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/test/crash-default-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "mk()",
+        "expect()"
+      ],
+      "imports": [],
+      "symbols": [
+        "mk()",
+        "expect()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/test/debug-ports-guard.test.sh",
       "lang": "sh",
       "role": "script",
@@ -7017,6 +7075,10 @@
         "a_webAppsEmbedRenders()",
         "b_webAppsEmbedRendersAtNight()",
         "c_linktreeRenders()",
+        "e_linktreeFixtureRenders()",
+        "html(body: String, head: String = \"\")",
+        "fixtures()",
+        "page(h: String, status: Int = 200)",
         "d_webAppsBackFollowsHistory()",
         "web()",
         "until(what: String, ms: Long = 20_000, diag: ()",
@@ -7750,6 +7812,8 @@
         "StepsBoard",
         "PlaceVisit",
         "PlacesDay",
+        "TimelineSeg",
+        "TimelineBoard",
         "TaskProject",
         "Boards",
         "ThreadIntents",
@@ -7775,12 +7839,14 @@
         "steps(days: Int = 7)",
         "health(days: Int = 30)",
         "places(days: Int = 7)",
+        "timeline(hours: Int = 24)",
         "taskProjects()",
         "group(mail: List<InboxItem>, phone: List<InboxItem>)",
         "put(key: String, pi: PendingIntent?)",
         "get(key: String?)",
         "steps(body: String)",
         "places(body: String)",
+        "timeline(body: String)",
         "projects(body: String)",
         "readHealthBoard(ctx: Context, days: Int = 30, today: LocalDate = LocalDate.now()",
         "fleetMail(limit: Int)",
@@ -7788,6 +7854,7 @@
         "steps(days: Int)",
         "health(days: Int)",
         "places(days: Int)",
+        "timeline(hours: Int)",
         "ask(pkg: String, app: String, op: String, q: Map<String, String>, parse: (String)",
         "class BoardsSource",
         "class Read",
@@ -7800,6 +7867,8 @@
         "class StepsBoard",
         "class PlaceVisit",
         "class PlacesDay",
+        "class TimelineSeg",
+        "class TimelineBoard",
         "class TaskProject",
         "class Boards",
         "class ThreadIntents",
@@ -10851,6 +10920,7 @@
         "androidx.compose.ui.text.style.TextOverflow"
       ],
       "symbols": [
+        "tlRow(i: Int, kind: String)",
         "unavailable(board: String)",
         "group(pkg: String)",
         "project(id: String)",
@@ -10880,9 +10950,14 @@
         "PlacesDayCard(d: PlacesDay, onOpen: (String)",
         "MiniMap(d: PlacesDay, modifier: Modifier)",
         "at(lat: Double, lon: Double)",
+        "tlRowText(s: TimelineSeg, zone: java.time.ZoneId = java.time.ZoneId.systemDefault()",
+        "hm(ms: Long)",
+        "BoardTimelineBody(epoch: Int, onOpen: (String)",
+        "TimelineCard(b: TimelineBoard, onOpen: (String)",
         "BoardTaskProjectsBody(epoch: Int, onOpen: (String)",
         "ProjectRow(t: TaskProject, onOpen: (String)",
-        "class BoardTags"
+        "class BoardTags",
+        "class TlRowText"
       ]
     },
     {
@@ -12335,6 +12410,7 @@
         "Content()",
         "onConsoleMessage(m: android.webkit.ConsoleMessage)",
         "onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?)",
+        "shouldInterceptRequest(view: WebView?, request: android.webkit.WebResourceRequest)",
         "onPageFinished(view: WebView?, url: String?)",
         "doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean)",
         "shouldOverrideUrlLoading(view: WebView, request: android.webkit.WebResourceRequest)",
@@ -12583,6 +12659,34 @@
         "status(ctx: Context, waitMs: Long)",
         "class AccountMesh",
         "class slot"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/AlwaysOnVpn.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AlwaysOnVpn"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.provider.Settings",
+        "com.diegonmarcos.superapp.adbdebug.ShellChannels",
+        "com.diegonmarcos.superapp.net.AidlBackend"
+      ],
+      "symbols": [
+        "parseApp(out: String?)",
+        "parseLockdown(out: String?)",
+        "isOurs(pkg: String?, engine: String = AidlBackend.ENGINE_PKG)",
+        "commands(on: Boolean, pkg: String)",
+        "lockdownCommand(on: Boolean)",
+        "read(ctx: Context)",
+        "view(ctx: Context, engineAlwaysOn: Boolean?)",
+        "write(ctx: Context, on: Boolean, engine: String = AidlBackend.ENGINE_PKG)",
+        "writeLockdown(ctx: Context, on: Boolean)",
+        "class AlwaysOnVpn",
+        "class Reading",
+        "class View"
       ]
     },
     {
@@ -13019,7 +13123,10 @@
         "com.diegonmarcos.superapp.network.AccountMesh",
         "com.diegonmarcos.superapp.network.CfKeyStore",
         "com.diegonmarcos.superapp.network.CloudflareWarp",
+        "com.diegonmarcos.superapp.network.AlwaysOnVpn",
         "com.diegonmarcos.superapp.network.FleetDns",
+        "com.diegonmarcos.superapp.network.MeshIntent",
+        "com.diegonmarcos.superapp.network.MeshSupervisorRunner",
         "com.diegonmarcos.superapp.network.MeshTransport",
         "com.diegonmarcos.superapp.network.WgState",
         "com.diegonmarcos.superapp.network.WireGuardPrefs",
@@ -13045,6 +13152,12 @@
         "pendingApply()",
         "alwaysOn()",
         "lockdown()",
+        "intent()",
+        "setStartup(which: String, on: Boolean)",
+        "alwaysOnView()",
+        "setAlwaysOn(on: Boolean)",
+        "setLockdown(on: Boolean)",
+        "supervisorNote()",
         "consentIntent()",
         "requireEngine()",
         "bringUp()",
@@ -13066,13 +13179,7 @@
         "setExcludedApps(v: List<String>)",
         "installedApps()",
         "addPeer()",
-        "removePeer(index: Int)",
-        "updatePeer(index: Int, p: PeerCfg)",
-        "dnsPreset()",
-        "setDnsPreset(id: String)",
-        "dnsChoices()",
-        "provider()",
-        "matchesCloudPreset()"
+        "removePeer(index: Int)"
       ]
     },
     {
@@ -13309,7 +13416,9 @@
         "ProbeLine"
       ],
       "imports": [
-        "android.content.Intent"
+        "android.content.Intent",
+        "com.diegonmarcos.superapp.network.AlwaysOnVpn",
+        "com.diegonmarcos.superapp.network.MeshIntent"
       ],
       "symbols": [
         "config()",
@@ -13320,6 +13429,12 @@
         "alwaysOn()",
         "lockdown()",
         "consentIntent()",
+        "intent()",
+        "setStartup(which: String, on: Boolean)",
+        "alwaysOnView()",
+        "setAlwaysOn(on: Boolean)",
+        "setLockdown(on: Boolean)",
+        "supervisorNote()",
         "connect()",
         "disconnect()",
         "reconnect()",
@@ -13345,13 +13460,7 @@
         "provider()",
         "matchesCloudPreset()",
         "applyCloudPreset()",
-        "setProviderCustom()",
-        "storedProfiles()",
-        "activeProfile()",
-        "activateProfile(name: String)",
-        "installDeclared(id: String)",
-        "importText(name: String, conf: String)",
-        "transport()"
+        "setProviderCustom()"
       ]
     },
     {
@@ -13506,6 +13615,7 @@
       "symbols": [
         "MeshStatusPage(store: MeshStore, modifier: Modifier = Modifier, embedded: Boolean = false)",
         "StatusRow(id: String, store: MeshStore, s: MeshSnapshot)",
+        "VpnControls(store: MeshStore, s: MeshSnapshot, tag: String)",
         "probeVerdict(ok: Boolean?)",
         "handshakeText(ageS: Long?, up: Boolean, engine: Boolean)",
         "healthWord(h: Health)",
@@ -13526,6 +13636,8 @@
         "androidx.compose.runtime.mutableStateMapOf",
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.setValue",
+        "com.diegonmarcos.superapp.network.AlwaysOnVpn",
+        "com.diegonmarcos.superapp.network.MeshIntent",
         "com.diegonmarcos.superapp.network.WireGuardProfiles",
         "java.util.concurrent.Executors"
       ],
@@ -13634,6 +13746,114 @@
         "pageBody(embedded: Boolean)",
         "class MeshTags",
         "class MeshRoles"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/MeshDownModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshDownModel"
+      ],
+      "imports": [
+        "java.util.Locale",
+        "java.util.TimeZone"
+      ],
+      "symbols": [
+        "stalePeers()",
+        "step(s: State, r: Reading, nowMs: Long)",
+        "title(r: Reading)",
+        "text(r: Reading, sinceMs: Long, tz: TimeZone = TimeZone.getDefault()",
+        "clock(epochMs: Long, tz: TimeZone)",
+        "class MeshDownModel",
+        "class PeerReading",
+        "class Reading",
+        "class State",
+        "class Effect"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/MeshIntent.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshIntent",
+        "MeshSupervisor"
+      ],
+      "imports": [
+        "android.content.Context"
+      ],
+      "symbols": [
+        "p(ctx: Context)",
+        "policy(ctx: Context)",
+        "wanted(ctx: Context)",
+        "setWanted(ctx: Context, v: Boolean)",
+        "setOnBoot(ctx: Context, v: Boolean)",
+        "setOnWifi(ctx: Context, v: Boolean)",
+        "setOnMobile(ctx: Context, v: Boolean)",
+        "backoffMs(failures: Int)",
+        "decide(i: Input)",
+        "wantedAfterBoot(p: MeshIntent.Policy)",
+        "foreignOwner(ownerUids: List<Int>, ours: Int)",
+        "explain(w: Why, holder: String? = null)",
+        "class MeshIntent",
+        "class Policy",
+        "class MeshSupervisor",
+        "class Net",
+        "class Why",
+        "class Input",
+        "class Decision"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/MeshSupervisorRunner.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshSupervisorRunner",
+        "MeshSupervisorWorker",
+        "MeshBootReceiver"
+      ],
+      "imports": [
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.net.ConnectivityManager",
+        "android.net.Network",
+        "android.net.NetworkCapabilities",
+        "android.net.NetworkRequest",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.util.Log",
+        "androidx.work.PeriodicWorkRequestBuilder",
+        "androidx.work.ExistingPeriodicWorkPolicy",
+        "androidx.work.WorkManager",
+        "androidx.work.Worker",
+        "androidx.work.WorkerParameters",
+        "com.diegonmarcos.superapp.notificationcenter.MeshDownAlert",
+        "com.wireguard.android.backend.Tunnel",
+        "com.wireguard.crypto.Key",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "sp(ctx: Context)",
+        "start(ctx: Context)",
+        "onAvailable(network: Network)",
+        "onLost(network: Network)",
+        "onCapabilitiesChanged(network: Network, caps: NetworkCapabilities)",
+        "kick(ctx: Context, delayMs: Long = DEBOUNCE_MS)",
+        "reconnectNow(ctx: Context)",
+        "lastNote(ctx: Context)",
+        "note(ctx: Context, s: String)",
+        "netKind(ctx: Context)",
+        "slotHolder(ctx: Context, ourTunnelUp: Boolean, consentNeeded: Boolean)",
+        "tick(ctx: Context, force: Boolean = false)",
+        "doWork()",
+        "onReceive(context: Context, intent: Intent)",
+        "class MeshSupervisorRunner",
+        "class MeshSupervisorWorker",
+        "class MeshBootReceiver"
       ]
     },
     {
@@ -14977,6 +15197,34 @@
         "class MarketsQuotes",
         "class Status",
         "class Quote"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/MeshDownAlert.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshDownAlert"
+      ],
+      "imports": [
+        "android.app.PendingIntent",
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.core.FleetAlerts",
+        "com.diegonmarcos.superapp.network.MeshDownModel",
+        "com.diegonmarcos.superapp.network.MeshIntent",
+        "com.diegonmarcos.superapp.network.MeshSupervisorRunner"
+      ],
+      "symbols": [
+        "actionsFor(ctx: Context, a: AlertStore.Alert)",
+        "reconnectIntent(ctx: Context)",
+        "raise(ctx: Context, r: MeshDownModel.Reading, sinceMs: Long)",
+        "clear(ctx: Context)",
+        "onReceive(ctx: Context, intent: Intent)",
+        "class MeshDownAlert",
+        "class ReconnectReceiver"
       ]
     },
     {
@@ -19582,6 +19830,8 @@
         "com.diegonmarcos.superapp.boards.StepsBoard",
         "com.diegonmarcos.superapp.boards.StepsDay",
         "com.diegonmarcos.superapp.boards.TaskProject",
+        "com.diegonmarcos.superapp.boards.TimelineBoard",
+        "com.diegonmarcos.superapp.boards.TimelineSeg",
         "com.diegonmarcos.superapp.boards.Why",
         "com.diegonmarcos.superapp.uikit.KitPartTags",
         "com.diegonmarcos.superapp.ui.KitPageHarness",
@@ -19603,6 +19853,7 @@
         "steps(days: Int)",
         "health(days: Int)",
         "places(days: Int)",
+        "timeline(hours: Int)",
         "taskProjects()",
         "use(f: Fake)",
         "clear()",
@@ -20053,6 +20304,55 @@
         "restore()",
         "shoot(name: String, board: HealthBoard, waitTag: String)",
         "class MyHealthShotTest",
+        "class Src"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/launcher/MyTripsShotTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MyTripsShotTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.graphics.Color",
+        "com.diegonmarcos.superapp.boards.Boards",
+        "com.diegonmarcos.superapp.boards.BoardsSource",
+        "com.diegonmarcos.superapp.boards.BoardsWire",
+        "com.diegonmarcos.superapp.boards.InboxItem",
+        "com.diegonmarcos.superapp.boards.PlacesDay",
+        "com.diegonmarcos.superapp.boards.Read",
+        "com.diegonmarcos.superapp.boards.StepsBoard",
+        "com.diegonmarcos.superapp.boards.TaskProject",
+        "com.diegonmarcos.superapp.boards.TimelineBoard",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "fleetMail(limit: Int)",
+        "phoneNotifications()",
+        "steps(days: Int)",
+        "places(days: Int)",
+        "timeline(hours: Int)",
+        "taskProjects()",
+        "restore()",
+        "seg(kind: String, a: Long, b: Long, place: String = \"\", lat: Double? = null, lon: Double? = null, steps: Long = 0, dist: Long = 0, src: String = \"\")",
+        "class MyTripsShotTest",
         "class Src"
       ]
     },
@@ -21227,7 +21527,9 @@
         "FakeHost"
       ],
       "imports": [
-        "android.content.Intent"
+        "android.content.Intent",
+        "com.diegonmarcos.superapp.network.AlwaysOnVpn",
+        "com.diegonmarcos.superapp.network.MeshIntent"
       ],
       "symbols": [
         "rec(s: String)",
@@ -21239,6 +21541,12 @@
         "alwaysOn()",
         "lockdown()",
         "consentIntent()",
+        "intent()",
+        "setStartup(which: String, on: Boolean)",
+        "alwaysOnView()",
+        "setAlwaysOn(on: Boolean)",
+        "setLockdown(on: Boolean)",
+        "supervisorNote()",
         "connect()",
         "disconnect()",
         "reconnect()",
@@ -21263,13 +21571,7 @@
         "dnsChoices()",
         "provider()",
         "matchesCloudPreset()",
-        "applyCloudPreset()",
-        "setProviderCustom()",
-        "storedProfiles()",
-        "activeProfile()",
-        "activateProfile(name: String)",
-        "installDeclared(id: String)",
-        "importText(name: String, conf: String)"
+        "applyCloudPreset()"
       ]
     },
     {
@@ -21333,6 +21635,36 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/mesh/MeshScreensShotTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshScreensShotTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.graphics.Bitmap",
+        "android.graphics.Canvas",
+        "android.view.View",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performScrollTo",
+        "com.diegonmarcos.superapp.network.MeshIntent",
+        "com.diegonmarcos.superapp.ui.KitPageHarness",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode",
+        "java.io.File"
+      ],
+      "symbols": [
+        "show(port: FakePort, tab: String)",
+        "snap(name: String)",
+        "class MeshScreensShotTest"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/mesh/MeshStoreTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -21357,6 +21689,119 @@
         "applyCloudPreset()",
         "class MeshStoreTest",
         "class controls"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/mesh/MeshVpnControlsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshVpnControlsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.compose.ui.test.assertIsEnabled",
+        "androidx.compose.ui.test.assertIsNotEnabled",
+        "androidx.compose.ui.test.assertTextContains",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performScrollTo",
+        "com.diegonmarcos.superapp.network.MeshIntent",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "com.diegonmarcos.superapp.ui.KitPageHarness"
+      ],
+      "symbols": [
+        "show(port: FakePort, host: FakeHost = FakeHost()",
+        "class MeshVpnControlsTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/MeshAlwaysOnVpnTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshAlwaysOnVpnTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "class MeshAlwaysOnVpnTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/MeshDownModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshDownModelTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.MeshDownModel.Effect",
+        "com.diegonmarcos.superapp.network.MeshDownModel.PeerReading",
+        "com.diegonmarcos.superapp.network.MeshDownModel.Reading",
+        "com.diegonmarcos.superapp.network.MeshDownModel.State",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.util.TimeZone"
+      ],
+      "symbols": [
+        "reading(wanted: Boolean = true, up: Boolean = false, engine: Boolean = true, hs: List<Long?> = listOf(null, null)",
+        "class MeshDownModelTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/MeshIntentTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshIntentTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "androidx.test.core.app.ApplicationProvider",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "class MeshIntentTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/network/MeshSupervisorTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshSupervisorTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.superapp.network.MeshSupervisor.Net",
+        "com.diegonmarcos.superapp.network.MeshSupervisor.Why",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "input( policy: MeshIntent.Policy = MeshIntent.Policy()",
+        "class MeshSupervisorTest"
       ]
     },
     {
@@ -21761,6 +22206,33 @@
         "markets()",
         "okQuote(price: Double, asOf: Long)",
         "class MarketsBadgeTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/MeshDownAlertTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshDownAlertTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.app.Notification",
+        "android.app.NotificationManager",
+        "androidx.test.core.app.ApplicationProvider",
+        "com.diegonmarcos.superapp.core.FleetAlerts",
+        "com.diegonmarcos.superapp.network.MeshDownModel",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "alert(key: String)",
+        "class MeshDownAlertTest"
       ]
     },
     {
@@ -31276,6 +31748,7 @@
         "partialBytes(ctx: Context, app: Fleet.App)",
         "mb(b: Long)",
         "stage(ctx: Context, app: Fleet.App, remote: Fleet.State? = null)",
+        "stageBase(ctx: Context, app: Fleet.App, remote: Fleet.State?)",
         "actionable(ctx: Context, app: Fleet.App, e: ApkCache.Entry, remote: Fleet.State?)",
         "reapLanded(ctx: Context, app: Fleet.App)",
         "actionableFor(ctx: Context, app: Fleet.App, remote: Fleet.State? = null)",
@@ -31365,6 +31838,32 @@
         "class Folder",
         "class Hit",
         "class Result"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/UnpackAfterInstall.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnpackAfterInstall"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.os.ResultReceiver"
+      ],
+      "symbols": [
+        "applies(pkg: String)",
+        "text(code: Int, error: String?)",
+        "run(ctx: Context, pkg: String)",
+        "onReceiveResult(resultCode: Int, data: Bundle?)",
+        "resultOf(ctx: Context, pkg: String)",
+        "record(ctx: Context, pkg: String, text: String)",
+        "class UnpackAfterInstall"
       ]
     },
     {
@@ -38239,6 +38738,162 @@
         "drainStopsAtTheFirstRefusalAndKeepsTheRest()",
         "theQueueKeepsTheNewestAndRefusesAnOversizeEvent()",
         "class TelemetryRouteTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/crash/src/main/compose/com/diegonmarcos/superapp/crash/CrashActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CrashActivity"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "androidx.activity.ComponentActivity",
+        "androidx.activity.compose.setContent",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.text.selection.SelectionContainer",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Button",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedButton",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.darkColorScheme",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.unit.dp"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "class CrashActivity"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/crash/src/main/java/com/diegonmarcos/superapp/crash/CrashActions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CrashActions"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.ClipData",
+        "android.content.ClipboardManager",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.widget.Toast"
+      ],
+      "symbols": [
+        "title(a: Activity)",
+        "load(a: Activity)",
+        "label(a: Activity)",
+        "copy(a: Activity, report: String)",
+        "share(a: Activity, report: String)",
+        "retryInSafeMode(a: Activity)",
+        "class CrashActions"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/crash/src/main/java/com/diegonmarcos/superapp/crash/CrashReports.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CrashReports"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.util.Log",
+        "java.io.File",
+        "java.io.PrintWriter",
+        "java.io.StringWriter",
+        "java.net.InetSocketAddress",
+        "java.net.Socket",
+        "java.text.SimpleDateFormat",
+        "java.util.Date",
+        "java.util.Locale",
+        "java.util.TimeZone",
+        "java.util.concurrent.atomic.AtomicInteger"
+      ],
+      "symbols": [
+        "dir(ctx: Context)",
+        "trace(t: Throwable)",
+        "stamp(ms: Long)",
+        "text(phase: String, trace: String, meta: Map<String, String>, ms: Long)",
+        "jsonString(s: String)",
+        "json(app: String, phase: String, trace: String, meta: Map<String, String>, ms: Long)",
+        "persist(dir: File, phase: String, trace: String, meta: Map<String, String>, ms: Long = System.currentTimeMillis()",
+        "reports(dir: File)",
+        "unseen(dir: File)",
+        "latest(dir: File)",
+        "markAllSeen(dir: File)",
+        "shareText(dir: File)",
+        "unsunk(dir: File)",
+        "markSunk(f: File)",
+        "postLocal(port: Int, path: String, json: String, timeoutMs: Int = 700)",
+        "meta(ctx: Context)",
+        "report(ctx: Context, phase: String, t: Throwable)",
+        "isCrashProcess()",
+        "showScreen(ctx: Context, clearTask: Boolean)",
+        "installHandler(context: Context)",
+        "flushLocal(context: Context)",
+        "class CrashReports"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/crash/src/main/plain/com/diegonmarcos/superapp/crash/CrashActivity.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CrashActivity"
+      ],
+      "imports": [
+        "android.os.Bundle",
+        "androidx.activity.ComponentActivity"
+      ],
+      "symbols": [
+        "onCreate(savedInstanceState: Bundle?)",
+        "class CrashActivity"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/crash/src/test/java/com/diegonmarcos/superapp/crash/CrashReportsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CrashReportsTest"
+      ],
+      "imports": [
+        "java.io.File",
+        "java.net.ServerSocket",
+        "java.nio.file.Files",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "tmp()",
+        "persistWritesTheFullStackBeforeAnythingElse()",
+        "jsonEscapesWhatATraceContains()",
+        "theLocalSinkIsAPlainLoopbackPostWithTheGuardHeaders()",
+        "anUnreachableSinkIsFalseNotAThrow()",
+        "aReportTheSinkMissedIsRetriedUntilMarkedSunk()",
+        "oldReportsArePruned()",
+        "anUnshownReportIsSurfacedUntilMarkedSeen()",
+        "persistNeverThrowsAndShareTextIsBounded()",
+        "class CrashReportsTest"
       ]
     },
     {
@@ -63419,6 +64074,12 @@
       "symbols": [
         "onCreate(db: SQLiteDatabase)",
         "onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int)",
+        "createTimeline(db: SQLiteDatabase)",
+        "segmentsBetween(fromTs: Long, toTs: Long)",
+        "segmentCount()",
+        "replaceSegments(fromMs: Long, segs: List<TlSegment>)",
+        "stopsOverlapping(fromTs: Long, toTs: Long)",
+        "pointsBetween(fromTs: Long, toTs: Long)",
         "insertPoint(p: PointRow)",
         "insertStop(s: StopRow)",
         "recentPoints(limit: Int)",
@@ -64267,6 +64928,57 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/maps/src/main/java/com/diegonmarcos/cloudnav/maps/Timeline.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TlKind",
+        "TlSegment",
+        "TlStop",
+        "TlFix",
+        "TlSteps",
+        "TimelineBuilder",
+        "TimelineViews",
+        "TimelineJson"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.time.Instant",
+        "java.time.ZoneId",
+        "kotlin.math.asin",
+        "kotlin.math.cos",
+        "kotlin.math.min",
+        "kotlin.math.pow",
+        "kotlin.math.sin",
+        "kotlin.math.sqrt"
+      ],
+      "symbols": [
+        "parse(s: String?)",
+        "build(stops: List<TlStop>, fixes: List<TlFix>, steps: List<TlSteps>, nowMs: Long, zone: ZoneId)",
+        "unplaced(steps: List<TlSteps>, placed: List<TlSegment>, nowMs: Long)",
+        "flush()",
+        "move(fixes: List<TlFix>, steps: List<TlSteps>, a: Long, b: Long, from: LatLon, to: LatLon?)",
+        "stepsIn(steps: List<TlSteps>, a: Long, b: Long)",
+        "isSleep(a: Long, b: Long, zone: ZoneId)",
+        "haversineM(lat1: Double, lon1: Double, lat2: Double, lon2: Double)",
+        "richStops(segs: List<TlSegment>)",
+        "stepSlices(segs: List<TlSegment>)",
+        "lastHours(segs: List<TlSegment>, nowMs: Long, hours: Int)",
+        "toJson(segs: List<TlSegment>, nowMs: Long, hours: Int)",
+        "fromJson(body: String)",
+        "class TlKind",
+        "class TlSegment",
+        "class TlStop",
+        "class TlFix",
+        "class TlSteps",
+        "class TimelineBuilder",
+        "class LatLon",
+        "class TimelineViews",
+        "class TimelineJson"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/maps/src/main/java/com/diegonmarcos/cloudnav/maps/TimelineHost.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -64278,6 +64990,32 @@
         "openStopsForDay(dayMs: Long)",
         "openStops(parent: Any?, dayMs: Long)",
         "class TimelineHost"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/maps/src/main/java/com/diegonmarcos/cloudnav/maps/TimelineSync.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TimelineSync",
+        "TimelineState"
+      ],
+      "imports": [
+        "android.content.Context",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "fixes(fromMs: Long, toMs: Long)",
+        "derivedStops(fromMs: Long, toMs: Long)",
+        "steps(fromMs: Long, toMs: Long)",
+        "relocate(stop: TlStop, nowMs: Long)",
+        "usable(s: TlStop)",
+        "run(ctx: Context, nowMs: Long = System.currentTimeMillis()",
+        "view(ctx: Context, fromMs: Long, toMs: Long)",
+        "migrateOnce(ctx: Context, nowMs: Long = System.currentTimeMillis()",
+        "class TimelineSync",
+        "class Extra",
+        "class TimelineState"
       ]
     },
     {
@@ -64332,6 +65070,29 @@
         "recolorSymbol(layer: JSONObject)",
         "fetch(url: String)",
         "class VectorStyleLoader"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/maps/src/test/java/com/diegonmarcos/cloudnav/maps/TimelineBuilderTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TimelineBuilderTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.LocalDate",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "at(h: Int, m: Int = 0, plusDays: Long = 0)",
+        "stop(a: Long, b: Long?, p: Pair<Double, Double>, name: String? = null)",
+        "build(stops: List<TlStop>, fixes: List<TlFix> = emptyList()",
+        "class TimelineBuilderTest"
       ]
     },
     {
@@ -79962,6 +80723,7 @@
         "check_links(l: &serde_json::Value)",
         "api_links(_ctx: &Ctx, _req: &Req)",
         "openable(url: &str)",
+        "crashes_api(ctx: &Ctx, req: &Req)",
         "api_open(_ctx: &Ctx, req: &Req)",
         "ctx()",
         "get(path: &str)",
@@ -79972,6 +80734,39 @@
         "open_is_guarded()",
         "openable_accepts_only_web_links()",
         "links_declaration_is_well_formed_and_refuses_bad_ones()"
+      ]
+    },
+    {
+      "path": "ac_cloud-c3-webserver/server/src/crashes.rs",
+      "lang": "rust",
+      "role": "rust-module",
+      "exports": [
+        "accept",
+        "api_post",
+        "api_get",
+        "list",
+        "page",
+        "render"
+      ],
+      "imports": [
+        "crate::Ctx",
+        "fleet_webserver::http::",
+        "fleet_webserver::render::jstr",
+        "std::sync::Mutex",
+        "std::io::Write",
+        "super::"
+      ],
+      "symbols": [
+        "file()",
+        "accept(body: &[u8])",
+        "api_post(_ctx: &Ctx, req: &Req)",
+        "api_get(_ctx: &Ctx, req: &Req)",
+        "list(app: Option<&str>)",
+        "esc(s: &str)",
+        "page(_ctx: &Ctx, _req: &Req)",
+        "render(rows: &[serde_json::Value])",
+        "a_report_is_stored_once_and_listed_newest_first()",
+        "refuses_what_is_not_a_report()"
       ]
     },
     {
@@ -164801,22 +165596,6 @@
       ]
     },
     {
-      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/DriveApp.kt",
-      "lang": "kotlin",
-      "role": "kotlin",
-      "exports": [
-        "DriveApp"
-      ],
-      "imports": [
-        "android.app.Application",
-        "com.diegonmarcos.clouddrive.startup.StartupGuard"
-      ],
-      "symbols": [
-        "onCreate()",
-        "class DriveApp"
-      ]
-    },
-    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/DriveDebugLog.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -166420,25 +167199,21 @@
       ]
     },
     {
-      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/startup/CrashReportActivity.kt",
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/startup/StartupGate.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "CrashReportActivity"
+        "StartupAction",
+        "actionsFor",
+        "StartupTags",
+        "StartupGate"
       ],
       "imports": [
-        "android.content.ClipData",
-        "android.content.ClipboardManager",
         "android.content.Context",
         "android.content.Intent",
-        "android.os.Bundle",
-        "android.widget.Toast",
-        "androidx.activity.ComponentActivity",
-        "androidx.activity.compose.setContent",
-        "androidx.compose.foundation.background",
+        "android.net.Uri",
         "androidx.compose.foundation.layout.Arrangement",
         "androidx.compose.foundation.layout.Column",
-        "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.fillMaxWidth",
         "androidx.compose.foundation.layout.padding",
@@ -166447,25 +167222,35 @@
         "androidx.compose.foundation.text.selection.SelectionContainer",
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material3.Button",
+        "androidx.compose.material3.CircularProgressIndicator",
         "androidx.compose.material3.MaterialTheme",
         "androidx.compose.material3.OutlinedButton",
         "androidx.compose.material3.Text",
-        "androidx.compose.material3.darkColorScheme",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.stringResource",
         "androidx.compose.ui.text.font.FontFamily",
-        "androidx.compose.ui.text.font.FontWeight",
-        "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.sp",
-        "com.diegonmarcos.clouddrive.MainActivity"
+        "com.diegonmarcos.clouddrive.DriveDebugLog",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics"
       ],
       "symbols": [
-        "onCreate(savedInstanceState: Bundle?)",
-        "Screen(report: String)",
-        "copy(report: String)",
-        "share(report: String)",
-        "retryInSafeMode()",
-        "class CrashReportActivity"
+        "actionsFor(e: StartupError)",
+        "StartupGate( state: StartupState, terminalPackage: String, onRetry: ()",
+        "progressLabel(s: StartupState)",
+        "labelOf(a: StartupAction)",
+        "message(e: StartupError)",
+        "openTerminal(ctx: Context, pkg: String)",
+        "openInstall(ctx: Context)",
+        "class StartupAction",
+        "class StartupTags"
       ]
     },
     {
@@ -166476,40 +167261,97 @@
         "StartupGuard"
       ],
       "imports": [
-        "android.app.Application",
         "android.content.Context",
-        "android.content.Intent",
-        "android.os.Build",
         "android.os.Looper",
-        "android.os.Process",
-        "java.io.File",
-        "java.io.PrintWriter",
-        "java.io.StringWriter",
-        "java.text.SimpleDateFormat",
-        "java.util.Date",
-        "java.util.Locale",
-        "java.util.TimeZone",
-        "java.util.concurrent.atomic.AtomicInteger",
-        "kotlin.system.exitProcess"
+        "com.diegonmarcos.superapp.crash.CrashReports",
+        "java.util.concurrent.atomic.AtomicInteger"
       ],
       "symbols": [
         "failureCount()",
-        "dir(ctx: Context)",
-        "format(phase: String, t: Throwable, env: String, nowMs: Long)",
-        "record(dir: File, phase: String, t: Throwable, env: String, nowMs: Long = System.currentTimeMillis()",
-        "reports(dir: File)",
-        "unseen(dir: File)",
-        "latest(dir: File)",
-        "markAllSeen(dir: File)",
-        "prune(dir: File)",
-        "shareText(dir: File)",
-        "env(ctx: Context?)",
         "step(ctx: Context, phase: String, optional: Boolean = false, block: ()",
-        "launchReport(ctx: Context, clearTask: Boolean)",
-        "install(app: Application)",
-        "isReportProcess(ctx: Context)",
         "onMainThread()",
+        "class keeps",
         "class StartupGuard"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/startup/StoreStartup.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StartupStep",
+        "StartupError",
+        "StartupState",
+        "StartupEnv",
+        "TerminalStart",
+        "MountResult",
+        "StartupTimeout",
+        "StartupLimits",
+        "StartupSequence",
+        "AndroidStartupEnv",
+        "TimeLimited",
+        "StoreStartupController"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.clouddrive.DriveDebugLog",
+        "com.diegonmarcos.clouddrive.SharedStore",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreAccess",
+        "com.diegonmarcos.cloudlib.sharedstore.StoreExec",
+        "com.diegonmarcos.cloudlib.sharedstore.StorePaths",
+        "java.io.File",
+        "java.util.concurrent.Callable",
+        "java.util.concurrent.ExecutionException",
+        "java.util.concurrent.Executors",
+        "java.util.concurrent.TimeUnit",
+        "java.util.concurrent.TimeoutException",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.StateFlow",
+        "kotlinx.coroutines.launch"
+      ],
+      "symbols": [
+        "toString()",
+        "terminalPackage()",
+        "terminalInstalled()",
+        "startTerminal(timeoutMs: Long)",
+        "homePath()",
+        "homeReady()",
+        "mount(timeoutMs: Long)",
+        "sleep(ms: Long)",
+        "nowMs()",
+        "log(msg: String)",
+        "run(onState: (StartupState)",
+        "enter(s: StartupState)",
+        "fail(e: StartupError)",
+        "call(ms: Long, block: ()",
+        "start()",
+        "retry()",
+        "class StartupStep",
+        "class StartupError",
+        "class TermuxMissing",
+        "class TermuxNotStarted",
+        "class HomeUnavailable",
+        "class PermissionDenied",
+        "class MountFailed",
+        "class Timeout",
+        "class StartupState",
+        "class Idle",
+        "class CheckingTerminal",
+        "class StartingTerminal",
+        "class WaitingForHome",
+        "class Mounting",
+        "class Ready",
+        "class Failed",
+        "class StartupEnv",
+        "class TerminalStart",
+        "class Started",
+        "class Denied",
+        "class MountResult",
+        "class Mounted",
+        "class StartupTimeout",
+        "class StartupLimits"
       ]
     },
     {
@@ -168710,11 +169552,9 @@
         "android.content.Context",
         "androidx.test.core.app.ApplicationProvider",
         "com.diegonmarcos.clouddrive.DrivePrefs",
-        "java.io.File",
-        "java.nio.file.Files",
+        "com.diegonmarcos.superapp.crash.CrashReports",
         "org.junit.Assert.assertEquals",
         "org.junit.Assert.assertFalse",
-        "org.junit.Assert.assertNotNull",
         "org.junit.Assert.assertNull",
         "org.junit.Assert.assertTrue",
         "org.junit.Test",
@@ -168722,15 +169562,53 @@
         "org.robolectric.RobolectricTestRunner"
       ],
       "symbols": [
-        "tmp()",
-        "reportCarriesPhaseAndFullStackTrace()",
-        "anUnshownReportIsSurfacedUntilMarkedSeen()",
-        "recordNeverThrowsAndOldReportsArePruned()",
         "aFailingStepIsRecordedAndTheNextStepStillRuns()",
         "safeModeSkipsOptionalPhasesOnly()",
         "staleTypedPrefsAreDefaultsNotAClassCastException()",
         "noSocketOnTheMainThread()",
         "class StartupGuardTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/startup/StartupSequenceTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StartupSequenceTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "terminalPackage()",
+        "terminalInstalled()",
+        "startTerminal(timeoutMs: Long)",
+        "homePath()",
+        "homeReady()",
+        "mount(timeoutMs: Long)",
+        "sleep(ms: Long)",
+        "nowMs()",
+        "log(msg: String)",
+        "run(env: Fake, limits: StartupLimits = StartupLimits()",
+        "failed(s: StartupState)",
+        "happyPathWalksEveryStateInOrder()",
+        "missingTerminalStopsBeforeAnyStart()",
+        "anInstalledCheckThatThrowsIsMissingNotACrash()",
+        "aStoppedTerminalIsStartedThenTheHomeIsAwaitedWithBackoff()",
+        "backoffIsCappedAndTheWaitIsBounded()",
+        "startDeniedWithoutAHomeIsPermissionDenied()",
+        "startFailureWithoutAHomeIsTermuxNotStarted()",
+        "startTimeoutAndSecurityExceptionAreTyped()",
+        "aStartThatFailedButWhoseHomeIsReadableStillOpens()",
+        "mountErrorsAreTyped()",
+        "everyErrorOffersRetryAndTheDegradedLocalFileList()",
+        "timeLimitedAnswersOrTimesOutAndRethrowsTheCause()",
+        "theFinishedFlagMarksOnlyTheEnds()",
+        "class StartupSequenceTest",
+        "class Fake"
       ]
     },
     {
@@ -347989,6 +348867,46 @@
       ]
     },
     {
+      "path": "ac_cloud-nav/app/src/androidTest/java/com/diegonmarcos/cloudnav/TimelineViewsShotTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TimelineViewsShotTest"
+      ],
+      "imports": [
+        "android.os.ParcelFileDescriptor",
+        "androidx.compose.ui.test.junit4.createEmptyComposeRule",
+        "androidx.compose.ui.test.onAllNodesWithTag",
+        "androidx.compose.ui.test.onAllNodesWithText",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.test.core.app.ActivityScenario",
+        "androidx.test.ext.junit.runners.AndroidJUnit4",
+        "androidx.test.platform.app.InstrumentationRegistry",
+        "com.diegonmarcos.cloudnav.maps.MapsDb",
+        "com.diegonmarcos.cloudnav.maps.MapsDemo",
+        "com.diegonmarcos.cloudnav.maps.TimelineState",
+        "com.diegonmarcos.cloudnav.maps.TlKind",
+        "com.diegonmarcos.cloudnav.tracker.EngineDb",
+        "com.diegonmarcos.superapp.bottomnav.PageTabsTags",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "java.time.LocalDate",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "t(day: LocalDate, h: Int, m: Int = 0)",
+        "seedDay(db: MapsDb, eng: EngineDb, day: LocalDate)",
+        "stop(a: Long, b: Long, lat: Double, lon: Double, place: String, hood: String)",
+        "shot(name: String)",
+        "daily_stops_and_steps_are_views_over_the_one_timeline_store()",
+        "class TimelineViewsShotTest"
+      ]
+    },
+    {
       "path": "ac_cloud-nav/app/src/androidTest/java/com/diegonmarcos/cloudnav/tracker/EngineSettingsScreenTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -349791,6 +350709,31 @@
       ]
     },
     {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/NavTimelineExtra.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "NavTimelineExtra"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.cloudnav.maps.TimelineSync",
+        "com.diegonmarcos.cloudnav.maps.TlFix",
+        "com.diegonmarcos.cloudnav.maps.TlStop",
+        "com.diegonmarcos.cloudnav.maps.TlSteps",
+        "java.time.ZoneId"
+      ],
+      "symbols": [
+        "fixes(fromMs: Long, toMs: Long)",
+        "derivedStops(fromMs: Long, toMs: Long)",
+        "steps(fromMs: Long, toMs: Long)",
+        "relocate(stop: TlStop, nowMs: Long)",
+        "install(ctx: Context)",
+        "tick(ctx: Context, now: Long, zone: ZoneId = ZoneId.systemDefault()",
+        "class NavTimelineExtra"
+      ]
+    },
+    {
       "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/PlacesDigest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -349967,6 +350910,8 @@
         "androidx.health.connect.client.request.ReadRecordsRequest",
         "androidx.health.connect.client.time.TimeRangeFilter",
         "com.diegonmarcos.cloudnav.maps.MapsDb",
+        "com.diegonmarcos.cloudnav.maps.TimelineSync",
+        "com.diegonmarcos.cloudnav.maps.TimelineViews",
         "kotlinx.coroutines.Dispatchers",
         "kotlinx.coroutines.withContext",
         "java.time.Instant",
@@ -350056,6 +351001,42 @@
       ]
     },
     {
+      "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/StopLocator.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StopLocator"
+      ],
+      "imports": [
+        "android.annotation.SuppressLint",
+        "android.content.Context",
+        "android.content.pm.PackageManager",
+        "android.location.Location",
+        "android.location.LocationManager",
+        "androidx.core.content.ContextCompat",
+        "androidx.core.location.LocationManagerCompat",
+        "androidx.core.util.Consumer",
+        "java.util.concurrent.CountDownLatch",
+        "java.util.concurrent.TimeUnit"
+      ],
+      "symbols": [
+        "enabled(provider: String)",
+        "lastKnown(provider: String)",
+        "request(provider: String, timeoutMs: Long)",
+        "allowed(env: Env, provider: String)",
+        "fresh(now: Long, f: Fix)",
+        "resolve(now: Long, env: Env, probe: Probe, held: Fix? = null)",
+        "env(ctx: Context)",
+        "granted(p: String)",
+        "toFix(provider: String)",
+        "class StopLocator",
+        "class Fix",
+        "class Env",
+        "class Probe",
+        "class AndroidProbe"
+      ]
+    },
+    {
       "path": "ac_cloud-nav/app/src/main/java/com/diegonmarcos/cloudnav/tracker/TrackerDebugApiProvider.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -350068,6 +351049,9 @@
         "android.content.Context",
         "android.database.Cursor",
         "android.net.Uri",
+        "com.diegonmarcos.cloudnav.maps.TimelineJson",
+        "com.diegonmarcos.cloudnav.maps.TimelineSync",
+        "com.diegonmarcos.cloudnav.maps.TimelineViews",
         "com.diegonmarcos.superapp.devtools.AppDebugServer",
         "kotlinx.coroutines.runBlocking",
         "org.json.JSONArray",
@@ -350078,6 +351062,7 @@
       "symbols": [
         "onCreate()",
         "steps(ctx: Context, days: Int, zone: ZoneId = ZoneId.systemDefault()",
+        "timeline(ctx: Context, hours: Int, nowMs: Long = System.currentTimeMillis()",
         "places(ctx: Context, days: Int, zone: ZoneId = ZoneId.systemDefault()",
         "query(uri: Uri, p: Array<out String>?, s: String?, a: Array<out String>?, o: String?)",
         "getType(uri: Uri)",
@@ -350483,6 +351468,35 @@
         "predictedWinsWhenMeasuredIsMuchFurther()",
         "modelBuildsCardsWithPlacesAndSegments()",
         "class StepsLogicTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nav/app/src/test/java/com/diegonmarcos/cloudnav/tracker/StopLocatorTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "StopLocatorTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudnav.maps.TimelineBuilder",
+        "com.diegonmarcos.cloudnav.maps.TimelineViews",
+        "com.diegonmarcos.cloudnav.maps.TlStop",
+        "com.diegonmarcos.cloudnav.maps.TlSteps",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.time.LocalDate",
+        "java.time.ZoneOffset"
+      ],
+      "symbols": [
+        "enabled(provider: String)",
+        "lastKnown(provider: String)",
+        "request(provider: String, timeoutMs: Long)",
+        "fix(src: String, ageMs: Long = 0, lat: Double = 40.4)",
+        "at(h: Int, plus: Long = 0)",
+        "class StopLocatorTest",
+        "class Probe"
       ]
     },
     {
@@ -352892,6 +353906,62 @@
       ]
     },
     {
+      "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/app/UnpackReceiver.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackReceiver",
+        "onReceive"
+      ],
+      "imports": [
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "com.termux.cloud.UnpackReport",
+        "com.termux.shared.logger.Logger"
+      ],
+      "symbols": [
+        "onReceive(Context context, Intent intent)",
+        "class UnpackReceiver"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/app/UnpackService.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackService",
+        "onStartCommand",
+        "onBind"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Bundle",
+        "android.os.IBinder",
+        "android.os.ResultReceiver",
+        "com.termux.cloud.UnpackReport",
+        "com.termux.shared.logger.Logger",
+        "com.termux.shared.termux.TermuxConstants",
+        "java.io.File",
+        "java.io.FileOutputStream",
+        "java.nio.charset.StandardCharsets"
+      ],
+      "symbols": [
+        "start(Context context, ResultReceiver receiver)",
+        "onStartCommand(Intent intent, int flags, int startId)",
+        "unpack(Context app)",
+        "notification()",
+        "onBind(Intent intent)",
+        "class UnpackService"
+      ]
+    },
+    {
       "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/cloud/AgentAuth.java",
       "lang": "java",
       "role": "java",
@@ -353087,6 +354157,26 @@
       ]
     },
     {
+      "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/cloud/UnpackReport.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackReport",
+        "runsOn",
+        "json",
+        "isOk"
+      ],
+      "imports": [],
+      "symbols": [
+        "UnpackReport()",
+        "runsOn(String action)",
+        "json(String pkg, String error, long at)",
+        "isOk(String json)",
+        "esc(String s)",
+        "class UnpackReport"
+      ]
+    },
+    {
       "path": "ac_cloud-nix-on-droid/app/src/main/java/com/termux/filepicker/TermuxDocumentsProvider.java",
       "lang": "java",
       "role": "java",
@@ -353183,6 +354273,31 @@
         "assertUrlsAre(String text, String... urls)",
         "testExtractUrls()",
         "class TermuxActivityTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/app/src/test/java/com/termux/cloud/UnpackReportTest.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackReportTest",
+        "onlyTheUpdateBroadcastAndTheFleetStartRunAnUnpack",
+        "aSuccessIsOkAndNamesThePackage",
+        "aFailureCarriesItsReasonEscaped",
+        "nothingIsOkWhenNothingWasWritten",
+        "theActionIsTheOneTheStoreAndTheRegistryName"
+      ],
+      "imports": [
+        "org.junit.Assert",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "onlyTheUpdateBroadcastAndTheFleetStartRunAnUnpack()",
+        "aSuccessIsOkAndNamesThePackage()",
+        "aFailureCarriesItsReasonEscaped()",
+        "nothingIsOkWhenNothingWasWritten()",
+        "theActionIsTheOneTheStoreAndTheRegistryName()",
+        "class UnpackReportTest"
       ]
     },
     {
@@ -359986,6 +361101,22 @@
       "symbols": [
         "ok()",
         "bad()"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/test/test-unpack-after-update.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "real()",
+        "mutant()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "real()",
+        "mutant()"
       ]
     },
     {
@@ -475497,6 +476628,43 @@
       ]
     },
     {
+      "path": "ac_cloud-store/app/src/test/java/com/diegonmarcos/cloudstore/UnpackAfterInstallTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnpackAfterInstallTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.Intent",
+        "android.os.Bundle",
+        "android.os.ResultReceiver",
+        "com.diegonmarcos.superapp.appstore.UnpackAfterInstall",
+        "org.junit.After",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "restore()",
+        "onlyTheTwoTerminalsApply()",
+        "otherPackagesStartNothing()",
+        "startsTheUnpackServiceExplicitlyWithAResultReceiver()",
+        "theAppsAnswerBecomesTheResult()",
+        "anUnstartableServiceFallsBackToLaunchingTheApp()",
+        "neitherWorkingIsReportedNotHidden()",
+        "theErrorTextNeverComesBackEmpty()",
+        "class UnpackAfterInstallTest"
+      ]
+    },
+    {
       "path": "ac_cloud-store/app/src/test/java/com/diegonmarcos/cloudstore/UpdateChecksTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -479403,6 +480571,62 @@
       ]
     },
     {
+      "path": "ac_cloud-termux/app/src/main/java/com/termux/app/UnpackReceiver.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackReceiver",
+        "onReceive"
+      ],
+      "imports": [
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "com.termux.cloud.UnpackReport",
+        "com.termux.shared.logger.Logger"
+      ],
+      "symbols": [
+        "onReceive(Context context, Intent intent)",
+        "class UnpackReceiver"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/app/src/main/java/com/termux/app/UnpackService.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackService",
+        "onStartCommand",
+        "onBind"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.Service",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Build",
+        "android.os.Bundle",
+        "android.os.IBinder",
+        "android.os.ResultReceiver",
+        "com.termux.cloud.UnpackReport",
+        "com.termux.shared.logger.Logger",
+        "com.termux.shared.termux.TermuxConstants",
+        "java.io.File",
+        "java.io.FileOutputStream",
+        "java.nio.charset.StandardCharsets"
+      ],
+      "symbols": [
+        "start(Context context, ResultReceiver receiver)",
+        "onStartCommand(Intent intent, int flags, int startId)",
+        "unpack(Context app)",
+        "notification()",
+        "onBind(Intent intent)",
+        "class UnpackService"
+      ]
+    },
+    {
       "path": "ac_cloud-termux/app/src/main/java/com/termux/app/utils/CrashUtils.java",
       "lang": "java",
       "role": "java",
@@ -479867,6 +481091,26 @@
       ]
     },
     {
+      "path": "ac_cloud-termux/app/src/main/java/com/termux/cloud/UnpackReport.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackReport",
+        "runsOn",
+        "json",
+        "isOk"
+      ],
+      "imports": [],
+      "symbols": [
+        "UnpackReport()",
+        "runsOn(String action)",
+        "json(String pkg, String error, long at)",
+        "isOk(String json)",
+        "esc(String s)",
+        "class UnpackReport"
+      ]
+    },
+    {
       "path": "ac_cloud-termux/app/src/main/java/com/termux/filepicker/TermuxDocumentsProvider.java",
       "lang": "java",
       "role": "java",
@@ -479986,6 +481230,31 @@
         "assertUrlsAre(String text, String... urls)",
         "testExtractUrls()",
         "class TermuxActivityTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/app/src/test/java/com/termux/cloud/UnpackReportTest.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackReportTest",
+        "onlyTheUpdateBroadcastAndTheFleetStartRunAnUnpack",
+        "aSuccessIsOkAndNamesThePackage",
+        "aFailureCarriesItsReasonEscaped",
+        "nothingIsOkWhenNothingWasWritten",
+        "theActionIsTheOneTheStoreAndTheRegistryName"
+      ],
+      "imports": [
+        "org.junit.Assert",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "onlyTheUpdateBroadcastAndTheFleetStartRunAnUnpack()",
+        "aSuccessIsOkAndNamesThePackage()",
+        "aFailureCarriesItsReasonEscaped()",
+        "nothingIsOkWhenNothingWasWritten()",
+        "theActionIsTheOneTheStoreAndTheRegistryName()",
+        "class UnpackReportTest"
       ]
     },
     {
@@ -485332,6 +486601,22 @@
         "plant()",
         "run()",
         "check()",
+        "mutant()"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/test/test-unpack-after-update.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "check()",
+        "real()",
+        "mutant()"
+      ],
+      "imports": [],
+      "symbols": [
+        "check()",
+        "real()",
         "mutant()"
       ]
     },
