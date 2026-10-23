@@ -6,13 +6,13 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 3012,
+    "files": 3014,
     "by_lang": {
       "sh": 164,
       "nix": 179,
       "js": 88,
       "py": 875,
-      "ts": 1170,
+      "ts": 1172,
       "rust": 536
     },
     "by_role": {
@@ -20,7 +20,7 @@
       "nix-module": 19,
       "file": 335,
       "python": 861,
-      "module": 717,
+      "module": 719,
       "script": 9,
       "flake": 81,
       "compose": 79,
@@ -8629,6 +8629,24 @@
       ]
     },
     {
+      "path": "infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/test-grouped-tools.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/client/index.js",
+        "@modelcontextprotocol/sdk/inMemory.js",
+        "zod",
+        "../../lib-mcp/src/tools.js",
+        "../../lib-mcp/src/grouped.js"
+      ],
+      "symbols": [
+        "connect(server: McpServer)"
+      ]
+    },
+    {
       "path": "infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/test-superapp-mcp.ts",
       "lang": "ts",
       "role": "module",
@@ -8703,6 +8721,38 @@
       ]
     },
     {
+      "path": "infra-api_cloud-superapp-mcp/src/code/lib-mcp/src/grouped.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "methodsOf",
+        "summary",
+        "validateParams",
+        "jsonSchemaOf",
+        "registerGrouped",
+        "registerLegacy",
+        "TOOL",
+        "HELP",
+        "ToolDef",
+        "ToolRegistry",
+        "Method"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "zod-to-json-schema"
+      ],
+      "symbols": [
+        "methodsOf(reg: ToolRegistry)",
+        "summary(desc: string)",
+        "validateParams(m: Method, params: unknown)",
+        "jsonSchemaOf(def: ToolDef)",
+        "registerGrouped(server: McpServer, reg: ToolRegistry)",
+        "registerLegacy(server: McpServer, reg: ToolRegistry)",
+        "class ToolRegistry"
+      ]
+    },
+    {
       "path": "infra-api_cloud-superapp-mcp/src/code/lib-mcp/src/registry.ts",
       "lang": "ts",
       "role": "module",
@@ -8728,13 +8778,16 @@
         "resolve",
         "stamp",
         "registerTools",
+        "buildRegistry",
+        "registerAll",
         "ROUTE_RE"
       ],
       "imports": [
         "@modelcontextprotocol/sdk/server/mcp.js",
         "zod",
         "./device.js",
-        "./registry.js"
+        "./registry.js",
+        "./grouped.js"
       ],
       "symbols": [
         "aliasToPkg(q: string)",
@@ -8746,6 +8799,8 @@
         "registerTools(server: McpServer, appModules: AppModule[] = [])",
         "pkgOf(query: string)",
         "adbExec(cmd: string, timeoutSec = 30)",
+        "buildRegistry(appModules: AppModule[] = [])",
+        "registerAll(server: McpServer, appModules: AppModule[] = [], env: NodeJS.ProcessEnv = process.env)",
         "class escape"
       ]
     },
