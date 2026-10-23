@@ -6,28 +6,28 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22123,
+    "files": 22139,
     "by_lang": {
       "js": 488,
-      "sh": 548,
-      "py": 157,
-      "kotlin": 11676,
-      "java": 645,
+      "sh": 551,
+      "py": 162,
+      "kotlin": 11682,
+      "java": 647,
       "ts": 8467,
       "nix": 31,
       "rust": 111
     },
     "by_role": {
       "file": 2279,
-      "shell": 434,
-      "script": 252,
-      "java": 644,
+      "shell": 436,
+      "script": 255,
+      "java": 646,
       "entrypoint": 23,
       "module": 6423,
       "compose": 1,
       "flake": 26,
-      "kotlin": 11673,
-      "python": 50,
+      "kotlin": 11679,
+      "python": 53,
       "rust-module": 111,
       "hook": 150,
       "nix-module": 4,
@@ -1387,6 +1387,20 @@
         "load(path)",
         "main(argv)",
         "class RemoteFile"
+      ]
+    },
+    {
+      "path": ".github/workflows/scripts/cloud-android-safe-prefs-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "main()"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "main()"
       ]
     },
     {
@@ -3817,6 +3831,20 @@
       ]
     },
     {
+      "path": "1_cicd/src/scripts/cloud-android-safe-prefs-guard.py",
+      "lang": "py",
+      "role": "script",
+      "exports": [
+        "main()"
+      ],
+      "imports": [
+        "json"
+      ],
+      "symbols": [
+        "main()"
+      ]
+    },
+    {
       "path": "1_cicd/src/scripts/cloud-android-ship-lib.sh",
       "lang": "sh",
       "role": "script",
@@ -5765,6 +5793,20 @@
         "ok()",
         "bad()",
         "expect()"
+      ]
+    },
+    {
+      "path": "1_cicd/src/scripts/test/safe-prefs-guard.test.sh",
+      "lang": "sh",
+      "role": "script",
+      "exports": [
+        "mk()",
+        "chk()"
+      ],
+      "imports": [],
+      "symbols": [
+        "mk()",
+        "chk()"
       ]
     },
     {
@@ -12739,6 +12781,7 @@
         "CfKeyStore"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "com.wireguard.crypto.KeyPair",
@@ -28753,9 +28796,9 @@
         "ConfigsPrefs"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey"
+        "androidx.security.crypto.EncryptedSharedPreferences"
       ],
       "symbols": [
         "credential()",
@@ -30148,11 +30191,10 @@
         "FleetBearer"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
-        "android.net.Uri",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey"
+        "android.net.Uri"
       ],
       "symbols": [
         "superAppInstalled(ctx: Context)",
@@ -31854,16 +31896,39 @@
         "android.os.Bundle",
         "android.os.Handler",
         "android.os.Looper",
+        "android.os.Parcel",
         "android.os.ResultReceiver"
       ],
       "symbols": [
         "applies(pkg: String)",
         "text(code: Int, error: String?)",
+        "receiverForSending(local: ResultReceiver)",
         "run(ctx: Context, pkg: String)",
         "onReceiveResult(resultCode: Int, data: Bundle?)",
         "resultOf(ctx: Context, pkg: String)",
         "record(ctx: Context, pkg: String, text: String)",
-        "class UnpackAfterInstall"
+        "class UnpackAfterInstall",
+        "class by",
+        "class alone"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/appstore/src/main/java/com/diegonmarcos/superapp/appstore/UnpackTestReceiver.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "UnpackTestReceiver"
+      ],
+      "imports": [
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.os.Handler",
+        "android.os.Looper"
+      ],
+      "symbols": [
+        "onReceive(context: Context, intent: Intent)",
+        "class UnpackTestReceiver"
       ]
     },
     {
@@ -34445,6 +34510,7 @@
         "AcUnlock"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "android.os.SystemClock",
@@ -34455,7 +34521,6 @@
         "androidx.core.content.ContextCompat",
         "androidx.fragment.app.FragmentActivity",
         "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "java.security.KeyStore",
         "javax.crypto.KeyGenerator",
         "javax.crypto.SecretKey"
@@ -35931,10 +35996,10 @@
         "BrowserProfileStore"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "org.json.JSONArray",
         "org.json.JSONObject"
       ],
@@ -38154,10 +38219,10 @@
         "MattermostPrefs"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey"
+        "androidx.security.crypto.EncryptedSharedPreferences"
       ],
       "symbols": [
         "isLoggedIn()",
@@ -38436,6 +38501,7 @@
         "FleetConfig"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "android.os.Bundle",
@@ -38852,6 +38918,53 @@
       ]
     },
     {
+      "path": "ab_cloud-libs-shared/libs/crash/src/main/java/com/diegonmarcos/superapp/crash/SafeEncryptedPrefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SafeEncryptedPrefs"
+      ],
+      "imports": [
+        "android.content.Context",
+        "android.content.SharedPreferences",
+        "androidx.security.crypto.EncryptedSharedPreferences",
+        "androidx.security.crypto.MasterKey",
+        "java.security.KeyStore"
+      ],
+      "symbols": [
+        "create(context: Context, fileName: String)",
+        "prefs(context: Context, fileName: String)",
+        "wasReset(context: Context, fileName: String)",
+        "acknowledgeReset(context: Context, fileName: String)",
+        "recover( open: ()",
+        "deleteMasterKeyAlias()",
+        "getAll()",
+        "getString(k: String, d: String?)",
+        "getStringSet(k: String, d: MutableSet<String>?)",
+        "getInt(k: String, d: Int)",
+        "getLong(k: String, d: Long)",
+        "getFloat(k: String, d: Float)",
+        "getBoolean(k: String, d: Boolean)",
+        "contains(k: String)",
+        "registerOnSharedPreferenceChangeListener(l: SharedPreferences.OnSharedPreferenceChangeListener?)",
+        "unregisterOnSharedPreferenceChangeListener(l: SharedPreferences.OnSharedPreferenceChangeListener?)",
+        "edit()",
+        "putString(k: String, v: String?)",
+        "putStringSet(k: String, v: MutableSet<String>?)",
+        "putInt(k: String, v: Int)",
+        "putLong(k: String, v: Long)",
+        "putFloat(k: String, v: Float)",
+        "putBoolean(k: String, v: Boolean)",
+        "remove(k: String)",
+        "clear()",
+        "commit()",
+        "apply()",
+        "class SafeEncryptedPrefs",
+        "class Opened",
+        "class MemoryPrefs"
+      ]
+    },
+    {
       "path": "ab_cloud-libs-shared/libs/crash/src/main/plain/com/diegonmarcos/superapp/crash/CrashActivity.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -38894,6 +39007,32 @@
         "anUnshownReportIsSurfacedUntilMarkedSeen()",
         "persistNeverThrowsAndShareTextIsBounded()",
         "class CrashReportsTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/crash/src/test/java/com/diegonmarcos/superapp/crash/SafeEncryptedPrefsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SafeEncryptedPrefsTest"
+      ],
+      "imports": [
+        "android.content.SharedPreferences",
+        "java.security.GeneralSecurityException",
+        "javax.crypto.AEADBadTagException",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "good()",
+        "healthyStoreOpensUntouched()",
+        "corruptKeysetRecoversByDeletingTheFileAndReports()",
+        "aKeystoreThatStaysBrokenGetsItsAliasDeletedToo()",
+        "neverThrowsEvenWhenEverythingFailsAndFallsBackToMemory()",
+        "class SafeEncryptedPrefsTest"
       ]
     },
     {
@@ -43829,6 +43968,7 @@
         "SetupStores"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "java.io.File"
@@ -44480,10 +44620,9 @@
         "GitCredentialStore"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "java.io.File"
       ],
       "symbols": [
@@ -63217,9 +63356,8 @@
         "JmapPrefs"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "org.json.JSONArray",
         "org.json.JSONObject"
       ],
@@ -63247,9 +63385,8 @@
         "signedIn"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "kotlinx.serialization.json.Json",
         "kotlinx.serialization.json.JsonObject",
         "kotlinx.serialization.json.JsonPrimitive",
@@ -66780,10 +66917,9 @@
         "MountCredentialStore"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "java.io.File"
       ],
       "symbols": [
@@ -68732,10 +68868,10 @@
         "DaguPrefs"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "com.diegonmarcos.superapp.ops.BuildConfig"
       ],
       "symbols": [
@@ -84778,11 +84914,11 @@
         "JevStore"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "android.os.SystemClock",
         "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "com.diegonmarcos.cloudcalc.BuildConfig",
         "com.diegonmarcos.cloudcalc.Declarations",
         "com.diegonmarcos.superapp.decisions.Http",
@@ -154101,10 +154237,7 @@
       "imports": [
         "android.content.Context",
         "android.content.SharedPreferences",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKeys",
-        "java.io.IOException",
-        "java.security.GeneralSecurityException"
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs"
       ],
       "symbols": [
         "EncryptedPreferenceManager(Context context, String prefName)",
@@ -154499,10 +154632,10 @@
       "role": "java",
       "exports": [],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "com.diegonmarcos.superapp.texttools.TextToolsClient",
         "org.json.JSONArray",
         "org.json.JSONObject",
@@ -165332,6 +165465,7 @@
         "onLaunch(activity: Activity)",
         "Dialog()",
         "keep(rel: String, size: Long)",
+        "isEncryptedPrefs(f: File)",
         "write(dataDir: File, out: File)",
         "read(zip: File, dataDir: File)",
         "class DataMigration",
@@ -166646,23 +166780,23 @@
         "androidx.compose.runtime.rememberCoroutineScope",
         "androidx.compose.runtime.saveable.rememberSaveable",
         "androidx.compose.runtime.setValue",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
         "androidx.compose.ui.Modifier",
+        "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
         "androidx.core.content.FileProvider",
         "androidx.core.view.WindowCompat",
         "com.diegonmarcos.superapp.bottomnav.FleetChrome",
         "androidx.lifecycle.Lifecycle",
         "androidx.lifecycle.LifecycleEventObserver",
         "androidx.lifecycle.compose.LocalLifecycleOwner",
-        "com.diegonmarcos.clouddrive.backups.MirrorRunner",
-        "com.diegonmarcos.clouddrive.configs.ConfigsScreen",
-        "com.diegonmarcos.clouddrive.files.FilesController",
-        "com.diegonmarcos.clouddrive.files.FilesScreen",
-        "com.diegonmarcos.clouddrive.files.ExplorerScreen",
-        "com.diegonmarcos.clouddrive.manage.ManageScreen",
-        "com.diegonmarcos.clouddrive.agents.AgentsScreen",
-        "com.diegonmarcos.clouddrive.ai.AiScreen",
-        "com.diegonmarcos.clouddrive.files.FilesUiState",
-        "com.diegonmarcos.clouddrive.files.Places"
+        "com.diegonmarcos.clouddrive.backups.MirrorRunner"
       ],
       "symbols": [
         "onCreate(savedInstanceState: Bundle?)",
@@ -353955,10 +354089,12 @@
       "symbols": [
         "start(Context context, ResultReceiver receiver)",
         "onStartCommand(Intent intent, int flags, int startId)",
+        "receiverOf(Intent intent)",
         "unpack(Context app)",
         "notification()",
         "onBind(Intent intent)",
-        "class UnpackService"
+        "class UnpackService",
+        "class this"
       ]
     },
     {
@@ -354273,6 +354409,35 @@
         "assertUrlsAre(String text, String... urls)",
         "testExtractUrls()",
         "class TermuxActivityTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-nix-on-droid/app/src/test/java/com/termux/app/UnpackServiceReceiverTest.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackServiceReceiverTest",
+        "noIntentOrNoExtraMeansNoReply",
+        "anExtraOfTheWrongTypeMeansNoReplyAndNoCrash",
+        "aReceiverIsReturned"
+      ],
+      "imports": [
+        "android.content.Intent",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.os.ResultReceiver",
+        "com.termux.cloud.UnpackReport",
+        "org.junit.Assert",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "noIntentOrNoExtraMeansNoReply()",
+        "anExtraOfTheWrongTypeMeansNoReplyAndNoCrash()",
+        "aReceiverIsReturned()",
+        "class UnpackServiceReceiverTest"
       ]
     },
     {
@@ -476661,7 +476826,11 @@
         "anUnstartableServiceFallsBackToLaunchingTheApp()",
         "neitherWorkingIsReportedNotHidden()",
         "theErrorTextNeverComesBackEmpty()",
-        "class UnpackAfterInstallTest"
+        "receiverForSendingIsAPlainResultReceiverThatForwards()",
+        "onReceiveResult(resultCode: Int, data: Bundle?)",
+        "theIntentCarriesAPlainResultReceiver()",
+        "class UnpackAfterInstallTest",
+        "class Mine"
       ]
     },
     {
@@ -477570,6 +477739,7 @@
         "CalBridge"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.Intent",
         "android.content.SharedPreferences",
@@ -477580,7 +477750,6 @@
         "com.diegonmarcos.cloudagenda.agents.ScreenshotFeed",
         "com.diegonmarcos.superapp.core.DataBackendClient",
         "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "org.json.JSONArray",
         "org.json.JSONObject",
         "java.util.UUID",
@@ -477758,10 +477927,9 @@
         "AgentSecrets"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
-        "android.content.SharedPreferences",
-        "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey"
+        "android.content.SharedPreferences"
       ],
       "symbols": [
         "isDark(systemDark: Boolean)",
@@ -480620,10 +480788,12 @@
       "symbols": [
         "start(Context context, ResultReceiver receiver)",
         "onStartCommand(Intent intent, int flags, int startId)",
+        "receiverOf(Intent intent)",
         "unpack(Context app)",
         "notification()",
         "onBind(Intent intent)",
-        "class UnpackService"
+        "class UnpackService",
+        "class this"
       ]
     },
     {
@@ -481230,6 +481400,35 @@
         "assertUrlsAre(String text, String... urls)",
         "testExtractUrls()",
         "class TermuxActivityTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-termux/app/src/test/java/com/termux/app/UnpackServiceReceiverTest.java",
+      "lang": "java",
+      "role": "java",
+      "exports": [
+        "UnpackServiceReceiverTest",
+        "noIntentOrNoExtraMeansNoReply",
+        "anExtraOfTheWrongTypeMeansNoReplyAndNoCrash",
+        "aReceiverIsReturned"
+      ],
+      "imports": [
+        "android.content.Intent",
+        "android.os.Handler",
+        "android.os.Looper",
+        "android.os.ResultReceiver",
+        "com.termux.cloud.UnpackReport",
+        "org.junit.Assert",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "noIntentOrNoExtraMeansNoReply()",
+        "anExtraOfTheWrongTypeMeansNoReplyAndNoCrash()",
+        "aReceiverIsReturned()",
+        "class UnpackServiceReceiverTest"
       ]
     },
     {
@@ -486675,10 +486874,10 @@
         "SecretPrefs"
       ],
       "imports": [
+        "com.diegonmarcos.superapp.crash.SafeEncryptedPrefs",
         "android.content.Context",
         "android.content.SharedPreferences",
         "androidx.security.crypto.EncryptedSharedPreferences",
-        "androidx.security.crypto.MasterKey",
         "com.diegonmarcos.cloudtoolssmallllms.core.SecretStore"
       ],
       "symbols": [
@@ -489781,12 +489980,12 @@
         "getPasswordBreachCount(password: String)",
         "getPasswordStrength(email: String? = null, password: String)",
         "validatePassword(password: String)",
+        "reauthenticate(password: String)",
         "validatePinUserKey(pin: String)",
         "validatePasswordAgainstPolicies(password: String)",
         "sendVerificationEmail( email: String, name: String, receiveMarketingEmails: Boolean, )",
         "validateEmailToken( email: String, token: String, )",
-        "setOnboardingStatus(status: OnboardingStatus)",
-        "leaveOrganization( organizationId: String, )"
+        "setOnboardingStatus(status: OnboardingStatus)"
       ]
     },
     {
@@ -501825,6 +502024,28 @@
       ]
     },
     {
+      "path": "ac_cloud-vault/app/src/main/kotlin/com/x8bit/bitwarden/fleet/OfflineStatus.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SyncHealth",
+        "OfflineStatus"
+      ],
+      "imports": [
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.flow.StateFlow",
+        "java.time.Instant",
+        "java.time.ZoneId",
+        "java.time.format.DateTimeFormatter"
+      ],
+      "symbols": [
+        "setLastSyncFailed(value: Boolean)",
+        "label( connected: Boolean, lastSyncFailed: Boolean, lastSync: Instant?, zone: ZoneId = ZoneId.systemDefault()",
+        "class SyncHealth",
+        "class OfflineStatus"
+      ]
+    },
+    {
       "path": "ac_cloud-vault/app/src/main/kotlin/com/x8bit/bitwarden/fleet/SyncSignInNeeded.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -501838,6 +502059,34 @@
       "symbols": [
         "set(value: Boolean)",
         "class SyncSignInNeeded"
+      ]
+    },
+    {
+      "path": "ac_cloud-vault/app/src/main/kotlin/com/x8bit/bitwarden/fleet/SyncStatusViewModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "SyncStatusViewModel"
+      ],
+      "imports": [
+        "androidx.lifecycle.ViewModel",
+        "androidx.lifecycle.viewModelScope",
+        "com.x8bit.bitwarden.data.auth.repository.AuthRepository",
+        "com.x8bit.bitwarden.data.platform.manager.network.NetworkConnectionManager",
+        "com.x8bit.bitwarden.data.platform.repository.SettingsRepository",
+        "dagger.hilt.android.lifecycle.HiltViewModel",
+        "kotlinx.coroutines.flow.SharingStarted",
+        "kotlinx.coroutines.flow.StateFlow",
+        "kotlinx.coroutines.flow.combine",
+        "kotlinx.coroutines.flow.stateIn",
+        "javax.inject.Inject",
+        "kotlinx.coroutines.flow.MutableStateFlow",
+        "kotlinx.coroutines.launch"
+      ],
+      "symbols": [
+        "signIn(password: String, onDone: ()",
+        "clearError()",
+        "class SyncStatusViewModel"
       ]
     },
     {
@@ -511758,7 +512007,11 @@
         "com.x8bit.bitwarden.fleet.SyncSignInNeeded",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel",
+        "com.x8bit.bitwarden.fleet.SyncStatusViewModel",
         "androidx.compose.ui.res.painterResource",
         "androidx.compose.ui.res.stringResource",
         "com.bitwarden.ui.platform.components.navigation.model.NavigationItem",
@@ -511772,7 +512025,8 @@
       ],
       "symbols": [
         "FleetNavScaffold( navigationData: ScaffoldNavigationData, contentWindowInsets: WindowInsets, content: @Composable ()",
-        "fleetId()"
+        "fleetId()",
+        "SyncSignInDialog(failed: Boolean, onDismiss: ()"
       ]
     },
     {
@@ -527914,6 +528168,24 @@
         "tearDown()",
         "prepareStateForUnlocking( unlockResult: VaultUnlockResult, mockMasterPassword: String = \"mockPassword-1\", mockPin: String = \"1234\", )",
         "class VaultRepositoryTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-vault/app/src/test/kotlin/com/x8bit/bitwarden/fleet/OfflineStatusTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "OfflineStatusTest"
+      ],
+      "imports": [
+        "org.junit.jupiter.api.Assertions.assertEquals",
+        "org.junit.jupiter.api.Assertions.assertNull",
+        "org.junit.jupiter.api.Test",
+        "java.time.Instant",
+        "java.time.ZoneOffset"
+      ],
+      "symbols": [
+        "class OfflineStatusTest"
       ]
     },
     {
@@ -552419,6 +552691,112 @@
         "java.util.Properties"
       ],
       "symbols": []
+    },
+    {
+      "path": "ac_cloud-vault/test/emulator/dns-stub.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "name_of(q)"
+      ],
+      "imports": [
+        "os"
+      ],
+      "symbols": [
+        "name_of(q)"
+      ]
+    },
+    {
+      "path": "ac_cloud-vault/test/emulator/run-ci.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "bw()"
+      ],
+      "imports": [],
+      "symbols": [
+        "bw()"
+      ]
+    },
+    {
+      "path": "ac_cloud-vault/test/emulator/seed-vaultwarden.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "enc(data, ek, mk)",
+        "expand(prk, info)",
+        "post(path, body, headers=None, form=False)"
+      ],
+      "imports": [
+        "cryptography.hazmat.primitives",
+        "cryptography.hazmat.primitives.asymmetric",
+        "cryptography.hazmat.primitives.ciphers",
+        "base64"
+      ],
+      "symbols": [
+        "enc(data, ek, mk)",
+        "expand(prk, info)",
+        "post(path, body, headers=None, form=False)"
+      ]
+    },
+    {
+      "path": "ac_cloud-vault/test/emulator/uidrv.py",
+      "lang": "py",
+      "role": "python",
+      "exports": [
+        "adb(*a)",
+        "dump()",
+        "nodes()",
+        "center(n)",
+        "hit(n, rx)",
+        "find(rx)",
+        "poll(fn, timeout)",
+        "fail(msg)",
+        "main()"
+      ],
+      "imports": [
+        "os",
+        "xml.etree.ElementTree"
+      ],
+      "symbols": [
+        "adb(*a)",
+        "dump()",
+        "nodes()",
+        "center(n)",
+        "hit(n, rx)",
+        "find(rx)",
+        "poll(fn, timeout)",
+        "fail(msg)",
+        "main()"
+      ]
+    },
+    {
+      "path": "ac_cloud-vault/test/test-vault-offline-emulator.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "shot()",
+        "prefs_keys()",
+        "die()",
+        "launch()",
+        "touch_finger()",
+        "offline()",
+        "enrol_fingerprint()",
+        "trace()",
+        "signin_selfhosted()"
+      ],
+      "imports": [],
+      "symbols": [
+        "shot()",
+        "prefs_keys()",
+        "die()",
+        "launch()",
+        "touch_finger()",
+        "offline()",
+        "enrol_fingerprint()",
+        "trace()",
+        "signin_selfhosted()"
+      ]
     },
     {
       "path": "ac_cloud-vault/test/test-vault-web.sh",
