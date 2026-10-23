@@ -6,21 +6,21 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 3009,
+    "files": 3012,
     "by_lang": {
       "sh": 164,
       "nix": 179,
       "js": 88,
       "py": 875,
-      "ts": 1167,
+      "ts": 1170,
       "rust": 536
     },
     "by_role": {
       "shell": 154,
       "nix-module": 19,
-      "file": 334,
+      "file": 335,
       "python": 861,
-      "module": 715,
+      "module": 717,
       "script": 9,
       "flake": 81,
       "compose": 79,
@@ -4477,17 +4477,16 @@
       ]
     },
     {
-      "path": "infra-api_cloud-infra-mcp/src/code/mcp/http.ts",
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/factory.ts",
       "lang": "ts",
       "role": "module",
       "exports": [
-        "startMcpHttpServer"
+        "buildRegistry",
+        "createMcpServer"
       ],
       "imports": [
-        "node:http",
         "@modelcontextprotocol/sdk/server/mcp.js",
-        "@modelcontextprotocol/sdk/server/streamableHttp.js",
-        "../shared/libs/binds.js",
+        "./registry.js",
         "./tools/health_cloud.js",
         "./tools/health_mail.js",
         "./tools/observability-read.js",
@@ -4507,7 +4506,25 @@
         "./resources/index.js"
       ],
       "symbols": [
-        "createMcpServer()",
+        "buildRegistry()",
+        "createMcpServer(env: NodeJS.ProcessEnv = process.env)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/http.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "startMcpHttpServer"
+      ],
+      "imports": [
+        "node:http",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/server/streamableHttp.js",
+        "../shared/libs/binds.js",
+        "./factory.js"
+      ],
+      "symbols": [
         "handleMcpRequest(req: IncomingMessage, res: ServerResponse)",
         "initSession(port: number)",
         "startMcpHttpServer(port: number = 3100)"
@@ -4526,6 +4543,40 @@
       ],
       "symbols": [
         "main()"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/registry.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "classify",
+        "methodsOf",
+        "summary",
+        "validateParams",
+        "jsonSchemaOf",
+        "registerGrouped",
+        "registerLegacy",
+        "ToolDef",
+        "ToolRegistry",
+        "GROUPS",
+        "Group",
+        "Method"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "zod-to-json-schema"
+      ],
+      "symbols": [
+        "classify(name: string)",
+        "methodsOf(reg: ToolRegistry)",
+        "summary(desc: string)",
+        "validateParams(m: Method, params: unknown)",
+        "jsonSchemaOf(def: ToolDef)",
+        "registerGrouped(server: McpServer, reg: ToolRegistry)",
+        "registerLegacy(server: McpServer, reg: ToolRegistry)",
+        "class ToolRegistry"
       ]
     },
     {
@@ -6445,6 +6496,24 @@
         "./shared/libs/gha-policy.ts"
       ],
       "symbols": []
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-grouped-tools.mts",
+      "lang": "ts",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "@modelcontextprotocol/sdk/client/index.js",
+        "@modelcontextprotocol/sdk/inMemory.js",
+        "zod",
+        "./mcp/factory.ts",
+        "./mcp/registry.ts"
+      ],
+      "symbols": [
+        "connect(server: McpServer)"
+      ]
     },
     {
       "path": "infra-api_cloud-infra-mcp/src/code/test-inspect-redact.mjs",
