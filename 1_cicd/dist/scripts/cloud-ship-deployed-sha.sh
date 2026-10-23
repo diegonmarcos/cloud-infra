@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+# ╔══════════════════════════════════════════════════════════════════╗
+# ║                                                                  ║
+# ║   GENERATED FILE — DO NOT EDIT                                   ║
+# ║                                                                  ║
+# ║   Source : 1_cicd/src/scripts/cloud-ship-deployed-sha.sh
+# ║   Engine : 1_cicd/src/scripts/cloud-ship-repo-workflow-engine.sh
+# ║   Rebuild: ./9_others/build.sh
+# ║                                                                  ║
+# ║   Manual edits will be overwritten on next build.                ║
+# ║                                                                  ║
+# ╚══════════════════════════════════════════════════════════════════╝
+
 # Deployed-sha marker helper for change detection.
 #
 # Ship decides what to deploy by diffing the push (or the last cloud-u-containers
