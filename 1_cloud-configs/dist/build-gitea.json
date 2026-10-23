@@ -32,7 +32,7 @@
     "image": "gitea/gitea:latest",
     "port": 3002,
     "port_env": "GITEA__server__HTTP_PORT",
-    "dns": "gitea.app",
+    "dns": "gitea.mesh.diegonmarcos.com",
     "public": true,
     "proxy": {
       "domain": "git.diegonmarcos.com",
@@ -664,7 +664,7 @@
       },
       "vm": "gcp-proxy",
       "domain": "dns.internal",
-      "description": "Internal DNS server for WireGuard mesh (per-service .app zones)",
+      "description": "Internal DNS server for WireGuard mesh (per-service mesh zone)",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -1095,7 +1095,7 @@
       },
       "vm": "oci-apps",
       "healthcheck": "/health",
-      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds. Public address: c3-pvt.diegonmarcos.com/tokens-api (shared gate, #1104); mesh tokens-api.app",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds. Public address: c3-pvt.diegonmarcos.com/tokens-api (shared gate, #1104); mesh tokens-api.mesh.diegonmarcos.com",
       "api": {
         "has_api": true,
         "has_web_ui": false,
@@ -1534,7 +1534,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.app is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
+          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.mesh.diegonmarcos.com is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
           "service": "jmap_mesh_http",
           "role": "app"
         },
@@ -1986,7 +1986,7 @@
         "10.0.0.1"
       ],
       "_trusted_proxies_doc": "MEASURED 2026-09-30 on oci-apps: `ss -tn sport = :3002` during a bearer request through git.diegonmarcos.com showed exactly one peer, [::ffff:10.0.0.1] — the hub caddy on gcp-proxy dialling 10.0.0.6:3002 over wg0. The public edge (oci-analytics) never connects: it L4-passes this SNI to the hub. gcp-proxy masquerades only its docker bridges (172.16.0.0/12) and ens4 egress, so a mesh peer forwarded through the hub keeps its own source address and is NOT 10.0.0.1. Exact addresses only — never a CIDR, never *.",
-      "_doc": "Gitea honours its reverse-proxy user header from ANY peer: REVERSE_PROXY_TRUSTED_PROXIES only feeds the X-Forwarded-For rewrite (gitea v28.0.0 routers/common/middleware.go:33); services/auth/reverseproxy.go never checks the source. With 0.0.0.0:3002 reachable from every wg0/wg-public peer and ~40 host-network containers on oci-apps, enabling reverse-proxy auth on that listener would let any of them become `diego` with one header. So gitea listens only on a unix socket in a tmpfs volume that no other container mounts, and this caddy owns :3002: it forwards `identity.header` (and X-Real-IP) only when the peer is in trusted_proxies AND the Host is this service's domain — the .app catalog routes the hub also serves from 10.0.0.1 carry Host gitea.app, so they cannot mint an identity either. Everything else reaches gitea exactly as before, anonymous."
+      "_doc": "Gitea honours its reverse-proxy user header from ANY peer: REVERSE_PROXY_TRUSTED_PROXIES only feeds the X-Forwarded-For rewrite (gitea v28.0.0 routers/common/middleware.go:33); services/auth/reverseproxy.go never checks the source. With 0.0.0.0:3002 reachable from every wg0/wg-public peer and ~40 host-network containers on oci-apps, enabling reverse-proxy auth on that listener would let any of them become `diego` with one header. So gitea listens only on a unix socket in a tmpfs volume that no other container mounts, and this caddy owns :3002: it forwards `identity.header` (and X-Real-IP) only when the peer is in trusted_proxies AND the Host is this service's domain — the .app catalog routes the hub also serves from 10.0.0.1 carry Host gitea.mesh.diegonmarcos.com, so they cannot mint an identity either. Everything else reaches gitea exactly as before, anonymous."
     },
     "mirrors": {
       "cloud-t-infra": {

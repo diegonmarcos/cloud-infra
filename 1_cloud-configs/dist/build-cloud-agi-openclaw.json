@@ -33,7 +33,7 @@
     "_image_comment": "Upstream's public GHCR image, pinned (2026.9.9 = latest on 2026-10-10, arm64 digest sha256:f75083cde787fcb90cdfa91cb17ca0ea135b5f4ee989fc08ca2c2e12abe22e84). Public, so the oci-apps pull needs no GHCR login. 3.4 GB on disk.",
     "port": 18789,
     "port_env": "OPENCLAW_GATEWAY_PORT",
-    "dns": "openclaw.app",
+    "dns": "openclaw.mesh.diegonmarcos.com",
     "public": false,
     "healthcheck": null,
     "monitoring": null,
@@ -46,7 +46,7 @@
     },
     "read_only": false,
     "protocol": "http",
-    "_healthcheck_comment": "null on purpose, as for cloud-agi-hermes: the listener is loopback-only, so a mesh probe of openclaw.app:18789 could only ever fail. Liveness is compose.nix's container healthcheck (127.0.0.1/health) and the gateway's /health.modes[openclaw].available."
+    "_healthcheck_comment": "null on purpose, as for cloud-agi-hermes: the listener is loopback-only, so a mesh probe of openclaw.mesh.diegonmarcos.com:18789 could only ever fail. Liveness is compose.nix's container healthcheck (127.0.0.1/health) and the gateway's /health.modes[openclaw].available."
   },
   "service": "openclaw",
   "role": "app",
@@ -653,7 +653,7 @@
       },
       "vm": "gcp-proxy",
       "domain": "dns.internal",
-      "description": "Internal DNS server for WireGuard mesh (per-service .app zones)",
+      "description": "Internal DNS server for WireGuard mesh (per-service mesh zone)",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -1084,7 +1084,7 @@
       },
       "vm": "oci-apps",
       "healthcheck": "/health",
-      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds. Public address: c3-pvt.diegonmarcos.com/tokens-api (shared gate, #1104); mesh tokens-api.app",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds. Public address: c3-pvt.diegonmarcos.com/tokens-api (shared gate, #1104); mesh tokens-api.mesh.diegonmarcos.com",
       "api": {
         "has_api": true,
         "has_web_ui": false,
@@ -1523,7 +1523,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.app is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
+          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.mesh.diegonmarcos.com is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
           "service": "jmap_mesh_http",
           "role": "app"
         },

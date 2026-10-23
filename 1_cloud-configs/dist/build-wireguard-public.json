@@ -637,7 +637,7 @@
       },
       "vm": "gcp-proxy",
       "domain": "dns.internal",
-      "description": "Internal DNS server for WireGuard mesh (per-service .app zones)",
+      "description": "Internal DNS server for WireGuard mesh (per-service mesh zone)",
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -1068,7 +1068,7 @@
       },
       "vm": "oci-apps",
       "healthcheck": "/health",
-      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds. Public address: c3-pvt.diegonmarcos.com/tokens-api (shared gate, #1104); mesh tokens-api.app",
+      "description": "Fleet token engine: lists, generates, reveals and revokes every fleet bearer token (fleet ft_ tokens and adopted Authelia JWTs); introspect-proxy asks it before accepting a Bearer, so a revoked token stops working within 60 seconds. Public address: c3-pvt.diegonmarcos.com/tokens-api (shared gate, #1104); mesh tokens-api.mesh.diegonmarcos.com",
       "api": {
         "has_api": true,
         "has_web_ui": false,
@@ -1507,7 +1507,7 @@
             "10.0.0.3",
             "10.1.0.3"
           ],
-          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.app is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
+          "desc": "Plain-HTTP JMAP on the MESH ONLY (host:2080 → stalwart:8080). Bound on wg0/wg-public, never on a public interface: .app is WireGuard-only and WG already encrypts, so the mesh endpoint stalwart.mesh.diegonmarcos.com is plain http (fleet convention, #1093). Cloud Mail and the fleet apps reach JMAP here first and fall back to the public jmap.diegonmarcos.com with the bearer.",
           "service": "jmap_mesh_http",
           "role": "app"
         },
