@@ -101,14 +101,19 @@ if [ -d "$DF_SRC/claude" ]; then
         # renamed on the way in: in the SoT it sits beside settings.base.json /
         # settings.{termux,desktop}.json and needs a distinguishing suffix,
         # while Claude Code will only read `.claude/settings.json`.
-        for _pair in agents:agents mcp-auth-headers.sh:mcp-auth-headers.sh mcp-connect.mjs:mcp-connect.mjs settings.project.json:settings.json; do
+        # skills/c3-infra and hooks/c3: cloud sessions do not install plugins
+        # but do load a repo's .claude/, so the c3-infra plugin's skill and
+        # guard hooks are copied there too (settings.project.json wires them).
+        for _pair in agents:agents mcp-auth-headers.sh:mcp-auth-headers.sh mcp-connect.mjs:mcp-connect.mjs settings.project.json:settings.json cloud-marketplace/c3-infra/skills/c3-infra:skills/c3-infra cloud-marketplace/c3-infra/hooks:hooks/c3; do
             _from="$CLAUDE_SOT/${_pair%%:*}"
             _to="$DF_SRC/claude/${_pair##*:}"
             if [ -d "$_from" ]; then
                 # Wiped then copied, like claude.nix does for agents/: for a
                 # directory that IS the whole semantics, a merge would leave a
                 # deleted agent behind forever.
-                rm -rf "$_to"; cp -a "$_from" "$_to"
+                rm -rf "$_to"; mkdir -p "$(dirname "$_to")"; cp -a "$_from" "$_to"
+                # plugin manifest, not a hook script: the repo wires hooks in settings.json
+                rm -f "$_to/hooks.json"
                 log "claude: ${_pair##*:}/ refreshed from the SoT ($(find "$_to" -type f | wc -l | tr -d ' ') files)"
             elif [ -f "$_from" ]; then
                 cmp -s "$_from" "$_to" 2>/dev/null || {
