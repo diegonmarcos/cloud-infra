@@ -1,0 +1,110 @@
+name: "Vault mTLS issue (fleet client CA + per-device .p12, sops-encrypted)"
+
+# #1117 / #1137. Generates, on an EPHEMERAL runner only:
+#   - the fleet client CA (ECDSA P-256, 5 years). Its KEY never leaves this job in plaintext;
+#   - one client certificate per device (90 days, EKU clientAuth, CN = device id) as a PKCS#12 with a random password.
+# Outputs, nothing else:
+#   1. PRIVATE repo diegonmarcos/cloud-me-data-pvt  vault-mtls/vault-mtls.sops.json : the CA key, CA cert, and each device
+#      .p12 (base64) + its password, the whole JSON sops-encrypted to the fleet age recipient (see .sops.yaml).
+#      Written with CLOUD_DATA_DEPLOY_KEY (the same write deploy key the health-report publisher uses).
+#   2. THIS public repo 1_cloud-configs/src/inputs/vault-client-ca.pem : the PUBLIC CA certificate only. The derive turns it
+#      into the trust anchor on the vault vhost (caddyfile.nix client_auth verify_if_given).
+# Nothing is printed (passwords and keys are ::add-mask::ed and never echoed), no artifact is uploaded, files live in a
+# 0700 tmpfs dir that is shredded at the end. Refuses to re-key an existing CA unless rotate=true.
+on:
+  workflow_dispatch:
+    inputs:
+      devices:
+        description: "comma-separated device ids to issue a certificate for"
+        required: false
+        default: "a37-phone,laptop"
+        type: string
+      rotate:
+        description: "true = replace an existing CA and every device certificate"
+        required: false
+        default: "false"
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vault-mtls-issue
+  cancel-in-progress: false
+
+jobs:
+  issue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUD_DATA_DEPLOY_KEY: ${{ secrets.CLOUD_DATA_DEPLOY_KEY }}
+      DEVICES: ${{ inputs.devices }}
+      ROTATE: ${{ inputs.rotate }}
+      AGE_RECIPIENT: age1u575hx8h4t5cgle2uznmyfy75e7cgd02h9t5dax506luz9e05vlqxtd7pq
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install sops
+        run: |
+          set -eu
+          curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+          sops --version >/dev/null
+      - name: Refuse to re-key without rotate
+        run: |
+          set -eu
+          printf '%s' "$DEVICES" | grep -Eq '^[a-z0-9][a-z0-9-]{0,30}(,[a-z0-9][a-z0-9-]{0,30})*$' || { echo "::error::devices must be comma-separated [a-z0-9-] ids"; exit 1; }
+          if [ -f 1_cloud-configs/src/inputs/vault-client-ca.pem ] && [ "$ROTATE" != "true" ]; then
+            echo "::error::a fleet client CA already exists; pass rotate=true to replace it and every device certificate"; exit 1
+          fi
+      - name: Generate CA + device certificates, encrypt, publish
+        run: |
+          set -eu
+          umask 077
+          W="$(mktemp -d -p /dev/shm)"; cd "$W"
+          trap 'find "$W" -type f -exec shred -u {} + 2>/dev/null; rm -rf "$W" ~/.ssh/id_deploy' EXIT
+          # ── CA (key stays in this directory, then only inside the sops file) ──
+          openssl ecparam -name prime256v1 -genkey -noout -out ca.key
+          openssl req -new -x509 -key ca.key -sha256 -days 1825 -subj "/O=diegonmarcos fleet/CN=vault-client-ca" \
+            -addext "basicConstraints=critical,CA:TRUE,pathlen:0" -addext "keyUsage=critical,keyCertSign,cRLSign" -out ca.pem
+          python3 - "$DEVICES" <<'PY'
+          import base64, json, os, secrets, subprocess, sys
+          devices = sys.argv[1].split(",")
+          out = {"ca_key_pem": open("ca.key").read(), "ca_cert_pem": open("ca.pem").read(),
+                 "issued": subprocess.check_output(["date", "-u", "+%FT%TZ"]).decode().strip(), "devices": {}}
+          for d in devices:
+              pw = secrets.token_urlsafe(24)
+              print("::add-mask::" + pw, flush=True)
+              subprocess.run(["openssl", "ecparam", "-name", "prime256v1", "-genkey", "-noout", "-out", d + ".key"], check=True)
+              subprocess.run(["openssl", "req", "-new", "-key", d + ".key", "-subj", "/O=diegonmarcos fleet/CN=" + d, "-out", d + ".csr"], check=True)
+              open(d + ".ext", "w").write("basicConstraints=CA:FALSE\nkeyUsage=digitalSignature\nextendedKeyUsage=clientAuth\n")
+              subprocess.run(["openssl", "x509", "-req", "-in", d + ".csr", "-CA", "ca.pem", "-CAkey", "ca.key", "-CAcreateserial",
+                              "-sha256", "-days", "90", "-extfile", d + ".ext", "-out", d + ".pem"], check=True, stderr=subprocess.DEVNULL)
+              subprocess.run(["openssl", "pkcs12", "-export", "-inkey", d + ".key", "-in", d + ".pem", "-certfile", "ca.pem",
+                              "-name", "vault-" + d, "-passout", "env:P12PW", "-out", d + ".p12"], check=True, env={**os.environ, "P12PW": pw})
+              out["devices"][d] = {"p12_b64": base64.b64encode(open(d + ".p12", "rb").read()).decode(), "p12_password": pw, "valid_days": 90}
+          json.dump(out, open("plain.json", "w"))
+          PY
+          sops --encrypt --age "$AGE_RECIPIENT" --input-type json --output-type json plain.json > vault-mtls.sops.json
+          grep -q '"sops"' vault-mtls.sops.json
+          if grep -q 'PRIVATE KEY' vault-mtls.sops.json; then echo "::error::plaintext key leaked into the sops file"; exit 1; fi
+          # ── private repo: encrypted bundle ──
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$CLOUD_DATA_DEPLOY_KEY" > ~/.ssh/id_deploy; chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan github.com >> ~/.ssh/known_hosts 2>/dev/null
+          GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes" git clone -q --depth 1 git@github.com:diegonmarcos/cloud-me-data-pvt.git "$W/pvt"
+          mkdir -p "$W/pvt/vault-mtls" && cp vault-mtls.sops.json "$W/pvt/vault-mtls/vault-mtls.sops.json"
+          printf 'Fleet client CA + per-device .p12 for the vault mTLS leg (#1117). sops-encrypted to the fleet age key; decrypt with `sops -d`.\nOwner steps: decrypt, pull devices.<id>.p12_b64 (base64) and p12_password, import the .p12 on the device (Android: Settings > Security > Install a certificate > VPN & app user cert), then in the vault app pick it under Client certificate (mTLS) > Choose system. Server URL: https://vault.diegonmarcos.com\n' > "$W/pvt/vault-mtls/README.txt"
+          ( cd "$W/pvt" && git config user.name "Claude" && git config user.email "noreply@anthropic.com" && git add vault-mtls \
+            && git commit -q -m "vault-mtls: fleet client CA + device certs (sops-encrypted)" \
+            && GIT_SSH_COMMAND="ssh -i $HOME/.ssh/id_deploy -o IdentitiesOnly=yes" git push -q origin HEAD )
+          # ── this public repo: the PUBLIC CA certificate only ──
+          cd "$GITHUB_WORKSPACE"
+          cp "$W/ca.pem" 1_cloud-configs/src/inputs/vault-client-ca.pem
+          grep -q 'PRIVATE KEY' 1_cloud-configs/src/inputs/vault-client-ca.pem && { echo "::error::private key in the public file"; exit 1; }
+          git config user.name "Claude"; git config user.email "noreply@anthropic.com"
+          git add 1_cloud-configs/src/inputs/vault-client-ca.pem
+          git commit -q -m "vault-mtls: publish PUBLIC fleet client CA certificate (#1117) [skip ci]"
+          git push -q origin HEAD:${{ github.ref_name }}
+          echo "issued for: $DEVICES; encrypted bundle pushed to cloud-me-data-pvt/vault-mtls; public CA cert committed."

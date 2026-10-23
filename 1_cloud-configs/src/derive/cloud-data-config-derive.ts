@@ -558,7 +558,32 @@ function deriveCaddy(c: any): DerivedFile[] {
       ...(proxy.identity ? { identity: proxy.identity } : {}),
       comment: svc.description,
     };
+    // client_cert (vault, #1117): the vhost also accepts a per-device mTLS client
+    // certificate (verify_if_given) as an alternative to mesh source for its wg gate.
+    // The trust anchor is the PUBLIC fleet client CA cert committed by the
+    // vault-mtls-issue workflow at src/inputs/vault-client-ca.pem; its CA KEY never
+    // leaves the sops-encrypted private repo. Without that file the route stays
+    // strictly mesh-only (fail closed).
+    if (proxy.client_cert) {
+      const caPem = resolve(ENGINE_DIR, "../inputs/vault-client-ca.pem");
+      if (existsSync(caPem)) {
+        const der = [...readFileSync(caPem, "utf-8").matchAll(/-----BEGIN CERTIFICATE-----([^-]+)-----END CERTIFICATE-----/g)]
+          .map((m) => m[1].replace(/\s+/g, ""));
+        if (der.length > 0) route.client_ca_der = der;
+      }
+    }
     routes.push(route);
+    // mesh_alias: a second vhost for the same upstream that is mesh-only, no client-cert
+    // path (the mesh-first URL the app uses, #1123).
+    if (proxy.mesh_alias) {
+      routes.push({
+        domain: proxy.mesh_alias,
+        ...(upstreamForCaddy ? { upstream: upstreamForCaddy } : {}),
+        ...(proxy.auth === "none" ? { auth: "none" } : {}),
+        wg_only: true,
+        comment: `${svc.description} (mesh-only name)`,
+      });
+    }
   }
   // introspect-proxy is caddy-internal (no external route — consumed by Caddy's forward_auth)
 
