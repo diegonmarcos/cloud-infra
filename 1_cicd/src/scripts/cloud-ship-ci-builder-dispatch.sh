@@ -367,6 +367,17 @@ fi
 # ── Per-service worker (runs in background) ──────────────────────
 RESULTS_DIR=$(mktemp -d)
 
+# Deployed-sha markers (cloud-ship-deployed-sha.sh): the last SUCCESSFULLY
+# deployed a_solutions commit per service, on the VM. Read once, used below to
+# retry a service the diff calls unchanged but whose last deploy failed.
+_DS_HELPER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/cloud-ship-deployed-sha.sh"
+_DEPLOY_HEAD="$(git -C "$REPO_ROOT/a_solutions" rev-parse HEAD 2>/dev/null || true)"
+_MARKERS=""
+if [ "$SHIP_VERB" != "ship-build" ] && [ -n "$_DEPLOY_HEAD" ]; then
+  _MARKERS="$(ssh $SSH_OPTS "$VM" 'cd ~/.ship-deployed 2>/dev/null && grep -r "" .' 2>/dev/null | sed 's|^\./||' || true)"
+fi
+export _DS_HELPER _DEPLOY_HEAD SSH_OPTS VM
+
 ship_one() {
   local dir="$1" name="$2"
   local log_file="$RESULTS_DIR/${name}.log"
@@ -387,6 +398,10 @@ ship_one() {
     if bash "$BUILD_SH" "$SHIP_VERB"; then
       echo "OK $name"
       echo "ok" > "$RESULTS_DIR/${name}.status"
+      # Record the deployed sha only after a green deploy, so a failure is retried.
+      if [ "$SHIP_VERB" != "ship-build" ] && [ -n "$_DEPLOY_HEAD" ]; then
+        ssh $SSH_OPTS "$VM" "mkdir -p ~/.ship-deployed && printf %s '$_DEPLOY_HEAD' > ~/.ship-deployed/$dir" 2>/dev/null || true
+      fi
     else
       echo "FAIL $name (exit $?)"
       echo "fail" > "$RESULTS_DIR/${name}.status"
@@ -415,6 +430,13 @@ while IFS='|' read -r dir name; do
   # actually runs, did not.
   _changed=0
   case " $CHANGED_DIRS " in *" $dir "*) _changed=1 ;; esac
+  if [ -n "$CHANGED_DIRS" ] && [ "$_changed" -eq 0 ] && [ -n "$_MARKERS" ]; then
+    _mk="$(bash "$_DS_HELPER" lookup "$_MARKERS" "$dir")"
+    if bash "$_DS_HELPER" retry "$REPO_ROOT/a_solutions" "$dir" "$_mk" "$_DEPLOY_HEAD" >/dev/null; then
+      echo "RETRY $name (changed since last deployed ${_mk:0:12}; last deploy did not succeed)"
+      _changed=1
+    fi
+  fi
   if [ -n "$CHANGED_DIRS" ] && [ "$_changed" -eq 0 ]; then
     echo "SKIP $name (unchanged)"
     echo "skip" > "$RESULTS_DIR/${name}.status"

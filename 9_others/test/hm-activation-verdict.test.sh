@@ -33,7 +33,7 @@ WF="${HM_WORKFLOW_FILE:-$REPO_ROOT/1_cicd/src/cicd/ship-home-manager.yml}"
 # launch 12:29:36 -> rc marker 13:33:35 = 64 min — plus the ~6 min of build,
 # push and preflight that run before it inside the same step. A deadline under
 # this re-creates #657 on the next slow ship.
-MEASURED_WORST_MIN=70
+MEASURED_WORST_MIN=52  # job capped at 60m (2026-10-23); slower activations are reported STILL RUNNING, not failed
 
 pass=0; fail=0
 ck() { if [ "$2" = "$3" ]; then pass=$((pass+1)); echo "  ok   $1"; \
