@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Long jobs must not starve deploys: every job of ship-reconcile and
 # ship-home-manager declares timeout-minutes <= 60 (ship-home-manager: <= 90, measured 64-70 min), and cgc-db-index jobs stay
-# within their own 300-minute budget. Checked on the source AND the deployed copy.
+# within 120 minutes (restore-all). Checked on the source AND the deployed copy.
 # Usage: bash 9_others/test/test_ship_long_jobs_bounded.sh
 set -eu
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 python3 - "$ROOT" <<'PY'
 import sys, yaml
 root = sys.argv[1]; fails = 0
-budget = {"ship-reconcile.yml": 60, "ship-home-manager.yml": 90, "cgc-db-index.yml": 300}
+budget = {"ship-reconcile.yml": 60, "ship-home-manager.yml": 90, "cgc-db-index.yml": 120}
 # ship-home-manager.yml: 90 (not 60) - real activations on the 1 GB VMs measured 64-70 min;
 # a 60m cap would kill legitimate deploys (see MEASURED_WORST_MIN in hm-activation-verdict.test.sh).
-# cgc-db-index.yml: only restore-all (its WG/deploy-facing job) is capped at 300; the
+# cgc-db-index.yml: only restore-all (its WG/deploy-facing job) is capped at 120 (#1061); the
 # index matrix holds no concurrency group and keeps its own longer ceiling.
 only = {"cgc-db-index.yml": {"restore-all"}}
 for base in ("1_cicd/src/cicd", ".github/workflows"):

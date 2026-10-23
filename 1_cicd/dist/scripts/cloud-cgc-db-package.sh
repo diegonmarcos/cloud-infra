@@ -332,6 +332,30 @@ use_github_token_push() { # $1=PKG (for messages) → rc 0 + PUSH_DOCKER_CONFIG 
   echo "[cgc-db] $1: push will be GITHUB_TOKEN-authenticated (throwaway DOCKER_CONFIG) so the package is created PUBLIC"
 }
 
+# gh_pkg_vis PKG -> stdout: visibility | absent | unknown. Retries ONLY the
+# transient failures (rate limit, 5xx, network): the 5000/hr GitHub token is
+# shared by every agent and workflow in the fleet, and one 403 used to turn a
+# healthy private package into "unknown", which verify_or_delete_repo_pkg then
+# DELETED (run 39752468596, cloud-data leg, #1061). 404 is a final answer.
+gh_pkg_vis() {
+  _gv_pkg="$1"; _gv_try=0; _gv_max="${CGC_GH_RETRY_MAX:-5}"; _gv_sleep="${CGC_GH_RETRY_SLEEP:-60}"
+  while :; do
+    _gv_err=$(mktemp)
+    if _gv_body=$(gh api "/user/packages/container/${_gv_pkg}" 2>"$_gv_err"); then
+      rm -f "$_gv_err"
+      _gv_v=$(printf '%s' "$_gv_body" | jq -r '.visibility // empty' 2>/dev/null)
+      [ -n "$_gv_v" ] || { _gv_v=$(printf '%s' "$_gv_body" | tr -d ' \n'); case "$_gv_v" in public|private|internal) ;; *) _gv_v=unknown ;; esac; }
+      printf '%s' "$_gv_v"; return 0
+    fi
+    if grep -qi 'HTTP 404\|not found' "$_gv_err" 2>/dev/null; then rm -f "$_gv_err"; printf 'absent'; return 0; fi
+    rm -f "$_gv_err"
+    _gv_try=$((_gv_try + 1))
+    if [ "$_gv_try" -ge "$_gv_max" ]; then printf 'unknown'; return 0; fi
+    echo "::warning::[cgc-db] $_gv_pkg: package API failed (rate limit or network), retry $_gv_try/$_gv_max in $((_gv_sleep * _gv_try))s" >&2
+    sleep $((_gv_sleep * _gv_try))
+  done
+}
+
 gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHOLE SCRIPT otherwise
   _gp_pkg="$1"; _gp_local="$2"
   resolve_repo_desired_visibility "$_gp_pkg" "$_gp_local"
@@ -342,18 +366,7 @@ gate_repo_push() { # $1=PKG $2=LOCAL_NAME → rc 0 = push allowed; exits the WHO
   # which matched no arm below and took the refuse-loudly default. Result: both
   # private repos went red on every run with "already exists as {...404...}" — a
   # package that did not exist at all. Classify explicitly instead.
-  _gp_err=$(mktemp)
-  if _gp_body=$(gh api "/user/packages/container/${_gp_pkg}" 2>"$_gp_err"); then
-    _gp_vis=$(printf '%s' "$_gp_body" | jq -r '.visibility // empty' 2>/dev/null)
-    [ -n "$_gp_vis" ] || _gp_vis=unknown
-  elif grep -qi 'HTTP 404\|not found' "$_gp_err" 2>/dev/null; then
-    _gp_vis=absent
-  else
-    # Rate limit, network, bad token: NOT absent. Treating an unreachable API as
-    # "no package here" would push private data at a package we never looked at.
-    _gp_vis=unknown
-  fi
-  rm -f "$_gp_err"
+  _gp_vis=$(gh_pkg_vis "$_gp_pkg")
   if [ "$_rdv_desired" = "public" ]; then
     case "$_gp_vis" in
       public)
@@ -438,7 +451,7 @@ verify_or_delete_repo_pkg() { # $1=PKG $2=LOCAL_NAME → rc 0 ok/skip; exits the
     # cgc-db-cloud-u-containers + -cloud-infra-desktop starved octocode_db for
     # weeks). No API can SET visibility (PUT/PATCH 404) — fail LOUDLY with the
     # two manual fixes instead of skipping the check.
-    _vd_vis=$(gh api "/user/packages/container/${_vd_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
+    _vd_vis=$(gh_pkg_vis "$_vd_pkg")
     if [ "$_vd_vis" = "private" ]; then
       echo "::error::[cgc-db] $_vd_pkg is PRIVATE but repo diegonmarcos/${_rdv_remote:-?} is PUBLIC — the anonymous pub restore cannot pull it, so this repo will be MISSING from the public octocode volume. Fix: flip the package public in the GitHub UI (packages → $_vd_pkg → settings → change visibility), or delete it and re-run packaging (recreated born-public via the source label)."
       exit 1
@@ -446,10 +459,18 @@ verify_or_delete_repo_pkg() { # $1=PKG $2=LOCAL_NAME → rc 0 ok/skip; exits the
     echo "[cgc-db] $_vd_pkg: repo diegonmarcos/${_rdv_remote:-?} is public, package $_vd_vis — ok"
     return 0
   fi
-  _vd_vis=$(gh api "/user/packages/container/${_vd_pkg}" --jq '.visibility' 2>/dev/null || echo unknown)
+  _vd_vis=$(gh_pkg_vis "$_vd_pkg")
   if [ "$_vd_vis" = "private" ]; then
     echo "[cgc-db] $_vd_pkg visibility=private (correct — repo diegonmarcos/${_rdv_remote:-unresolved} is private or undetermined)"
     return 0
+  fi
+  if [ "$_vd_vis" = "unknown" ]; then
+    # The visibility could not be read even after retries (rate limit/network).
+    # gate_repo_push proved the package private or absent before this push and
+    # a push preserves visibility, so an unreadable answer is NOT evidence of a
+    # leak: never delete on it. Fail so the run is re-run, loudly.
+    echo "::error::[cgc-db] $_vd_pkg: visibility unreadable after retries (GitHub API rate limit or network); not deleting on an unknown answer - re-run once the API recovers"
+    exit 1
   fi
   echo "::error::[cgc-db] $_vd_pkg is $_vd_vis but must be private (repo diegonmarcos/${_rdv_remote:-unresolved} is private or undetermined) — GitHub's package API cannot SET visibility (no PUT/PATCH endpoint), deleting instead of leaving private source exposed"
   gh api --method DELETE "/user/packages/container/${_vd_pkg}" >/dev/null 2>&1 \
@@ -604,7 +625,7 @@ case "$MODE" in
   base)
     build_base_tar "$SRC" "$WORK/ctx/octocode-db.tar"
     DESC="cloud-cgc-pub-mcp octocode DB BASE — octocode home ROOT state (config.toml + fastembed/ + sentencetransformer/ model caches), no project data. Consumers restore this ONCE per octocode home, then layer each cgc-db-<repo>:latest on top via cp -a. Embedding models must stay pinned identical everywhere — a mismatch silently drop_tables a repo."
-    SRC_URL="https://github.com/diegonmarcos/cloud-infra"
+    SRC_URL="https://github.com/diegonmarcos/cloud-t-infra"
     ;;
   repo)
     # BEFORE the tar+build, not just before the push: if this repo may not be
@@ -622,7 +643,7 @@ case "$MODE" in
   monolith|*)
     tar cf "$WORK/ctx/octocode-db.tar" -C "$SRC" .
     DESC="cloud-cgc-pub-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
-    SRC_URL="https://github.com/diegonmarcos/cloud-infra"
+    SRC_URL="https://github.com/diegonmarcos/cloud-t-infra"
     ;;
 esac
 [ -s "$WORK/ctx/octocode-db.tar" ] || { echo "::error::empty DB tar from $SRC (mode=$MODE)"; exit 1; }
