@@ -33,11 +33,12 @@ jobs:
           PW="$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')"; echo "::add-mask::$PW"
           RK="$(sops -d --extract '["RESEND_API_KEY"]' infra-api_cloud-mail-mcp/src/secrets.yaml)"; echo "::add-mask::$RK"
           [ -n "$PW" ] && [ -n "$RK" ]
+          j(){ python3 -c 'import json,sys;sys.stdout.write(json.dumps(sys.stdin.read()))'; }
           B=infra-sec_auth-broker/src/secrets.yaml; S=user-comm_tools-stalwart/src/secrets.yaml
-          printf '%s' 'noreply-auth@diegonmarcos.com' | sops set --value-stdin "$B" '["AUTH_BROKER_SMTP_USER"]'
-          printf '%s' "$PW" | sops set --value-stdin "$B" '["AUTH_BROKER_SMTP_PASSWORD"]'
-          printf '%s' "$RK" | sops set --value-stdin "$B" '["AUTH_BROKER_RESEND_API_KEY"]'
-          printf '%s' "$PW" | sops set --value-stdin "$S" '["AUTH_NOREPLY_PASSWORD"]'
+          printf '%s' 'noreply-auth@diegonmarcos.com' | j | sops set --value-stdin "$B" '["AUTH_BROKER_SMTP_USER"]'
+          printf '%s' "$PW" | j | sops set --value-stdin "$B" '["AUTH_BROKER_SMTP_PASSWORD"]'
+          printf '%s' "$RK" | j | sops set --value-stdin "$B" '["AUTH_BROKER_RESEND_API_KEY"]'
+          printf '%s' "$PW" | j | sops set --value-stdin "$S" '["AUTH_NOREPLY_PASSWORD"]'
           for f in "$B" "$S"; do
             if grep -qF -- "$PW" "$f" || grep -qF -- "$RK" "$f"; then echo "::error::plaintext leaked into $f"; exit 1; fi
             sops -d "$f" >/dev/null
