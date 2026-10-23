@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 3014,
+    "files": 3017,
     "by_lang": {
       "sh": 164,
       "nix": 179,
-      "js": 88,
+      "js": 89,
       "py": 875,
-      "ts": 1172,
+      "ts": 1174,
       "rust": 536
     },
     "by_role": {
       "shell": 154,
       "nix-module": 19,
-      "file": 335,
+      "file": 336,
       "python": 861,
-      "module": 719,
+      "module": 720,
       "script": 9,
       "flake": 81,
       "compose": 79,
       "entrypoint": 51,
-      "mcp-tool": 117,
+      "mcp-tool": 118,
       "workflow-dag": 5,
       "rust-module": 531,
       "hook": 53
@@ -4503,6 +4503,7 @@
         "./tools/frontend.js",
         "./tools/telegram.js",
         "./tools/security.js",
+        "./tools/plugin.js",
         "./resources/index.js"
       ],
       "symbols": [
@@ -4543,6 +4544,37 @@
       ],
       "symbols": [
         "main()"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/plugin-gh.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "confine",
+        "scanContent",
+        "buildPutPayload",
+        "pluginList",
+        "pluginRead",
+        "pluginWrite",
+        "pluginDeploy",
+        "REPO",
+        "PREFIX",
+        "MAX_WRITE_BYTES",
+        "MAX_READ_BYTES",
+        "Fetch"
+      ],
+      "imports": [],
+      "symbols": [
+        "confine(input: unknown)",
+        "scanContent(text: string)",
+        "buildPutPayload(message: string, content: string, sha: string)",
+        "headers(token?: string)",
+        "call(f: Fetch, method: string, url: string, token?: string, body?: unknown)",
+        "pluginList(f: Fetch, path: unknown = PREFIX, token?: string)",
+        "pluginRead(f: Fetch, path: unknown, token?: string)",
+        "pluginWrite(f: Fetch, a: { path: unknown; content: string; sha: string; message: string }, token?: string)",
+        "pluginDeploy(f: Fetch, token?: string)"
       ]
     },
     {
@@ -4996,6 +5028,22 @@
         "validatePath(path: string)",
         "formatControl(result: { ok: boolean; message: string })",
         "registerOperationsTools(server: McpServer)"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/mcp/tools/plugin.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "registerPluginTools"
+      ],
+      "imports": [
+        "@modelcontextprotocol/sdk/server/mcp.js",
+        "zod",
+        "../plugin-gh.js"
+      ],
+      "symbols": [
+        "registerPluginTools(server: McpServer)"
       ]
     },
     {
@@ -6535,6 +6583,18 @@
         "node:assert/strict",
         "node:fs",
         "./shared/libs/jev-flake.ts"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-plugin-gh.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "./mcp/plugin-gh.ts"
       ],
       "symbols": []
     },
