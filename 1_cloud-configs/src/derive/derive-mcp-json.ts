@@ -244,6 +244,15 @@ function writeProjectMcp(servers: Record<string, Server>): void {
     if (!meshOnly.has(n)) args.push('--public', pub);
     project[n] = { type: 'stdio', command: 'node', args };
   }
+  // Tiers (mcp-policy.json .tiers): only `default` servers go in a repo's
+  // .mcp.json so a plain session stays under the MCP token budget; every other
+  // server (including any not tiered at all) goes in the opt-in catalog, which
+  // deploy-dotfiles merges per repo from .claude/mcp-optin.json.
+  let tiers: any = null;
+  try { tiers = JSON.parse(fs.readFileSync(POLICY_FILE, 'utf8')).tiers; } catch { /* no policy: ship everything */ }
+  const isDefault = (n: string) => !tiers || (tiers.default ?? []).includes(n);
+  const optin: Record<string, any> = {};
+  for (const n of Object.keys(project)) if (!isDefault(n)) { optin[n] = project[n]; delete project[n]; }
   const out = {
     _warning: 'GENERATED — DO NOT EDIT. Derived by 1_cloud-configs/src/derive/derive-mcp-json.ts (writeProjectMcp) from the same inputs as dist/mcp.json.',
     _schema: 'mcp-servers/v1',
@@ -251,6 +260,11 @@ function writeProjectMcp(servers: Record<string, Server>): void {
     mcpServers: project,
   };
   fs.writeFileSync(path.join(DIST_DIR, 'mcp.project.json'), JSON.stringify(out, null, 2) + '\n');
+  fs.writeFileSync(path.join(DIST_DIR, 'mcp.optin.json'), JSON.stringify({
+    _warning: 'GENERATED — DO NOT EDIT. Opt-in tier catalog (mcp-policy.json .tiers), same entry shape as mcp.project.json. A repo opts in by listing names in .claude/mcp-optin.json.',
+    _schema: 'mcp-servers/v1',
+    mcpServers: optin,
+  }, null, 2) + '\n');
   console.log(`derive-mcp-json: ${Object.keys(project).length} server(s) → dist/mcp.project.json`);
 }
 
