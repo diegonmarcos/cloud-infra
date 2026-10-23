@@ -1,0 +1,51 @@
+name: "tmp eotp provision (#1118, one-shot)"
+# One-shot: generate the noreply-auth SMTP password and copy the Resend key into the auth-broker and
+# Stalwart sops files of cloud-u-containers. Only the ENCRYPTED files leave the job (1-day artifact).
+# Delete this workflow after the run.
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    env:
+      SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: diegonmarcos/cloud-u-containers
+          path: t
+          sparse-checkout: |
+            infra-sec_auth-broker/src
+            user-comm_tools-stalwart/src
+            infra-api_cloud-mail-mcp/src
+      - name: Install sops
+        run: |
+          set -eu
+          curl -fsSL -o /tmp/sops https://github.com/getsops/sops/releases/download/v3.11.0/sops-v3.11.0.linux.amd64
+          sudo install -m 0755 /tmp/sops /usr/local/bin/sops
+      - name: Provision
+        run: |
+          set -eu
+          mkdir -p ~/.config/sops/age && umask 077 && printf '%s\n' "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+          export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
+          cd t
+          PW="$(python3 -c 'import secrets;print(secrets.token_urlsafe(32))')"; echo "::add-mask::$PW"
+          RK="$(sops -d --extract '["RESEND_API_KEY"]' infra-api_cloud-mail-mcp/src/secrets.yaml)"; echo "::add-mask::$RK"
+          [ -n "$PW" ] && [ -n "$RK" ]
+          B=infra-sec_auth-broker/src/secrets.yaml; S=user-comm_tools-stalwart/src/secrets.yaml
+          printf '%s' 'noreply-auth@diegonmarcos.com' | sops set --value-stdin "$B" '["AUTH_BROKER_SMTP_USER"]'
+          printf '%s' "$PW" | sops set --value-stdin "$B" '["AUTH_BROKER_SMTP_PASSWORD"]'
+          printf '%s' "$RK" | sops set --value-stdin "$B" '["AUTH_BROKER_RESEND_API_KEY"]'
+          printf '%s' "$PW" | sops set --value-stdin "$S" '["AUTH_NOREPLY_PASSWORD"]'
+          for f in "$B" "$S"; do
+            if grep -qF -- "$PW" "$f" || grep -qF -- "$RK" "$f"; then echo "::error::plaintext leaked into $f"; exit 1; fi
+            sops -d "$f" >/dev/null
+          done
+          mkdir -p ../out/infra-sec_auth-broker/src ../out/user-comm_tools-stalwart/src
+          cp "$B" ../out/infra-sec_auth-broker/src/; cp "$S" ../out/user-comm_tools-stalwart/src/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eotp-secrets
+          path: out
+          retention-days: 1
