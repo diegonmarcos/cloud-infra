@@ -167,7 +167,7 @@ jobs:
           # Mount the runner's checkout AS the container's cloud repo so the
           # derive writes the regenerated dist/ INTO the workspace the commit
           # step stages. Without this, gen-configs runs on the image-baked
-          # /root/git/cloud-infra and its output is discarded with the --rm container
+          # /root/git/cloud-t-infra and its output is discarded with the --rm container
           # → the commit step saw "nothing to commit", so newly-declared
           # cloud-data (e.g. wg-public clients + vault keys) never reached origin.
           # See a0_tasks/PLAN_gen-configs-dist-propagation-fix.md.
@@ -179,7 +179,7 @@ jobs:
             -v "$HOME/git/cloud-vault:/root/git/cloud-vault:ro" \
             -v "$(dirname "$GITHUB_WORKSPACE")/cloud-u-linux:/root/git/cloud-u-linux:ro" \
             -v "$(dirname "$GITHUB_WORKSPACE")/cloud-u-android:/root/git/cloud-u-android:ro" \
-            -v "$GITHUB_WORKSPACE:/root/git/cloud-infra" \
+            -v "$GITHUB_WORKSPACE:/root/git/cloud-t-infra" \
             -e CLOUD_DATA_DEPLOY_KEY \
             cloud-builder gen-configs
           # The container runs as root inside the mounted workspace; reclaim
