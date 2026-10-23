@@ -1028,12 +1028,6 @@
         "type": "A",
         "value": "10.0.0.6",
         "service": "send"
-      },
-      {
-        "name": "vaultwarden.app",
-        "type": "A",
-        "value": "10.0.0.6",
-        "service": "vaultwarden"
       }
     ],
     "cloudflare": []
@@ -7071,7 +7065,6 @@
           "image": "vaultwarden/server:latest",
           "port": 8880,
           "port_env": "ROCKET_PORT",
-          "dns": "vaultwarden.app",
           "public": true,
           "proxy": {
             "domain": "vault.diegonmarcos.com",
@@ -7106,9 +7099,7 @@
       "all_ports": [
         "8880"
       ],
-      "all_dns": [
-        "vaultwarden.app"
-      ],
+      "all_dns": [],
       "compose": {
         "containers": [],
         "ports": [],
@@ -7118,7 +7109,8 @@
         "primary": {
           "domain": "vault.diegonmarcos.com",
           "auth": "none",
-          "wg_only": true
+          "wg_only": true,
+          "client_cert": true
         }
       },
       "declared_ports": {

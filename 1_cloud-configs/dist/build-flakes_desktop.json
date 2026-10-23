@@ -6650,6 +6650,10 @@
           "cmd": "bash test/test-hub-resource-budget.sh",
           "cwd": "src"
         },
+        "vault-mtls": {
+          "cmd": "bash test/test-vault-mtls.sh",
+          "cwd": "src"
+        },
         "fallback-redirect": {
           "cmd": "bash test/test-fallback-redirect.sh",
           "cwd": "src"
@@ -11454,7 +11458,6 @@
           "image": "vaultwarden/server:latest",
           "port": 8880,
           "port_env": "ROCKET_PORT",
-          "dns": "vaultwarden.app",
           "public": true,
           "proxy": {
             "domain": "vault.diegonmarcos.com",
@@ -11489,9 +11492,7 @@
       "all_ports": [
         "8880"
       ],
-      "all_dns": [
-        "vaultwarden.app"
-      ],
+      "all_dns": [],
       "compose": {
         "containers": [],
         "ports": [],
@@ -11501,7 +11502,8 @@
         "primary": {
           "domain": "vault.diegonmarcos.com",
           "auth": "none",
-          "wg_only": true
+          "wg_only": true,
+          "client_cert": true
         }
       },
       "declared_ports": {
@@ -11522,6 +11524,12 @@
         ]
       },
       "upstream_image": "vaultwarden/server:latest",
+      "tests": {
+        "cloud-vault-brand": {
+          "cmd": "bash test-cloud-vault-brand.sh",
+          "cwd": "src"
+        }
+      },
       "timezone": "Europe/Madrid",
       "resources": {
         "mem_reservation": "64M"
