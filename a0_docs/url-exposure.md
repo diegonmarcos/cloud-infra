@@ -16,12 +16,18 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 |---|---|---|
 | auth.diegonmarcos.com | whole host | The IdP itself: login portal and OIDC endpoints (authorize / token / JWKS / discovery) cannot require the token or session they exist to issue. |
 | linktree.diegonmarcos.com | whole host | Owner decision 2026-10-16: the public link page is deliberately anonymous. |
+| c3-pub.diegonmarcos.com | whole host | Routing tier pub (#1104): Cloudflare-proxied, explicit unauthenticated allowlist only (_shared/fleet-addressing.json tiers.pub); every other path answers 404 and no upstream is reachable beyond the listed paths. |
 | mcp.diegonmarcos.com | paths: `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` | Owner decision 2026-10-16 + item 5 (MCP auth discovery): a claude.ai MCP connector completes the OAuth sign-in BEFORE it holds a token -- discovery metadata (RFC 9728 / RFC 8414, incl. per-resource variants), Dynamic Client Registration (/register), /authorize, /token and the callback. The tool endpoints (/<route>/mcp) stay Bearer-protected; a request to any of these paths is answered by the MCP side itself. |
 | analytics.diegonmarcos.com | paths: `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` | Owner decision 2026-10-16: the tracker script and its event-collection endpoint are loaded by anonymous visitors of the public websites (umami script.js + /api/send; Matomo's tracker equivalents). Dashboards, the reporting APIs (matomo api.php, umami /api/*) and OpenObserve stay protected. |
 | matrix.diegonmarcos.com | paths: `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` | Owner decision 2026-10-16: other homeservers federate and discover this one without credentials. Owner decision 22: the Matrix client API (/_matrix/client/*) is open for Element web and token-less clients -- the homeserver does its own auth. Media and everything else stays protected. |
 | chat.diegonmarcos.com | paths: `/api/v4/*` | Owner decision 22: Mattermost mobile login and API -- Mattermost does its own authentication on /api/v4/*. The web UI stays gated. |
 | git.diegonmarcos.com | paths: `/*/*/info/refs` `/*/*/git-upload-pack` `/*/*/git-receive-pack` `/api/v1/*` | Owner decision 22: git-over-HTTPS (smart HTTP) with Basic auth and the Gitea API -- Gitea does its own authentication; git clients cannot do a cookie/bearer handshake. The web UI stays gated. |
-| diegonmarcos.com | paths: `/.well-known/openpgpkey/*` `/.well-known/jmap` | Owner decision 22: WKD (OpenPGP key discovery, public keys by design) and the apex /.well-known/jmap autoconfig redirect (redirect only, no content). |
+| diegonmarcos.com | whole host | Routing tier public HTML (#1104, owner ruling 2026-10-22): the apex and www are the ONLY unauthenticated public hosts. Static landing page plus WKD (OpenPGP public keys by design) and the /.well-known/jmap autoconfig redirect. |
+| www.diegonmarcos.com | whole host | Routing tier public HTML (#1104, owner ruling 2026-10-22): www and the apex are the ONLY unauthenticated public hosts; static landing page. |
+| nexus.diegonmarcos.com | whole host | Owner ruling 2026-10-22 (#1104): GitHub Pages custom domain, explicit public HTML host without auth; the content is public on github.io anyway. |
+| suite.diegonmarcos.com | whole host | Owner ruling 2026-10-22 (#1104): GitHub Pages custom domain, explicit public HTML host without auth; the content is public on github.io anyway. |
+| maps.diegonmarcos.com | whole host | Owner ruling 2026-10-22 (#1104): GitHub Pages custom domain, explicit public HTML host without auth; the content is public on github.io anyway. |
+| *.diegonmarcos.com | whole host | Routing tier (#1104, owner ruling 2026-10-22): there is NO public wildcard route. This catch-all serves nothing: an undeclared subdomain is redirected to the apex and reaches no upstream. Guard: _shared/test-fleet-addressing.mjs. |
 | mta-sts.diegonmarcos.com | paths: `/.well-known/mta-sts.txt` | Owner decision 22: MTA-STS policy (RFC 8461) is fetched anonymously by sending MTAs. |
 | vpn.diegonmarcos.com | WebSocket upgrade requests only (`Upgrade: websocket`) | Owner decision 2026-10-16: the wstunnel client opens a WebSocket upgrade to a secret path prefix and cannot do a cookie/bearer handshake. The exemption is `Upgrade: websocket` only; wstunnel itself rejects every upgrade whose path is not its secret --http-upgrade-path-prefix, and every non-upgrade request to vpn. is gated. |
 | every host | acme-http-01: `/.well-known/acme-challenge/*` | Owner decision 2026-10-16: ACME http-01 validation requests come from the CA and cannot carry a token. Exempted on EVERY host (the path is excluded from the gate). Caddy core answers a live token before any route runs; this fleet itself issues via DNS-01. |
@@ -32,92 +38,342 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 
 | Host | Tier | Current auth | Exempt (tier c) paths |
 |---|---|---|---|
-| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/openpgpkey/*` `/.well-known/jmap` |
-| maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| c3-pvt.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` |
 | mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` |
-| nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
 | auth.diegonmarcos.com, account.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| diegonmarcos.com, www.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| maps.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| nexus.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| suite.diegonmarcos.com | c | none (anonymous) | `whole host` |
 
 ## Hub (caddy, gcp-proxy): sites
 
 | Host | Tier | Current auth | Exempt (tier c) paths |
 |---|---|---|---|
 | `:2020` | a (loopback / mesh-bound listener) | not reachable off-mesh | - |
+| authelia-http-9091.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| authelia.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-authelia.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-authelia.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-calendar-radicale.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-calendar-radicale.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-cgc-pub-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-cgc-pub-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-cgc-pvt-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-drive-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-drive-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-infra-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-infra-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-mail-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-mail-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-mattermost-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-mattermost-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-me-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-me-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-notes-sync.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-notes-sync.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-notes-web.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-notes-web.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-services-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-services-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-spec.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-spec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-superapp-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-superapp-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-vault-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-cloud-webmail.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-cloud-webmail.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-contacts-radicale.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-contacts-radicale.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-continuwuity.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-continuwuity.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-crowdsec.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-crowdsec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-dagu.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-dagu.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-dbgate.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-dbgate.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-etherpad-app.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-etherpad-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-filebrowser-app.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-filebrowser-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-fin-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-fin-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-git-proxy-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-git-proxy-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-gitea.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-gitea.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-google-personal-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-google-personal-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-google-workspace-mcp.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-google-workspace-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-grist-app.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-grist-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-hedgedoc-app.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-hedgedoc-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-infra-api-http-8081.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-infra-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-infra-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-infra-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-kg-store-pub.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-kg-store-pub.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-kg-store.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-kg-store.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-matomo-hybrid.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-matomo-hybrid.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-matrix-element.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-matrix-element.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-mattermost.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-mattermost.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-news-gdelt.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-news-gdelt.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-ntfy.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-ntfy.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-openobserve.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-openobserve.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-photoprism-app.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-photoprism-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-playlist-syncer.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-playlist-syncer.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-public-api-http-8087.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-public-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-public-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-scrappers-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-scrappers-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-send-app.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-send-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-services-api-http-8082.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-services-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-services-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-services-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-spec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-tokens-api.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-tokens-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-umami.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-umami.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-vaultwarden.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-vaultwarden.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | c3-wireguard-mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| c3-wireguard-mesh.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| caddy-https-443.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| caddy-public-https-443.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| caddy-public.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| caddy.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | cal.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| calendar-radicale-http-5232.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| calendar-radicale.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| calendar.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| chat-mattermost.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-cgc-pub-mcp-http-3105.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-cgc-pub-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-chat.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-contacts.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-drive-mcp-http-3109.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-drive-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-gallery.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-infra-mcp-http-3100.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-infra-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-mail-mcp-http-3103.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-mail-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-mail.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-matrix.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-mattermost-mcp-http-3102.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-mattermost-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-me-api-http-8124.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-me-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-notes-sync-http-8098.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-notes-sync.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-notes-web-http-8097.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-notes-web.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-services-mcp-http-3101.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-services-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-spec-http-3080.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-spec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-superapp-mcp-http-3110.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-superapp-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-tasks.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-webmail-http-3000.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud-webmail.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.authelia.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.c3-infra-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.c3-infra-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.c3-public-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.c3-services-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.c3-services-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.c3-spec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.caddy-public.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.caddy.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.calendar-radicale.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.calendar.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.chat-mattermost.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-cgc-pub-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-drive-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-infra-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-mail-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-mattermost-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-me-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-notes-sync.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-notes-web.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-services-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-spec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-superapp-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.cloud-webmail.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.code-server.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.contacts-radicale.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.contacts.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.continuwuity.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.crowdsec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.dagu.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.dbgate.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.drive-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.etherpad-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.etherpad.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.filebrowser-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.filebrowser.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.fin-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.g-personal-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.g-workspace-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.git-proxy-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.gitea.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.google-personal-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.google-workspace-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.grist-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.grist.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.hedgedoc-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.hedgedoc.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.kg-store-pub.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.kg-store.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.mail-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.matomo-hybrid.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.matomo.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.matrix-continuwuity.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.matrix-element.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.mattermost-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.mattermost.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.news-gdelt.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.ntfy.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.openobserve.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.photoprism-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.photoprism.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.playlist-syncer.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.scrappers-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.send-app.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.send.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.stalwart.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.superapp-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.tokens-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.umami.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.unbound-dns64.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.vaultwarden.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.webmail.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| cloud.wireguard-mesh.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| code-server-https-8443.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| code-server.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| contacts-radicale-http-5233.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| contacts-radicale.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | contacts.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| contacts.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| continuwuity-http-8008.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| crowdsec-http-8088.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | crowdsec.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| crowdsec.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| dagu-http-8070.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| dagu.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | db.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| dbgate-http-8086.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| dbgate.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| drive-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| etherpad.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| etherpad_app-http-3012.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| filebrowser.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| filebrowser_app-http-3015.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| fin-api-http-8340.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| fin-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| g-personal-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| g-workspace-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| git-proxy-api-http-8123.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| git-proxy-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | git.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| gitea-http-3002.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| gitea.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| google-personal-mcp-http-3106.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| google-personal-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| google-workspace-mcp-http-3104.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| google-workspace-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| grist.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| grist_app-http-3011.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| hedgedoc.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| hedgedoc_app-http-3018.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | `http://` | a (loopback / mesh-bound listener) | not reachable off-mesh | - |
 | ide.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| kg-store-http-8001.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| kg-store-pub-http-8002.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| kg-store-pub.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| kg-store.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | languagetool.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| mail-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| matomo-hybrid-http-8080.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| matomo.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| matrix-continuwuity.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| matrix-element-http-8083.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| matrix-element.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| mattermost-http-8065.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| mattermost-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| mattermost.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | messenger.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| news-gdelt-http-3019.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| news-gdelt.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | notes-sync.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | notes.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| ntfy-http-8090.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| ntfy.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| openobserve-http-5080.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| openobserve.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| photoprism.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| photoprism_app-http-3013.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | photos.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| playlist-syncer-http-8090.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| playlist-syncer.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | proxy.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | rss.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| s3-backups-binaries.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| s3-backups-db.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| s3-backups-media.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| s3-backups-nonbin.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| s3-photos.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| scrappers-api-http-3020.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| scrappers-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | send.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| send.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| send_app-http-3016.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | sheets.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| stalwart-http-2080.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| stalwart-https-2443.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| stalwart-sorter-null.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| stalwart.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| superapp-mcp.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| tokens-api-http-4184.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| tokens-api.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| umami-http-3006.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| umami.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| unbound-dns64.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | vault.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| vaultwarden-http-8880.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| vaultwarden.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | webmail.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| webmail.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| wireguard-mesh-http-8084.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
+| wireguard-mesh.mesh.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
 | workflows.diegonmarcos.com | a | mesh only (403 off-mesh) | - |
-| *.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | analytics.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` |
 | analytics.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/umami/script.js` `/umami/api/send` `/matomo/matomo.js` `/matomo/piwik.js` `/matomo/matomo.php` `/matomo/piwik.php` `/matomo/js/*` |
 | api.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | app.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
+| c3-pvt.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | chat.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | `/api/v4/*` |
 | cloud-account.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud-browser.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
@@ -154,21 +410,23 @@ Owner rule (2026-10-16): **PUBLIC URL = fleet Bearer OR Authelia session cookie.
 | cloud-wallet.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud-writer.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | cloud.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
-| diegonmarcos.com, www.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/openpgpkey/*` `/.well-known/jmap` |
+| fin-api.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | jmap.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
 | mail.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | mails.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
-| maps.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | matrix.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/_matrix/federation/*` `/_matrix/key/*` `/.well-known/matrix/*` `/_matrix/client/*` |
 | mcp.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust | `/.well-known/oauth-protected-resource*` `/.well-known/oauth-authorization-server*` `/.well-known/openid-configuration*` `/register` `/authorize` `/token` `/callback` `/oauth/*` `/*/.well-known/oauth-protected-resource*` `/*/.well-known/oauth-authorization-server*` `/*/register` `/*/authorize` `/*/token` `/*/callback` |
 | mta-sts.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | `/.well-known/mta-sts.txt` |
-| nexus.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | playlist.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- enforced for non-mesh sources; mesh peers keep WG trust; plus mesh guard on the rest | - |
-| suite.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session | - |
 | vpn.diegonmarcos.com | b | Bearer (fleet token, introspect-proxy; `Authorization` or `X-Fleet-Authorization`) OR Authelia session -- except `Upgrade: websocket` | - |
+| *.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | auth.diegonmarcos.com, account.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| c3-pub.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| diegonmarcos.com, www.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | linktree.diegonmarcos.com | c | none (anonymous) | `whole host` |
-| 229 x `*.app` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
+| maps.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| nexus.diegonmarcos.com | c | none (anonymous) | `whole host` |
+| suite.diegonmarcos.com | c | none (anonymous) | `whole host` |
 | 13 x `*.db` names | a | mesh only (`@not_mesh` 403; edge L4 forwards the SNI but the hub refuses non-mesh sources) | - |
 
 ## Routes inside a host
@@ -229,8 +487,6 @@ A tier-b host's gate runs before any of these; the inner column is the *addition
 | analytics.diegonmarcos.com | `/matomo/piwik.php` | c | declared public-open |
 | analytics.diegonmarcos.com | `/matomo/js/*` | c | declared public-open |
 | chat.diegonmarcos.com | `/api/v4/*` | c | declared public-open |
-| diegonmarcos.com | `/.well-known/openpgpkey/*` | c | declared public-open |
-| diegonmarcos.com | `/.well-known/jmap` | c | declared public-open |
 | git.diegonmarcos.com | `/*/*/info/refs` | c | declared public-open |
 | git.diegonmarcos.com | `/*/*/git-upload-pack` | c | declared public-open |
 | git.diegonmarcos.com | `/*/*/git-receive-pack` | c | declared public-open |

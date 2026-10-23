@@ -67,11 +67,11 @@ def parse_sites(text):
                 in_global = True
                 depth += delta
                 continue
-            if s.endswith("{") and not s.startswith("("):
+            if s.endswith("{") and not s.startswith(("(", "&(")):
                 addr = s[:-1].strip()
                 cur = {"addrs": [a.strip() for a in re.split(r",\s*|\s+", addr) if a.strip()],
                        "raw_addr": addr, "lines": []}
-            elif s.startswith("(") and s.endswith("{"):
+            elif s.startswith(("(", "&(")) and s.endswith("{"):
                 cur = {"snippet": s, "lines": []}
         elif cur is not None:
             cur["lines"].append((d_before, s))
