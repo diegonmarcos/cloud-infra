@@ -1,11 +1,11 @@
 // preview-app-urls.ts — Strict port-declaration preview.
 //
 // For each container across every build.json, synthesize:
-//   {container_name}.app                              — ALWAYS an HTTPS redirect to the first canonical URL
+//   {container_name}.mesh.diegonmarcos.com                              — ALWAYS an HTTPS redirect to the first canonical URL
 //                                                       (redundant alias, not a primary route)
-//   {container_name}-{protocol}-{port}.app            — canonical per-port entry
+//   {container_name}-{protocol}-{port}.mesh.diegonmarcos.com            — canonical per-port entry
 //                                                       (protocol: http|https|tls|starttls|tcp|udp)
-//   {container_name}-null.app                         — explicit marker for portless workers/sidecars
+//   {container_name}-null.mesh.diegonmarcos.com                         — explicit marker for portless workers/sidecars
 //
 // Protocol is read from build.json:
 //   - containers.<x>.protocol            (sibling of containers.<x>.port)
@@ -103,19 +103,19 @@ function synthForService(bj: any) {
     // Redirect target: always the first canonical URL
     const first = ports[0];
     const redirectTarget = first
-      ? `${c.container_name}-${first.protocol}-${first.port}.app`
-      : `${c.container_name}-null.app`;
+      ? `${c.container_name}-${first.protocol}-${first.port}.mesh.diegonmarcos.com`
+      : `${c.container_name}-null.mesh.diegonmarcos.com`;
 
     const urls: Array<{ name: string; source: string }> = [];
     urls.push({
-      name: `${c.container_name}.app`,
+      name: `${c.container_name}.mesh.diegonmarcos.com`,
       source: `redirect → https://${redirectTarget}`,
     });
     if (ports.length === 0) {
-      urls.push({ name: `${c.container_name}-null.app`, source: "portless marker" });
+      urls.push({ name: `${c.container_name}-null.mesh.diegonmarcos.com`, source: "portless marker" });
     } else {
       for (const { port, protocol, source } of ports) {
-        urls.push({ name: `${c.container_name}-${protocol}-${port}.app`, source: `${source} (proto=${protocol})` });
+        urls.push({ name: `${c.container_name}-${protocol}-${port}.mesh.diegonmarcos.com`, source: `${source} (proto=${protocol})` });
       }
     }
     cInfos.push({ key: ck, name: c.container_name, ports, urls });
@@ -124,7 +124,7 @@ function synthForService(bj: any) {
   // ── Detect issues ──
   const issues: Issue[] = [];
 
-  // Containers with no port are valid (workers/sidecars) — they emit {container}-null.app.
+  // Containers with no port are valid (workers/sidecars) — they emit {container}-null.mesh.diegonmarcos.com.
   // Only flag if there's a top-level port that points at this container but isn't declared on it.
 
   // Issue: top-level bj.port that doesn't match any container's port

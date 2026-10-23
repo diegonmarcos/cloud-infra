@@ -151,7 +151,7 @@ export interface BuildJsonEntry {
   archived_reason?: string;      // why it was retired — required alongside archived_at
   // Standardized routing fields
   port?: number;               // Main listening port (REQUIRED for routable services)
-  dns?: string;                // Internal DNS name, e.g. "{name}.app" (REQUIRED for routable services)
+  dns?: string;                // Internal DNS name, e.g. "{name}.mesh.diegonmarcos.com" (REQUIRED for routable services)
   // Declarative infrastructure fields
   proxy?: ProxyConfig;
   ports?: Record<string, PortConfig>;
@@ -287,11 +287,11 @@ export function scanBuildJsons(solutionsDir: string): BuildJsonEntry[] {
       }
       // Fallback: top-level port/dns override empty container-level values
       if (port == null && bj.port != null) port = bj.port;
-      if (dns == null) dns = bj.dns ?? (port ? `${name}.app` : undefined);
+      if (dns == null) dns = bj.dns ?? (port ? `${name}.mesh.diegonmarcos.com` : undefined);
       if (!port && !containers) {
         // Legacy flat schema without containers key
         port = bj.port;
-        dns = bj.dns ?? (port ? `${name}.app` : undefined);
+        dns = bj.dns ?? (port ? `${name}.mesh.diegonmarcos.com` : undefined);
       }
 
       // Collect extra top-level fields not handled above

@@ -2,13 +2,13 @@
 # test-url-scheme.sh — guard the fleet URL scheme (a0_docs/eng-specs/url-scheme.md).
 #
 #   APK       : cloud-{name}.diegonmarcos.com — public, NEVER wg_only, Authelia,
-#               anonymous -> landing. Private cloud-{name}.app.
+#               anonymous -> landing. Private cloud-{name}.mesh.diegonmarcos.com.
 #   CONTAINER : c3-{container}.diegonmarcos.com — public name, wg_only (403
-#               off-mesh). Private c3-{container}.app.
+#               off-mesh). Private c3-{container}.mesh.diegonmarcos.com.
 #   GROUPS    : SPECIAL (auth open, GitHub Pages), MAIL (open), NETWORK (vpn
 #               wg_only).
-#   LEGACY    : {app}.diegonmarcos.com and cloud.{name}.app keep working; the
-#               gated ones carry a landing fallback. No .app name ever reaches a
+#   LEGACY    : {app}.diegonmarcos.com and cloud.{name}.mesh.diegonmarcos.com keep working; the
+#               gated ones carry a landing fallback. No mesh name ever reaches a
 #               public route, the public-edge allowlist or public DNS.
 #
 # Reads only derived dist/ + declared sources. Read-only; exits non-zero on
@@ -22,10 +22,10 @@ CADDY="$DIST/build-caddy.json"
 EDGE="$DIST/build-caddy-public.json"
 CONS="$DIST/_cloud-data-consolidated.json"
 CF_DIR="$CLOUD/c_vps/ba-clo_cloudflare/src"
-PRIV_RE='^cloud\.[a-z0-9][a-z0-9-]*\.app$'          # legacy private names
-C3_RE='^c3-[a-z0-9][a-z0-9-]*\.app$'
-APK_RE='^cloud-[a-z0-9][a-z0-9-]*\.app$'
-ANY_PRIV_RE='(^|\.)((cloud\.[a-z0-9-]+)|(cloud-[a-z0-9-]+)|(c3-[a-z0-9-]+))\.app$'
+PRIV_RE='^cloud\.[a-z0-9][a-z0-9-]*\.mesh\.diegonmarcos\.com$'          # legacy private names
+C3_RE='^c3-[a-z0-9][a-z0-9-]*\.mesh\.diegonmarcos\.com$'
+APK_RE='^cloud-[a-z0-9][a-z0-9-]*\.mesh\.diegonmarcos\.com$'
+ANY_PRIV_RE='(^|\.)((cloud\.[a-z0-9-]+)|(cloud-[a-z0-9-]+)|(c3-[a-z0-9-]+))\.mesh\.diegonmarcos\.com$'
 PUB_RE='^[a-z0-9][a-z0-9-]*\.diegonmarcos\.com$'
 
 fail=0
@@ -36,29 +36,29 @@ for f in "$CADDY" "$CONS"; do [ -f "$f" ] || { echo "✗ $f missing — run buil
 # 1) every private mesh name is well-formed and unique
 badp=$(jq -r --arg legacy "$PRIV_RE" --arg c3 "$C3_RE" --arg apk "$APK_RE" '.private_mesh_routes[]?
   | select((.scheme // "") as $k | .service | (if $k=="c3" then test($c3) elif $k=="apk" then test($apk) else test($legacy) end) | not) | .service' "$CADDY")
-[ -z "$badp" ] && ok "private_mesh_routes: names are c3-<container>.app, cloud-<apk>.app or legacy cloud.<name>.app" || bad "malformed private names: $badp"
+[ -z "$badp" ] && ok "private_mesh_routes: names are c3-<container>.mesh.diegonmarcos.com, cloud-<apk>.mesh.diegonmarcos.com or legacy cloud.<name>.mesh.diegonmarcos.com" || bad "malformed private names: $badp"
 dupp=$(jq -r '[.private_mesh_routes[]?.service] | group_by(.) | map(select(length>1)[0])[]' "$CADDY")
 [ -z "$dupp" ] && ok "private_mesh_routes: no duplicates" || bad "duplicate private names: $dupp"
 
-# 2) every routable service (an internal .app route) has exactly ONE private name
-missing=$(jq -r '.internal_routes[] | select(.service|test("^[a-z0-9-]+\\.app$")) | select((.private_name // "") == "") | .service' "$CADDY")
-[ -z "$missing" ] && ok "internal_routes: every <name>.app service has a cloud.<name>.app private name" || bad "services without a private name: $missing"
+# 2) every routable service (an internal mesh route) has exactly ONE private name
+missing=$(jq -r '.internal_routes[] | select(.service|test("^[a-z0-9-]+\\.mesh\\.diegonmarcos\\.com$")) | select((.private_name // "") == "") | .service' "$CADDY")
+[ -z "$missing" ] && ok "internal_routes: every <name>.mesh.diegonmarcos.com service has a cloud.<name>.mesh.diegonmarcos.com private name" || bad "services without a private name: $missing"
 
 # 3) every publicly routed service declares at most ONE {app}.diegonmarcos.com
 multi=$(jq -r --arg re "$PUB_RE" '.services | to_entries[] | .value.proxy.primary.domain? // empty | select(type=="string") | select(test($re)|not) | select(test("diegonmarcos\\.com"))' "$CONS")
 [ -z "$multi" ] && ok "services: each public domain is a single {app}.diegonmarcos.com" || bad "non-conforming public domains: $multi"
 
-# 4) no cloud.*.app anywhere public
+# 4) no cloud.*.mesh anywhere public
 leak=$(jq -r --arg re "$ANY_PRIV_RE" '[.routes[]?.domain, .path_routes[]?.parent_domain, .github_pages_proxies[]?.domain, .redirects[]?.from?, .well_known_routes[]?.target_domain] | map(select(type=="string")) | map(split(", ")[]) | map(select(test($re)))[]' "$CADDY")
-[ -z "$leak" ] && ok "build-caddy.json: no private .app name on a public vhost" || bad "private .app name on public vhost: $leak"
+[ -z "$leak" ] && ok "build-caddy.json: no private mesh name on a public vhost" || bad "private mesh name on public vhost: $leak"
 if [ -f "$EDGE" ]; then
-  if grep -Eq '"(cloud\.|cloud-|c3-)[a-z0-9-]+\.app"' "$EDGE"; then bad "private .app name present in the public-edge allowlist ($EDGE)"; else ok "build-caddy-public.json: no private .app name"; fi
+  if grep -Eq '"(cloud\.|cloud-|c3-)[a-z0-9-]+\.mesh\.diegonmarcos\.com"' "$EDGE"; then bad "private mesh name present in the public-edge allowlist ($EDGE)"; else ok "build-caddy-public.json: no private mesh name"; fi
 fi
 if [ -d "$CF_DIR" ]; then
-  if grep -rEq '"?(cloud\.|cloud-|c3-)[a-z0-9-]+\.app"?' "$CF_DIR"/*.tf "$CF_DIR"/*.json 2>/dev/null; then bad "private .app name in Cloudflare (public DNS) sources"; else ok "Cloudflare sources: no private .app name"; fi
+  if grep -rEq '"?(cloud\.|cloud-|c3-)[a-z0-9-]+\.mesh\.diegonmarcos\.com"?' "$CF_DIR"/*.tf "$CF_DIR"/*.json 2>/dev/null; then bad "private mesh name in Cloudflare (public DNS) sources"; else ok "Cloudflare sources: no private mesh name"; fi
 fi
-pubzone=$(jq -r '.services | to_entries[] | .value.dns_records? // empty' "$CONS" 2>/dev/null | grep -E '(cloud\.|cloud-|c3-)[a-z0-9-]+\.app' || true)
-[ -z "$pubzone" ] || bad "private .app name in a declared public DNS record: $pubzone"
+pubzone=$(jq -r '.services | to_entries[] | .value.dns_records? // empty' "$CONS" 2>/dev/null | grep -E '(cloud\.|cloud-|c3-)[a-z0-9-]+\.mesh\.diegonmarcos\.com' || true)
+[ -z "$pubzone" ] || bad "private mesh name in a declared public DNS record: $pubzone"
 
 # 5) every Authelia-gated vhost has a landing page under the declared base
 base=$(jq -r '.public_landing.base_url // empty' "$CADDY")
@@ -96,7 +96,7 @@ c3n=$(jq -r '[.routes[] | select(.domain | test("^c3-[a-z0-9-]+\\.diegonmarcos\\
 c3d=$(jq -r '.url_scheme.container_hosts | length' "$CADDY")
 [ "$c3n" = "$c3d" ] && [ "$c3n" -gt 0 ] && ok "c3-* routes match the declared container hosts ($c3n)" || bad "c3 route count $c3n != container_hosts $c3d"
 c3nopriv=$(jq -r '. as $r | ([$r.private_mesh_routes[].service] + [$r.internal_routes[].service] + [$r.all_app_urls[].service]) as $all | $r.url_scheme.container_hosts[] | select(.private as $p | $all | index($p) | not) | .private' "$CADDY")
-[ -z "$c3nopriv" ] && ok "every c3-* host has a served c3-<container>.app private name" || bad "c3 hosts without a private name: $c3nopriv"
+[ -z "$c3nopriv" ] && ok "every c3-* host has a served c3-<container>.mesh.diegonmarcos.com private name" || bad "c3 hosts without a private name: $c3nopriv"
 
 # 8) groups
 authwg=$(jq -r '.routes[] | select(.domain=="auth.diegonmarcos.com") | select(.wg_only==true) | .domain' "$CADDY")
@@ -149,7 +149,7 @@ nobearer=$(jq -r --slurpfile m "$MCPM" '($m[0].mcps | map(select(.auth=="token")
 [ -z "$nobearer" ] && ok "every other MCP is token-public (bearer_auth)" || bad "token MCPs without bearer_auth: $nobearer"
 if [ -f "$EDGE" ] && grep -q '/cloud-vault-mcp' "$EDGE"; then bad "cloud-vault-mcp present in the public-edge allowlist"; fi
 
-# 13) every manifest MCP ALSO has a private mesh address c3-{container}.app
+# 13) every manifest MCP ALSO has a private mesh address c3-{container}.mesh.diegonmarcos.com
 #     (url_scheme.mcp_private, served as a private_mesh_routes site, no token);
 #     the public mcp.diegonmarcos.com paths stay token-gated (9, 12) and vault
 #     stays mesh-only (12).
@@ -157,7 +157,7 @@ nopriv=$(jq -r --slurpfile m "$MCPM" --arg c3 "$C3_RE" '. as $r | $m[0].mcps[].b
   | ([$r.url_scheme.mcp_private[]? | select(.base_path==$b)][0]) as $p
   | select($p == null or ($p.private | test($c3) | not)
            or ([$r.private_mesh_routes[] | select(.service==$p.private)] | length) == 0) | $b' "$CADDY")
-[ -z "$nopriv" ] && ok "every MCP has a private mesh address c3-<container>.app" || bad "MCPs without a private mesh address: $nopriv"
+[ -z "$nopriv" ] && ok "every MCP has a private mesh address c3-<container>.mesh.diegonmarcos.com" || bad "MCPs without a private mesh address: $nopriv"
 
 # 14) every MCP in the manifest also has a `<container>-mesh` entry in
 #     dist/mcp.json pointing at its private mesh address, with no auth headers
@@ -167,7 +167,7 @@ nomesh=$(jq -r --slurpfile j "$MCPJ" '.url_scheme.mcp_private[]
   | . as $p | ($j[0].mcpServers[$p.container + "-mesh"]) as $s
   | select($s == null or $s.url != ("https://" + $p.private + "/mcp") or ($s.headers != null) or ($s.headersHelper != null))
   | $p.container' "$CADDY")
-[ -z "$nomesh" ] && ok "every MCP has a <name>-mesh entry at https://c3-<container>.app/mcp, no auth" || bad "MCPs without a correct -mesh entry in dist/mcp.json: $nomesh"
+[ -z "$nomesh" ] && ok "every MCP has a <name>-mesh entry at https://c3-<container>.mesh.diegonmarcos.com/mcp, no auth" || bad "MCPs without a correct -mesh entry in dist/mcp.json: $nomesh"
 
 # 15) auth.diegonmarcos.com is fully open (owner decision 2026-10-15): authelia
 #     declares wg_only:false, so oidc_public must carry wg_only:false (the edge

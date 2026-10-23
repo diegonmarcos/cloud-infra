@@ -150,7 +150,7 @@ in {
     $SUDO systemctl restart dashboard-ttyd.service 2>/dev/null || true
     $SUDO systemctl restart dashboard-httpd.service 2>/dev/null || true
 
-    echo "[dashboard] deployed: html=:${toString dashboardPort} ttyd=:${toString ttydPort} (${vmName}.app)"
+    echo "[dashboard] deployed: html=:${toString dashboardPort} ttyd=:${toString ttydPort} (${vmName}.mesh.diegonmarcos.com)"
     ) || echo "[dashboard] FAILED — activation continues"
   '';
 }

@@ -58,7 +58,7 @@ export -f probe_one; export AUTH_RE EDGE_IP
 # host). Behind a sandboxing egress gateway these come back as "skip" or hit the real
 # public domain of the same name (vaultwarden.app exists) -- do not read them there.
 # Only the c3-*.app names are unambiguous there (no such public domain).
-APPS="$(printf '%s\n' c3-infra-api.app c3-gitea.app c3-authelia.app gitea.app cloud.gitea.app s3-photos.app | awk '{print "private\t"$1"\t/\trefused"}')"
+APPS="$(printf '%s\n' c3-infra-api.mesh.diegonmarcos.com c3-gitea.mesh.diegonmarcos.com c3-authelia.mesh.diegonmarcos.com gitea.mesh.diegonmarcos.com cloud.gitea.mesh.diegonmarcos.com s3-photos.mesh.diegonmarcos.com | awk '{print "private\t"$1"\t/\trefused"}')"
 
 RES="$(printf '%s\n%s\n' "$LIST" "$APPS" | awk -F'\t' 'NF>=3' | \
   xargs -P 2 -d '\n' -I{} bash -c 'IFS=$'"'"'\t'"'"' read -r k h p e <<<"$1"; probe_one "$k" "$h" "$p" "$e"' _ {} | sort)"

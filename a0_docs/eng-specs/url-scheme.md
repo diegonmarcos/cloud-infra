@@ -1,6 +1,6 @@
 # Fleet URL scheme: public vs private names
 
-Status: v2 implemented 2026-10-14 (v1, the landing fallback and `cloud.{name}.app`
+Status: v2 implemented 2026-10-14 (v1, the landing fallback and `cloud.{name}.mesh.diegonmarcos.com`
 names, shipped earlier the same day and is kept; see "Legacy"). Sources of truth:
 service `build.json` in cloud-u-containers, the generated manifests below, and the
 derive engine in `1_cloud-configs/src/derive/`. Guard:
@@ -18,8 +18,8 @@ derive engine in `1_cloud-configs/src/derive/`. Guard:
 
 | Kind | Public (internet DNS, wildcard `*.diegonmarcos.com`) | Private (Hickory `app` zone, mesh only) |
 |---|---|---|
-| APK | `cloud-{name}.diegonmarcos.com`: open to the internet, **never wg_only**; Authelia bearer / WebAuthn; anonymous request 302s to the app's landing page | `cloud-{name}.app` (only for an APK that declares a container web target) |
-| Container | `c3-{container}.diegonmarcos.com`: **wg_only** (403 off-mesh), no Authelia (the mesh is the trust boundary) | `c3-{container}.app` |
+| APK | `cloud-{name}.diegonmarcos.com`: open to the internet, **never wg_only**; Authelia bearer / WebAuthn; anonymous request 302s to the app's landing page | `cloud-{name}.mesh.diegonmarcos.com` (only for an APK that declares a container web target) |
+| Container | `c3-{container}.diegonmarcos.com`: **wg_only** (403 off-mesh), no Authelia (the mesh is the trust boundary) | `c3-{container}.mesh.diegonmarcos.com` |
 | MCP | `mcp.diegonmarcos.com/{mcp}`: public with **token** auth (WG peers pass, off-mesh needs an Authelia bearer), not mesh-only | n/a |
 
 Names: `{name}` for an APK is its full module name, always `cloud-` prefixed
@@ -65,7 +65,7 @@ An APK's own `build.json` declares what a signed-in request to its public host l
 
 | kind | Behaviour |
 |---|---|
-| `container` | Authelia (bearer or session) gates a reverse proxy to that container's HTTP port. Anonymous 302 to the landing page. Also gives the APK `cloud-{name}.app`. |
+| `container` | Authelia (bearer or session) gates a reverse proxy to that container's HTTP port. Anonymous 302 to the landing page. Also gives the APK `cloud-{name}.mesh.diegonmarcos.com`. |
 | `wasm` | (#876) Authelia (bearer or session) gates the app's Kotlin/Wasm bundle, served from `caddy_config.url_scheme.wasm_origin` `{upstream, path_prefix}` at `<path_prefix>/<web.portal_slug>/` (the route carries `web.serve_path`). Anonymous 302 to the landing page. Rendered only once `wasm_origin` is declared (an owner deploy decision); until then it is treated as "no web target". Code: `derive/apk-web-route.ts`, tests `derive/apk-web-route.test.ts`. The caddy renderer (cloud-u-containers infra-sec_caddy) must still honour `web.serve_path`. |
 | `webapp` | Declared in the manifest, not rendered yet: treated as "no web target". |
 | absent | `landing_only`: every request, signed in or not, 302s to the landing page. `/login` still hands off to Authelia. |
@@ -112,7 +112,7 @@ All existing hostnames keep working; v2 only adds names alongside (nothing remov
 | Kind | Form | Reachable from | Declared in |
 |---|---|---|---|
 | Public | `{app}.diegonmarcos.com` | Internet, through the public edge (caddy-public on oci-analytics) to the hub Caddy on gcp-proxy | `proxy.primary.domain`; landing in caddy `public_landing.landings` |
-| Private | `cloud.{name}.app` | WireGuard mesh only (Hickory `app` zone on 10.0.0.1) | derived: one per routable service (`dns` key) and per HTTP container (first port) |
+| Private | `cloud.{name}.mesh.diegonmarcos.com` | WireGuard mesh only (Hickory `app` zone on 10.0.0.1) | derived: one per routable service (`dns` key) and per HTTP container (first port) |
 
 ### Public: auth check with a landing fallback
 
@@ -148,12 +148,12 @@ with its own `proxy.primary.landing`. Kept in the caddy declaration so a
 landing change ships to Caddy alone, not to every service. Rendered by
 `infra-sec_caddy/src/caddyfile.nix` (`landingGateBlock`).
 
-### Private: `cloud.{name}.app`
+### Private: `cloud.{name}.mesh.diegonmarcos.com`
 
-- DNS: Hickory's `* IN A 10.0.0.1` in the `app` zone already answers every
-  `cloud.{name}.app` on the mesh. The `.app` TLD is public, but none of these
-  names is registered or declared in Cloudflare, and they resolve only through
-  fleet DNS. Direct-dial backends (maddy, stalwart, git-proxy-api) get
+- DNS: Hickory's `* IN A 10.0.0.1` in the `mesh.diegonmarcos.com` zone already answers every
+  `cloud.{name}.mesh.diegonmarcos.com` on the mesh. The public `mesh` label carries only a sentinel TXT
+  (terraform `mesh_sentinel`), so the Cloudflare wildcard never answers under it
+  (public NXDOMAIN); these names resolve only through fleet DNS. Direct-dial backends (maddy, stalwart, git-proxy-api) get
   explicit `cloud.*` rows next to their legacy rows.
 - Caddy: each name is its own site block (`private_mesh_routes` in
   `build-caddy.json`, `mkPrivateMeshRoute`), internal-CA TLS, gated to
@@ -163,18 +163,17 @@ landing change ships to Caddy alone, not to every service. Rendered by
 - `https` upstream containers keep only their legacy canonical alias until a
   per-container TLS policy is declared.
 
-### Deprecation of the old private names
+### The `.app` names are gone (#1123)
 
-`{name}.app`, `{container}.app`, `{container}-{proto}-{port}.app` and
-`{container}-null.app` remain served, unchanged, for one release. Removal
-happens in the next release: drop `internal_routes`/`all_app_urls` site
-rendering and the legacy Hickory rows, after callers have moved (grep the
-fleet for `[a-z0-9-]+\.app`).
+`.app` is a real public TLD, so every private name now lives under
+`mesh.diegonmarcos.com`. There is no alias and no transition window: the old
+`*.app` names are not served, and `_shared/test-fleet-addressing.mjs` fails on
+any `.app` mesh name (rules `mesh_tld` and `app_tld`).
 
 ### Android APK fleet
 
 Superseded by "Scheme v2": APKs have `cloud-{name}.diegonmarcos.com` and, with a
-container web target, `cloud-{name}.app`. They still talk to each other through the
+container web target, `cloud-{name}.mesh.diegonmarcos.com`. They still talk to each other through the
 IPC mesh, not DNS.
 
 ## Guards (`test-url-scheme.sh`)
@@ -256,71 +255,71 @@ IPC mesh, not DNS.
 
 | Old (alias, one release) | New | Upstream |
 |---|---|---|
-| `authelia.app` | `cloud.authelia.app` | `172.18.0.3:9091` |
-| `c3-infra-api.app` | `cloud.c3-infra-api.app` | `10.0.0.6:8081` |
-| `c3-infra-mcp.app` | `cloud.c3-infra-mcp.app` | `10.0.0.6:3100` |
-| `c3-public-api.app` | `cloud.c3-public-api.app` | `10.0.0.4:8087` |
-| `c3-services-api.app` | `cloud.c3-services-api.app` | `10.0.0.6:8082` |
-| `c3-services-mcp.app` | `cloud.c3-services-mcp.app` | `10.0.0.6:3101` |
-| `c3-spec.app` | `cloud.c3-spec.app` | `10.0.0.6:3080` |
-| `caddy-public.app` | `cloud.caddy-public.app` | `10.0.0.4:443` |
-| `caddy.app` | `cloud.caddy.app` | `10.0.0.1:443` |
-| `calendar-radicale-http-5232.app` | `cloud.calendar-radicale.app` | `10.0.0.6:5232` |
-| `calendar.app` | `cloud.calendar.app` | `10.0.0.6:5232` |
-| `cloud-cgc-pub-mcp.app` | `cloud.cloud-cgc-pub-mcp.app` | `10.0.0.6:3105` |
-| `cloud-drive-mcp-http-3109.app` | `cloud.cloud-drive-mcp.app` | `10.0.0.6:3109` |
-| `cloud-infra-mcp-http-3100.app` | `cloud.cloud-infra-mcp.app` | `10.0.0.6:3100` |
-| `cloud-mail-mcp-http-3103.app` | `cloud.cloud-mail-mcp.app` | `10.0.0.6:3103` |
-| `cloud-mattermost-mcp-http-3102.app` | `cloud.cloud-mattermost-mcp.app` | `10.0.0.6:3102` |
-| `cloud-services-mcp-http-3101.app` | `cloud.cloud-services-mcp.app` | `10.0.0.6:3101` |
-| `cloud-spec-http-3080.app` | `cloud.cloud-spec.app` | `10.0.0.6:3080` |
-| `cloud-superapp-mcp-http-3110.app` | `cloud.cloud-superapp-mcp.app` | `10.0.0.6:3110` |
-| `cloud-webmail-http-3000.app` | `cloud.cloud-webmail.app` | `10.0.0.6:3000` |
-| `code-server.app` | `cloud.code-server.app` | `10.0.0.6:8443` |
-| `contacts-radicale-http-5233.app` | `cloud.contacts-radicale.app` | `10.0.0.6:5233` |
-| `contacts.app` | `cloud.contacts.app` | `10.0.0.6:5233` |
-| `continuwuity-http-8008.app` | `cloud.continuwuity.app` | `10.0.0.6:8008` |
-| `crowdsec.app` | `cloud.crowdsec.app` | `10.0.0.6:8088` |
-| `dagu.app` | `cloud.dagu.app` | `10.0.0.6:8070` |
-| `dbgate.app` | `cloud.dbgate.app` | `10.0.0.6:8086` |
-| `drive-mcp.app` | `cloud.drive-mcp.app` | `10.0.0.6:3109` |
-| `etherpad_app-http-3012.app` | `cloud.etherpad-app.app` | `10.0.0.6:3012` |
-| `etherpad.app` | `cloud.etherpad.app` | `10.0.0.6:3012` |
-| `filebrowser_app-http-3015.app` | `cloud.filebrowser-app.app` | `10.0.0.6:3015` |
-| `filebrowser.app` | `cloud.filebrowser.app` | `10.0.0.6:3015` |
-| `fin-api.app` | `cloud.fin-api.app` | `10.0.0.6:8340` |
-| `g-personal-mcp.app` | `cloud.g-personal-mcp.app` | `10.0.0.6:3106` |
-| `g-workspace-mcp.app` | `cloud.g-workspace-mcp.app` | `10.0.0.6:3104` |
-| `git-proxy-api.app` | `cloud.git-proxy-api.app` | `10.0.0.4:8123` |
-| `gitea.app` | `cloud.gitea.app` | `10.0.0.6:3002` |
-| `google-personal-mcp-http-3106.app` | `cloud.google-personal-mcp.app` | `10.0.0.6:3106` |
-| `google-workspace-mcp-http-3104.app` | `cloud.google-workspace-mcp.app` | `10.0.0.6:3104` |
-| `grist_app-http-3011.app` | `cloud.grist-app.app` | `10.0.0.6:3011` |
-| `grist.app` | `cloud.grist.app` | `10.0.0.6:3011` |
-| `hedgedoc_app-http-3018.app` | `cloud.hedgedoc-app.app` | `10.0.0.6:3018` |
-| `hedgedoc.app` | `cloud.hedgedoc.app` | `10.0.0.6:3018` |
-| `kg-store-pub.app` | `cloud.kg-store-pub.app` | `10.0.0.6:8002` |
-| `kg-store.app` | `cloud.kg-store.app` | `10.0.0.6:8001` |
-| `mail-mcp.app` | `cloud.mail-mcp.app` | `10.0.0.6:3103` |
-| `matomo-hybrid-http-8080.app` | `cloud.matomo-hybrid.app` | `10.0.0.6:8080` |
-| `matomo.app` | `cloud.matomo.app` | `10.0.0.6:8080` |
-| `matrix-continuwuity.app` | `cloud.matrix-continuwuity.app` | `10.0.0.6:8008` |
-| `matrix-element.app` | `cloud.matrix-element.app` | `10.0.0.6:8083` |
-| `mattermost-mcp.app` | `cloud.mattermost-mcp.app` | `10.0.0.6:3102` |
-| `mattermost.app` | `cloud.mattermost.app` | `10.0.0.6:8065` |
-| `news-gdelt.app` | `cloud.news-gdelt.app` | `10.0.0.6:3019` |
-| `ntfy.app` | `cloud.ntfy.app` | `10.0.0.6:8090` |
-| `openobserve.app` | `cloud.openobserve.app` | `10.0.0.6:5080` |
-| `photoprism_app-http-3013.app` | `cloud.photoprism-app.app` | `10.0.0.6:3013` |
-| `photoprism.app` | `cloud.photoprism.app` | `10.0.0.6:3013` |
-| `playlist-syncer.app` | `cloud.playlist-syncer.app` | `10.0.0.6:8090` |
-| `scrappers-api.app` | `cloud.scrappers-api.app` | `10.0.0.6:3020` |
-| `send_app-http-3016.app` | `cloud.send-app.app` | `10.0.0.6:3016` |
-| `send.app` | `cloud.send.app` | `10.0.0.6:3016` |
-| `stalwart.app` | `cloud.stalwart.app` | `10.0.0.3:2443` |
-| `superapp-mcp.app` | `cloud.superapp-mcp.app` | `10.0.0.6:3110` |
-| `umami.app` | `cloud.umami.app` | `10.0.0.6:3006` |
-| `unbound-dns64.app` | `cloud.unbound-dns64.app` | `10.0.0.4:53` |
+| `authelia.mesh.diegonmarcos.com` | `cloud.authelia.mesh.diegonmarcos.com` | `172.18.0.3:9091` |
+| `c3-infra-api.mesh.diegonmarcos.com` | `cloud.c3-infra-api.mesh.diegonmarcos.com` | `10.0.0.6:8081` |
+| `c3-infra-mcp.mesh.diegonmarcos.com` | `cloud.c3-infra-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3100` |
+| `c3-public-api.mesh.diegonmarcos.com` | `cloud.c3-public-api.mesh.diegonmarcos.com` | `10.0.0.4:8087` |
+| `c3-services-api.mesh.diegonmarcos.com` | `cloud.c3-services-api.mesh.diegonmarcos.com` | `10.0.0.6:8082` |
+| `c3-services-mcp.mesh.diegonmarcos.com` | `cloud.c3-services-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3101` |
+| `c3-spec.mesh.diegonmarcos.com` | `cloud.c3-spec.mesh.diegonmarcos.com` | `10.0.0.6:3080` |
+| `caddy-public.mesh.diegonmarcos.com` | `cloud.caddy-public.mesh.diegonmarcos.com` | `10.0.0.4:443` |
+| `caddy.mesh.diegonmarcos.com` | `cloud.caddy.mesh.diegonmarcos.com` | `10.0.0.1:443` |
+| `calendar-radicale-http-5232.mesh.diegonmarcos.com` | `cloud.calendar-radicale.mesh.diegonmarcos.com` | `10.0.0.6:5232` |
+| `calendar.mesh.diegonmarcos.com` | `cloud.calendar.mesh.diegonmarcos.com` | `10.0.0.6:5232` |
+| `cloud-cgc-pub-mcp.mesh.diegonmarcos.com` | `cloud.cloud-cgc-pub-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3105` |
+| `cloud-drive-mcp-http-3109.mesh.diegonmarcos.com` | `cloud.cloud-drive-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3109` |
+| `cloud-infra-mcp-http-3100.mesh.diegonmarcos.com` | `cloud.cloud-infra-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3100` |
+| `cloud-mail-mcp-http-3103.mesh.diegonmarcos.com` | `cloud.cloud-mail-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3103` |
+| `cloud-mattermost-mcp-http-3102.mesh.diegonmarcos.com` | `cloud.cloud-mattermost-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3102` |
+| `cloud-services-mcp-http-3101.mesh.diegonmarcos.com` | `cloud.cloud-services-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3101` |
+| `cloud-spec-http-3080.mesh.diegonmarcos.com` | `cloud.cloud-spec.mesh.diegonmarcos.com` | `10.0.0.6:3080` |
+| `cloud-superapp-mcp-http-3110.mesh.diegonmarcos.com` | `cloud.cloud-superapp-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3110` |
+| `cloud-webmail-http-3000.mesh.diegonmarcos.com` | `cloud.cloud-webmail.mesh.diegonmarcos.com` | `10.0.0.6:3000` |
+| `code-server.mesh.diegonmarcos.com` | `cloud.code-server.mesh.diegonmarcos.com` | `10.0.0.6:8443` |
+| `contacts-radicale-http-5233.mesh.diegonmarcos.com` | `cloud.contacts-radicale.mesh.diegonmarcos.com` | `10.0.0.6:5233` |
+| `contacts.mesh.diegonmarcos.com` | `cloud.contacts.mesh.diegonmarcos.com` | `10.0.0.6:5233` |
+| `continuwuity-http-8008.mesh.diegonmarcos.com` | `cloud.continuwuity.mesh.diegonmarcos.com` | `10.0.0.6:8008` |
+| `crowdsec.mesh.diegonmarcos.com` | `cloud.crowdsec.mesh.diegonmarcos.com` | `10.0.0.6:8088` |
+| `dagu.mesh.diegonmarcos.com` | `cloud.dagu.mesh.diegonmarcos.com` | `10.0.0.6:8070` |
+| `dbgate.mesh.diegonmarcos.com` | `cloud.dbgate.mesh.diegonmarcos.com` | `10.0.0.6:8086` |
+| `drive-mcp.mesh.diegonmarcos.com` | `cloud.drive-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3109` |
+| `etherpad_app-http-3012.mesh.diegonmarcos.com` | `cloud.etherpad-app.mesh.diegonmarcos.com` | `10.0.0.6:3012` |
+| `etherpad.mesh.diegonmarcos.com` | `cloud.etherpad.mesh.diegonmarcos.com` | `10.0.0.6:3012` |
+| `filebrowser_app-http-3015.mesh.diegonmarcos.com` | `cloud.filebrowser-app.mesh.diegonmarcos.com` | `10.0.0.6:3015` |
+| `filebrowser.mesh.diegonmarcos.com` | `cloud.filebrowser.mesh.diegonmarcos.com` | `10.0.0.6:3015` |
+| `fin-api.mesh.diegonmarcos.com` | `cloud.fin-api.mesh.diegonmarcos.com` | `10.0.0.6:8340` |
+| `g-personal-mcp.mesh.diegonmarcos.com` | `cloud.g-personal-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3106` |
+| `g-workspace-mcp.mesh.diegonmarcos.com` | `cloud.g-workspace-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3104` |
+| `git-proxy-api.mesh.diegonmarcos.com` | `cloud.git-proxy-api.mesh.diegonmarcos.com` | `10.0.0.4:8123` |
+| `gitea.mesh.diegonmarcos.com` | `cloud.gitea.mesh.diegonmarcos.com` | `10.0.0.6:3002` |
+| `google-personal-mcp-http-3106.mesh.diegonmarcos.com` | `cloud.google-personal-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3106` |
+| `google-workspace-mcp-http-3104.mesh.diegonmarcos.com` | `cloud.google-workspace-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3104` |
+| `grist_app-http-3011.mesh.diegonmarcos.com` | `cloud.grist-app.mesh.diegonmarcos.com` | `10.0.0.6:3011` |
+| `grist.mesh.diegonmarcos.com` | `cloud.grist.mesh.diegonmarcos.com` | `10.0.0.6:3011` |
+| `hedgedoc_app-http-3018.mesh.diegonmarcos.com` | `cloud.hedgedoc-app.mesh.diegonmarcos.com` | `10.0.0.6:3018` |
+| `hedgedoc.mesh.diegonmarcos.com` | `cloud.hedgedoc.mesh.diegonmarcos.com` | `10.0.0.6:3018` |
+| `kg-store-pub.mesh.diegonmarcos.com` | `cloud.kg-store-pub.mesh.diegonmarcos.com` | `10.0.0.6:8002` |
+| `kg-store.mesh.diegonmarcos.com` | `cloud.kg-store.mesh.diegonmarcos.com` | `10.0.0.6:8001` |
+| `mail-mcp.mesh.diegonmarcos.com` | `cloud.mail-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3103` |
+| `matomo-hybrid-http-8080.mesh.diegonmarcos.com` | `cloud.matomo-hybrid.mesh.diegonmarcos.com` | `10.0.0.6:8080` |
+| `matomo.mesh.diegonmarcos.com` | `cloud.matomo.mesh.diegonmarcos.com` | `10.0.0.6:8080` |
+| `matrix-continuwuity.mesh.diegonmarcos.com` | `cloud.matrix-continuwuity.mesh.diegonmarcos.com` | `10.0.0.6:8008` |
+| `matrix-element.mesh.diegonmarcos.com` | `cloud.matrix-element.mesh.diegonmarcos.com` | `10.0.0.6:8083` |
+| `mattermost-mcp.mesh.diegonmarcos.com` | `cloud.mattermost-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3102` |
+| `mattermost.mesh.diegonmarcos.com` | `cloud.mattermost.mesh.diegonmarcos.com` | `10.0.0.6:8065` |
+| `news-gdelt.mesh.diegonmarcos.com` | `cloud.news-gdelt.mesh.diegonmarcos.com` | `10.0.0.6:3019` |
+| `ntfy.mesh.diegonmarcos.com` | `cloud.ntfy.mesh.diegonmarcos.com` | `10.0.0.6:8090` |
+| `openobserve.mesh.diegonmarcos.com` | `cloud.openobserve.mesh.diegonmarcos.com` | `10.0.0.6:5080` |
+| `photoprism_app-http-3013.mesh.diegonmarcos.com` | `cloud.photoprism-app.mesh.diegonmarcos.com` | `10.0.0.6:3013` |
+| `photoprism.mesh.diegonmarcos.com` | `cloud.photoprism.mesh.diegonmarcos.com` | `10.0.0.6:3013` |
+| `playlist-syncer.mesh.diegonmarcos.com` | `cloud.playlist-syncer.mesh.diegonmarcos.com` | `10.0.0.6:8090` |
+| `scrappers-api.mesh.diegonmarcos.com` | `cloud.scrappers-api.mesh.diegonmarcos.com` | `10.0.0.6:3020` |
+| `send_app-http-3016.mesh.diegonmarcos.com` | `cloud.send-app.mesh.diegonmarcos.com` | `10.0.0.6:3016` |
+| `send.mesh.diegonmarcos.com` | `cloud.send.mesh.diegonmarcos.com` | `10.0.0.6:3016` |
+| `stalwart.mesh.diegonmarcos.com` | `cloud.stalwart.mesh.diegonmarcos.com` | `10.0.0.3:2443` |
+| `superapp-mcp.mesh.diegonmarcos.com` | `cloud.superapp-mcp.mesh.diegonmarcos.com` | `10.0.0.6:3110` |
+| `umami.mesh.diegonmarcos.com` | `cloud.umami.mesh.diegonmarcos.com` | `10.0.0.6:3006` |
+| `unbound-dns64.mesh.diegonmarcos.com` | `cloud.unbound-dns64.mesh.diegonmarcos.com` | `10.0.0.4:53` |
 | `vaultwarden.app` | `cloud.vaultwarden.app` | `10.0.0.6:8880` |
-| `webmail.app` | `cloud.webmail.app` | `10.0.0.6:3000` |
-| `wireguard-mesh.app` | `cloud.wireguard-mesh.app` | `10.0.0.6:8084` |
+| `webmail.mesh.diegonmarcos.com` | `cloud.webmail.mesh.diegonmarcos.com` | `10.0.0.6:3000` |
+| `wireguard-mesh.mesh.diegonmarcos.com` | `cloud.wireguard-mesh.mesh.diegonmarcos.com` | `10.0.0.6:8084` |

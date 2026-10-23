@@ -425,7 +425,7 @@ def probe_list():
             for h in r["hosts"]:
                 if h.startswith("*") or ":" in h:
                     continue
-                if h.endswith((".app", ".db")):
+                if h.endswith((".mesh.diegonmarcos.com", ".db")):
                     continue            # mesh-only names: edge-auth-probe.sh probes a fixed sample through the edge IP
                 if r["tier"] in ("c", "h"):
                     add("open", h, "/", "any")

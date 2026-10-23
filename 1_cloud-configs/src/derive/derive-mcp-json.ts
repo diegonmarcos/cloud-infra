@@ -177,7 +177,7 @@ function main(): void {
     let caddy: any;
     try { caddy = JSON.parse(fs.readFileSync(CADDY_FILE, 'utf8')); } catch { caddy = null; }
     for (const m of caddy?.url_scheme?.mcp_private ?? []) {
-      if (!m?.container || !/^c3-[a-z0-9][a-z0-9-]*\.app$/.test(m.private ?? '')) continue;
+      if (!m?.container || !/^c3-[a-z0-9][a-z0-9-]*\.mesh\.diegonmarcos\.com$/.test(m.private ?? '')) continue;
       servers[`${m.container}-mesh`] = { type: 'http', url: `https://${m.private}/mcp` };
     }
   } else {

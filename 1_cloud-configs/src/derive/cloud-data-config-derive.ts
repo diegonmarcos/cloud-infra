@@ -279,17 +279,21 @@ function deriveDatabases(c: any): DerivedFile {
   };
 }
 
+// #1123: private mesh names live under this suffix (fleet DNS only), never under the public .app TLD.
+const MESH_SFX = ".mesh.diegonmarcos.com";
+const stripMesh = (d: string): string => (d.endsWith(MESH_SFX) ? d.slice(0, -MESH_SFX.length) : d);
+
 function deriveDnsServices(c: any): DerivedFile {
   const vms = c.vms as Record<string, any>;
   const services = c.services as Record<string, any>;
 
-  // All *.app zones resolve to Caddy (reverse proxy handles port routing)
+  // All *.mesh.diegonmarcos.com zones resolve to Caddy (reverse proxy handles port routing)
   // Find Caddy's WG IP from the caddy service entry
   const caddySvc = services["caddy"];
   const caddyVm = caddySvc ? vms[caddySvc.vm] : null;
   const caddyIp = caddyVm?.wg_ip ?? "10.0.0.1";
 
-  // Build service entries: key = dns name without .app suffix, ip = Caddy's WG IP
+  // Build service entries: key = dns name without the mesh suffix, ip = Caddy's WG IP
   const svcEntries: Record<string, { ip: string; desc: string }> = {};
 
   for (const [svcName, svc] of Object.entries(services)) {
@@ -300,22 +304,22 @@ function deriveDnsServices(c: any): DerivedFile {
     for (const container of Object.values(svc.containers ?? {})) {
       const ct = container as any;
       if (ct.dns) {
-        const key = ct.dns.endsWith(".app") ? ct.dns.slice(0, -4) : ct.dns;
+        const key = stripMesh(ct.dns);
         svcEntries[key] = { ip: caddyIp, desc: svc.description ?? "" };
       }
     }
 
     // Also add top-level dns if present and no container dns matched
     if (svc.dns && !Object.values(svc.containers ?? {}).some((ct: any) => ct.dns)) {
-      const key = svc.dns.endsWith(".app") ? svc.dns.slice(0, -4) : svc.dns;
+      const key = stripMesh(svc.dns);
       svcEntries[key] = { ip: caddyIp, desc: svc.description ?? "" };
     }
   }
 
-  // S3 storage buckets with dns field → resolve via Caddy like any other .app name
+  // S3 storage buckets with dns field → resolve via Caddy like any other mesh name
   for (const bucket of (c.storage ?? []) as any[]) {
     if (!bucket.dns) continue;
-    const key = bucket.dns.endsWith(".app") ? bucket.dns.slice(0, -4) : bucket.dns;
+    const key = stripMesh(bucket.dns);
     svcEntries[key] = { ip: caddyIp, desc: `S3 bucket: ${bucket.name}` };
   }
 
@@ -397,7 +401,7 @@ function deriveCaddy(c: any): DerivedFile[] {
     return upstream.replace(`${vm.wg_ip}:`, `${newIp}:`);
   };
 
-  // Build dns→<caddy-reachable>ip map (resolves any lingering name.app:port → IP:port).
+  // Build dns→<caddy-reachable>ip map (resolves any lingering name.mesh.diegonmarcos.com:port → IP:port).
   // Uses the wg-public preference when applicable.
   const dnsToIp: Record<string, string> = {};
   for (const [, svc] of Object.entries(services)) {
@@ -412,7 +416,7 @@ function deriveCaddy(c: any): DerivedFile[] {
   }
   const resolveUpstream = (upstream: string | undefined): string | undefined => {
     if (!upstream) return upstream;
-    const m = upstream.match(/^([a-z0-9-]+\.app):(\d+)$/);
+    const m = upstream.match(/^([a-z0-9-]+\.mesh\.diegonmarcos\.com):(\d+)$/);
     if (m && dnsToIp[m[1]]) return `${dnsToIp[m[1]]}:${m[2]}`;
     return upstream;
   };
@@ -489,7 +493,7 @@ function deriveCaddy(c: any): DerivedFile[] {
   // Source of truth: service build.json proxy.primary.wg_only.
   // Applies to every public-edge emitter below (subdomain, path, mcp, ntfy,
   // proxy_dashboard). NOT applied to special.analytics (matomo/umami public
-  // tracking beacons) or to internal :80 catalog / .app synthesis routes.
+  // tracking beacons) or to internal :80 catalog / mesh synthesis routes.
   const wgOnly = (proxy: any): boolean => (proxy?.wg_only ?? true);
 
   // ── Public landing fallback (a0_docs/eng-specs/url-scheme.md) ──
@@ -750,7 +754,7 @@ function deriveCaddy(c: any): DerivedFile[] {
   // ── MCP routes: streaming services ──
   const mcpEndpoints: any[] = [];
   // base_path -> { container, upstream }: feeds the per-MCP private mesh name
-  // (c3-{container}.app) in the URL-scheme block below.
+  // (c3-{container}.mesh.diegonmarcos.com) in the URL-scheme block below.
   const mcpContainerOf = new Map<string, { container: string; upstream?: string }>();
   for (const [svcName, svc] of Object.entries(services)) {
     const proxy = svc.proxy?.primary;
@@ -946,7 +950,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       upstream,
     });
     // dns_aliases (fleet addressing rule, ticket #1100): extra mesh names for the
-    // same upstream, so the canonical `<container>.app` resolves beside the legacy
+    // same upstream, so the canonical `<container>.mesh.diegonmarcos.com` resolves beside the legacy
     // `dns` until the consumers are switched (phase P4 swaps `dns` and drops these).
     for (const alias of (svc.dns_aliases ?? []) as string[]) {
       if (alias !== svc.dns) internalRoutes.push({ service: alias, upstream });
@@ -968,7 +972,7 @@ function deriveCaddy(c: any): DerivedFile[] {
     } catch { /* skip VMs without HM build.json */ }
   }
 
-  // ── S3 bucket routes: external HTTPS proxy via .app short names ──
+  // ── S3 bucket routes: external HTTPS proxy via mesh short names ──
   const s3Routes: any[] = [];
   for (const bucket of (c.storage ?? []) as any[]) {
     if (!bucket.dns || !bucket.s3_endpoint) continue;
@@ -1041,11 +1045,11 @@ function deriveCaddy(c: any): DerivedFile[] {
     upstream: EDGE_TO_HUB,
   } : null;
 
-  // ── all_app_urls: canonical per-container, per-port .app URL synthesis ──
+  // ── all_app_urls: canonical per-container, per-port mesh URL synthesis ──
   // Naming rules (zero heuristics — all declared):
-  //   {container}.app                          → HTTPS redirect to first canonical URL
-  //   {container}-{protocol}-{port}.app        → canonical per-port entry
-  //   {container}-null.app                     → portless workers/sidecars
+  //   {container}.mesh.diegonmarcos.com                          → HTTPS redirect to first canonical URL
+  //   {container}-{protocol}-{port}.mesh.diegonmarcos.com        → canonical per-port entry
+  //   {container}-null.mesh.diegonmarcos.com                     → portless workers/sidecars
   // Protocol is read from build.json (containers.<x>.protocol / extra_ports[].protocol / l4_ports[].protocol).
   const allAppUrls: any[] = [];
   for (const [svcName, svc] of Object.entries(services) as [string, any][]) {
@@ -1071,7 +1075,7 @@ function deriveCaddy(c: any): DerivedFile[] {
         // explicitly flagged `monitor: false` (e.g. caddy admin :2019,
         // caddy raw :80, stalwart :2025 shadow delivery). Listened-to by
         // local processes but never reachable from the WG mesh, so a
-        // canonical .app URL probe would always fail.
+        // canonical mesh URL probe would always fail.
         // Data-driven via build.json — both signals already declared:
         //   `"bind": "127.0.0.1"`  → service-defined binding scope
         //   `"monitor": false`     → explicit opt-out for non-bind cases
@@ -1090,12 +1094,12 @@ function deriveCaddy(c: any): DerivedFile[] {
       }
       // Redirect target: first canonical URL (or -null for portless)
       const redirectTarget = ports.length > 0
-        ? `${c.container_name}-${ports[0].protocol}-${ports[0].port}.app`
-        : `${c.container_name}-null.app`;
+        ? `${c.container_name}-${ports[0].protocol}-${ports[0].port}${MESH_SFX}`
+        : `${c.container_name}-null.mesh.diegonmarcos.com`;
       // Short alias → HTTPS redirect
       allAppUrls.push({
         kind: "redirect",
-        service: `${c.container_name}.app`,
+        service: `${c.container_name}${MESH_SFX}`,
         redirect_to: `https://${redirectTarget}`,
         container: c.container_name,
         container_key: ck,
@@ -1105,7 +1109,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       if (ports.length === 0) {
         allAppUrls.push({
           kind: "portless",
-          service: `${c.container_name}-null.app`,
+          service: `${c.container_name}-null.mesh.diegonmarcos.com`,
           container: c.container_name,
           container_key: ck,
           svc: svcName,
@@ -1125,7 +1129,7 @@ function deriveCaddy(c: any): DerivedFile[] {
         for (const { port, protocol, source } of ports) {
           allAppUrls.push({
             kind: "canonical",
-            service: `${c.container_name}-${protocol}-${port}.app`,
+            service: `${c.container_name}-${protocol}-${port}.mesh.diegonmarcos.com`,
             container: c.container_name,
             container_key: ck,
             svc: svcName,
@@ -1140,22 +1144,21 @@ function deriveCaddy(c: any): DerivedFile[] {
     }
   }
 
-  // ── private_mesh_routes: cloud.<name>.app (a0_docs/eng-specs/url-scheme.md) ──
-  // The private scheme. One mesh-only name per service (from its .app dns key)
+  // ── private_mesh_routes: cloud.<name>.mesh.diegonmarcos.com (a0_docs/eng-specs/url-scheme.md) ──
+  // The private scheme. One mesh-only name per service (from its mesh dns key)
   // and per HTTP container (first canonical port), deduplicated. The legacy
-  // <name>.app / <container>-<proto>-<port>.app names above stay as aliases
-  // for one release. Hickory's `*.app` wildcard already resolves every
-  // cloud.<name>.app to Caddy on the mesh; caddyfile.nix gates each site to
+  // <name> / <container>-<proto>-<port> mesh names above. Hickory's mesh-zone wildcard already resolves every
+  // cloud.<name>.mesh.diegonmarcos.com to Caddy on the mesh; caddyfile.nix gates each site to
   // mesh/docker/loopback sources. Never emitted into routes/path_routes, the
   // public edge allowlist, or public DNS (test-url-scheme.sh enforces it).
   const privateMeshRoutes: any[] = [];
   const seenPrivate = new Set<string>();
   // Hostname-safe: container names like photoprism_app carry `_`, which is
   // illegal in a TLS SAN and in a DNS host label.
-  const privateNameOf = (key: string) => `cloud.${key.toLowerCase().replace(/_/g, "-")}.app`;
+  const privateNameOf = (key: string) => `cloud.${key.toLowerCase().replace(/_/g, "-")}.mesh.diegonmarcos.com`;
   for (const r of internalRoutes) {
-    if (typeof r.service !== "string" || !r.service.endsWith(".app")) continue;
-    const key = r.service.slice(0, -4);
+    if (typeof r.service !== "string" || !r.service.endsWith(MESH_SFX)) continue;
+    const key = r.service.slice(0, -MESH_SFX.length);
     if (key.startsWith("cloud.") || key.includes(".")) continue;
     const name = privateNameOf(key);
     if (seenPrivate.has(name)) continue;
@@ -1179,11 +1182,11 @@ function deriveCaddy(c: any): DerivedFile[] {
   }
 
   // ── URL scheme: c3-{container} and cloud-{apk} (a0_docs/eng-specs/url-scheme.md) ──
-  // Both are additive: no existing hostname or cloud.<name>.app is touched.
+  // Both are additive: no existing hostname or cloud.<name>.mesh.diegonmarcos.com is touched.
   //   c3-{container}.diegonmarcos.com  public name, wg_only (403 off-mesh), auth none;
-  //   c3-{container}.app               private name (mesh-only site block).
+  //   c3-{container}.mesh.diegonmarcos.com               private name (mesh-only site block).
   //   cloud-{apk}.diegonmarcos.com     public, NEVER wg_only, Authelia, anonymous -> landing;
-  //   cloud-{apk}.app                  private, only for APKs with a container web target.
+  //   cloud-{apk}.mesh.diegonmarcos.com                  private, only for APKs with a container web target.
   // Lists come from data, not from here: containers from the canonical-port
   // synthesis above, APKs from cloud-u-android's generated apk-manifest.json.
   let urlSchemeOut: any = null;
@@ -1220,11 +1223,11 @@ function deriveCaddy(c: any): DerivedFile[] {
         container,
         comment: `c3 container ${container} (mesh-only; ${e.service})`,
       });
-      const priv = `${label}.app`;
+      const priv = `${label}.mesh.diegonmarcos.com`;
       addPrivate(priv, e.upstream, "c3");
       c3Hosts.push({ host, container, private: priv });
     }
-    // Every manifest MCP ALSO gets a private mesh address c3-{container}.app
+    // Every manifest MCP ALSO gets a private mesh address c3-{container}.mesh.diegonmarcos.com
     // (WG peers, no token): the public mcp.diegonmarcos.com path stays
     // token-gated (vault: mesh-only). Reuses the c3 name above when the
     // container already has one; adds it otherwise (vault, cgc-pvt).
@@ -1233,7 +1236,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       const hit = mcpContainerOf.get(m.base_path);
       if (!hit?.upstream) throw new Error(`MCP ${m.base_path} has no container/upstream — cannot give it a private mesh address`);
       const base = hostSafe(hit.container);
-      const priv = `${base.startsWith(c3Prefix) ? base : c3Prefix + base}.app`;
+      const priv = `${base.startsWith(c3Prefix) ? base : c3Prefix + base}.mesh.diegonmarcos.com`;
       addPrivate(priv, hit.upstream, "c3");
       mcpPrivate.push({ name: m.name, base_path: m.base_path, container: hit.container, private: priv, url: `https://${priv}/mcp` });
     }
@@ -1260,7 +1263,7 @@ function deriveCaddy(c: any): DerivedFile[] {
       });
       dedupedRoutes.push(route);
       let priv: string | null = null;
-      if (privateUpstream) { priv = `${name}.app`; addPrivate(priv, privateUpstream, "apk"); }
+      if (privateUpstream) { priv = `${name}.mesh.diegonmarcos.com`; addPrivate(priv, privateUpstream, "apk"); }
       apkHosts.push({ host, apk: name, web_kind: web?.kind ?? null, private: priv });
     }
 
@@ -3980,7 +3983,7 @@ function deriveCloudFleetDeclared(c: any): DerivedFile {
       subgroup:    (SERVICE_SUBGROUP_OVERRIDE[id] ?? CATEGORY_TO_FLEET[svc.category ?? ""])?.subgroup ?? null,
       port:        svc.port ?? null,
       private_ip:  (vms[svc.vm ?? ""] ?? {}).wg_ip ?? null,
-      private_url: svc.port ? `https://${id}.app` : null,
+      private_url: svc.port ? `https://${id}.mesh.diegonmarcos.com` : null,
       public_url:  domain ? `https://${domain}` : null,
       mcp:         svc.mcp ? true : undefined,
     };
