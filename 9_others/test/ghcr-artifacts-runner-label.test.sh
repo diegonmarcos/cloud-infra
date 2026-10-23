@@ -66,7 +66,7 @@ ck "matrix field resolves to the mapped label" \
 CONFIG="$ROOT/config.json"
 LABELS_CONFIGURED=$(jq -r '.vms | to_entries[] | select(.value.runner_label != null and .value.runner_label != "") | "\(.key)=\(.value.runner_label)"' "$CONFIG" 2>/dev/null)
 if [ -n "$LABELS_CONFIGURED" ]; then
-  if RUNNERS=$(gh api repos/diegonmarcos/cloud-infra/actions/runners --jq '.runners[] | select(.status=="online") | .labels[].name' 2>/dev/null) && [ -n "$RUNNERS" ]; then
+  if RUNNERS=$(gh api repos/diegonmarcos/cloud-t-infra/actions/runners --jq '.runners[] | select(.status=="online") | .labels[].name' 2>/dev/null) && [ -n "$RUNNERS" ]; then
     for _kv in $LABELS_CONFIGURED; do
       _lbl=${_kv#*=}
       ck "runner_label '$_lbl' (${_kv%%=*}) is a label of an online runner" \

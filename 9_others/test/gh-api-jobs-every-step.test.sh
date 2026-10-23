@@ -64,7 +64,7 @@ echo '{"message":"Not Found"}'                      > "$T/not-found.json"
 run_jobs() { # run_jobs <fixture> <http_code> [token] -> writes $T/out, returns tool exit status
     GH_API_STUB_BODY="$T/$1" GH_API_STUB_CODE="$2" GH_TOKEN="${3-stub-token}" \
         PATH="$T/bin:$PATH" \
-        "$TOOL" jobs diegonmarcos/cloud-infra 35069355373 >"$T/out" 2>&1
+        "$TOOL" jobs diegonmarcos/cloud-t-infra 35069355373 >"$T/out" 2>&1
 }
 
 # ── 1) the defect itself: every step is listed, with its conclusion ──────────

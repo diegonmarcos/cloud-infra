@@ -591,7 +591,7 @@ case "$MODE" in
   base)
     build_base_tar "$SRC" "$WORK/ctx/octocode-db.tar"
     DESC="cloud-cgc-pub-mcp octocode DB BASE — octocode home ROOT state (config.toml + fastembed/ + sentencetransformer/ model caches), no project data. Consumers restore this ONCE per octocode home, then layer each cgc-db-<repo>:latest on top via cp -a. Embedding models must stay pinned identical everywhere — a mismatch silently drop_tables a repo."
-    SRC_URL="https://github.com/diegonmarcos/cloud-infra"
+    SRC_URL="https://github.com/diegonmarcos/cloud-t-infra"
     ;;
   repo)
     # BEFORE the tar+build, not just before the push: if this repo may not be
@@ -609,7 +609,7 @@ case "$MODE" in
   monolith|*)
     tar cf "$WORK/ctx/octocode-db.tar" -C "$SRC" .
     DESC="cloud-cgc-pub-mcp octocode DB (semantic FastEmbed vectors + GraphRAG graph). Single GHCR upstream; restore into the octocode home (~/.local/share/octocode or the octocode_db volume) via cloud-cgc-db-pull.sh."
-    SRC_URL="https://github.com/diegonmarcos/cloud-infra"
+    SRC_URL="https://github.com/diegonmarcos/cloud-t-infra"
     ;;
 esac
 [ -s "$WORK/ctx/octocode-db.tar" ] || { echo "::error::empty DB tar from $SRC (mode=$MODE)"; exit 1; }

@@ -126,7 +126,7 @@
     "token_type": "fine-grained personal access token",
     "resource_owner": "diegonmarcos",
     "repository_access": [
-      "diegonmarcos/cloud-infra"
+      "diegonmarcos/cloud-t-infra"
     ],
     "permissions": [
       {
@@ -175,19 +175,19 @@
         "../cloud-u-containers"
       ],
       "_checkout_comment": "Where the tester looks for this repo's tree. 'a_solutions' is the path ship.yml already checks cloud-u-containers out to on the runner; '../cloud-u-containers' is the local sibling clone. The repo is PUBLIC, so plain GITHUB_TOKEN can check it out — no dispatch credential is needed to lint the dispatch credential. If NEITHER path resolves the tester FAILS rather than skipping: a cross-repo consumer that silently stops being checked is exactly the blind spot #149 is about.",
-      "endpoint": "POST /repos/diegonmarcos/cloud-infra/dispatches",
-      "needs": "Contents: Write on diegonmarcos/cloud-infra",
+      "endpoint": "POST /repos/diegonmarcos/cloud-t-infra/dispatches",
+      "needs": "Contents: Write on diegonmarcos/cloud-t-infra",
       "why": "cloud-u-containers is no longer a submodule of cloud-infra (split 2026-09-06). Nothing in cloud-infra watches a push here, so this dispatch is the ONLY signal that a container changed. If it stops firing, every service change sits committed-but-undeployed while the Ship page looks idle."
     },
     {
-      "repo": "diegonmarcos/cloud-infra",
+      "repo": "diegonmarcos/cloud-t-infra",
       "workflow": ".github/workflows/ship-reconcile.yml",
       "kind": "self-repo",
       "checkout_paths": [
         "."
       ],
-      "endpoint": "POST /repos/diegonmarcos/cloud-infra/actions/workflows/ship.yml/dispatches",
-      "needs": "Actions: Write (dispatch) + Actions: Read (verify) on diegonmarcos/cloud-infra",
+      "endpoint": "POST /repos/diegonmarcos/cloud-t-infra/actions/workflows/ship.yml/dispatches",
+      "needs": "Actions: Write (dispatch) + Actions: Read (verify) on diegonmarcos/cloud-t-infra",
       "why": "Re-queues a lost deploy (#354). GITHUB_TOKEN cannot do this at all: GitHub suppresses runs triggered by GITHUB_TOKEN to prevent recursion, so the dispatch returns 204 and no run is ever created — a silent no-op that looks exactly like success."
     }
   ],

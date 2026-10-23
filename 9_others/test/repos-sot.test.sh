@@ -17,7 +17,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 SOT="$ROOT/1_cloud-configs/src/inputs/repos.sot.json"
 M="$ROOT/0_apps/src/manifest.json"
 INV="$ROOT/1_cloud-configs/src/inputs/github-repos.json"
-URL="${REPOS_SOT_URL:-https://raw.githubusercontent.com/diegonmarcos/git-repos-master/claude/new-session-vb0job/repos.json}"
+URL="${REPOS_SOT_URL:-https://raw.githubusercontent.com/diegonmarcos/git-repos-master/main/repos.json}"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 pass=0; fail=0
 ok()  { pass=$((pass+1)); echo "PASS $1"; }
@@ -65,7 +65,7 @@ used=""; for o in $old; do jq -e --arg o "$o" '[.fleet.repos[].github]|index($o)
 [ -z "$used" ] && ok "S5b no fleet entry still uses a renamed-away name" || bad "S5b fleet manifest uses old name(s):$used"
 
 # S6 mutation: the guard must bite
-jq '.repos |= map(select(.name != "cloud-infra"))' "$SOT" > "$T/mut.json"
+jq '.repos |= map(select(.name != "cloud-t-infra"))' "$SOT" > "$T/mut.json"
 out=$(jq -r --slurpfile s "$T/mut.json" '[$s[0].repos[]|'"$GH"'] as $g | .fleet.repos[] | select(.github as $x | ($g|index($x))==null) | .dir' "$M")
 [ -n "$out" ] && ok "S6 dropping a repo from the registry is caught" || bad "S6 guard does not bite"
 
