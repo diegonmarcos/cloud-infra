@@ -2679,7 +2679,7 @@
           "command": "sh",
           "args": [
             "-c",
-            "\"${MCP_LOCAL_LAUNCH:-$HOME/.claude/mcp-local-launch.sh}\" \"${CLOUD_INFRA_DIR:-$HOME/git/cloud-infra}/a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/index.ts\""
+            "\"${MCP_LOCAL_LAUNCH:-$HOME/.claude/mcp-local-launch.sh}\" \"${CLOUD_INFRA_DIR:-$HOME/git/cloud-t-infra}/a_solutions/infra-api_cloud-superapp-mcp/src/code/cloud-superapp-mcp/src/index.ts\""
           ]
         }
       },
@@ -2918,7 +2918,7 @@
           "cache_ttl_s": 120,
           "max_per_page": 50,
           "repos": [
-            "diegonmarcos/cloud-infra",
+            "diegonmarcos/cloud-t-infra",
             "diegonmarcos/cloud-infra-desktop",
             "diegonmarcos/cloud-u-android",
             "diegonmarcos/cloud-u-containers",
@@ -3366,7 +3366,7 @@
         "runner_workdir": "/tmp/runner/work",
         "registrations": [
           {
-            "repo_url": "https://github.com/diegonmarcos/cloud-infra",
+            "repo_url": "https://github.com/diegonmarcos/cloud-t-infra",
             "runner_name": "oci-apps-arm64"
           },
           {
@@ -3690,8 +3690,8 @@
           "_doc": "Gitea honours its reverse-proxy user header from ANY peer: REVERSE_PROXY_TRUSTED_PROXIES only feeds the X-Forwarded-For rewrite (gitea v28.0.0 routers/common/middleware.go:33); services/auth/reverseproxy.go never checks the source. With 0.0.0.0:3002 reachable from every wg0/wg-public peer and ~40 host-network containers on oci-apps, enabling reverse-proxy auth on that listener would let any of them become `diego` with one header. So gitea listens only on a unix socket in a tmpfs volume that no other container mounts, and this caddy owns :3002: it forwards `identity.header` (and X-Real-IP) only when the peer is in trusted_proxies AND the Host is this service's domain — the .app catalog routes the hub also serves from 10.0.0.1 carry Host gitea.app, so they cannot mint an identity either. Everything else reaches gitea exactly as before, anonymous."
         },
         "mirrors": {
-          "cloud-infra": {
-            "upstream": "https://github.com/diegonmarcos/cloud-infra.git"
+          "cloud-t-infra": {
+            "upstream": "https://github.com/diegonmarcos/cloud-t-infra.git"
           },
           "front-unity": {
             "upstream": "https://github.com/diegonmarcos/front-unity.git",
@@ -11943,10 +11943,15 @@
         "git": 77
       },
       "github_repos": 39,
-      "github_indexed": 5,
+      "github_indexed": 4,
       "github_mirrored": 38
     },
     "_dangling_declarations": [
+      {
+        "kind": "octocode-index",
+        "repo": "cloud-infra",
+        "declared_by": "cloud-cgc-pub-mcp"
+      },
       {
         "kind": "octocode-index",
         "repo": "cloud-infra-desktop",
@@ -12484,22 +12489,22 @@
         }
       },
       {
-        "id": "git#gh/cloud-infra",
-        "service": "cloud-cgc-pub-mcp",
+        "id": "git#gh/cloud-t-infra",
+        "service": "gitea",
         "container": null,
         "engine": "git",
         "kind": "git-remote",
         "host": "github",
-        "repo": "diegonmarcos/cloud-infra",
+        "repo": "diegonmarcos/cloud-t-infra",
         "visibility": "public",
         "fork": false,
         "pushed_at": "2026-10-21T16:53:29Z",
-        "indexed": true,
-        "local_dir": "cloud-infra",
+        "indexed": false,
+        "local_dir": null,
         "mirrored": true,
         "persistence": {
           "type": "git",
-          "ref": "https://github.com/diegonmarcos/cloud-infra.git",
+          "ref": "https://github.com/diegonmarcos/cloud-t-infra.git",
           "mount": null
         },
         "vm": null,
@@ -12509,17 +12514,17 @@
         }
       },
       {
-        "id": "git#gitea/cloud-infra",
+        "id": "git#gitea/cloud-t-infra",
         "service": "gitea",
         "container": null,
         "engine": "git",
         "kind": "git-remote",
         "host": "gitea",
-        "repo": "cloud-infra",
-        "upstream": "https://github.com/diegonmarcos/cloud-infra.git",
+        "repo": "cloud-t-infra",
+        "upstream": "https://github.com/diegonmarcos/cloud-t-infra.git",
         "persistence": {
           "type": "git",
-          "ref": "https://github.com/diegonmarcos/cloud-infra.git",
+          "ref": "https://github.com/diegonmarcos/cloud-t-infra.git",
           "mount": null
         },
         "vm": "oci-A1-f_0",
