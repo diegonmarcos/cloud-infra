@@ -448,7 +448,13 @@ jobs:
     # slow (amd64 images emulated on the arm64 box, docker rmi between
     # surfaces forcing full re-pulls) is tracked separately, and until it
     # lands a tighter ceiling would kill restores that were going to succeed.
-    timeout-minutes: 240
+    #
+    # 2026-10-23 (#1061): tightened again to 120. The measured full restore (pub
+    # then pvt) is ~63 min (run 39752468596); a restore past 2h is wedged, and
+    # a wedged one must release ship-wg-runner so Ship deploys are never queued
+    # behind it for hours. The per-surface poll below stops at 110 min so the
+    # step fails cleanly (with the box log tail) before this ceiling fires.
+    timeout-minutes: 120
     permissions:
       contents: read
       packages: read
@@ -796,12 +802,12 @@ jobs:
           # the box for another two hours with nobody reading its result.
           #
           # A wall-clock guess cannot tell "slow" from "stuck"; process liveness can.
-          # The 4h counter below is a backstop against a poll loop that somehow never
+          # The 110-minute counter below is a backstop against a poll loop that somehow never
           # terminates, not the thing that is supposed to fire.
             RC=""
             i=0
             GONE=0
-            while [ $i -lt 480 ]; do
+            while [ $i -lt 220 ]; do
               sleep 30
               i=$((i + 1))
               # One round trip for both facts. `[c]gc` so the poll's own remote command
@@ -837,7 +843,7 @@ jobs:
             # Starting an already-running container is a no-op error here, hence || true.
             ssh $CGC_SSH_OPTS "$TARGET" "sudo docker start $CTR" >/dev/null 2>&1 || true
             if [ -z "$RC" ]; then
-              echo "::error::[cgc-db] $SURFACE restore-all produced no result on $HOST (process gone, or the 4h backstop fired)"
+              echo "::error::[cgc-db] $SURFACE restore-all produced no result on $HOST (process gone, or the 110-minute bound fired)"
               exit 1
             fi
             if [ "$RC" != "0" ]; then

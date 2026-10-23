@@ -1821,6 +1821,7 @@ chunk_index_repo() {
   _cr_n=$(chunk_state_read "$_cr_sf_stage" | jq -r '.chunk // 0')
   [ "${_cr_n:-0}" -gt 0 ] 2>/dev/null || _cr_n="$CHUNK_N_DEFAULT"
   [ -n "${CGC_CHUNK_FILES:-}" ] && _cr_n="$CGC_CHUNK_FILES"
+  _cr_stallcap=0
   # graphrag (#1061): a window's cost is dominated by a fixed relationship-discovery phase after its
   # file loop (octocode re-resolves the imports of every unchanged importer of the window's
   # symbols), so BIG windows amortise it and a stalled one is split by halving down to ONE file.
@@ -1866,6 +1867,17 @@ chunk_index_repo() {
     if [ "$MANIFEST_PHASE" = "graphrag" ] && [ -z "${CGC_CHUNK_FILES:-}" ]; then
       _cr_plan_n="$_cr_n"
       [ "$CHUNK_MAX" -gt 0 ] && [ "$_cr_plan_n" -gt "$CHUNK_MAX" ] && _cr_plan_n="$CHUNK_MAX"
+      # Growth stays inside the planning cap (#1061): the window starts big (the fixed
+      # relationship phase is amortised) but may not GROW past CHUNK_GR_WINDOW_MIN of work
+      # at the measured rate (floored at CHUNK_GR_MIN_MSPF), and never below the start size.
+      if [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null; then
+        _cr_rate_n=$(( _cr_wplan * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
+        [ "$_cr_rate_n" -lt "${CGC_GRAPHRAG_START_CHUNK:-400}" ] && _cr_rate_n="${CGC_GRAPHRAG_START_CHUNK:-400}"
+        [ "$_cr_rate_n" -lt "$_cr_plan_n" ] && _cr_plan_n="$_cr_rate_n"
+      fi
+      # A size that already stalled in this job is not tried again (every retry of a
+      # stalling size cost 50-60 min of silence in run 39841993539).
+      [ "${_cr_stallcap:-0}" -gt 0 ] && [ "$_cr_plan_n" -gt "$_cr_stallcap" ] && _cr_plan_n="$_cr_stallcap"
       echo "[cgc-db] $_cr_r · chunk $_cr_i: graphrag window of up to ${_cr_plan_n} files (halved on a stall, down to one file)"
     elif [ "${_cr_mspf:-0}" -gt 0 ] 2>/dev/null && [ -z "${CGC_CHUNK_FILES:-}" ]; then
       _cr_plan_n=$(( _cr_wplan * 60 * 10 * CHUNK_FILL_PCT / _cr_mspf ))
@@ -1956,6 +1968,7 @@ chunk_index_repo() {
         # Split: halve the window (down to one file). A stalled window left its files with
         # nodes but no edges, so they are forced (marker) in the windows that follow.
         _cr_n=$(( _cr_nn / 2 )); [ "$_cr_n" -ge 1 ] || _cr_n=1
+        _cr_stallcap="$_cr_n"
         jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_o/state0" > "$_cr_sf_stage"
         chunk_rework_add "$_cr_sf_stage" "$_cr_o/next" "$_cr_sf_stage"
         echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i of ${_cr_nn} file(s) stalled/timed out (${_cr_dt}s) — splitting: next window ${_cr_n} file(s)"

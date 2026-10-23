@@ -25,6 +25,7 @@ ok()  { pass=$((pass+1)); echo "  ok: $1"; }
 bad() { fail=$((fail+1)); echo "  FAIL: $1"; }
 
 # shellcheck disable=SC1090
+export CGC_GH_RETRY_SLEEP=0
 CGC_PKG_SOURCE_ONLY=1 source "$PKG_SH"
 # package.sh sets -eu at its own top level; sourcing carries that into THIS
 # shell. Relax it back so the harness can inspect non-zero returns itself —
@@ -190,6 +191,12 @@ out=$(verify_or_delete_repo_pkg cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
 { [ "$rc" -ne 0 ] && echo "$out" | grep -q "could NOT delete"; } \
   && ok "backstop: delete failure surfaced as ::error::" || bad "case F: rc=$rc out=[$out]"
 unset STUB_DELETE_RC
+
+: > "$CALL_LOG"; STUB_ISPRIVATE=true STUB_CUR_VIS=apierror
+out=$(verify_or_delete_repo_pkg cgc-db-cloud-infra cloud-infra 2>&1); rc=$?
+{ [ "$rc" -ne 0 ] && echo "$out" | grep -q "unreadable after retries" && echo "$out" | grep -q "retry 1/" \
+  && ! grep -q "^DELETE " "$CALL_LOG"; } \
+  && ok "backstop: rate-limited API -> retried, never deleted on unknown" || bad "case F2: rc=$rc out=[$out] log=[$(cat "$CALL_LOG")]"
 
 echo "── gate_repo_push (PRE-push gate: never create a public pkg from a private repo) ──"
 : > "$CALL_LOG"; STUB_ISPRIVATE=false STUB_CUR_VIS=absent
