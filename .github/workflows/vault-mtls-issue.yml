@@ -116,7 +116,7 @@ jobs:
           cp "$W/ca.pem" 1_cloud-configs/src/inputs/vault-client-ca.pem
           grep -q 'PRIVATE KEY' 1_cloud-configs/src/inputs/vault-client-ca.pem && { echo "::error::private key in the public file"; exit 1; }
           git config user.name "Claude"; git config user.email "noreply@anthropic.com"
-          git add 1_cloud-configs/src/inputs/vault-client-ca.pem
+          git add -f 1_cloud-configs/src/inputs/vault-client-ca.pem
           git commit -q -m "vault-mtls: publish PUBLIC fleet client CA certificate (#1117) [skip ci]"
           git push -q origin HEAD:${{ github.ref_name }}
           echo "issued for: $DEVICES; encrypted bundle pushed to cloud-me-data-pvt/vault-mtls; public CA cert committed."
