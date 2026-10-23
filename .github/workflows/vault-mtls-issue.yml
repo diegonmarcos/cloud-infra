@@ -75,7 +75,7 @@ jobs:
           set -eu
           umask 077
           W="$(mktemp -d -p /dev/shm)"; cd "$W"
-          trap 'find "$W" -type f -exec shred -u {} + 2>/dev/null; rm -rf "$W" ~/.ssh/id_deploy' EXIT
+          trap 'find "$W" -type f -exec shred -u {} + 2>/dev/null || true; rm -rf "$W" ~/.ssh/id_deploy || true' EXIT
           # ── CA (key stays in this directory, then only inside the sops file) ──
           openssl ecparam -name prime256v1 -genkey -noout -out ca.key
           openssl req -new -x509 -key ca.key -sha256 -days 1825 -subj "/O=diegonmarcos fleet/CN=vault-client-ca" \
