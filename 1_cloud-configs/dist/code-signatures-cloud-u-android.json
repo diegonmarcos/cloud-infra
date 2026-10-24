@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22154,
+    "files": 22173,
     "by_lang": {
       "js": 488,
       "sh": 550,
       "py": 163,
-      "kotlin": 11725,
+      "kotlin": 11744,
       "java": 647,
       "nix": 29,
       "rust": 111,
@@ -22,7 +22,7 @@
       "shell": 435,
       "script": 255,
       "java": 646,
-      "kotlin": 11722,
+      "kotlin": 11741,
       "module": 6417,
       "flake": 25,
       "python": 54,
@@ -33159,6 +33159,7 @@
       ],
       "imports": [
         "androidx.activity.compose.BackHandler",
+        "androidx.compose.animation.AnimatedVisibility",
         "androidx.compose.foundation.BorderStroke",
         "androidx.compose.foundation.background",
         "androidx.compose.foundation.clickable",
@@ -33179,8 +33180,10 @@
         "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.foundation.verticalScroll",
         "androidx.compose.material.icons.Icons",
+        "androidx.compose.material.icons.filled.AccountCircle",
         "androidx.compose.material.icons.filled.AutoAwesome",
         "androidx.compose.material.icons.filled.Menu",
+        "androidx.compose.material.icons.filled.MoreVert",
         "androidx.compose.material.icons.filled.Settings",
         "androidx.compose.material3.DropdownMenu",
         "androidx.compose.material3.DropdownMenuItem",
@@ -33194,10 +33197,7 @@
         "androidx.compose.runtime.Immutable",
         "androidx.compose.runtime.getValue",
         "androidx.compose.runtime.mutableStateOf",
-        "androidx.compose.runtime.remember",
-        "androidx.compose.runtime.rememberUpdatedState",
-        "androidx.compose.runtime.setValue",
-        "androidx.compose.runtime.staticCompositionLocalOf"
+        "androidx.compose.runtime.remember"
       ],
       "symbols": [
         "AppTopBarScaffold( decl: TopBarDecl, /** The app's name (build.json::name, the launcher label)",
@@ -33741,6 +33741,47 @@
         "crop(full: Bitmap, b: Rect, windowSpace: Boolean = false)",
         "distance(a: Color, b: Color)",
         "class FleetParityTest"
+      ]
+    },
+    {
+      "path": "ab_cloud-libs-shared/libs/bottomnav/src/test/kotlin/com/diegonmarcos/superapp/bottomnav/IconPillTabsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "IconPillTabsTest"
+      ],
+      "imports": [
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.WindowInsets",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Rect",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.graphics.painter.ColorPainter",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "evaluate()",
+        "show(count: Int)",
+        "bounds(tag: String)",
+        "assertEvenGaps(n: Int)",
+        "class IconPillTabsTest"
       ]
     },
     {
@@ -72841,6 +72882,7 @@
         "android.content.ContextWrapper",
         "android.os.Bundle",
         "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.key",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.viewinterop.AndroidView",
@@ -165385,6 +165427,7 @@
       "imports": [
         "com.diegonmarcos.superapp.bottomnav.NavDecl",
         "com.diegonmarcos.superapp.bottomnav.NavPage",
+        "com.diegonmarcos.clouddrive.sync.GitHostsDecl",
         "com.diegonmarcos.superapp.bottomnav.TopBarDecl",
         "java.util.Base64",
         "kotlinx.serialization.json.Json",
@@ -165414,6 +165457,7 @@
         "cloneUrl(repo: GitRepoDecl)",
         "byGithub(github: String)",
         "cloneable(github: String)",
+        "routable(id: String)",
         "decode(b64: String)",
         "parseWebserver(text: String)",
         "element(text: String)",
@@ -165435,8 +165479,7 @@
         "parseApps(text: String)",
         "parseConnections(text: String)",
         "parseRepoSot(text: String)",
-        "restrictToRegistry(family: GitFamilyDecl, sot: RepoSotDecl)",
-        "parseGitFamily(text: String)"
+        "restrictToRegistry(family: GitFamilyDecl, sot: RepoSotDecl)"
       ]
     },
     {
@@ -165623,6 +165666,7 @@
         "setThumbnails(on: Boolean)",
         "isBookmarked(path: String)",
         "toggleBookmark(path: String)",
+        "repointBookmarks(rule: (String)",
         "removeBookmark(path: String)",
         "rememberTreeGrant(uri: Uri, name: String)",
         "forgetTreeGrant()",
@@ -167406,6 +167450,22 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/CloudRepos.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudRepos"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.sync.GitHostsDecl.CloudListDecl"
+      ],
+      "symbols": [
+        "filter(repos: List<GitHubRepos.Repo>, prefix: String)",
+        "fetch(base: String, decl: CloudListDecl)",
+        "class CloudRepos"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/ExecCopier.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -167524,6 +167584,130 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/GitHosts.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitHosts"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.sync.GitHostsDecl.GitHostDecl",
+        "java.util.Base64",
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.booleanOrNull",
+        "kotlinx.serialization.json.contentOrNull",
+        "kotlinx.serialization.json.longOrNull"
+      ],
+      "symbols": [
+        "tokenKey(hostId: String)",
+        "userKey(hostId: String)",
+        "headers(kind: String, user: String, token: String)",
+        "basic(user: String, secret: String)",
+        "cloneUser(decl: GitHostDecl, user: String)",
+        "str(k: String)",
+        "bool(k: String)",
+        "long(k: String)",
+        "obj(k: String)",
+        "parse(kind: String, text: String)",
+        "parseGitlab(text: String)",
+        "parseBitbucket(text: String)",
+        "clone(kind: String)",
+        "parseAzure(text: String)",
+        "fetch(decl: GitHostDecl, user: String, token: String)",
+        "class GitHosts",
+        "class Listing"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/GitHostsDecl.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitHostsDecl"
+      ],
+      "imports": [
+        "kotlinx.serialization.json.Json",
+        "kotlinx.serialization.json.JsonArray",
+        "kotlinx.serialization.json.JsonObject",
+        "kotlinx.serialization.json.JsonPrimitive",
+        "kotlinx.serialization.json.contentOrNull",
+        "kotlinx.serialization.json.intOrNull"
+      ],
+      "symbols": [
+        "url(base: String, page: Int)",
+        "reposUrl(user: String, page: Int)",
+        "str(k: String, d: String = \"\")",
+        "bool(k: String)",
+        "sync(text: String)",
+        "parseCloud(syncText: String)",
+        "parseHosts(syncText: String)",
+        "class GitHostsDecl",
+        "class CloudListDecl",
+        "class GitHostDecl"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/GitHostsUi.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitHostsState",
+        "GitHostCard"
+      ],
+      "imports": [
+        "android.content.Context",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.text.KeyboardOptions",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.OutlinedTextField",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.input.KeyboardType",
+        "androidx.compose.ui.text.input.PasswordVisualTransformation",
+        "com.diegonmarcos.clouddrive.Declarations",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveCard",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
+        "com.diegonmarcos.clouddrive.ui.DriveTags",
+        "com.diegonmarcos.clouddrive.ui.IconCatalog",
+        "com.diegonmarcos.clouddrive.ui.Pill",
+        "com.diegonmarcos.clouddrive.ui.PillRow",
+        "com.diegonmarcos.clouddrive.ui.StatusLight",
+        "com.diegonmarcos.cloudlib.gitsync.GitAuth",
+        "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
+        "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
+        "kotlinx.coroutines.CoroutineScope",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "read(key: String)",
+        "put(id: String, h: Host)",
+        "restore()",
+        "signIn(d: GitHostsDecl.GitHostDecl, user: String, token: String)",
+        "signOut(d: GitHostsDecl.GitHostDecl)",
+        "refresh(d: GitHostsDecl.GitHostDecl)",
+        "tokenOf(id: String)",
+        "GitHostCard( decl: GitHostsDecl.GitHostDecl, state: GitHostsState.Host, onSignIn: (user: String, token: String)",
+        "class GitHostsState",
+        "class Host"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/GitHubRepos.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -167551,7 +167735,7 @@
         "ghStatus(text: String, host: String)",
         "group(repos: List<Repo>, wantPrivate: Boolean)",
         "fetch(api: Declarations.GitApiDecl, token: String)",
-        "get(url: String, token: String)",
+        "get(url: String, headers: Map<String, String>)",
         "class GitHubRepos",
         "class Repo",
         "class Page",
@@ -167582,6 +167766,7 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
+        "GitView",
         "GitReposScreen"
       ],
       "imports": [
@@ -167627,7 +167812,7 @@
         "androidx.compose.material3.ButtonDefaults"
       ],
       "symbols": [
-        "GitReposScreen(coordinator: GitSyncCoordinator, actions: DriveActions, nextRunMinutes: Long?, modifier: Modifier = Modifier)",
+        "GitReposScreen(coordinator: GitSyncCoordinator, actions: DriveActions, nextRunMinutes: Long?, modifier: Modifier = Modifier, view: GitView = GitView.ME, prefs: DrivePrefs? = null)",
         "onSignedIn(result: SignInResult)",
         "onWebSession(cookie: String)",
         "tableRow(name: String, owner: String, declaredPrivate: Boolean?)",
@@ -167662,10 +167847,11 @@
         "stepLabel(step: GitSyncCoordinator.Step)",
         "HistoryRow(e: SyncEvent, fmt: DateFormat, compact: Boolean = false)",
         "RepoSettingsSheet(repo: ManagedRepo, coordinator: GitSyncCoordinator, onDismiss: ()",
+        "class GitView",
+        "class CloudPublic",
         "class GhAuth",
         "class GitLogin",
-        "class GitChainState",
-        "class GitListing"
+        "class GitChainState"
       ]
     },
     {
@@ -167774,6 +167960,115 @@
         "class Running",
         "class BulkPull",
         "class Details"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/LocalRepoRefs.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LocalRepoRefs"
+      ],
+      "imports": [
+        "android.content.Context",
+        "com.diegonmarcos.clouddrive.DrivePrefs",
+        "com.diegonmarcos.clouddrive.GitSyncWorker",
+        "com.diegonmarcos.clouddrive.JobPathMigration",
+        "com.diegonmarcos.cloudlib.gitsync.GitCredentialStore",
+        "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
+        "com.diegonmarcos.cloudlib.rclone.RcloneJobStore",
+        "java.io.File"
+      ],
+      "symbols": [
+        "repointRegistry(registry: RepoRegistry, rekey: (from: String, to: String)",
+        "repoint(ctx: Context, prefs: DrivePrefs, old: File, new: File)",
+        "class LocalRepoRefs",
+        "class Report"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/LocalRepos.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LocalRepos"
+      ],
+      "imports": [
+        "java.io.File"
+      ],
+      "symbols": [
+        "repoNameOf(url: String)",
+        "isParentless(folder: String, repoName: String)",
+        "originFromConfig(config: String)",
+        "gitDirOf(dir: File)",
+        "originOf(dir: File)",
+        "scan(roots: List<File>)",
+        "parentless(found: List<Found>)",
+        "usable(name: String)",
+        "rename(p: Parentless)",
+        "renameAll(rows: List<Parentless>)",
+        "repointPath(path: String, old: String, new: String)",
+        "class LocalRepos",
+        "class Found",
+        "class Parentless",
+        "class Outcome",
+        "class Renamed",
+        "class TargetExists",
+        "class Missing",
+        "class Invalid",
+        "class Failed"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/main/java/com/diegonmarcos/clouddrive/sync/ParentlessPanel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "ParentlessPanel"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.AlertDialog",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.material3.TextButton",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.rememberCoroutineScope",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.res.stringResource",
+        "androidx.compose.ui.text.font.FontFamily",
+        "androidx.compose.ui.text.style.TextOverflow",
+        "com.diegonmarcos.clouddrive.DrivePrefs",
+        "com.diegonmarcos.clouddrive.R",
+        "com.diegonmarcos.clouddrive.ui.DriveMetrics",
+        "com.diegonmarcos.clouddrive.ui.DriveTags",
+        "com.diegonmarcos.clouddrive.ui.Hairline",
+        "com.diegonmarcos.clouddrive.ui.Pill",
+        "com.diegonmarcos.clouddrive.ui.SectionHeader",
+        "java.io.File",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.launch",
+        "kotlinx.coroutines.withContext"
+      ],
+      "symbols": [
+        "ParentlessPanel(roots: List<File>, prefs: DrivePrefs, onChanged: ()",
+        "rescan()",
+        "say(o: LocalRepos.Outcome)",
+        "run(list: List<LocalRepos.Parentless>)"
       ]
     },
     {
@@ -168155,7 +168450,9 @@
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "SyncScreen",
+        "GitPageScreen",
+        "RsyncPageScreen",
+        "MountsPageScreen",
         "TerminalIslandAction"
       ],
       "imports": [
@@ -168165,6 +168462,7 @@
         "androidx.compose.animation.togetherWith",
         "androidx.compose.foundation.horizontalScroll",
         "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
         "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -168197,12 +168495,14 @@
         "com.diegonmarcos.clouddrive.ui.DriveTags",
         "com.diegonmarcos.clouddrive.ui.EmptyState",
         "com.diegonmarcos.clouddrive.ui.IconCatalog",
-        "com.diegonmarcos.clouddrive.ui.IslandAction",
-        "com.diegonmarcos.clouddrive.StoreReady"
+        "com.diegonmarcos.clouddrive.ui.IslandAction"
       ],
       "symbols": [
-        "SyncScreen( git: GitSyncCoordinator, rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, page: String? = null, onPageConsumed: ()",
+        "GitPageScreen( git: GitSyncCoordinator, prefs: DrivePrefs, actions: DriveActions, page: String? = null, onPageConsumed: ()",
         "say(msg: String)",
+        "RsyncPageScreen(rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, modifier: Modifier = Modifier)",
+        "MountsPageScreen(rclone: RcloneCoordinator, prefs: DrivePrefs, actions: DriveActions, modifier: Modifier = Modifier)",
+        "SyncSurface(sectionId: String, actions: DriveActions, modifier: Modifier, body: @Composable (say: (String)",
         "TerminalIslandAction(actions: DriveActions, say: (String)"
       ]
     },
@@ -168499,6 +168799,11 @@
       ],
       "symbols": [
         "tab(id: String)",
+        "drawerItem(id: String)",
+        "parentlessRow(name: String)",
+        "hostCard(id: String)",
+        "hostToken(id: String)",
+        "hostSignIn(id: String)",
         "appTile(label: String)",
         "explorerPage(id: String)",
         "managePage(id: String)",
@@ -168535,7 +168840,19 @@
         "androidx.compose.animation.fadeIn",
         "androidx.compose.animation.fadeOut",
         "androidx.compose.animation.togetherWith",
+        "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.heightIn",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.layout.width",
+        "androidx.compose.material3.Icon",
+        "androidx.compose.material3.MaterialTheme",
+        "androidx.compose.material3.Text",
+        "androidx.compose.ui.text.font.FontWeight",
         "androidx.compose.foundation.layout.fillMaxSize",
         "androidx.compose.foundation.layout.windowInsetsPadding",
         "androidx.compose.runtime.Composable",
@@ -168544,6 +168861,7 @@
         "androidx.compose.runtime.mutableStateOf",
         "androidx.compose.runtime.saveable.rememberSaveable",
         "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.stringResource",
@@ -168551,12 +168869,14 @@
         "com.diegonmarcos.clouddrive.R",
         "com.diegonmarcos.superapp.bottomnav.AppTopBarScaffold",
         "com.diegonmarcos.superapp.bottomnav.BottomNavHost",
+        "com.diegonmarcos.superapp.bottomnav.TopBarDrawer",
         "com.diegonmarcos.superapp.bottomnav.appTopBarLabels",
         "com.diegonmarcos.superapp.bottomnav.islandEntries",
         "com.diegonmarcos.superapp.bottomnav.rememberAccountLauncher"
       ],
       "symbols": [
-        "DriveShell(select: String? = null, onSelected: ()"
+        "DriveShell(select: String? = null, onSelected: ()",
+        "DrawerRow(label: String, icon: String, current: Boolean, tag: String, onClick: ()"
       ]
     },
     {
@@ -169101,6 +169421,7 @@
         "configsPages()",
         "webserverAndTopBarDeclarations()",
         "syncPagesAndPeriods()",
+        "cloudListAndGitHostsAreDeclared()",
         "volumesAreReachableUnderExplorerCloud()",
         "volumesDeclaresTheFourClassesAndTheirRules()",
         "syncRulesMapOntoOneRcloneJob()",
@@ -169809,6 +170130,30 @@
       ]
     },
     {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/CloudReposTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "CloudReposTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.clouddrive.sync.GitHostsDecl.CloudListDecl",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "item(name: String, private: Boolean = false, fork: Boolean = false)",
+        "keepsPublicReposWhoseNameStartsWithTheDeclaredPrefix()",
+        "aPrivateRepoIsDroppedEvenWhenTheNameMatches()",
+        "theNameMustSTARTWithThePrefixNotContainIt()",
+        "aBlankPrefixListsNothingRatherThanEverything()",
+        "anErrorBodyIsNoRepositories()",
+        "theUrlIsTheDeclaredRouteWithNoCredentialInIt()",
+        "class CloudReposTest"
+      ]
+    },
+    {
       "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/FleetGitPagingTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -169870,6 +170215,33 @@
         "anEngineThatStopsAnsweringIsNamed()",
         "class GhLoginFollowTest",
         "class Engine"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/GitHostsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "GitHostsTest"
+      ],
+      "imports": [
+        "java.util.Base64",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "eachHostGetsItsOwnAuthHeader()",
+        "secretsLiveUnderKeysThatCannotBeARepoId()",
+        "giteaParsesLikeTheTableExpects()",
+        "gitlabParsesVisibilityAndUrls()",
+        "bitbucketTakesTheHttpsAndSshCloneLinks()",
+        "azureTakesTheProjectAsOwnerAndStripsTheRefPrefix()",
+        "garbageAndErrorBodiesAreNoRepositoriesForEveryKind()",
+        "fetchWithoutATokenOrAUserFailsBeforeAnyRequest()",
+        "theCloneUserIsTheHostsFixedOneElseTheSignInName()",
+        "class GitHostsTest"
       ]
     },
     {
@@ -169947,6 +170319,45 @@
         "aRepositoryOnlyTheRoutedProbeCanSeeIsStillRead()",
         "aDirectoryNobodyCallsARepositoryIsNotCloned()",
         "class GitStatusReaderTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-drive/app/src/test/java/com/diegonmarcos/clouddrive/sync/LocalReposTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LocalReposTest"
+      ],
+      "imports": [
+        "com.diegonmarcos.cloudlib.gitsync.ManagedRepo",
+        "com.diegonmarcos.cloudlib.gitsync.RepoRegistry",
+        "java.io.File",
+        "java.nio.file.Files",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test"
+      ],
+      "symbols": [
+        "tmp()",
+        "repo(root: File, folder: String, origin: String?)",
+        "repoNameIsTheBasenameWithoutTheGitSuffix()",
+        "aFolderIsParentlessWhenItsNameIsNotTheOriginsRepoName()",
+        "theGitSuffixIsNotPartOfTheName()",
+        "aCaseOnlyDifferenceIsNotParentless()",
+        "scanFindsOnlyFoldersWithAGitAndReadsTheirOrigin()",
+        "scanFollowsAGitFileAndIgnoresDuplicateRoots()",
+        "onlyTheOriginRemoteCounts()",
+        "renameMovesTheFolderAndKeepsItsContent()",
+        "renameRefusesWhenTheTargetExistsAndTouchesNothing()",
+        "renameRefusesAnUnusableNameAndAMissingFolder()",
+        "renameAllRenamesEveryRowAndRefusesOnlyTheOnesWhoseTargetExists()",
+        "renameAllCannotLetTwoRowsWinOneName()",
+        "repointPathMovesTheFolderAndWhatIsInsideAndNothingElse()",
+        "theRegistryFollowsTheRenameWithItsIdAndItsCredential()",
+        "aNameTheOwnerChoseIsKeptWhenTheFolderIsRenamed()",
+        "class LocalReposTest"
       ]
     },
     {
@@ -346446,9 +346857,9 @@
         "android.os.Bundle",
         "androidx.activity.compose.BackHandler",
         "androidx.activity.compose.setContent",
+        "androidx.activity.result.contract.ActivityResultContracts",
         "androidx.appcompat.app.AppCompatActivity",
         "androidx.compose.foundation.background",
-        "androidx.compose.foundation.layout.Column",
         "androidx.compose.foundation.layout.WindowInsets",
         "androidx.compose.foundation.layout.WindowInsetsSides",
         "androidx.compose.foundation.layout.fillMaxSize",
@@ -346461,6 +346872,7 @@
         "androidx.compose.runtime.key",
         "androidx.compose.runtime.mutableIntStateOf",
         "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
         "androidx.compose.runtime.setValue",
         "androidx.compose.runtime.staticCompositionLocalOf",
         "androidx.compose.ui.Modifier",
@@ -346479,6 +346891,7 @@
         "onNewIntent(intent: Intent)",
         "handleShortcutIntent(intent: Intent?)",
         "onSaveInstanceState(outState: Bundle)",
+        "onResume()",
         "onDestroy()",
         "Shell()",
         "open(sectionId: String, pageId: String? = null)",
@@ -346506,6 +346919,7 @@
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.painterResource",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavCollapse",
         "com.diegonmarcos.superapp.bottomnav.BottomNavEntry",
         "com.diegonmarcos.superapp.bottomnav.BottomNavIsland",
         "com.diegonmarcos.superapp.bottomnav.rememberBottomNavCollapse"
@@ -346518,42 +346932,119 @@
       ]
     },
     {
+      "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/MeShell.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeShell"
+      ],
+      "imports": [
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.ui.Modifier",
+        "com.diegonmarcos.superapp.bottomnav.AppTopBarScaffold",
+        "com.diegonmarcos.superapp.bottomnav.rememberBottomNavCollapse"
+      ],
+      "symbols": [
+        "MeShell( title: String, selectedSectionId: String?, onOpen: (String)"
+      ]
+    },
+    {
       "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/MeTopBar.kt",
       "lang": "kotlin",
       "role": "kotlin",
       "exports": [
-        "MeTopBar"
+        "MeTopBar",
+        "MeDrawer"
       ],
       "imports": [
-        "androidx.compose.foundation.background",
         "androidx.compose.foundation.clickable",
         "androidx.compose.foundation.layout.Row",
         "androidx.compose.foundation.layout.fillMaxWidth",
-        "androidx.compose.foundation.layout.height",
         "androidx.compose.foundation.layout.padding",
         "androidx.compose.foundation.layout.size",
-        "androidx.compose.foundation.shape.RoundedCornerShape",
         "androidx.compose.material3.Icon",
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
-        "androidx.compose.ui.draw.clip",
         "androidx.compose.ui.platform.LocalContext",
         "androidx.compose.ui.platform.testTag",
         "androidx.compose.ui.res.colorResource",
         "androidx.compose.ui.res.painterResource",
-        "androidx.compose.ui.semantics.Role",
-        "androidx.compose.ui.semantics.role",
-        "androidx.compose.ui.semantics.selected",
-        "androidx.compose.ui.semantics.semantics",
         "androidx.compose.ui.unit.dp",
-        "androidx.compose.ui.unit.sp"
+        "androidx.compose.ui.unit.sp",
+        "com.diegonmarcos.superapp.bottomnav.TopBarDecl",
+        "com.diegonmarcos.superapp.bottomnav.TopBarDrawer",
+        "com.diegonmarcos.superapp.bottomnav.TopBarSettings"
       ],
       "symbols": [
-        "entry(sectionId: String)",
-        "MeTopBar(title: String, currentSectionId: String?, onOpen: (String)",
+        "drawerItem(sectionId: String)",
+        "MeDrawer(onOpen: (String)",
         "class MeTopBar"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/Permissions.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "DeclaredPermission",
+        "PermState",
+        "GateDecision",
+        "Permissions",
+        "MePermissions",
+        "LocalMePermissions",
+        "PermissionTags",
+        "PermissionsList",
+        "PermissionBanner"
+      ],
+      "imports": [
+        "android.app.Activity",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.pm.PackageManager",
+        "android.net.Uri",
+        "android.os.Build",
+        "android.provider.Settings",
+        "android.util.Base64",
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.staticCompositionLocalOf",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "androidx.core.app.ActivityCompat",
+        "androidx.core.content.ContextCompat",
+        "org.json.JSONArray"
+      ],
+      "symbols": [
+        "declared()",
+        "state(ctx: Context, p: DeclaredPermission)",
+        "states(ctx: Context)",
+        "markAsked(ctx: Context, perms: Collection<String>)",
+        "gate(states: List<PermState>)",
+        "openSettings(ctx: Context)",
+        "row(perm: String)",
+        "PermissionsList(title: String, subtitle: String)",
+        "PermissionBanner(missing: List<String>)",
+        "class DeclaredPermission",
+        "class PermState",
+        "class GateDecision",
+        "class Permissions",
+        "class MePermissions",
+        "class PermissionTags"
       ]
     },
     {
@@ -346644,11 +347135,7 @@
       ],
       "imports": [
         "android.content.Context",
-        "android.content.pm.PackageManager",
         "android.graphics.drawable.BitmapDrawable",
-        "android.util.Base64",
-        "androidx.activity.compose.rememberLauncherForActivityResult",
-        "androidx.activity.result.contract.ActivityResultContracts",
         "androidx.compose.foundation.Image",
         "androidx.compose.foundation.background",
         "androidx.compose.foundation.border",
@@ -346671,9 +347158,7 @@
         "androidx.compose.material3.Text",
         "androidx.compose.runtime.Composable",
         "androidx.compose.runtime.getValue",
-        "androidx.compose.runtime.mutableIntStateOf",
         "androidx.compose.runtime.produceState",
-        "androidx.compose.runtime.remember",
         "androidx.compose.runtime.setValue",
         "androidx.compose.ui.Alignment",
         "androidx.compose.ui.Modifier",
@@ -346682,7 +347167,13 @@
         "androidx.compose.ui.graphics.ColorFilter",
         "androidx.compose.ui.graphics.ImageBitmap",
         "androidx.compose.ui.graphics.asImageBitmap",
-        "androidx.compose.ui.layout.ContentScale"
+        "androidx.compose.ui.layout.ContentScale",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.res.painterResource",
+        "androidx.compose.ui.text.font.FontStyle",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign"
       ],
       "symbols": [
         "StackScreen(stack: JSONArray, modifier: Modifier = Modifier)",
@@ -346714,6 +347205,100 @@
       ]
     },
     {
+      "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/TasksModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TaskItem",
+        "TasksModel"
+      ],
+      "imports": [
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "java.util.Calendar"
+      ],
+      "symbols": [
+        "items(events: JSONArray, todos: JSONArray)",
+        "due(t: JSONObject)",
+        "startOfDay(ms: Long)",
+        "addDays(ms: Long, days: Int)",
+        "addMonths(ms: Long, n: Int)",
+        "day(items: List<TaskItem>, day: Long, today: Long)",
+        "bySubject(items: List<TaskItem>)",
+        "month(items: List<TaskItem>, month: Long, firstDayOfWeek: Int = Calendar.MONDAY)",
+        "class TaskItem",
+        "class TasksModel"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/TasksScreen.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TasksView",
+        "TasksTags",
+        "TasksScreen",
+        "TasksContent"
+      ],
+      "imports": [
+        "androidx.compose.foundation.background",
+        "androidx.compose.foundation.border",
+        "androidx.compose.foundation.clickable",
+        "androidx.compose.foundation.layout.Arrangement",
+        "androidx.compose.foundation.layout.Box",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Row",
+        "androidx.compose.foundation.layout.aspectRatio",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.fillMaxWidth",
+        "androidx.compose.foundation.layout.padding",
+        "androidx.compose.foundation.layout.size",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.shape.CircleShape",
+        "androidx.compose.foundation.shape.RoundedCornerShape",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.material3.Text",
+        "androidx.compose.runtime.Composable",
+        "androidx.compose.runtime.LaunchedEffect",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableLongStateOf",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.remember",
+        "androidx.compose.runtime.saveable.rememberSaveable",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Alignment",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.draw.clip",
+        "androidx.compose.ui.platform.LocalContext",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.res.colorResource",
+        "androidx.compose.ui.text.font.FontWeight",
+        "androidx.compose.ui.text.style.TextAlign",
+        "androidx.compose.ui.unit.dp",
+        "androidx.compose.ui.unit.sp",
+        "kotlinx.coroutines.Dispatchers",
+        "kotlinx.coroutines.withContext",
+        "org.json.JSONArray",
+        "java.text.SimpleDateFormat",
+        "java.util.Date"
+      ],
+      "symbols": [
+        "view(v: TasksView)",
+        "row(title: String)",
+        "TasksScreen(modifier: Modifier = Modifier)",
+        "TasksContent(items: List<TaskItem>, notice: String?, modifier: Modifier = Modifier, today: Long = System.currentTimeMillis()",
+        "DayView(items: List<TaskItem>, day: Long, today: Long, onDay: (Long)",
+        "SubjectView(items: List<TaskItem>)",
+        "CalendarView(items: List<TaskItem>, day: Long, today: Long, onDay: (Long)",
+        "Rows(rows: List<TaskItem>, empty: String)",
+        "ItemRow(i: TaskItem)",
+        "Empty(text: String)",
+        "Dim(text: String)",
+        "class TasksView",
+        "class TasksTags"
+      ]
+    },
+    {
       "path": "ac_cloud-me/app/src/main/java/com/diegonmarcos/cloudme/WebPage.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -346740,6 +347325,51 @@
         "WebPage(block: JSONObject, modifier: Modifier = Modifier)",
         "onPageFinished(view: WebView?, url: String?)",
         "doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean)"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/app/src/test/java/com/diegonmarcos/cloudme/HostedFragmentLeakTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "LeakProbeFragment",
+        "HostedFragmentLeakTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "android.os.Bundle",
+        "android.os.Parcel",
+        "android.view.LayoutInflater",
+        "android.view.View",
+        "android.view.ViewGroup",
+        "android.widget.TextView",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.fragment.app.Fragment",
+        "androidx.fragment.app.FragmentActivity",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.Shadows.shadowOf",
+        "org.robolectric.annotation.Config",
+        "org.robolectric.annotation.GraphicsMode"
+      ],
+      "symbols": [
+        "onCreateView(i: LayoutInflater, c: ViewGroup?, s: Bundle?)",
+        "evaluate()",
+        "switchingPagesKeepsOneFragmentAndSmallSavedState()",
+        "class LeakProbeFragment",
+        "class HostedFragmentLeakTest"
       ]
     },
     {
@@ -346800,6 +347430,63 @@
       ]
     },
     {
+      "path": "ac_cloud-me/app/src/test/java/com/diegonmarcos/cloudme/MeShellTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeShellTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.ComponentName",
+        "androidx.activity.ComponentActivity",
+        "androidx.compose.foundation.layout.Column",
+        "androidx.compose.foundation.layout.Spacer",
+        "androidx.compose.foundation.layout.fillMaxSize",
+        "androidx.compose.foundation.layout.height",
+        "androidx.compose.foundation.rememberScrollState",
+        "androidx.compose.foundation.verticalScroll",
+        "androidx.compose.runtime.getValue",
+        "androidx.compose.runtime.mutableStateOf",
+        "androidx.compose.runtime.setValue",
+        "androidx.compose.ui.Modifier",
+        "androidx.compose.ui.geometry.Offset",
+        "androidx.compose.ui.graphics.Color",
+        "androidx.compose.ui.platform.testTag",
+        "androidx.compose.ui.test.assertDoesNotExist",
+        "androidx.compose.ui.test.assertIsDisplayed",
+        "androidx.compose.ui.test.hasText",
+        "androidx.compose.ui.test.junit4.createAndroidComposeRule",
+        "androidx.compose.ui.test.onAllNodes",
+        "androidx.compose.ui.test.onNodeWithTag",
+        "androidx.compose.ui.test.performClick",
+        "androidx.compose.ui.test.performTouchInput",
+        "androidx.compose.ui.test.swipe",
+        "androidx.compose.ui.test.swipeDown",
+        "androidx.compose.ui.test.swipeUp",
+        "androidx.compose.ui.unit.dp",
+        "com.diegonmarcos.superapp.bottomnav.BottomNavTags",
+        "com.diegonmarcos.superapp.bottomnav.TopBarTags",
+        "com.diegonmarcos.superapp.uikit.CloudKitTheme",
+        "com.diegonmarcos.superapp.uikit.KitPalette",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Rule",
+        "org.junit.Test",
+        "org.junit.rules.RuleChain",
+        "org.junit.rules.TestRule",
+        "org.junit.runner.RunWith",
+        "org.junit.runners.model.Statement"
+      ],
+      "symbols": [
+        "evaluate()",
+        "show()",
+        "barShown()",
+        "navLabels()",
+        "class MeShellTest"
+      ]
+    },
+    {
       "path": "ac_cloud-me/app/src/test/java/com/diegonmarcos/cloudme/MeTabsTest.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -346847,6 +347534,57 @@
         "showTabs(select: String)",
         "nameCount(id: String)",
         "class MeTabsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/app/src/test/java/com/diegonmarcos/cloudme/PermissionsTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "PermissionsTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.content.pm.PackageManager",
+        "org.robolectric.RuntimeEnvironment",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config"
+      ],
+      "symbols": [
+        "perm(name: String, required: Boolean = true)",
+        "state(p: DeclaredPermission, granted: Boolean, asked: Boolean, rationale: Boolean = false)",
+        "class PermissionsTest"
+      ]
+    },
+    {
+      "path": "ac_cloud-me/app/src/test/java/com/diegonmarcos/cloudme/TasksModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "TasksModelTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "org.json.JSONArray",
+        "org.json.JSONObject",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.annotation.Config",
+        "java.util.Calendar"
+      ],
+      "symbols": [
+        "at(y: Int, m: Int, d: Int, h: Int = 10)",
+        "event(title: String, start: Long)",
+        "todo(title: String, due: Long?, project: String, status: String = \"NEEDS-ACTION\")",
+        "class TasksModelTest"
       ]
     },
     {
