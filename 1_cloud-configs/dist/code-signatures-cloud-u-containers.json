@@ -6,26 +6,26 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2477,
+    "files": 2484,
     "by_lang": {
       "sh": 167,
       "nix": 181,
-      "js": 91,
+      "js": 92,
       "py": 502,
-      "ts": 1174,
+      "ts": 1180,
       "rust": 362
     },
     "by_role": {
       "shell": 157,
       "nix-module": 19,
-      "file": 338,
+      "file": 339,
       "python": 489,
-      "module": 720,
+      "module": 725,
       "script": 9,
       "flake": 82,
       "compose": 80,
       "entrypoint": 49,
-      "mcp-tool": 118,
+      "mcp-tool": 119,
       "workflow-dag": 5,
       "rust-module": 358,
       "hook": 53
@@ -1543,6 +1543,7 @@
         "./routes/events.js",
         "./routes/reports.js",
         "./routes/workflows.js",
+        "./routes/configsSync.js",
         "../shared/libs/poller.js"
       ],
       "symbols": [
@@ -1630,6 +1631,21 @@
       "symbols": [
         "declaredContainers()",
         "registerAppLogsRoutes(app: FastifyInstance)"
+      ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/api/routes/configsSync.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerConfigsSyncRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "../../shared/libs/configs-sync-core.js"
+      ],
+      "symbols": [
+        "registerConfigsSyncRoutes(app: FastifyInstance)"
       ]
     },
     {
@@ -2229,6 +2245,24 @@
         "getVmSshAlias(vmId: string)",
         "resolveVmId(nameOrAlias: string)",
         "getServicesForVm(vmId: string)"
+      ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/configs-sync-core.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "isConfigFileName",
+        "readConfigFile",
+        "clearConfigCache",
+        "DATA_REPO_RAW",
+        "TTL_MS"
+      ],
+      "imports": [],
+      "symbols": [
+        "isConfigFileName(name: string)",
+        "readConfigFile(name: string, f: Fetcher = fetch as unknown as Fetcher, now = Date.now()",
+        "clearConfigCache()"
       ]
     },
     {
@@ -3331,6 +3365,18 @@
         "node:assert/strict",
         "node:fs",
         "./code/shared/libs/app-logs-core.ts"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/test-configs-sync.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "./code/shared/libs/configs-sync-core.ts"
       ],
       "symbols": []
     },
@@ -5505,6 +5551,24 @@
       ]
     },
     {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/configs-sync-core.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "isConfigFileName",
+        "readConfigFile",
+        "clearConfigCache",
+        "DATA_REPO_RAW",
+        "TTL_MS"
+      ],
+      "imports": [],
+      "symbols": [
+        "isConfigFileName(name: string)",
+        "readConfigFile(name: string, f: Fetcher = fetch as unknown as Fetcher, now = Date.now()",
+        "clearConfigCache()"
+      ]
+    },
+    {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/control.ts",
       "lang": "ts",
       "role": "module",
@@ -6531,6 +6595,17 @@
         "node:assert/strict",
         "./mcp/tools/cf-policy.ts",
         "./shared/libs/redact-argv.ts"
+      ],
+      "symbols": []
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/test-configs-sync.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs"
       ],
       "symbols": []
     },
@@ -20926,6 +21001,24 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/configs-sync-core.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "isConfigFileName",
+        "readConfigFile",
+        "clearConfigCache",
+        "DATA_REPO_RAW",
+        "TTL_MS"
+      ],
+      "imports": [],
+      "symbols": [
+        "isConfigFileName(name: string)",
+        "readConfigFile(name: string, f: Fetcher = fetch as unknown as Fetcher, now = Date.now()",
+        "clearConfigCache()"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/control.ts",
       "lang": "ts",
       "role": "module",
@@ -22460,6 +22553,24 @@
         "getVmSshAlias(vmId: string)",
         "resolveVmId(nameOrAlias: string)",
         "getServicesForVm(vmId: string)"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/configs-sync-core.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "isConfigFileName",
+        "readConfigFile",
+        "clearConfigCache",
+        "DATA_REPO_RAW",
+        "TTL_MS"
+      ],
+      "imports": [],
+      "symbols": [
+        "isConfigFileName(name: string)",
+        "readConfigFile(name: string, f: Fetcher = fetch as unknown as Fetcher, now = Date.now()",
+        "clearConfigCache()"
       ]
     },
     {
