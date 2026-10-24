@@ -6,12 +6,12 @@
   },
   "repo": "cloud-u-android",
   "counts": {
-    "files": 22173,
+    "files": 22181,
     "by_lang": {
       "js": 488,
-      "sh": 550,
+      "sh": 551,
       "py": 163,
-      "kotlin": 11744,
+      "kotlin": 11751,
       "java": 647,
       "nix": 29,
       "rust": 111,
@@ -19,10 +19,10 @@
     },
     "by_role": {
       "file": 2279,
-      "shell": 435,
+      "shell": 436,
       "script": 255,
       "java": 646,
-      "kotlin": 11741,
+      "kotlin": 11748,
       "module": 6417,
       "flake": 25,
       "python": 54,
@@ -12533,6 +12533,7 @@
         "effective(d: Decl, presetId: String?)",
         "splitServers(csv: String)",
         "vpnServers(d: Decl, presetId: String?, fallbacks: List<String>, fleetResolvers: List<String>)",
+        "presetServers(d: Decl, presetId: String?, fallbacks: List<String>, fleetResolvers: List<String>)",
         "meshDownServers(d: Decl, presetId: String?, fallbacks: List<String>, fleetResolvers: List<String>)",
         "meshDownConfig(d: Decl, servers: List<String>, fleetResolvers: List<String>, self: KeyPair, sink: KeyPair)",
         "isMeshName(d: Decl, name: String)",
@@ -12565,8 +12566,7 @@
         "class SelfResolver",
         "class Prefs",
         "class Verdict",
-        "class Live",
-        "class AndroidDns"
+        "class Live"
       ]
     },
     {
@@ -12847,6 +12847,7 @@
         "LogEvent",
         "MeshReducer",
         "MeshJournal",
+        "MeshEventLog",
         "RouteKind",
         "RouteMode",
         "RouteRow",
@@ -12882,6 +12883,13 @@
         "clear()",
         "list()",
         "text(tz: TimeZone = TimeZone.getDefault()",
+        "compact(f: java.io.File)",
+        "levelOf(kind: String)",
+        "shows(e: LogEvent, level: String)",
+        "encode(e: LogEvent)",
+        "decode(line: String)",
+        "file(ctx: android.content.Context)",
+        "log(ctx: android.content.Context, kind: String, text: String, nowMs: Long = System.currentTimeMillis()",
         "v4Range(cidr: String)",
         "v4Coverage(cidrs: List<String>)",
         "kindOf(cidr: String, family: Int, marker: String)",
@@ -12895,14 +12903,7 @@
         "cmp(field: String, a: String, b: String)",
         "clean(lines: List<Line>)",
         "covers(cidr: String, ip: String)",
-        "v(a: String)",
-        "forPeers(peers: List<PeerCfg>, resolvers: List<String>)",
-        "peerBlock(p: PeerCfg)",
-        "class MeshFormat",
-        "class PeerCfg",
-        "class ConfigView",
-        "class public",
-        "class PeerCounters"
+        "v(a: String)"
       ]
     },
     {
@@ -13055,6 +13056,53 @@
       ]
     },
     {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/mesh/MeshReach.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshReach"
+      ],
+      "imports": [
+        "java.net.HttpURLConnection",
+        "java.net.InetAddress",
+        "java.net.InetSocketAddress",
+        "java.net.Socket",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "resolve(host: String)",
+        "connect(address: String, port: Int, timeoutMs: Int)",
+        "https(url: String, timeoutMs: Int)",
+        "run(hosts: List<String>, io: Io = SystemIo, timeoutMs: Int = 4000, nowMs: ()",
+        "timed(nowMs: ()",
+        "probe(host: String, io: Io, timeoutMs: Int, nowMs: ()",
+        "text(results: List<Result>)",
+        "class MeshReach",
+        "class Step",
+        "class Result",
+        "class Io",
+        "class SystemIo"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/mesh/MeshReport.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "MeshReport"
+      ],
+      "imports": [
+        "java.util.TimeZone"
+      ],
+      "symbols": [
+        "redact(text: String)",
+        "build( s: MeshSnapshot?, dnsPreset: String, provider: String, transport: TransportView?, probes: List<ProbeLine>, reach: List<MeshReach.Result>, journal: List<LogEvent>, nowMs: Long, tz: TimeZone = TimeZone.getDefault()",
+        "line(t: String = \"\")",
+        "kv(k: String, v: String)",
+        "class MeshReport"
+      ]
+    },
+    {
       "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/network/mesh/MeshRoutesPage.kt",
       "lang": "kotlin",
       "role": "kotlin",
@@ -13187,6 +13235,8 @@
       ],
       "symbols": [
         "poll()",
+        "logChanges(snap: MeshSnapshot)",
+        "note(kind: String, text: String)",
         "refreshStatic()",
         "shouldPoll(resumed: Boolean)",
         "fail(what: String, t: Throwable)",
@@ -13195,6 +13245,8 @@
         "connected()",
         "connectFlow(label: String, call: ()",
         "run(engineId: String, arg: String = \"\", index: Int = -1)",
+        "runReach()",
+        "reportText()",
         "confirmCloudPreset()",
         "nameOf(id: String)",
         "storedKey(stored: Map<String, String>, id: String)",
@@ -13950,6 +14002,7 @@
         "palette()",
         "Content()",
         "report(label: String, block: ()",
+        "exportText(name: String, text: String)",
         "requestConsent(intent: Intent, then: ()",
         "copy(label: String, text: String)",
         "paste()",
@@ -14036,6 +14089,111 @@
         "class WireGuardProfiles",
         "class Profile",
         "class Peer"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/AiBadgeService.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiBadgeService"
+      ],
+      "imports": [
+        "android.app.Notification",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "android.app.PendingIntent",
+        "android.app.Service",
+        "android.content.BroadcastReceiver",
+        "android.content.Context",
+        "android.content.Intent",
+        "android.content.IntentFilter",
+        "android.os.Build",
+        "android.os.Handler",
+        "android.os.IBinder",
+        "android.os.Looper",
+        "android.os.PowerManager",
+        "androidx.core.app.NotificationCompat",
+        "androidx.core.content.ContextCompat",
+        "com.diegonmarcos.superapp.BuildConfig",
+        "com.diegonmarcos.superapp.MainActivity",
+        "com.diegonmarcos.superapp.R",
+        "com.diegonmarcos.superapp.ops.dagu.DaguPrefs",
+        "com.diegonmarcos.superapp.profile.AccountData",
+        "java.util.concurrent.Executors"
+      ],
+      "symbols": [
+        "run()",
+        "onBind(intent: Intent?)",
+        "onCreate()",
+        "onReceive(context: Context, intent: Intent)",
+        "onStartCommand(intent: Intent?, flags: Int, startId: Int)",
+        "onDestroy()",
+        "requestRefresh(force: Boolean)",
+        "refreshNow()",
+        "drawCached(note: String)",
+        "build(card: AiUsageModel.Card)",
+        "prefs(ctx: Context)",
+        "bearer(ctx: Context)",
+        "ensureChannel(ctx: Context)",
+        "class AiBadgeService"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/AiUsageClient.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiUsageClient"
+      ],
+      "imports": [
+        "java.io.IOException",
+        "java.net.HttpURLConnection",
+        "java.net.URL"
+      ],
+      "symbols": [
+        "get(url: String, headers: Map<String, String>)",
+        "fetch(baseUrl: String, bearer: String, fleet: Transport, plain: Transport)",
+        "class AiUsageClient",
+        "class Reply",
+        "class Transport",
+        "class Outcome",
+        "class Ok",
+        "class Failed"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/main/java/com/diegonmarcos/superapp/notificationcenter/AiUsageModel.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiUsageModel"
+      ],
+      "imports": [
+        "org.json.JSONObject",
+        "java.text.SimpleDateFormat",
+        "java.util.Locale",
+        "java.util.TimeZone"
+      ],
+      "symbols": [
+        "parse(body: String)",
+        "win(o: JSONObject?)",
+        "spend(o: JSONObject?)",
+        "usd(v: Double)",
+        "mTokens(t: Long)",
+        "spend(s: Spend?)",
+        "pct(d: Double)",
+        "ago(ms: Long)",
+        "until(ms: Long)",
+        "resets(w: Win, nowMs: Long, zone: TimeZone)",
+        "card(snap: Snapshot?, fetchedAtMs: Long, nowMs: Long, note: String = \"\", zone: TimeZone = TimeZone.getDefault()",
+        "class AiUsageModel",
+        "class Win",
+        "class Claude",
+        "class Spend",
+        "class OpenRouter",
+        "class Snapshot",
+        "class Card"
       ]
     },
     {
@@ -14129,6 +14287,7 @@
       "symbols": [
         "read(ctx: Context, b: BadgeDeclaration.Badge)",
         "data(headline: String, sub: String, progress: Float?, lines: List<Line>)",
+        "maxLines(b: BadgeDeclaration.Badge)",
         "batteryLevel(ctx: Context)",
         "ago(ms: Long)",
         "class BadgeCardData",
@@ -21030,12 +21189,13 @@
         "servers(id: String, fb: List<String> = emptyList()",
         "defaultPresetIsDeclaredAndUsable()",
         "eachPublicPresetIsItsServersThenItsFallback()",
-        "mirrorPutsNoServerOnTheVpn()",
+        "mirrorPutsOnlyTheFleetResolversOnTheVpn()",
         "privateOnlyIsTheFleetResolverAndNothingElse()",
         "privateWithFallbacksIsFleetFirstThenTheChosenFallbackInOrder()",
         "anUnavailablePresetIsNeverChosenNorUsedAsAFallback()",
         "aPrivatePresetWithNoFleetResolverFailsLoudly()",
         "meshNamesGoToTheFleetResolverWhileTheMeshIsUp()",
+        "everyMeshProfileRoutesItsFleetResolversThroughThePeers()",
         "down(id: String, fb: List<String> = emptyList()",
         "downConfig(id: String, fb: List<String> = emptyList()",
         "withoutTheMeshEachPresetKeepsWhatItCanStillReach()",
@@ -21180,6 +21340,7 @@
       ],
       "imports": [
         "android.app.Application",
+        "androidx.compose.ui.test.assertDoesNotExist",
         "androidx.compose.ui.test.assertIsDisplayed",
         "androidx.compose.ui.test.assertIsNotEnabled",
         "androidx.compose.ui.test.assertTextContains",
@@ -21261,8 +21422,12 @@
         "store(port: FakePort = FakePort()",
         "matchesCloudPreset()",
         "applyCloudPreset()",
+        "resolve(host: String)",
+        "connect(address: String, port: Int, timeoutMs: Int)",
+        "https(url: String, timeoutMs: Int)",
         "class MeshStoreTest",
-        "class controls"
+        "class controls",
+        "class FakeIo"
       ]
     },
     {
@@ -21593,6 +21758,56 @@
       "symbols": [
         "assertOff(r: WgLink.Reading)",
         "class WgLinkTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/AiUsageClientTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiUsageClientTest"
+      ],
+      "imports": [
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "java.io.IOException"
+      ],
+      "symbols": [
+        "leg(name: String, reply: ()",
+        "fetch(bearer: String, fleet: AiUsageClient.Transport, plain: AiUsageClient.Transport)",
+        "class AiUsageClientTest"
+      ]
+    },
+    {
+      "path": "aa_cloud-superapp/app/src/test/java/com/diegonmarcos/superapp/notificationcenter/AiUsageModelTest.kt",
+      "lang": "kotlin",
+      "role": "kotlin",
+      "exports": [
+        "AiUsageModelTest"
+      ],
+      "imports": [
+        "android.app.Application",
+        "android.app.NotificationChannel",
+        "android.app.NotificationManager",
+        "androidx.core.app.NotificationCompat",
+        "org.junit.Assert.assertEquals",
+        "org.junit.Assert.assertFalse",
+        "org.junit.Assert.assertNotNull",
+        "org.junit.Assert.assertNull",
+        "org.junit.Assert.assertTrue",
+        "org.junit.Test",
+        "org.junit.runner.RunWith",
+        "org.robolectric.RobolectricTestRunner",
+        "org.robolectric.RuntimeEnvironment",
+        "org.robolectric.annotation.Config",
+        "java.util.TimeZone"
+      ],
+      "symbols": [
+        "body( pushedAgo: Long = 120, five: String = \"\"\"{\"used_percentage\":23.5,\"resets_at\":${sec + 3 * 3600 + 12 * 60}}\"\"\", seven: String = \"\"\"{\"used_percentage\":41.2,\"resets_at\":${sec + 2 * 86400 + 3 * 3600}}\"\"\", rate: String = \"null\", openrouter: String = \"\"\"{\"configured\":true,\"fetched_at\":$sec,\"balance_usd\":37.654322, \"last_24h\":{\"usd\":2.0,\"tokens\":2000000},\"last_7d\":{\"usd\":7.0,\"tokens\":6000000},\"month\":{\"usd\":11.0,\"tokens\":10000000}}\"\"\", )",
+        "card(b: String = body()",
+        "class AiUsageModelTest",
+        "class at"
       ]
     },
     {
@@ -23792,6 +24007,22 @@
         "test-agi-llm-folders.sh"
       ],
       "symbols": []
+    },
+    {
+      "path": "aa_cloud-superapp/test/test-ai-badge.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "ok()",
+        "bad()",
+        "check()"
+      ],
+      "imports": [],
+      "symbols": [
+        "ok()",
+        "bad()",
+        "check()"
+      ]
     },
     {
       "path": "aa_cloud-superapp/test/test-app-identity-resolves.sh",
