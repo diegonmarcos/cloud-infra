@@ -135,6 +135,16 @@ chunk_rework_restore() {  # $1 repo dir  $2 marked list
   while IFS= read -r _rr_f; do git -C "$1" checkout -q -- "$_rr_f" 2>/dev/null || true; done < "$2"
 }
 
+# The file octocode was inside when a window stalled: the last "Processing file:" of its log
+# (spinner frames separated by CR, ANSI escapes stripped), printed only when it belongs to the
+# stalled window's new-work list. Empty when unknown, so the caller falls back to halving.
+chunk_suspect() {  # $1 octocode log  $2 window new-work list → stdout: path|""
+  [ -f "$1" ] || return 0
+  _cs_p=$(tr '\r' '\n' < "$1" | sed -e 's/\x1b\[[0-9;]*[A-Za-z]//g' -e 's/\[K//g' -n -e 's/.*Processing file: //p' | tail -n 1 | sed 's/[[:space:]]*$//')
+  [ -n "$_cs_p" ] && grep -Fxq -- "$_cs_p" "$2" && printf '%s' "$_cs_p"
+  return 0
+}
+
 # Escape a literal path as an anchored gitignore pattern.
 chunk_glob_escape() {  # stdin paths → stdout patterns
   sed -e 's/[][\\*?!#]/\\&/g' -e 's/^/\//' -e 's/ $/\\ /'
@@ -191,9 +201,22 @@ chunk_plan() {  # $1 repo dir  $2 state file  $3 head  $4 chunk size  $5 allowli
   # stalled window could never get under 509 files and the same stall repeated (run
   # 39749111631, cloud-u-android: 909, 963, 990 new-work files for chunks 400, 454, 481).
   # The dirty files a window leaves out stay dirty (chunk_commit) for the next one.
-  head -n "$_cp_n" "$_cp_o/dirty" > "$_cp_o/dirty_win"
-  _cp_room=$(( _cp_n - $(wc -l < "$_cp_o/dirty_win" | tr -d ' ') ))
-  head -n "$_cp_room" "$_cp_o/cand" > "$_cp_o/chunk"
+  # SUSPECT PROBE (#1143): a stalled window names the file octocode was inside ("Processing
+  # file:"). The next window is that file ALONE (state .probe, one-shot), so a hang is
+  # attributed in one step instead of a log2(window) ladder of 10-30 minute stalls.
+  _cp_probe=$(jq -r '.probe // ""' "$_cp_o/state0"); _cp_pw=0
+  if [ -n "$_cp_probe" ]; then
+    if grep -Fxq -- "$_cp_probe" "$_cp_o/dirty"; then
+      printf '%s\n' "$_cp_probe" > "$_cp_o/dirty_win"; : > "$_cp_o/chunk"; _cp_pw=1
+    elif grep -Fxq -- "$_cp_probe" "$_cp_o/cand"; then
+      : > "$_cp_o/dirty_win"; printf '%s\n' "$_cp_probe" > "$_cp_o/chunk"; _cp_pw=1
+    fi
+  fi
+  if [ "$_cp_pw" = 0 ]; then
+    head -n "$_cp_n" "$_cp_o/dirty" > "$_cp_o/dirty_win"
+    _cp_room=$(( _cp_n - $(wc -l < "$_cp_o/dirty_win" | tr -d ' ') ))
+    head -n "$_cp_room" "$_cp_o/cand" > "$_cp_o/chunk"
+  fi
   LC_ALL=C sort -u "$_cp_o/dirty_win" "$_cp_o/chunk" > "$_cp_o/next"
   LC_ALL=C sort -u "$_cp_o/done" "$_cp_o/next" > "$_cp_o/window"
   # Everything indexable outside the window is hidden from this walk.
@@ -209,7 +232,8 @@ chunk_plan() {  # $1 repo dir  $2 state file  $3 head  $4 chunk size  $5 allowli
   echo $(( _cp_rem + _cp_dn )) > "$_cp_o/todo_n"
   jq --rawfile dirty "$_cp_o/dirty" --rawfile done "$_cp_o/done" \
      '.dirty = ($dirty | split("\n") | map(select(length > 0)))
-      | .done = ($done | split("\n") | map(select(length > 0)))' \
+      | .done = ($done | split("\n") | map(select(length > 0)))
+      | del(.probe)' \
      "$_cp_o/state0" > "$_cp_o/state"
   printf '[cgc-chunk] plan: indexable=%s done=%s dirty=%s remaining=%s chunk=%s window=%s\n' \
     "$(wc -l < "$_cp_o/indexable" | tr -d ' ')" "$(wc -l < "$_cp_o/done" | tr -d ' ')" \

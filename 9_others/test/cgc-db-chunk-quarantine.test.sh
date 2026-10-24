@@ -11,6 +11,7 @@
 #      appended (comment syntax by extension) and git restores the file byte for byte afterwards;
 #      a file without comment syntax is left alone; rework is cleared once the window succeeded;
 #   5. CPU is NOT liveness: the stall watchdog does not reset on CPU alone;
+#   7. a stalled window's in-flight file runs ALONE next (one-shot probe), so a hang is attributed in one step;
 #   6. the update script splits a stalled window by halving down to one file, and only a file that
 #      hangs ALONE is quarantined, named in an ::error::.
 # Each property is re-checked against a mutated library, which must fail.
@@ -68,6 +69,21 @@ run_suite() { # $1 lib → rc = failures
     [ "$(jq -r '.rework | length' "$WORK/s8")" = 3 ] || f "rework_add does not union"
     chunk_rework_clear "$WORK/s8" "$WORK/nx" "$WORK/s9"
     [ "$(jq -r '.rework | length' "$WORK/s9")" = 0 ] || f "rework_clear leaves the committed files"
+    # 7 (#1143): the file a stalled window was inside runs ALONE next; the probe is one-shot
+    printf '%s\n' src/f1.ts src/f4.ts > "$WORK/nx7"
+    { printf '\033[K\342\240\247 Indexing: 3/9 files (33%%) - Processing file: src/f1.ts\r'; printf '\033[K\342\240\207 Indexing: 3/9 files (33%%) - Processing file: src/f4.ts\r'; } > "$WORK/oclog"
+    [ "$(chunk_suspect "$WORK/oclog" "$WORK/nx7")" = "src/f4.ts" ] || f "suspect is not the last file octocode was inside: $(chunk_suspect "$WORK/oclog" "$WORK/nx7")"
+    [ -z "$(chunk_suspect "$WORK/oclog" "$WORK/q")" ] || f "a suspect outside the stalled window was accepted"
+    printf '{"v":1,"seen":"","chunk":6,"done":[],"dirty":[],"probe":"src/f4.ts"}\n' > "$WORK/s10"
+    chunk_exclude_clear "$R"
+    chunk_plan "$R" "$WORK/s10" "$H" 6 "" "$O" >/dev/null
+    [ "$(tr '\n' ' ' < "$O/next")" = "src/f4.ts " ] || f "the probe window is not the suspect alone: $(tr '\n' ' ' < "$O/next")"
+    [ "$(jq -r 'has("probe")' "$O/state")" = false ] || f "the probe is not one-shot"
+    chunk_exclude_clear "$R"
+    printf '{"v":1,"seen":"","chunk":6,"done":[],"dirty":[],"probe":"src/gone.ts"}\n' > "$WORK/s11"
+    chunk_plan "$R" "$WORK/s11" "$H" 3 "" "$O" >/dev/null
+    [ "$(wc -l < "$O/next" | tr -d ' ')" = 3 ] || f "a probe that is no longer outstanding must fall back to the normal window"
+    chunk_exclude_clear "$R"
   ) && return 0 || return 1
 }
 
@@ -76,7 +92,7 @@ run_suite "$LIB" && echo "  ok   quarantine properties hold on the real library"
 
 # wiring: the update script splits a stalled graphrag window and quarantines only a file that hangs ALONE
 UPD="$REPO_ROOT/1_cicd/src/ops/cloud-cgc-db-update.sh"
-if grep -q 'cgc_chunk_persist_decision' "$UPD" && grep -q 'stall decision checkpointed' "$UPD" && grep -q 'splitting: next window' "$UPD" && grep -q 'hangs ALONE' "$UPD" && grep -q 'CGC_ALONE_BUDGET_MIN' "$UPD" && grep -q 'chunk_rework_apply' "$UPD" && grep -q 'chunk_rework_restore' "$UPD"; then echo "  ok   a stalled window is split down to one file; only a file that hangs alone is quarantined"; else echo "  FAIL the split / alone-quarantine / rework wiring is missing from the chunk loop" >&2; fails=1; fi
+if grep -q 'cgc_chunk_persist_decision' "$UPD" && grep -q 'stall decision checkpointed' "$UPD" && grep -q 'splitting: next window' "$UPD" && grep -q 'hangs ALONE' "$UPD" && grep -q 'CGC_ALONE_BUDGET_MIN' "$UPD" && grep -q 'chunk_rework_apply' "$UPD" && grep -q 'chunk_rework_restore' "$UPD" && grep -q 'chunk_suspect' "$UPD"; then echo "  ok   a stalled window is split down to one file; only a file that hangs alone is quarantined"; else echo "  FAIL the split / alone-quarantine / rework wiring is missing from the chunk loop" >&2; fails=1; fi
 
 # 5: CPU is not liveness (the watchdog resets only on progress or an LLM call)
 if grep -q 'dcpu.*-ge' "$LIB"; then echo "  FAIL watchdog still treats CPU as liveness" >&2; fails=1; else echo "  ok   the stall watchdog does not reset on CPU"; fi
@@ -88,6 +104,7 @@ mut() { # $1 name  $2 sed expr
 }
 mut "quarantine ignored by the plan" 's#comm -23 "$_cp_o/remaining" "$_cp_o/quarantine"#comm -23 "$_cp_o/remaining" /dev/null#'
 mut "quarantine ignored by convergence" 's#chunk_quarantined_list "$1"; } | LC_ALL=C sort -u > "$_cv_t"#true; } | LC_ALL=C sort -u > "$_cv_t"#'
+mut "probe window ignored by the plan" 's#_cp_pw=1#_cp_pw=0#'
 mut "rework never restores the file" 's#git -C "$1" checkout -q -- "$_rr_f" 2>/dev/null || true#true#'
 mut "rework forces unmarkable files too" 's#\[ -n "$_rw_m" \] \&\& \[ -f#[ -f#'
 exit "$fails"

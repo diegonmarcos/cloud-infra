@@ -1932,8 +1932,8 @@ chunk_index_repo() {
       [ "$_cr_stall_s" -lt 480 ] && _cr_stall_s=480
       [ "$_cr_stall_s" -gt $(( ${CGC_STALL_MIN:-30} * 60 )) ] && _cr_stall_s=$(( ${CGC_STALL_MIN:-30} * 60 ))
       if [ "$_cr_nn" -le 1 ]; then
-        _cr_stall_s=$(( ${CGC_ALONE_BUDGET_MIN:-60} * 60 ))
-        [ "$_cr_wto" -gt "${CGC_ALONE_BUDGET_MIN:-60}" ] && _cr_wto="${CGC_ALONE_BUDGET_MIN:-60}"
+        _cr_stall_s=$(( ${CGC_ALONE_BUDGET_MIN:-20} * 60 ))
+        [ "$_cr_wto" -gt "${CGC_ALONE_BUDGET_MIN:-20}" ] && _cr_wto="${CGC_ALONE_BUDGET_MIN:-20}"
       fi
     fi
     # Files a stalled window left with a node but no edges are forced this time (marker line).
@@ -1960,16 +1960,18 @@ chunk_index_repo() {
       if [ "$MANIFEST_PHASE" = "graphrag" ] && [ "$_cr_nn" -le 1 ] && [ -s "$_cr_o/next" ]; then
         # ONE file, alone, with the long budget, and it still hangs: the only case that leaves
         # a file out. Name it (private repos: count only) and say why.
-        chunk_quarantine "$_cr_o/state0" "$_cr_o/next" "hangs ALONE: octocode made no progress on this file for ${CGC_ALONE_BUDGET_MIN:-60}m, $(date -u +%Y-%m-%d), run ${GITHUB_RUN_ID:-local}" "$_cr_sf_stage"
+        chunk_quarantine "$_cr_o/state0" "$_cr_o/next" "hangs ALONE: octocode made no progress on this file for ${CGC_ALONE_BUDGET_MIN:-20}m, $(date -u +%Y-%m-%d), run ${GITHUB_RUN_ID:-local}" "$_cr_sf_stage"
         chunk_rework_add "$_cr_sf_stage" "$_cr_o/next" "$_cr_sf_stage"
         if cgc_repo_is_private "$_cr_r"; then _cr_qnames="(name withheld: private repo)"; else _cr_qnames=$(tr '\n' ' ' < "$_cr_o/next"); fi
-        echo "::error::[cgc-db] $_cr_r · QUARANTINED $_cr_qnames: it hangs ALONE (> ${CGC_ALONE_BUDGET_MIN:-60}m); skipped from now on, node without edges"
+        echo "::error::[cgc-db] $_cr_r · QUARANTINED $_cr_qnames: it hangs ALONE (> ${CGC_ALONE_BUDGET_MIN:-20}m); skipped from now on, node without edges"
       elif [ "$MANIFEST_PHASE" = "graphrag" ]; then
         # Split: halve the window (down to one file). A stalled window left its files with
         # nodes but no edges, so they are forced (marker) in the windows that follow.
         _cr_n=$(( _cr_nn / 2 )); [ "$_cr_n" -ge 1 ] || _cr_n=1
         _cr_stallcap="$_cr_n"
-        jq --argjson n "$_cr_n" '.chunk = $n' "$_cr_o/state0" > "$_cr_sf_stage"
+        _cr_sus=$(chunk_suspect "$_log" "$_cr_o/next")
+        jq --argjson n "$_cr_n" --arg s "$_cr_sus" '.chunk = $n | if $s != "" then .probe = $s else del(.probe) end' "$_cr_o/state0" > "$_cr_sf_stage"
+        [ -z "$_cr_sus" ] || echo "[cgc-db] $_cr_r · chunk $_cr_i: suspect file isolated for the next window (it runs ALONE; quarantined only if it hangs alone)"
         chunk_rework_add "$_cr_sf_stage" "$_cr_o/next" "$_cr_sf_stage"
         echo "::warning::[cgc-db] $_cr_r · chunk $_cr_i of ${_cr_nn} file(s) stalled/timed out (${_cr_dt}s) — splitting: next window ${_cr_n} file(s)"
       else
