@@ -491,6 +491,7 @@
         "cloudflared",
         "wireguard-mesh",
         "cloud-spec",
+        "configs-sync",
         "dagu",
         "dbgate",
         "matomo",
@@ -533,7 +534,7 @@
         "send",
         "vaultwarden"
       ],
-      "container_count": 74
+      "container_count": 75
     },
     "gcp-E2-f_0": {
       "ip": "35.226.147.64",
@@ -724,6 +725,10 @@
         "ports": [],
         "networks": []
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -781,6 +786,10 @@
       },
       "health": {
         "path": "/health"
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
       },
       "upstream_image": "python:3.13-slim",
       "resources": {
@@ -880,6 +889,10 @@
         "endpoint_check": false,
         "_doc": "endpoint_check disabled: /v2/check requires POST body; TLS+DNS checks confirm reachability."
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Tools Primary"
+      },
       "api": {
         "has_api": false,
         "has_web_ui": true,
@@ -970,6 +983,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
       },
       "tests": {
         "drift-multi-container": {
@@ -1105,6 +1122,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
       },
       "_domain_doc": "PUB ROUTING (operator decision 2026-05-27): public-facing routes live under api.diegonmarcos.com/pub/* (high precedence, public ingress via oci-analytics). All other api.* paths remain wg-cloud-only (gcp-proxy edge over wg0). Renamed from /c3-public-api → /pub for clean separation of concerns.",
       "mail": {
@@ -1266,6 +1287,10 @@
         "dns_check": true,
         "endpoint_check": true
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "api": {
         "has_api": true,
         "has_web_ui": true,
@@ -1344,6 +1369,10 @@
       },
       "declared_ports": {
         "app": 3109
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
       },
       "dns_aliases": [
         "cloud-drive-mcp.mesh.diegonmarcos.com"
@@ -1614,6 +1643,10 @@
       "health": {
         "path": "/mcp"
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "dns_aliases": [
         "cloud-infra-mcp.mesh.diegonmarcos.com"
       ],
@@ -1780,6 +1813,10 @@
       "declared_ports": {
         "app": 3103
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "dns_aliases": [
         "cloud-mail-mcp.mesh.diegonmarcos.com"
       ],
@@ -1913,6 +1950,10 @@
       "declared_ports": {
         "app": 3102
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "dns_aliases": [
         "cloud-mattermost-mcp.mesh.diegonmarcos.com"
       ],
@@ -2001,6 +2042,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Me"
       },
       "resources": {
         "_doc": "Clones live on a size-capped tmpfs (compose.nix), never on the VM disk: oci disks have sat at 87-97%. mem_limit covers node plus that tmpfs.",
@@ -2232,6 +2277,10 @@
       "health": {
         "path": "/mcp"
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "dns_aliases": [
         "cloud-services-mcp.mesh.diegonmarcos.com"
       ],
@@ -2366,6 +2415,10 @@
       },
       "declared_ports": {
         "app": 3110
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
       },
       "dns_aliases": [
         "cloud-superapp-mcp.mesh.diegonmarcos.com"
@@ -2560,6 +2613,10 @@
       "declared_ports": {
         "app": 3111
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "dns_aliases": [
         "cloud-vault-mcp.mesh.diegonmarcos.com"
       ],
@@ -2662,6 +2719,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Dev-Gits"
       },
       "resources": {
         "_doc": "A tarball is streamed, never buffered, so memory does not scale with repository size. 128M is headroom for node's baseline plus the JWKS cache.",
@@ -2863,6 +2924,10 @@
       "health": {
         "path": "/health"
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "dns_aliases": [
         "google-personal-mcp.mesh.diegonmarcos.com"
       ],
@@ -2975,6 +3040,10 @@
       "health": {
         "path": "/health"
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "dns_aliases": [
         "google-workspace-mcp.mesh.diegonmarcos.com"
       ],
@@ -3064,6 +3133,10 @@
       "declared_ports": {
         "app": 8090
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
+      },
       "_decommissioned": "2026-05-21",
       "_decommission_reason": "Replaced by bc-obs_c3-public-api/mail/http-to-smtp on oci-analytics. CF Worker repointed in commit 47d19acd (cloudflare-worker/src/wrangler.toml: HTTP_TO_SMTP_PROXY_API_URL → https://api.diegonmarcos.com/c3-public-api/mail/http-to-smtp). End-to-end Gmail-Send-As → CF MX → Worker → c3-public-api round trip verified 2026-05-21 (msg_id <CAKkpMnkF8N_B8Q1ghdc5cRGO1+xwqHpaLUe63-wxvYV+pT29=g@mail.gmail.com>, smtp.delivered to Maddy:25). Container on gcp-proxy remains running until next vm-pilot reconciliation drops it from build-vm-gcp-proxy.json — Caddy route + monitoring stop immediately when this enabled=false propagates through gen-configs.",
       "api": {
@@ -3107,6 +3180,10 @@
         "containers": [],
         "ports": [],
         "networks": []
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Dev-Builders"
       },
       "on_demand": true,
       "registry": "ghcr.io/diegonmarcos",
@@ -3174,6 +3251,10 @@
         "ports": [],
         "networks": []
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Dev-Builders"
+      },
       "gha": {
         "_comment": "One runner registration per repo (personal accounts have no org-level runners; myoung34 image registers RUNNER_SCOPE=repo). compose.nix maps over registrations[] — add a repo here, never a hardcoded service. Same ACCESS_TOKEN (classic PAT, repo scope) covers all repos of the user.",
         "labels": "self-hosted,linux,arm64,oci-apps",
@@ -3233,6 +3314,10 @@
         "ports": [],
         "networks": []
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Infra"
+      },
       "tests": {
         "email-forwarder": {
           "cmd": "node test-email-forwarder.mjs",
@@ -3276,6 +3361,10 @@
         "ports": [],
         "networks": []
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Infra"
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -3315,6 +3404,10 @@
       },
       "declared_ports": {
         "app": 2224
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Backup"
       },
       "upstream_image": "alpine:3.19",
       "api": {
@@ -3361,6 +3454,10 @@
       },
       "declared_ports": {
         "app": 2223
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Backup"
       },
       "upstream_image": "alpine:3.20",
       "tests": {
@@ -3481,6 +3578,10 @@
         "volumes": [
           "gitea_data"
         ]
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Dev-Gits"
       },
       "ssh_port": 2222,
       "ssh_listen_host": "10.0.0.6",
@@ -3692,7 +3793,11 @@
           "container_name": "postlite-npm"
         },
         "postlite-vaultwarden": {
-          "container_name": "postlite-vaultwarden"
+          "container_name": "postlite-vaultwarden",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          }
         },
         "postlite-ntfy": {
           "container_name": "postlite-ntfy"
@@ -3724,6 +3829,10 @@
         "vaultwarden_pg": 5434,
         "ntfy_pg": 5435,
         "authelia_pg": 5436
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-dBs-infra"
       },
       "_doc_containers": "postlite-authelia is deliberately ABSENT from containers{} below: infra-sec_authelia/build.json carries the real spec (image, volumes, depends_on) and deploys it as authelia's sidecar. A bare stub here made two build.json files claim the same container_name — the owner declares, the catalogue only points. This note sits BESIDE containers{}, not inside it: the ship engine iterates containers{} values and reads .container_name off each one, so a string value there aborts the iteration mid-list (see _doc note history / debt #20 L3).",
       "api": {
@@ -3793,6 +3902,10 @@
         ],
         "volumes": []
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-dBs-infra"
+      },
       "redis": {
         "maxmemory": "128mb",
         "maxmemory_policy": "allkeys-lru"
@@ -3858,6 +3971,10 @@
         "endpoint_check": false,
         "_doc": "No vhost of its own. Health = the tunnel's connector status in Cloudflare (cf-zero-trust workflow [zt:probe]) and http://127.0.0.1:20241/ready on oci-apps."
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
+      },
       "subcategory": "net",
       "api": {
         "has_api": false,
@@ -3920,6 +4037,10 @@
       "declared_ports": {
         "dns": 53
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Mesh"
+      },
       "api": {
         "has_api": false,
         "has_web_ui": false,
@@ -3976,6 +4097,10 @@
       },
       "declared_ports": {
         "dns": 53
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Mesh"
       },
       "upstream_image": "klutchell/unbound:latest",
       "api": {
@@ -4057,6 +4182,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Mesh"
       },
       "subcategory": "net",
       "data_sources": {
@@ -4155,6 +4284,10 @@
         "dns_check": true,
         "endpoint_check": false
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Mesh"
+      },
       "subcategory": "net",
       "transports": {
         "_doc": "Canonical declaration of all VPN transport paths. Read by bb-net_wireguard-mesh (the panel) + unix/.../wireguard-wstunnel.nix (the laptop client) + cloud Caddy deriver. Single source of truth — never duplicate these values anywhere.",
@@ -4214,6 +4347,10 @@
         "containers": [],
         "ports": [],
         "networks": []
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Mesh"
       },
       "subcategory": "network",
       "_doc": "Engine contract: cloud-data-config-consolidated.ts reads .wireguard_public from THIS build.json (preferred) before falling back to config.json::native.wireguard_public during the migration window. Final state after migration is to remove the config.json copy entirely.",
@@ -4367,11 +4504,63 @@
       "declared_ports": {
         "app": 3080
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
+      },
       "dns_aliases": [
         "cloud-spec.mesh.diegonmarcos.com"
       ],
       "runtime": {
         "command": "busybox httpd -f -p %PORT% -h /srv"
+      },
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
+    "configs-sync": {
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-obs_configs-sync",
+      "description": "configs-sync engine (#1148): the fleet's configs pipeline as its own container. On a schedule it checks out cloud-u-containers (the declared inputs) and cloud-t-infra (the derive code, 1_cloud-configs), regenerates the consolidated JSON, the per-app build-*.json and the C3 containers-declared.json, runs the containers guard, and commits the result to the public data repo cloud_db_infra-ops-obsv_configs-sync. c3-infra-api and cloud-infra-mcp serve those files from the data repo. CANONICAL: the derivation of containers-declared.json lives HERE (src/code/containers-declared.mjs); the consolidated and per-app derivation stays in cloud-t-infra 1_cloud-configs, which this engine runs. cloud-t-infra keeps generating into its own dist/ as a thin wrapper until this engine is live.",
+      "enabled": true,
+      "flake": "infra-obs_configs-sync",
+      "containers": {
+        "app": {
+          "container_name": "configs-sync",
+          "public": false,
+          "env_file": true,
+          "read_only": false,
+          "protocol": "none"
+        }
+      },
+      "container_names": [
+        "configs-sync"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
+      },
+      "timezone": "Europe/Berlin",
+      "resources": {
+        "mem_reservation": "128m"
+      },
+      "tests": {
+        "containers-guard": {
+          "cmd": "bash test/test-containers-guard.sh",
+          "cwd": "src"
+        }
       },
       "api": {
         "has_api": false,
@@ -4460,6 +4649,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
       },
       "ssh": {
         "uid": 0,
@@ -4588,6 +4781,10 @@
         "volumes": [
           "dbgate_data"
         ]
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
       },
       "timezone": "Europe/Madrid",
       "api": {
@@ -4718,6 +4915,10 @@
         "volumes": [
           "matomo_data"
         ]
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
       },
       "upstream_image": "matomo:fpm-alpine",
       "tests": {
@@ -4917,6 +5118,10 @@
       },
       "backup": {
         "enabled": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
       },
       "timezone": "Europe/Paris",
       "_topics_comment": "Source of truth for ntfy topics. Consumed by: (a) bc-obs_ntfy/src/code/topic-scanner.py (its own runtime topic list), (b) 9_others/src/engine/parsers/ntfy.ts (publishes configs.ntfy.topics — incl. path/title — into _cloud-data-consolidated.json), (c) 9_others/src/engine/cloud-data-config-derive.ts (emits topics into build-mattermost.json AND the RSS taxonomy build-ntfy-rss-channels.json consumed by the Cloud Mail SUPER RSS READER). 'path' = parent folder in the Cloud Mail feed tree (leaf = the topic itself, display = 'title'); topics sharing a 'path' become siblings under that folder, so e.g. the three dev_* topics form a nested CICD/GH group. Adding a topic = edit this array + rebuild.",
@@ -5220,6 +5425,10 @@
         "dns_check": true,
         "endpoint_check": true
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
+      },
       "upstream_image": "public.ecr.aws/zinclabs/openobserve:v0.14.7",
       "api": {
         "has_api": true,
@@ -5263,6 +5472,10 @@
         "containers": [],
         "ports": [],
         "networks": []
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
       },
       "tests": {
         "fleet-reach-mirror": {
@@ -5321,6 +5534,10 @@
         },
         "db": {
           "container_name": "umami-db",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-infra"
+          },
           "image": "postgres:16-alpine",
           "port": 5442,
           "port_env": "PGPORT",
@@ -5417,6 +5634,10 @@
       "backup": {
         "enabled": true
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Observability"
+      },
       "tests": {
         "setup-idempotent-and-credentials": {
           "cmd": "sh test-setup-idempotent.sh",
@@ -5468,6 +5689,10 @@
         "ports": [],
         "networks": []
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Infra"
+      },
       "timezone": "Europe/Berlin",
       "resources": {
         "mem_reservation": "16m"
@@ -5505,6 +5730,10 @@
         "containers": [],
         "ports": [],
         "networks": []
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-Infra"
       },
       "git_tree_maintenance": {
         "_comment": "The janitor `git gc`s the fleet's shared checkout (cloud-git-gh) and never deletes from it. It is NOT an agent (no toolbelt, no GH_TOKEN, no owner-repair), so it must not use agent.git_tree; but the volume mount and its pinned name still have ONE declaration, _shared/engine.nix, which supplies both from this key (test-git-tree-one-mount-pattern S1 forbids a hand-written pair in compose.nix). Writable because git gc rewrites packs.",
@@ -5620,6 +5849,10 @@
         "github": 4181,
         "cloudflare": 4182,
         "email": 4183
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
       },
       "bind_host": "10.0.0.6",
       "auth_broker": {
@@ -5833,6 +6066,10 @@
         },
         "redis": {
           "container_name": "authelia-redis",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-infra"
+          },
           "image": "redis:7-bookworm",
           "port": 6380,
           "port_env": null,
@@ -5850,6 +6087,10 @@
         },
         "postlite": {
           "container_name": "postlite-authelia",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-infra"
+          },
           "image": "ghcr.io/diegonmarcos/postlite:latest",
           "port": null,
           "port_env": null,
@@ -5919,6 +6160,10 @@
       },
       "backup": {
         "enabled": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
       },
       "timezone": "Europe/Madrid",
       "api": {
@@ -6121,6 +6366,10 @@
           "type": "special",
           "comment": "Caddy IS the reverse proxy — serves all domains"
         }
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
       },
       "caddy_config": {
         "public_landing": {
@@ -6711,6 +6960,10 @@
         "ports": [],
         "networks": []
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
+      },
       "upstream_image": "caddy:2",
       "api": {
         "has_api": false,
@@ -6790,6 +7043,10 @@
           "type": "special",
           "comment": "Caddy-public IS the public-edge reverse proxy — allowlist + forward-to-gcp-proxy"
         }
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
       },
       "caddy_config": {
         "global": {
@@ -6996,6 +7253,10 @@
       "backup": {
         "enabled": false
       },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
+      },
       "dormant": true,
       "timezone": "Europe/Madrid",
       "upstream_image": "crowdsecurity/crowdsec:v1.7.8",
@@ -7058,6 +7319,10 @@
       },
       "health": {
         "path": "/health"
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
       },
       "bind_host": "10.0.0.1",
       "resources": {
@@ -7142,6 +7407,10 @@
       },
       "health": {
         "path": "/health"
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
       },
       "_status": "WIP on branch wip/mcp-oauth. Owner has not chosen option 31.1. Do not merge to main: a push to main dispatches cloud-infra Ship for every touched service.",
       "bind_host": "10.0.0.1",
@@ -7233,6 +7502,10 @@
         "tls_check": false,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Net-Routing & Security"
       },
       "timezone": "Europe/Madrid",
       "resources": {
@@ -7358,6 +7631,10 @@
       },
       "health": {
         "path": "/mcp"
+      },
+      "taxonomy": {
+        "group": "Infra Apps",
+        "category": "Ops-API-MCP"
       },
       "db_publish": {
         "_comment": "Durability: the octocode GraphRAG index (FastEmbed vectors + LLM relationship graph, a multi-hour build) lives only in the octocode_db volume on `host`. ship-kg-db.yml (GHA) snapshots it to image:tag on GHCR so a volume wipe is restorable by pulling the image. GHA (not the local ship) so the package can be flipped PUBLIC. Consumed by 9_others/src/deploy/scripts/cloud-kg-db-snapshot.sh.",
@@ -7663,6 +7940,10 @@
         "ports": [],
         "networks": []
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
+      },
       "timezone": "UTC",
       "resources": {
         "mem_reservation": "16m"
@@ -7728,6 +8009,10 @@
       "declared_ports": {
         "api": 8642,
         "dashboard": 9119
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
       },
       "agent": {
         "_comment": "The shared checkout (docker volume cloud-git-gh) mounts at ONE canonical path in EVERY agent container — /home/appuser/git — declared once in _shared/engine.nix and published to the container as AGENT_GIT_TREE. The per-container git_tree_mount field is GONE and setting it is now a build error. It used to claim to be 'this container's own $HOME/git' with nothing checking, and the three agent containers drifted to three different answers; hermes ended up with the tree at /opt/data/git while its running HOME was /root, so `ls $HOME/git` found nothing and the agent reported the repositories as missing. Read-write: an agent that can read the code but not commit it cannot do the job it exists for.",
@@ -7811,6 +8096,10 @@
       },
       "backup": {
         "enabled": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
       },
       "upstream_image": "surrealdb/surrealdb:v2",
       "data_path": "/opt/data/surrealdb",
@@ -8005,6 +8294,10 @@
       },
       "backup": {
         "enabled": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
       },
       "upstream_image": "surrealdb/surrealdb:v2",
       "data_path": "/opt/data/surrealdb-pub",
@@ -8203,6 +8496,10 @@
       },
       "health": {
         "path": "/health"
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
       },
       "agent": {
         "_comment": "The shared checkout (docker volume cloud-git-gh) mounts at ONE canonical path in EVERY agent container — /home/appuser/git — declared once in _shared/engine.nix and published to the container as AGENT_GIT_TREE. The per-container git_tree_mount field is GONE and setting it is now a build error. It used to claim to be 'this container's own $HOME/git' with nothing checking, and the three agent containers drifted to three different answers; hermes ended up with the tree at /opt/data/git while its running HOME was /root, so `ls $HOME/git` found nothing and the agent reported the repositories as missing. Read-write: an agent that can read the code but not commit it cannot do the job it exists for. #359: only the goose agent pushes. cloud-agi-bots (the Telegram gateway, #542) is in this compose project too and was getting the writable tree AND GH_TOKEN, a classic PAT with admin:org/delete_repo/admin:enterprise, while it only makes HTTP calls. Services not listed here get neither (see _shared/agent-credential.nix).",
@@ -8403,6 +8700,10 @@
       },
       "health": {
         "path": "/health"
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
       },
       "_upstream_image_doc": "Top-level upstream_image marks this as a Type-B vendored-Dockerfile build: the ship engine builds src/code/Dockerfile (staged to dist/code/arm64/) natively on the arm64 cloud-builder. It is NOT injected as a FROM-override build-arg — it only selects BUILD_CONTEXT=dist/code/arch. The real multi-stage Dockerfile (builder compiles the Headroom sidecar, runtime installs node) is preserved. The old docker.native_build:image-wrapper was WRONG: image-wrapper with no cmd made the native block skip AND blocked Type-B auto-detect, so CI silently built nothing and only recreated the stale image.",
       "upstream_image": "python:3.13-slim",
@@ -8610,6 +8911,10 @@
       "declared_ports": {
         "app": 18789
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
+      },
       "agent": {
         "_comment": "Explicit opt-OUT, required by 9_others/test/test_agent_git_tree_declared.sh in cloud-infra. openclaw is upstream's stock image, unmodified, reached only through the agent gateway on loopback; it is not wired to read or commit the fleet repositories, and a writable shared tree would widen its blast radius for nothing. Flip to true (with git_tree_writable true) only together with a decision that this agent works in the checkout.",
         "git_tree": false
@@ -8694,6 +8999,10 @@
       "health": {
         "path": "/health"
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
+      },
       "agent": {
         "_comment": "Explicit opt-OUT, required by 9_others/test/test_agent_git_tree_declared.sh in cloud-infra. session-memory is a SQLite transcript store, not a code-reading agent: it never opens a repository, so mounting the shared tree would widen its blast radius for nothing. This key exists so the decision is recorded rather than forgotten, which is how #416 happened.",
         "git_tree": false
@@ -8751,6 +9060,10 @@
         },
         "db": {
           "container_name": "mattermost-postgres",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "postgres:16-alpine",
           "port": 5435,
           "port_env": "PGPORT",
@@ -8834,6 +9147,10 @@
           "mattermost_data",
           "mattermost_postgres"
         ]
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
       },
       "dns_aliases": [
         "chat-mattermost.mesh.diegonmarcos.com"
@@ -8946,6 +9263,10 @@
       "health": {
         "path": "/api/health"
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
+      },
       "dns_aliases": [
         "cloud-webmail.mesh.diegonmarcos.com"
       ],
@@ -9053,6 +9374,10 @@
           "mail_puller_state"
         ]
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
+      },
       "upstream_image": "debian:bookworm-slim",
       "api": {
         "has_api": false,
@@ -9152,6 +9477,10 @@
         "volumes": [
           "continuwuity_data"
         ]
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
       },
       "timezone": "Europe/Madrid",
       "appservices": [
@@ -9255,6 +9584,10 @@
         "dns_check": true,
         "endpoint_check": true
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
+      },
       "timezone": "Europe/Madrid",
       "upstream_image": "vectorim/element-web:latest",
       "resources": {
@@ -9329,6 +9662,10 @@
         "volumes": [
           "mautrix_whatsapp_data"
         ]
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
       },
       "timezone": "Europe/Madrid",
       "upstream_image": "dock.mau.dev/mautrix/whatsapp:latest",
@@ -9489,6 +9826,10 @@
         "volumes": [
           "maddy_data"
         ]
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
       },
       "users": {
         "42": {
@@ -9770,6 +10111,10 @@
           "stalwart_data"
         ]
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
+      },
       "_doc_recovery_mode": "First-boot v0.16 bootstrap toggle. Set true to inject STALWART_RECOVERY_MODE=1 + STALWART_RECOVERY_ADMIN=admin:${ADMIN_PASSWORD} into the container's env so v0.16 wipes settings + accepts admin login. After running `stalwart-cli apply --file export.json` + recreating listeners, flip back to false and redeploy. The container reads JMAP-object state from RocksDB on production boot.",
       "recovery_mode": false,
       "upstream_image": "stalwartlabs/stalwart:v0.16.5",
@@ -9935,6 +10280,10 @@
       "backup": {
         "enabled": true
       },
+      "taxonomy": {
+        "group": "Project Apps",
+        "category": "Data"
+      },
       "timezone": "Europe/Paris",
       "tests": {
         "robots": {
@@ -10041,6 +10390,10 @@
       "backup": {
         "enabled": false
       },
+      "taxonomy": {
+        "group": "Project Apps",
+        "category": "Finance"
+      },
       "api": {
         "has_api": true,
         "has_web_ui": true,
@@ -10107,6 +10460,10 @@
         },
         "db": {
           "container_name": "photoprism_mariadb",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "mariadb:11",
           "port": null,
           "port_env": null,
@@ -10188,6 +10545,10 @@
           "photoprism_storage",
           "photoprism_import"
         ]
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
       },
       "timezone": "Europe/Madrid",
       "s3": {
@@ -10318,6 +10679,10 @@
           "playlist_syncer_data"
         ]
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
+      },
       "timezone": "Europe/Madrid",
       "api": {
         "has_api": true,
@@ -10370,6 +10735,10 @@
       },
       "health": {
         "path": "/health"
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Inboxes"
       },
       "timezone": "Europe/Paris",
       "api": {
@@ -10456,6 +10825,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
       },
       "dns_aliases": [
         "calendar-radicale.mesh.diegonmarcos.com"
@@ -10549,6 +10922,10 @@
         "dns_check": true,
         "endpoint_check": true
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
+      },
       "timezone": "Europe/Madrid",
       "upstream_image": "ghcr.io/diegonmarcos/cloud-notes-sync:latest",
       "resources": {
@@ -10632,6 +11009,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
       },
       "timezone": "Europe/Madrid",
       "upstream_image": "ghcr.io/diegonmarcos/cloud-notes-web:latest",
@@ -10719,6 +11100,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "AGI"
       },
       "upstream_image": "linuxserver/code-server:latest",
       "timezone": "Europe/Madrid",
@@ -10812,6 +11197,10 @@
         "dns_check": true,
         "endpoint_check": true
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
+      },
       "dns_aliases": [
         "contacts-radicale.mesh.diegonmarcos.com"
       ],
@@ -10889,6 +11278,10 @@
         },
         "db": {
           "container_name": "etherpad_postgres",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "postgres:16-alpine",
           "port": 5436,
           "port_env": "PGPORT",
@@ -10949,6 +11342,10 @@
       },
       "backup": {
         "enabled": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
       },
       "upstream_image": "etherpad/etherpad:latest",
       "api": {
@@ -11046,6 +11443,10 @@
         "dns_check": true,
         "endpoint_check": true
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
+      },
       "upstream_image": "filebrowser/filebrowser:latest",
       "api": {
         "has_api": true,
@@ -11140,6 +11541,10 @@
           "grist_data"
         ]
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
+      },
       "upstream_image": "gristlabs/grist:latest",
       "grist_admin_email": "admin@diegonmarcos.com",
       "api": {
@@ -11201,6 +11606,10 @@
         },
         "db": {
           "container_name": "hedgedoc_postgres",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "postgres:16-alpine",
           "port": 5439,
           "port_env": "PGPORT",
@@ -11261,6 +11670,10 @@
       },
       "backup": {
         "enabled": true
+      },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Data Apps"
       },
       "upstream_image": "quay.io/hedgedoc/hedgedoc:latest",
       "api": {
@@ -11326,6 +11739,10 @@
       "declared_ports": {
         "app": 3014
       },
+      "taxonomy": {
+        "group": "Project Apps",
+        "category": "Productivity"
+      },
       "upstream_image": "webpronl/reveal-md:latest",
       "api": {
         "has_api": false,
@@ -11381,6 +11798,10 @@
         },
         "redis": {
           "container_name": "send_redis",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-projects"
+          },
           "image": "redis:7-alpine",
           "port": null,
           "port_env": null,
@@ -11433,6 +11854,10 @@
         "tls_check": true,
         "dns_check": true,
         "endpoint_check": true
+      },
+      "taxonomy": {
+        "group": "Project Apps",
+        "category": "Productivity"
       },
       "send_config": {
         "max_file_size_bytes": 2147483648,
@@ -11532,6 +11957,10 @@
           "vaultwarden_data"
         ]
       },
+      "taxonomy": {
+        "group": "Cloud Apps",
+        "category": "Tools Primary"
+      },
       "upstream_image": "vaultwarden/server:latest",
       "tests": {
         "cloud-vault-brand": {
@@ -11617,6 +12046,10 @@
             "github_path": "mymaps"
           }
         ]
+      },
+      "taxonomy": {
+        "group": "Project Apps",
+        "category": "Web"
       },
       "api": {
         "has_api": false,

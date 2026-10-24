@@ -6,24 +6,24 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2472,
+    "files": 2477,
     "by_lang": {
-      "sh": 166,
-      "nix": 179,
-      "js": 89,
+      "sh": 167,
+      "nix": 181,
+      "js": 91,
       "py": 502,
       "ts": 1174,
       "rust": 362
     },
     "by_role": {
-      "shell": 156,
+      "shell": 157,
       "nix-module": 19,
-      "file": 336,
+      "file": 338,
       "python": 489,
       "module": 720,
       "script": 9,
-      "flake": 81,
-      "compose": 79,
+      "flake": 82,
+      "compose": 80,
       "entrypoint": 49,
       "mcp-tool": 118,
       "workflow-dag": 5,
@@ -14045,6 +14045,127 @@
         "title",
         "default",
         "passthru"
+      ]
+    },
+    {
+      "path": "infra-obs_configs-sync/src/code/containers-declared.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "loadServices",
+        "entriesOf",
+        "derive"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "loadServices(root)",
+        "entriesOf({ dir, b })",
+        "derive(root)"
+      ]
+    },
+    {
+      "path": "infra-obs_configs-sync/src/code/containers-guard.mjs",
+      "lang": "js",
+      "role": "file",
+      "exports": [
+        "check"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path",
+        "./containers-declared.mjs"
+      ],
+      "symbols": [
+        "check(root, served)"
+      ]
+    },
+    {
+      "path": "infra-obs_configs-sync/src/code/entrypoint.sh",
+      "lang": "sh",
+      "role": "shell",
+      "exports": [
+        "log()",
+        "clone()",
+        "pass()"
+      ],
+      "imports": [],
+      "symbols": [
+        "log()",
+        "clone()",
+        "pass()"
+      ]
+    },
+    {
+      "path": "infra-obs_configs-sync/src/compose.nix",
+      "lang": "nix",
+      "role": "compose",
+      "exports": [
+        "buildJson",
+        "container"
+      ],
+      "imports": [],
+      "symbols": [
+        "app",
+        "services",
+        "configs-sync",
+        "image",
+        "container_name",
+        "environment",
+        "TZ",
+        "SCHEDULE_MIN",
+        "DATA_REPO",
+        "CONTAINERS_REPO",
+        "INFRA_REPO",
+        "MODE",
+        "env_file",
+        "volumes",
+        "healthcheck",
+        "test",
+        "interval",
+        "timeout",
+        "retries",
+        "start_period",
+        "configs-sync-work"
+      ]
+    },
+    {
+      "path": "infra-obs_configs-sync/src/flake.nix",
+      "lang": "nix",
+      "role": "flake",
+      "exports": [
+        "description",
+        "own",
+        "nixpkgs"
+      ],
+      "imports": [
+        "../../_shared/engine.nix",
+        "./compose.nix",
+        "../_shared/engine.nix",
+        "compose.nix"
+      ],
+      "symbols": [
+        "description",
+        "outputs",
+        "forAllSystems",
+        "buildJson",
+        "container",
+        "engine",
+        "nb",
+        "packages",
+        "pkgs",
+        "default",
+        "srcDir",
+        "templates",
+        "composeSpec",
+        "nativeBuild",
+        "cmd",
+        "binary",
+        "baseImage",
+        "apt",
+        "title"
       ]
     },
     {

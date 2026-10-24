@@ -748,6 +748,19 @@
         "healthcheck_paths": []
       }
     },
+    "configs-sync": {
+      "ip": "10.0.0.6",
+      "ports": {},
+      "vm": "oci-apps",
+      "description": "configs-sync engine (#1148): the fleet's configs pipeline as its own container. On a schedule it checks out cloud-u-containers (the declared inputs) and cloud-t-infra (the derive code, 1_cloud-configs), regenerates the consolidated JSON, the per-app build-*.json and the C3 containers-declared.json, runs the containers guard, and commits the result to the public data repo cloud_db_infra-ops-obsv_configs-sync. c3-infra-api and cloud-infra-mcp serve those files from the data repo. CANONICAL: the derivation of containers-declared.json lives HERE (src/code/containers-declared.mjs); the consolidated and per-app derivation stays in cloud-t-infra 1_cloud-configs, which this engine runs. cloud-t-infra keeps generating into its own dist/ as a thin wrapper until this engine is live.",
+      "api": {
+        "has_api": false,
+        "has_web_ui": false,
+        "api_path": null,
+        "api_url": null,
+        "healthcheck_paths": []
+      }
+    },
     "dagu": {
       "ip": "10.0.0.6",
       "ports": {
@@ -1961,5 +1974,9 @@
         "auth": "bearer"
       }
     }
+  },
+  "taxonomy": {
+    "group": "Cloud Apps",
+    "category": "Tools Primary"
   }
 }

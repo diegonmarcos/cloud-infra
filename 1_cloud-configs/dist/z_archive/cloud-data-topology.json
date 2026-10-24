@@ -99,6 +99,7 @@
         "cloudflared",
         "wireguard-mesh",
         "cloud-spec",
+        "configs-sync",
         "dagu",
         "dbgate",
         "matomo-hybrid",
@@ -2491,7 +2492,11 @@
           "container_name": "postlite-npm"
         },
         "postlite-vaultwarden": {
-          "container_name": "postlite-vaultwarden"
+          "container_name": "postlite-vaultwarden",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          }
         },
         "postlite-ntfy": {
           "container_name": "postlite-ntfy"
@@ -2975,6 +2980,32 @@
         "app": 3080
       },
       "flake": "infra-obs_cloud-spec"
+    },
+    "configs-sync": {
+      "category": "obs",
+      "vm": "oci-A1-f_0",
+      "folder": "infra-obs_configs-sync",
+      "description": "configs-sync engine (#1148): the fleet's configs pipeline as its own container. On a schedule it checks out cloud-u-containers (the declared inputs) and cloud-t-infra (the derive code, 1_cloud-configs), regenerates the consolidated JSON, the per-app build-*.json and the C3 containers-declared.json, runs the containers guard, and commits the result to the public data repo cloud_db_infra-ops-obsv_configs-sync. c3-infra-api and cloud-infra-mcp serve those files from the data repo. CANONICAL: the derivation of containers-declared.json lives HERE (src/code/containers-declared.mjs); the consolidated and per-app derivation stays in cloud-t-infra 1_cloud-configs, which this engine runs. cloud-t-infra keeps generating into its own dist/ as a thin wrapper until this engine is live.",
+      "containers": {
+        "app": {
+          "container_name": "configs-sync",
+          "public": false,
+          "env_file": true,
+          "read_only": false,
+          "protocol": "none"
+        }
+      },
+      "container_names": [
+        "configs-sync"
+      ],
+      "all_ports": [],
+      "all_dns": [],
+      "compose": {
+        "containers": [],
+        "ports": [],
+        "networks": []
+      },
+      "flake": "infra-obs_configs-sync"
     },
     "dagu": {
       "category": "tools",
@@ -3571,6 +3602,10 @@
         },
         "db": {
           "container_name": "umami-db",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-infra"
+          },
           "image": "postgres:16-alpine",
           "port": 5442,
           "port_env": "PGPORT",
@@ -3862,6 +3897,10 @@
         },
         "redis": {
           "container_name": "authelia-redis",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-infra"
+          },
           "image": "redis:7-bookworm",
           "port": 6380,
           "port_env": null,
@@ -3879,6 +3918,10 @@
         },
         "postlite": {
           "container_name": "postlite-authelia",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-infra"
+          },
           "image": "ghcr.io/diegonmarcos/postlite:latest",
           "port": null,
           "port_env": null,
@@ -4959,6 +5002,10 @@
         },
         "db": {
           "container_name": "mattermost-postgres",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "postgres:16-alpine",
           "port": 5435,
           "port_env": "PGPORT",
@@ -5946,6 +5993,10 @@
         },
         "db": {
           "container_name": "photoprism_mariadb",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "mariadb:11",
           "port": null,
           "port_env": null,
@@ -6575,6 +6626,10 @@
         },
         "db": {
           "container_name": "etherpad_postgres",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "postgres:16-alpine",
           "port": 5436,
           "port_env": "PGPORT",
@@ -6840,6 +6895,10 @@
         },
         "db": {
           "container_name": "hedgedoc_postgres",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-cloud"
+          },
           "image": "postgres:16-alpine",
           "port": 5439,
           "port_env": "PGPORT",
@@ -6995,6 +7054,10 @@
         },
         "redis": {
           "container_name": "send_redis",
+          "taxonomy": {
+            "group": "Infra Apps",
+            "category": "Ops-dBs-projects"
+          },
           "image": "redis:7-alpine",
           "port": null,
           "port_env": null,

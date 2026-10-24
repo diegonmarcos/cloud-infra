@@ -33,15 +33,15 @@
   "_generated": "",
   "_source": "_cloud-data-consolidated.json via cloud-data-config-derive.ts/kg-delta",
   "counts": {
-    "nodes": 341,
-    "edges": 468,
+    "nodes": 344,
+    "edges": 472,
     "by_table": {
       "vm": 4,
-      "service": 81,
-      "container": 100,
+      "service": 82,
+      "container": 101,
       "domain": 44,
       "repo": 3,
-      "module": 81,
+      "module": 82,
       "package": 28
     }
   },
@@ -870,6 +870,32 @@
         "role": "app",
         "port": 3080,
         "public": true
+      }
+    },
+    {
+      "table": "service",
+      "id": "configs_sync",
+      "key": "service:configs_sync",
+      "properties": {
+        "name": "configs-sync",
+        "category": "obs",
+        "description": "configs-sync engine (#1148): the fleet's configs pipeline as its own container. On a schedule it checks out cloud-u-containers (the declared inputs) and cloud-t-infra (the derive code, 1_cloud-configs), regenerates the consolidated JSON, the per-app build-*.json and the C3 containers-declared.json, runs the containers guard, and commits the result to the public data repo cloud_db_infra-ops-obsv_configs-sync. c3-infra-api and cloud-infra-mcp serve those files from the data repo. CANONICAL: the derivation of containers-declared.json lives HERE (src/code/containers-declared.mjs); the consolidated and per-app derivation stays in cloud-t-infra 1_cloud-configs, which this engine runs. cloud-t-infra keeps generating into its own dist/ as a thin wrapper until this engine is live.",
+        "domain": null,
+        "port": null,
+        "vm": "oci-apps",
+        "folder": "infra-obs_configs-sync"
+      }
+    },
+    {
+      "table": "container",
+      "id": "configs_sync",
+      "key": "container:configs_sync",
+      "properties": {
+        "name": "configs-sync",
+        "image": null,
+        "role": "app",
+        "port": null,
+        "public": false
       }
     },
     {
@@ -3134,6 +3160,17 @@
     },
     {
       "table": "module",
+      "id": "infra_obs_configs_sync",
+      "key": "module:infra_obs_configs_sync",
+      "properties": {
+        "name": "infra-obs_configs-sync",
+        "repo": "cloud",
+        "category": "obs",
+        "service": "configs-sync"
+      }
+    },
+    {
+      "table": "module",
       "id": "infra_obs_dagu",
       "key": "module:infra_obs_dagu",
       "properties": {
@@ -4497,6 +4534,22 @@
       "from": "service:cloud_spec",
       "to": "container:cloud_spec",
       "key": "service:cloud_spec->runs_container->container:cloud_spec",
+      "properties": {
+        "role": "app"
+      }
+    },
+    {
+      "table": "hosted_on",
+      "from": "service:configs_sync",
+      "to": "vm:oci_apps",
+      "key": "service:configs_sync->hosted_on->vm:oci_apps",
+      "properties": {}
+    },
+    {
+      "table": "runs_container",
+      "from": "service:configs_sync",
+      "to": "container:configs_sync",
+      "key": "service:configs_sync->runs_container->container:configs_sync",
       "properties": {
         "role": "app"
       }
@@ -6682,6 +6735,20 @@
       "from": "module:infra_obs_cloud_spec",
       "to": "service:cloud_spec",
       "key": "module:infra_obs_cloud_spec->implements->service:cloud_spec",
+      "properties": {}
+    },
+    {
+      "table": "belongs_to_repo",
+      "from": "module:infra_obs_configs_sync",
+      "to": "repo:cloud",
+      "key": "module:infra_obs_configs_sync->belongs_to_repo->repo:cloud",
+      "properties": {}
+    },
+    {
+      "table": "implements",
+      "from": "module:infra_obs_configs_sync",
+      "to": "service:configs_sync",
+      "key": "module:infra_obs_configs_sync->implements->service:configs_sync",
       "properties": {}
     },
     {
