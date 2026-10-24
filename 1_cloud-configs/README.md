@@ -36,3 +36,11 @@ Services symlink their own `build-<name>.json` from `dist/` into
 `a_solutions/<service>/src/`. Five fleet-wide MCP services link all of them.
 `link_builds` regenerates the input side; lint Phase 4 fails loudly if any
 symlink dangles.
+
+## configs-sync engine (#1148)
+
+The pipeline here is also run by the `configs-sync` container (cloud-u-containers `infra-obs_configs-sync`), which
+commits the consolidated and derived JSONs to the data repo `cloud_db_infra-ops-obsv_configs-sync`; c3-infra-api and
+cloud-infra-mcp serve them from there. Canonical split: the consolidated/per-app derivation stays in this module (the engine runs
+`build.sh all`); `containers-declared.json` is derived ONLY by the engine's `containers-declared.mjs`, and
+`src/derive/derive-containers-declared.mjs` here is a thin wrapper that keeps writing it to `dist/` until the engine is live.
