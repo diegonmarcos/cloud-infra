@@ -6,13 +6,13 @@
   },
   "repo": "cloud-u-containers",
   "counts": {
-    "files": 2484,
+    "files": 2494,
     "by_lang": {
       "sh": 167,
       "nix": 181,
       "js": 92,
       "py": 502,
-      "ts": 1180,
+      "ts": 1190,
       "rust": 362
     },
     "by_role": {
@@ -20,12 +20,12 @@
       "nix-module": 19,
       "file": 339,
       "python": 489,
-      "module": 725,
+      "module": 733,
       "script": 9,
       "flake": 82,
       "compose": 80,
       "entrypoint": 49,
-      "mcp-tool": 119,
+      "mcp-tool": 121,
       "workflow-dag": 5,
       "rust-module": 358,
       "hook": 53
@@ -1544,6 +1544,7 @@
         "./routes/reports.js",
         "./routes/workflows.js",
         "./routes/configsSync.js",
+        "./routes/aiUsage.js",
         "../shared/libs/poller.js"
       ],
       "symbols": [
@@ -1571,12 +1572,10 @@
       ],
       "imports": [
         "fastify",
-        "fastify-plugin"
+        "fastify-plugin",
+        "../../shared/libs/auth-decision.js"
       ],
       "symbols": [
-        "isPublicPath(url: string)",
-        "isMeshRequest(req: FastifyRequest)",
-        "isCaddyAuthenticated(req: FastifyRequest)",
         "authHook(req: FastifyRequest, reply: FastifyReply)",
         "authPluginFn(app: FastifyInstance)"
       ]
@@ -1593,6 +1592,24 @@
       ],
       "symbols": [
         "errorHandler(error: FastifyError, _req: FastifyRequest, reply: FastifyReply)"
+      ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/api/routes/aiUsage.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "registerAiUsageRoutes"
+      ],
+      "imports": [
+        "fastify",
+        "node:path",
+        "node:fs",
+        "node:os",
+        "../../shared/libs/ai-usage.js"
+      ],
+      "symbols": [
+        "registerAiUsageRoutes(app: FastifyInstance)"
       ]
     },
     {
@@ -1956,6 +1973,48 @@
       ]
     },
     {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/ai-usage.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validateClaudeBody",
+        "emptyStore",
+        "applySample",
+        "loadStore",
+        "saveStore",
+        "claudeView",
+        "parseOpenRouter",
+        "resetOpenRouterCache",
+        "getOpenRouter",
+        "Window",
+        "ClaudeSample",
+        "ClaudeHistoryPoint",
+        "ClaudeStore",
+        "HISTORY_MAX",
+        "HISTORY_MIN_GAP_S",
+        "OrActivityRow",
+        "OrWindow",
+        "OrSummary",
+        "OR_TTL_MS"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "parseWindow(name: string, v: unknown, errors: string[])",
+        "validateClaudeBody(body: unknown, now: number)",
+        "emptyStore()",
+        "applySample(store: ClaudeStore, s: ClaudeSample)",
+        "loadStore(dir: string)",
+        "saveStore(dir: string, st: ClaudeStore)",
+        "claudeView(st: ClaudeStore, now: number)",
+        "parseOpenRouter(credits: unknown, activity: unknown, nowMs: number)",
+        "resetOpenRouterCache()",
+        "getOpenRouter(env: Record<string, string | undefined>, fetchFn: typeof fetch, nowMs: number)"
+      ]
+    },
+    {
       "path": "infra-api_c3-infra-api/src/code/shared/libs/app-logs-core.ts",
       "lang": "ts",
       "role": "module",
@@ -2032,6 +2091,24 @@
       ],
       "symbols": [
         "audit(tool: string, target: string, result: string, source = \"mcp\")"
+      ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/code/shared/libs/auth-decision.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "isPublicPath",
+        "isMeshIp",
+        "isCaddyAuthenticated",
+        "isAllowed"
+      ],
+      "imports": [],
+      "symbols": [
+        "isPublicPath(url: string)",
+        "isMeshIp(ip: string)",
+        "isCaddyAuthenticated(headers: Record<string, unknown>)",
+        "isAllowed(url: string, ip: string, headers: Record<string, unknown>)"
       ]
     },
     {
@@ -3355,6 +3432,21 @@
         "apt",
         "title"
       ]
+    },
+    {
+      "path": "infra-api_c3-infra-api/src/test-ai-usage.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [],
+      "imports": [
+        "node:assert/strict",
+        "node:fs",
+        "node:os",
+        "node:path",
+        "./code/shared/libs/ai-usage.ts",
+        "./code/shared/libs/auth-decision.ts"
+      ],
+      "symbols": []
     },
     {
       "path": "infra-api_c3-infra-api/src/test-app-logs.ts",
@@ -5259,6 +5351,48 @@
       ]
     },
     {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/ai-usage.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validateClaudeBody",
+        "emptyStore",
+        "applySample",
+        "loadStore",
+        "saveStore",
+        "claudeView",
+        "parseOpenRouter",
+        "resetOpenRouterCache",
+        "getOpenRouter",
+        "Window",
+        "ClaudeSample",
+        "ClaudeHistoryPoint",
+        "ClaudeStore",
+        "HISTORY_MAX",
+        "HISTORY_MIN_GAP_S",
+        "OrActivityRow",
+        "OrWindow",
+        "OrSummary",
+        "OR_TTL_MS"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "parseWindow(name: string, v: unknown, errors: string[])",
+        "validateClaudeBody(body: unknown, now: number)",
+        "emptyStore()",
+        "applySample(store: ClaudeStore, s: ClaudeSample)",
+        "loadStore(dir: string)",
+        "saveStore(dir: string, st: ClaudeStore)",
+        "claudeView(st: ClaudeStore, now: number)",
+        "parseOpenRouter(credits: unknown, activity: unknown, nowMs: number)",
+        "resetOpenRouterCache()",
+        "getOpenRouter(env: Record<string, string | undefined>, fetchFn: typeof fetch, nowMs: number)"
+      ]
+    },
+    {
       "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/app-logs-core.ts",
       "lang": "ts",
       "role": "module",
@@ -5335,6 +5469,24 @@
       ],
       "symbols": [
         "audit(tool: string, target: string, result: string, source = \"mcp\")"
+      ]
+    },
+    {
+      "path": "infra-api_cloud-infra-mcp/src/code/shared/libs/auth-decision.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "isPublicPath",
+        "isMeshIp",
+        "isCaddyAuthenticated",
+        "isAllowed"
+      ],
+      "imports": [],
+      "symbols": [
+        "isPublicPath(url: string)",
+        "isMeshIp(ip: string)",
+        "isCaddyAuthenticated(headers: Record<string, unknown>)",
+        "isAllowed(url: string, ip: string, headers: Record<string, unknown>)"
       ]
     },
     {
@@ -20711,6 +20863,48 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/ai-usage.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "validateClaudeBody",
+        "emptyStore",
+        "applySample",
+        "loadStore",
+        "saveStore",
+        "claudeView",
+        "parseOpenRouter",
+        "resetOpenRouterCache",
+        "getOpenRouter",
+        "Window",
+        "ClaudeSample",
+        "ClaudeHistoryPoint",
+        "ClaudeStore",
+        "HISTORY_MAX",
+        "HISTORY_MIN_GAP_S",
+        "OrActivityRow",
+        "OrWindow",
+        "OrSummary",
+        "OR_TTL_MS"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "parseWindow(name: string, v: unknown, errors: string[])",
+        "validateClaudeBody(body: unknown, now: number)",
+        "emptyStore()",
+        "applySample(store: ClaudeStore, s: ClaudeSample)",
+        "loadStore(dir: string)",
+        "saveStore(dir: string, st: ClaudeStore)",
+        "claudeView(st: ClaudeStore, now: number)",
+        "parseOpenRouter(credits: unknown, activity: unknown, nowMs: number)",
+        "resetOpenRouterCache()",
+        "getOpenRouter(env: Record<string, string | undefined>, fetchFn: typeof fetch, nowMs: number)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/app-logs-core.ts",
       "lang": "ts",
       "role": "module",
@@ -20787,6 +20981,24 @@
       ],
       "symbols": [
         "audit(tool: string, target: string, result: string, source = \"mcp\")"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/shared/libs/auth-decision.ts",
+      "lang": "ts",
+      "role": "module",
+      "exports": [
+        "isPublicPath",
+        "isMeshIp",
+        "isCaddyAuthenticated",
+        "isAllowed"
+      ],
+      "imports": [],
+      "symbols": [
+        "isPublicPath(url: string)",
+        "isMeshIp(ip: string)",
+        "isCaddyAuthenticated(headers: Record<string, unknown>)",
+        "isAllowed(url: string, ip: string, headers: Record<string, unknown>)"
       ]
     },
     {
@@ -22266,6 +22478,48 @@
       ]
     },
     {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/ai-usage.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "validateClaudeBody",
+        "emptyStore",
+        "applySample",
+        "loadStore",
+        "saveStore",
+        "claudeView",
+        "parseOpenRouter",
+        "resetOpenRouterCache",
+        "getOpenRouter",
+        "Window",
+        "ClaudeSample",
+        "ClaudeHistoryPoint",
+        "ClaudeStore",
+        "HISTORY_MAX",
+        "HISTORY_MIN_GAP_S",
+        "OrActivityRow",
+        "OrWindow",
+        "OrSummary",
+        "OR_TTL_MS"
+      ],
+      "imports": [
+        "node:fs",
+        "node:path"
+      ],
+      "symbols": [
+        "parseWindow(name: string, v: unknown, errors: string[])",
+        "validateClaudeBody(body: unknown, now: number)",
+        "emptyStore()",
+        "applySample(store: ClaudeStore, s: ClaudeSample)",
+        "loadStore(dir: string)",
+        "saveStore(dir: string, st: ClaudeStore)",
+        "claudeView(st: ClaudeStore, now: number)",
+        "parseOpenRouter(credits: unknown, activity: unknown, nowMs: number)",
+        "resetOpenRouterCache()",
+        "getOpenRouter(env: Record<string, string | undefined>, fetchFn: typeof fetch, nowMs: number)"
+      ]
+    },
+    {
       "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/app-logs-core.ts",
       "lang": "ts",
       "role": "mcp-tool",
@@ -22342,6 +22596,24 @@
       ],
       "symbols": [
         "audit(tool: string, target: string, result: string, source = \"mcp\")"
+      ]
+    },
+    {
+      "path": "user-ai_cloud-cgc-pub-mcp/src/code/tools/shared/libs/auth-decision.ts",
+      "lang": "ts",
+      "role": "mcp-tool",
+      "exports": [
+        "isPublicPath",
+        "isMeshIp",
+        "isCaddyAuthenticated",
+        "isAllowed"
+      ],
+      "imports": [],
+      "symbols": [
+        "isPublicPath(url: string)",
+        "isMeshIp(ip: string)",
+        "isCaddyAuthenticated(headers: Record<string, unknown>)",
+        "isAllowed(url: string, ip: string, headers: Record<string, unknown>)"
       ]
     },
     {
